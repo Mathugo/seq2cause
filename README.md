@@ -11,9 +11,9 @@ seq2cause: Turns any discrete sequence of events into a causal graph using autor
 
 - **Bring Your Own Model:** Plug in any HuggingFace/PyTorch model (`GPT-2`, `LLaMA`, `RNN`) trained on your discrete sequences (logs, codes, symbols).
 - **Scaling:** To thousands of events: The memory complexity scales linearly with the vocabulary and sequence length. Optimized for sparse, high-dimensional streams (e.g., Vehicle Diagnostics, Server Logs, User Journeys).
-- **GPU Accelerated:** Batch processing for analyzing thousands of events in seconds.
+- **Multiple GPUs Acceleration:** Batch processing for analyzing thousands of events in seconds using multiple GPUs.
 - **Delayed Effects:** Are identifiable up to the sequence length
-- **Multiple Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences and also an aggregation of global event-to-outcome scenarios with instance time causal graphs and summary causal graph.
+- **Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences and also an aggregation of global event-to-outcome scenarios with instance time causal graphs and summary causal graph.
 
 ## 📦 Installation
 
