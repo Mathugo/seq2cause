@@ -35,6 +35,10 @@ You can precise the graph types, which includes [redo graph namming and paramete
 - **Event-to-Outcome (per sequence):** Implements the **OSCAR** algorithm which target event-to-outcome relationships using a second autoregressive models to predict outcomes.
 - **Event-to-Outcome (global):** Implements the **CARGO** algorithm which aggregate the per-sequence causal graph to provide a global causal relationship of observational data.
 
+## Future works
+
+- **Time series**: Implements causal discovery for time series using autoregressive models (normalizing flows, AR models)
+
 ## 🔗 Citation
 If you use seq2cause in your research, please cite our works:
 
