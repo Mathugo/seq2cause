@@ -1,0 +1,23 @@
+# .ruff.toml
+line-length = 100
+target-version = "py38"
+
+[lint]
+# F: Pyflakes, E/W: Pycodestyle, I: Isort, N: PEP8 Naming
+select = ["F", "E", "W", "I", "N", "UP", "B"]
+
+ignore = [
+    "N806", # Allow non-lowercase for Tensors (e.g., X_input)
+    "F722", # Forward annotation syntax error (fixes jaxtyping strings)
+    "E501", # Line too long (let the formatter handle it or ignore it)
+]
+
+[lint.isort]
+known-first-party = ["seq2cause"]
+
+[format]
+quote-style = "double"
+
+[lint.pyflakes]
+# in complex type hints
+extend-generics = ["jaxtyping.Float", "jaxtyping.Int"]

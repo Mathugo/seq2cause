@@ -1,11 +1,11 @@
 # seq2cause
-seq2cause: Turns any discrete sequence of events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba). 
+seq2cause: Turns any discrete sequence of events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba).
 
 [![PyPI version](https://img.shields.io/pypi/v/seq2cause.svg)](https://pypi.org/project/seq2cause/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**seq2cause** is a Python library for **Causal Discovery on Discrete Event Sequences**. It bridges the gap between Autoregressive Models (Language Models, RNN, Mambda) and Causal Discovery by treating autoregressive models as density estimators to perform parallelized CI-tests on GPUs. 
+**seq2cause** is a Python library for **Causal Discovery on Discrete Event Sequences**. It bridges the gap between Autoregressive Models (Language Models, RNN, Mambda) and Causal Discovery by treating autoregressive models as density estimators to perform parallelized CI-tests on GPUs.
 
 ## 🚀 Key Features
 
@@ -29,7 +29,7 @@ Recover the causal graph from your logs in 3 lines of code.
 seq2cause implements the **TRACE** framework (Temporal Reconstruction via Autoregressive Causal Estimation) for the event-to-event causal discovery and **OSCAR** for the event-to-outcome. <talk abvout cmi>
 
 ## Graph Types
-You can precise the graph types, which includes [redo graph namming and parameters in packages, put time instrance, summary graph]: 
+You can precise the graph types, which includes [redo graph namming and parameters in packages, put time instrance, summary graph]:
 
 - **Event-to-Event (per sequence):** Implements the **TRACE** algorithm using Conditional Mutual Information (CMI) approximation.
 - **Event-to-Outcome (per sequence):** Implements the **OSCAR** algorithm which target event-to-outcome relationships using a second autoregressive models to predict outcomes.
@@ -44,13 +44,13 @@ If you use seq2cause in your research, please cite our works:
 
 ```bash
 @misc{math2026tracescalableamortizedcausal,
-      title={TRACE: Scalable Amortized Causal Discovery from Single Sequences via Autoregressive Density Estimation}, 
+      title={TRACE: Scalable Amortized Causal Discovery from Single Sequences via Autoregressive Density Estimation},
       author={Hugo Math and Rainer Lienhart},
       year={2026},
       eprint={2602.01135},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2602.01135}, 
+      url={https://arxiv.org/abs/2602.01135},
 }
 ```
 
@@ -78,4 +78,3 @@ url={https://openreview.net/forum?id=1HZfpuDVeW}
 
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
