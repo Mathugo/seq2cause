@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "seq2cause"
+version = "0.1.0"
+description = "Causal Discovery from Event Sequences using Autoregressive Models"
+requires-python = ">=3.8,<4"
+
+authors = [
+    { name = "Hugo Math", email = "hugo.math@gmail.com" },
+]
+
+license = { text = "MIT" }
+
+dependencies = [
+    "transformers>=4.24.0",
+    "pyarrow<17",
+    "numpy<2.0",
+    "torch",
+    "accelerate",
+    "datasets>2.20.0",
+    "seaborn",
+    "captum",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Mathugo/seq2cause"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/seq2cause"]
