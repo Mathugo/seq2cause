@@ -42,9 +42,20 @@ You can precise the graph types, which includes [redo graph namming and paramete
 ## 🔗 Citation
 If you use seq2cause in your research, please cite our works:
 
-```bash
+```bibtex
+@software{math2026seq2cause,
+  author = {Math, Hugo},
+  title = {seq2cause: Sample- and Population-Level Causal Discovery from Event Sequences using Autoregressive Models},
+  year = {2026},
+  publisher = {PyPI},
+  url = {[https://pypi.org/project/seq2cause/](https://pypi.org/project/seq2cause/)},
+  version = {0.1.4}
+}
+```
+
+```bibtex
 @misc{math2026tracescalableamortizedcausal,
-      title={TRACE: Scalable Amortized Causal Discovery from Single Sequences via Autoregressive Density Estimation},
+      title={Scalable Sample-Level Causal Discovery in Event Sequences via Autoregressive Density Estimation},
       author={Hugo Math and Rainer Lienhart},
       year={2026},
       eprint={2602.01135},
@@ -54,7 +65,7 @@ If you use seq2cause in your research, please cite our works:
 }
 ```
 
-```bash
+```bibtex
 @inproceedings{
 math2025oneshot,
 title={One-Shot Multi-Label Causal Discovery in High-Dimensional Event Sequences},
@@ -65,7 +76,7 @@ url={https://openreview.net/forum?id=z7NT8vGWC2}
 }
 ```
 
-```bash
+```bibtex
 @inproceedings{
 math2025towards,
 title={Towards Practical Multi-label Causal Discovery in High-Dimensional Event Sequences via One-Shot Graph Aggregation},
