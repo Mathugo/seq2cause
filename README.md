@@ -78,3 +78,12 @@ url={https://openreview.net/forum?id=1HZfpuDVeW}
 
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🔧 Building
+Ruff is used to add only clean code. A pre-commit will be automatically run.
+
+```
+pre-commit run --all-files
+git add .
+git commit -m "corrected import jaxtyping"
+```

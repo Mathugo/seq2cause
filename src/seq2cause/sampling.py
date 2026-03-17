@@ -5,6 +5,67 @@ from jaxtyping import Float, Int
 from torch import Tensor
 
 
+def do_interventions(
+    rest_upsampled: Float[Tensor, "bs N, L_minus_c"],
+    rest_untouched: Float[Tensor, "bs L_minus_c"],
+    prefix: Float[Tensor, "bs c"],
+    m: int = None,
+    prepend_context_back: bool = True,
+    **kwargs,
+):
+    """
+    Builds the staircase intervention tensor to detect delayed causal effects.
+    If using the full version, it generates all L-c rows corresponding to testing causes X_0 ... X_{L-c-1}.
+    Elif m is provided, it builds ONLY the last m rows (testing the last m causes) (sparse variant).
+    """
+
+    device = rest_upsampled.device
+    bs, N, L_minus_c = rest_upsampled.size()
+
+    # 1. Determine number of rows
+    # If m is set, we only generate the LAST m experiments.
+    # This corresponds to testing causes: X_{L-m} ... X_{L-1}
+    if m is not None and m < L_minus_c:
+        num_rows = m
+        print(f"[!] Applying memory bounding: Generating last {m} rows only.")
+    else:
+        num_rows = L_minus_c
+
+    # 2. Expand vanilla tokens (Ground Truth)
+    # Shape: [bs, N, num_rows, L-c]
+    rest_untouched_exp = rest_untouched.unsqueeze(1).unsqueeze(1).repeat(1, N, num_rows, 1)
+
+    # 3. Expand proposal samples (Noise)
+    rest_intervened_exp = rest_upsampled.unsqueeze(2).repeat(1, 1, num_rows, 1)
+
+    # 4. Build the Staircase mask
+    # We start with the full Lower Triangular mask for the whole sequence
+    full_mask = torch.tril(torch.ones((L_minus_c, L_minus_c), device=device, dtype=torch.bool))
+
+    # Take the LAST num_rows
+    # Row 0 of this slice corresponds to the experiment for cause index (L_minus_c - num_rows)
+    staircase_mask = full_mask[-num_rows:, :]
+
+    # Expand for batch and particles
+    # [bs, N, num_rows, L-c]
+    staircase_mask = staircase_mask.unsqueeze(0).unsqueeze(0).repeat(bs, N, 1, 1)
+
+    # 5. Apply interventions
+    rest_final = torch.where(
+        staircase_mask,
+        rest_untouched_exp,  # Lower Triangle: Ground Truth
+        rest_intervened_exp,  # Upper Triangle: Noise
+    )
+
+    # 6. Add back the untouched context
+    if prepend_context_back:
+        # Context is always fixed/observed
+        prefix_expanded = prefix.unsqueeze(1).unsqueeze(2).repeat(1, N, num_rows, 1).to(device)
+        rest_final = torch.cat([prefix_expanded, rest_final], dim=-1)
+
+    return rest_final
+
+
 def uniform_sample(
     prob_x: Float[Tensor, "bs vocab"] | Float[Tensor, "bs L vocab"],
     n_samples: int = 128,
@@ -109,7 +170,7 @@ def multinomial_sample(
 
 def ancestral_sampling(
     model: any,
-    encoded_input: dict[str, Tensor],
+    encoded_input: dict[str, Float[Tensor, "bs L"]],
     value: int = 64,
     guidance: int = 2,
     context: int = 10,
@@ -117,13 +178,16 @@ def ancestral_sampling(
     **kwargs,
 ):
     """
-    Standard Ancestral Sampling using a proposal function
+    Standard Ancestral Sampling using a proposal function.
+    This sampling is sequential. Given an autoregressive model,
+    it generates sequences of length `context` conditioned on the first `guidance` tokens
+    for a batch of input sequences. The proposal function is used to sample the next token at each step.
 
     Args:
         model: The autoregressive model to sample from.
         encoded_input: A dictionary containing 'input_ids' and 'attention_mask' tensors.
         value: Number of samples (particles) to generate per batch element.
-        guidance: Number of initial tokens to use as conditioning context.
+        guidance: Number of initial tokens to use as conditioning context to guide the sampling.
         context: Total length of the generated sequence (including guidance).
         proposal: The sampling function to use for generating tokens (e.g., multinomial_sample).
     Returns:
