@@ -1,6 +1,9 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19068730.svg)](https://doi.org/10.5281/zenodo.19068730)
+
 # seq2cause
 seq2cause: Turns any discrete sequence of events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba).
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19068730.svg)](https://doi.org/10.5281/zenodo.19068730)
 [![PyPI version](https://img.shields.io/pypi/v/seq2cause.svg)](https://pypi.org/project/seq2cause/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -47,8 +50,9 @@ If you use seq2cause in your research, please cite our works:
   author = {Math, Hugo},
   title = {seq2cause: Sample- and Population-Level Causal Discovery from Event Sequences using Autoregressive Models},
   year = {2026},
-  publisher = {PyPI},
-  url = {[https://pypi.org/project/seq2cause/](https://pypi.org/project/seq2cause/)},
+  publisher = {Zenodo},
+  doi = {10.5281/zenodo.19068730},
+  url = {https://doi.org/10.5281/zenodo.19068730},
   version = {0.1.4}
 }
 ```
@@ -97,4 +101,6 @@ Ruff is used to add only clean code. A pre-commit will be automatically run.
 pre-commit run --all-files
 git add .
 git commit -m "corrected import jaxtyping"
+git push origin main
+git push origin v0.1.4
 ```

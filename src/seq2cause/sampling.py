@@ -12,7 +12,7 @@ def do_interventions(
     m: int = None,
     prepend_context_back: bool = True,
     **kwargs,
-):
+) -> Float[Tensor, "bs N num_rows L"]:
     """
     Builds the staircase intervention tensor to detect delayed causal effects.
     If using the full version, it generates all L-c rows corresponding to testing causes X_0 ... X_{L-c-1}.
@@ -123,7 +123,7 @@ def multinomial_sample(
     n_samples: int = 128,
     cls_token_id: int | None = None,
     **kwargs,
-):
+) -> Int[Tensor, "bs n_samples"] | Int[Tensor, "bs n_samples L"]:
     """
     Multinomial sampling from prob_x.
 
