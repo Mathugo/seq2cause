@@ -48,6 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402, N812 (standard PyTorch convention)
 
+from seq2cause.adapters import HFModelAdapter  # noqa: E402
 from seq2cause.diagnostics import (  # noqa: E402
     compare_intervention_strategies,
     estimate_oracle_score,
@@ -109,32 +110,11 @@ def _unsupervised_tau_by_lag(
 
 
 
-class TrainedModelAdapter:
-    """Wraps a trained HuggingFace causal LM so it satisfies the small surface
-    `seq2cause.diagnostics.compare_intervention_strategies` expects (a
-    `.vocab_size` attribute and a HF-style `forward(input_ids=...)`), letting
-    us reuse the diagnostics/`do_interventions` machinery unchanged with a
-    real (non-oracle) trained model instead of `NonlinearSCM` itself.
-    """
-
-    def __init__(self, model, vocab_size: int):
-        self._model = model
-        self.vocab_size = vocab_size
-
-    def forward(self, input_ids, attention_mask=None, **kwargs):
-        # `do_interventions`/diagnostics feed tensors with arbitrary leading
-        # (particle, row, ...) dims; HF's LlamaForCausalLM only accepts 2D
-        # [batch, seq_len] input_ids, so flatten/restore around the call
-        # (mirrors what `core.py::SampleLevelCausalDiscovery.run()` does).
-        *lead_dims, seq_len = input_ids.shape
-        flat_input_ids = input_ids.reshape(-1, seq_len)
-        with torch.no_grad():
-            out = self._model(input_ids=flat_input_ids)
-        logits = out.logits.reshape(*lead_dims, seq_len, -1)
-        return {"logits": logits}
-
-    def __call__(self, *args, **kwargs):
-        return self.forward(*args, **kwargs)
+# Backward-compatible alias -- the adapter now lives in `seq2cause.adapters`
+# as a public, reusable piece of the package (see README Quick Start), but
+# keeps this name here since other scripts (e.g. simulate_threshold_law.py)
+# import it from this module.
+TrainedModelAdapter = HFModelAdapter
 
 
 def parse_args(argv=None) -> argparse.Namespace:

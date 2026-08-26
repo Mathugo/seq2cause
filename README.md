@@ -26,12 +26,53 @@ pip install seq2cause
 
 ## ⚡ Quick Start
 
-Recover a causal graph from a sequence of discrete events. This uses
-`seq2cause.scm.NonlinearSCM` as a stand-in autoregressive model -- swap it
-for your own trained `GPT-2`/`LLaMA`/`RNN` (it only needs a `.vocab_size`
-attribute and a HuggingFace-style `forward(input_ids=...)` returning a dict
-with a `"logits"` key). This exact example is run as part of the test suite
+Recover a causal graph from your own sequence of discrete events (log/event
+ids) with your own model -- no known data-generating process, no labeled
+ground truth required. `HFModelAdapter` accepts any HuggingFace causal LM
+(`GPT-2`, `LLaMA`, a fine-tuned checkpoint, ...); we use a small randomly
+initialized `LlamaForCausalLM` below purely so this snippet runs standalone
+-- swap it for `LlamaForCausalLM.from_pretrained(...)` or your own trained
+model. This exact example is run as part of the test suite
 (`tests/test_readme_example.py`).
+
+```python
+import torch
+from transformers import LlamaConfig, LlamaForCausalLM
+from seq2cause.adapters import HFModelAdapter
+from seq2cause.diagnostics import compare_intervention_strategies
+from seq2cause.threshold import otsu_threshold
+
+# 1. Your model (any HF causal LM) and your own event sequence (token ids).
+vocab_size = 20
+model = LlamaForCausalLM(LlamaConfig(
+    vocab_size=vocab_size, hidden_size=32, intermediate_size=64,
+    num_hidden_layers=2, num_attention_heads=2, max_position_embeddings=32,
+)).eval()
+adapter = HFModelAdapter(model, vocab_size=vocab_size)
+sequence = torch.randint(0, vocab_size, (20,))  # <- your real event sequence
+
+# 2. Per-(cause, effect) Conditional Mutual Information, via the recommended
+#    "atomic" intervention strategy (see "Alternative Intervention Constructions").
+#    No ground truth is known here, so pass an empty placeholder adjacency --
+#    only `results["atomic"].cmi_matrix` is used below.
+placeholder_adjacency = torch.zeros(len(sequence), len(sequence), dtype=torch.bool)
+results = compare_intervention_strategies(
+    adapter, sequence, context_len=3, adjacency=placeholder_adjacency, n_particles=32, max_lag=3,
+)
+cmi_matrix = results["atomic"].cmi_matrix  # [L-c, L-c]
+
+# 3. Turn CMI scores into a binary causal graph WITHOUT labeled data, via an
+#    unsupervised anomaly-detection-style cutoff (see "Threshold Selection").
+causal_graph = cmi_matrix >= otsu_threshold(cmi_matrix.flatten())
+```
+
+## 🧪 Evaluation (against a known generator)
+
+To validate the method itself (e.g. when developing/benchmarking, or
+reproducing our own experiments), `seq2cause.scm.NonlinearSCM` is a
+synthetic oracle generator with a known ground-truth causal graph, letting
+you measure recall/F1 directly and pick a threshold by maximizing F1 on a
+held-out validation split instead of an unsupervised cutoff:
 
 ```python
 import torch
@@ -41,27 +82,29 @@ from seq2cause.threshold import select_threshold_by_validation
 
 torch.manual_seed(0)
 
-# 1. A sequence of discrete events (here, synthetically generated).
+# 1. A sequence of discrete events from a KNOWN generator (for validation).
 scm, sequences = create_scm(vocab_size=15, memory=3, length=20, seed=0, sparsity=0.5)
 sequence = sequences[0]
 
-# 2. Ground-truth edges -- only needed to validate against a known generator
-#    like here; skip this step on your own real event sequences.
+# 2. Ground-truth edges -- only available/needed because the generator is known.
 adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=16)
 
-# 3. Per-(cause, effect) Conditional Mutual Information, via the recommended
-#    "atomic" intervention strategy (see "Alternative Intervention Constructions").
+# 3. Same recovery step as Quick Start (the SCM satisfies the same
+#    `.vocab_size` + `forward(input_ids=...)` interface as `HFModelAdapter`).
 results = compare_intervention_strategies(
     scm, sequence, context_len=3, adjacency=adjacency, n_particles=32, max_lag=3,
 )
 cmi_matrix = results["atomic"].cmi_matrix  # [L-c, L-c]
 
-# 4. Turn CMI scores into a binary causal graph via a validation-selected
-#    threshold (see "Threshold Selection" -- never hardcode a constant tau).
+# 4. With labels available, select tau by maximizing F1 on this validation
+#    split instead of an unsupervised cutoff (see "Threshold Selection" --
+#    never hardcode a constant tau).
 scores, labels = cmi_matrix.flatten(), adjacency[3:, 3:].flatten()
-tau = select_threshold_by_validation(scores, labels, delta=0.05).tau
-causal_graph = cmi_matrix >= tau
+result = select_threshold_by_validation(scores, labels, delta=0.05)
+causal_graph = cmi_matrix >= result.tau
+print(result.summary())  # e.g. F1=0.800, precision=0.800, recall=0.800
 ```
+
 
 ## 📚 How It Works
 
