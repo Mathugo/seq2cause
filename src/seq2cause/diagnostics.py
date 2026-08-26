@@ -37,6 +37,7 @@ __all__ = [
     "recall_by_lag_with_tau_by_lag",
     "StrategyResult",
     "compare_intervention_strategies",
+    "compute_cmi_matrix",
     "estimate_oracle_score",
 ]
 
@@ -295,6 +296,76 @@ def _cmi_matrix_from_atomic(p_event_mean: Tensor, baseline_probs: Tensor) -> Ten
     kl = _bernoulli_kl(baseline_exp, p_event_mean)
     mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool), diagonal=1)
     return torch.where(mask, kl, torch.zeros_like(kl))
+
+
+@torch.no_grad()
+def compute_cmi_matrix(
+    model,
+    sequence: Tensor,
+    context_len: int,
+    n_particles: int = 32,
+    strategy: str = "atomic",
+    max_pairs: int | None = 20000,
+) -> Tensor:
+    """Computes the per-(cause, effect) Conditional Mutual Information matrix
+    for a single sequence, using a single do-intervention `strategy`.
+
+    This is the lightweight, no-ground-truth-required entry point for actual
+    use (see README Quick Start): unlike `compare_intervention_strategies`
+    (which computes all 5 strategies at once purely to compare them against
+    known ground truth for research/diagnostic purposes), this only runs the
+    one strategy you ask for and never requires an `adjacency` argument.
+
+    Defaults to `strategy="atomic"`: only the candidate-cause position is
+    randomized (every other position, including mediators, stays real),
+    which does not collapse recall at cause-effect lag >= 2 the way the
+    paper's original `strategy="full"` staircase does (Chadyuk et al., 2026;
+    see README "Alternative Intervention Constructions").
+
+    Args:
+        model: anything satisfying `.vocab_size` + a HuggingFace-style
+            `forward(input_ids=...)` returning a dict with a `"logits"` key
+            (e.g. a real model wrapped in `seq2cause.adapters.HFModelAdapter`,
+            or `seq2cause.scm.NonlinearSCM` for validation against known
+            ground truth).
+        sequence: `[L]` single sequence (context + candidate-effect suffix).
+        context_len: length of the always-real fixed prefix/context.
+        n_particles: number of do-intervention noise particles.
+        strategy: `"atomic"` (default, recommended) or `"full"` (the
+            paper's original staircase). Use `compare_intervention_strategies`
+            for `"windowed"`/`"independent_mediator"`/`"in_distribution_noise"`.
+        max_pairs: forwarded to `do_interventions` as an O(L^2) guard.
+
+    Returns:
+        `[L - context_len, L - context_len]` CMI matrix; `[j, q]` is the
+        estimated causal strength of candidate cause `j` on candidate
+        effect `q`.
+    """
+    if strategy not in ("full", "atomic"):
+        raise ValueError(
+            f"strategy must be 'full' or 'atomic', got {strategy!r} -- use "
+            "compare_intervention_strategies for 'windowed'/'independent_mediator'/"
+            "'in_distribution_noise'."
+        )
+    device = sequence.device
+    seq_len = sequence.shape[-1]
+    lc = seq_len - context_len
+    prefix = sequence[:context_len].unsqueeze(0)  # [1, c]
+    rest = sequence[context_len:].unsqueeze(0)  # [1, Lc]
+
+    dummy = torch.zeros(1, lc, model.vocab_size, device=device)
+    noise = uniform_sample(dummy, n_samples=n_particles, device=device)
+
+    if strategy == "full":
+        rows = do_interventions(noise, rest, prefix, strategy="full").squeeze(0)
+        p = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
+        return _cmi_matrix_from_staircase(p.mean(dim=0))
+
+    rows = do_interventions(noise, rest, prefix, strategy="atomic", max_pairs=max_pairs).squeeze(0)
+    p_atomic = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
+    baseline_rows = sequence.unsqueeze(0)  # [1, L], fully real, no intervention
+    p_baseline = _predicted_true_token_probs(model, baseline_rows, rest.squeeze(0), context_len)
+    return _cmi_matrix_from_atomic(p_atomic.mean(dim=0), p_baseline.squeeze(0))
 
 
 def _cmi_matrix_from_windowed(

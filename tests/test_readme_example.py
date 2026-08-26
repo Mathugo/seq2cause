@@ -5,7 +5,11 @@ import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 
 from seq2cause.adapters import HFModelAdapter
-from seq2cause.diagnostics import compare_intervention_strategies, ground_truth_adjacency
+from seq2cause.diagnostics import (
+    compare_intervention_strategies,
+    compute_cmi_matrix,
+    ground_truth_adjacency,
+)
 from seq2cause.scm import create_scm
 from seq2cause.threshold import otsu_threshold, select_threshold_by_validation
 
@@ -24,11 +28,7 @@ def test_readme_quick_start_example_runs_without_ground_truth():
     adapter = HFModelAdapter(model, vocab_size=vocab_size)
     sequence = torch.randint(0, vocab_size, (20,))
 
-    placeholder_adjacency = torch.zeros(len(sequence), len(sequence), dtype=torch.bool)
-    results = compare_intervention_strategies(
-        adapter, sequence, context_len=3, adjacency=placeholder_adjacency, n_particles=32, max_lag=3,
-    )
-    cmi_matrix = results["atomic"].cmi_matrix
+    cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32)
 
     causal_graph = cmi_matrix >= otsu_threshold(cmi_matrix.flatten())
 

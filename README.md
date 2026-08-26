@@ -39,7 +39,7 @@ model. This exact example is run as part of the test suite
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from seq2cause.adapters import HFModelAdapter
-from seq2cause.diagnostics import compare_intervention_strategies
+from seq2cause.diagnostics import compute_cmi_matrix
 from seq2cause.threshold import otsu_threshold
 
 # 1. Your model (any HF causal LM) and your own event sequence (token ids).
@@ -51,15 +51,9 @@ model = LlamaForCausalLM(LlamaConfig(
 adapter = HFModelAdapter(model, vocab_size=vocab_size)
 sequence = torch.randint(0, vocab_size, (20,))  # <- your real event sequence
 
-# 2. Per-(cause, effect) Conditional Mutual Information, via the recommended
-#    "atomic" intervention strategy (see "Alternative Intervention Constructions").
-#    No ground truth is known here, so pass an empty placeholder adjacency --
-#    only `results["atomic"].cmi_matrix` is used below.
-placeholder_adjacency = torch.zeros(len(sequence), len(sequence), dtype=torch.bool)
-results = compare_intervention_strategies(
-    adapter, sequence, context_len=3, adjacency=placeholder_adjacency, n_particles=32, max_lag=3,
-)
-cmi_matrix = results["atomic"].cmi_matrix  # [L-c, L-c]
+# 2. Per-(cause, effect) Conditional Mutual Information. `strategy="atomic"`
+#    is the default (see "Alternative Intervention Constructions").
+cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32)
 
 # 3. Turn CMI scores into a binary causal graph WITHOUT labeled data, via an
 #    unsupervised anomaly-detection-style cutoff (see "Threshold Selection").
@@ -168,21 +162,29 @@ opt-out/override for reproducing a specific prior run.
 
 ## 🔬 Alternative Intervention Constructions
 
-The same replication note found that the default "full" staircase
+The same replication note found that the paper's original "full" staircase
 intervention construction (`seq2cause.sampling.do_interventions`) collapses
 recall for cause-effect lags >= 2 to near zero: the position immediately
 preceding a distant effect is randomized on both sides of the CMI contrast,
 destroying the local context the model relies on most. `do_interventions`
-now supports pluggable `strategy=` options to diagnose and work around this,
-all opt-in (the default remains `strategy="full"`, unchanged):
+now supports pluggable `strategy=` options to diagnose and work around this.
+**`"atomic"` is the recommended default** -- it does not exhibit the lag>=2
+collapse and consistently outperformed every other strategy across all
+threshold schemes we tested -- and is what `compute_cmi_matrix` (used in
+"Quick Start" above) defaults to. `do_interventions` itself still defaults
+to `strategy="full"` for backward compatibility (e.g. to exactly reproduce
+the paper's Table 2); pass `strategy="atomic"` explicitly when calling it
+directly:
 
-- `"full"` (default): the original staircase construction.
-- `"atomic"`: only the candidate-cause position is randomized; every other
-  position, including mediators, stays real.
+- `"atomic"` (recommended): only the candidate-cause position is randomized;
+  every other position, including mediators, stays real.
+- `"full"` (`do_interventions`'s own default): the original staircase
+  construction.
 - `"windowed"`: preserves a configurable trailing local-context radius
   (`window_k`) before each candidate effect.
 - `"independent_mediator"`: draws the cause and mediator noise from two
   statistically independent tensors instead of one shared tensor.
+
 
 `seq2cause.sampling.unigram_sample` provides an "in-distribution-noise"
 alternative to `uniform_sample` for the do-intervention proposal itself.
