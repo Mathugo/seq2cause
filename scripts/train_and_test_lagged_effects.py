@@ -168,7 +168,31 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="If set, dumps all results (oracle score, tau selections, per-lag recall for the "
         "shared/tailored/exponential-decay-fit thresholding schemes) to this JSON path.",
     )
+    p.add_argument(
+        "--save-model",
+        type=str,
+        default=None,
+        help="If set, saves the trained model (HF `save_pretrained`) to this directory after "
+        "training, so a later run can reuse the exact same trained model via --load-model "
+        "instead of retraining -- useful when only sweeping evaluation-time parameters "
+        "(e.g. --n-particles) and wanting to hold the trained model fixed.",
+    )
+    p.add_argument(
+        "--load-model",
+        type=str,
+        default=None,
+        help="If set, loads a previously --save-model'd model from this directory instead of "
+        "training a new one (skips train_tiny_llama entirely).",
+    )
     return p.parse_args(argv)
+
+
+def load_tiny_llama(path: str):
+    from transformers import LlamaForCausalLM
+
+    model = LlamaForCausalLM.from_pretrained(path)
+    model.eval()
+    return model
 
 
 def train_tiny_llama(scm: NonlinearSCM, args: argparse.Namespace):
@@ -354,7 +378,15 @@ def main(argv=None) -> None:
         decay_rate=args.decay_rate,
         seed=args.seed,
     )
-    model = train_tiny_llama(scm, args)
+    if args.load_model:
+        print(f"=== Loading previously-trained model from {args.load_model} (skipping training) ===")
+        model = load_tiny_llama(args.load_model)
+    else:
+        model = train_tiny_llama(scm, args)
+        if args.save_model:
+            Path(args.save_model).mkdir(parents=True, exist_ok=True)
+            model.save_pretrained(args.save_model)
+            print(f"Saved trained model to {args.save_model}")
     adapter = TrainedModelAdapter(model, vocab_size=args.vocab_size)
     n_params = sum(p.numel() for p in model.parameters())
 

@@ -172,7 +172,7 @@ class NonlinearSCM:
         )
         for _ in range(length - self.memory):
             probs = self.conditional_probs(seq[:, -self.memory :])
-            nxt = torch.multinomial(probs, 1)
+            nxt = torch.multinomial(probs, 1, generator=generator)
             seq = torch.cat([seq, nxt], dim=-1)
         return seq
 
