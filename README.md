@@ -8,7 +8,7 @@ seq2cause: Turns any discrete sequence of events into a causal graph using autor
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**seq2cause** is a Python library for **Causal Discovery on Discrete Event Sequences**. It bridges the gap between Autoregressive Models (Language Models, RNN, Mambda) and Causal Discovery by treating autoregressive models as density estimators to perform parallelized CI-tests on GPUs.
+**seq2cause** is a Python library for **Causal Discovery on Discrete Event Sequences**. It bridges the gap between Autoregressive Models (Language Models, RNN, Mamba) and Causal Discovery by treating autoregressive models as density estimators to perform parallelized CI-tests on GPUs.
 
 ## 🚀 Key Features
 
@@ -25,22 +25,130 @@ pip install seq2cause
 ```
 
 ## ⚡ Quick Start
-Recover the causal graph from your logs in 3 lines of code.
+
+Recover a causal graph from a sequence of discrete events. This uses
+`seq2cause.scm.NonlinearSCM` as a stand-in autoregressive model -- swap it
+for your own trained `GPT-2`/`LLaMA`/`RNN` (it only needs a `.vocab_size`
+attribute and a HuggingFace-style `forward(input_ids=...)` returning a dict
+with a `"logits"` key). This exact example is run as part of the test suite
+(`tests/test_readme_example.py`).
+
+```python
+import torch
+from seq2cause.scm import create_scm
+from seq2cause.diagnostics import ground_truth_adjacency, compare_intervention_strategies
+from seq2cause.threshold import select_threshold_by_validation
+
+torch.manual_seed(0)
+
+# 1. A sequence of discrete events (here, synthetically generated).
+scm, sequences = create_scm(vocab_size=15, memory=3, length=20, seed=0, sparsity=0.5)
+sequence = sequences[0]
+
+# 2. Ground-truth edges -- only needed to validate against a known generator
+#    like here; skip this step on your own real event sequences.
+adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=16)
+
+# 3. Per-(cause, effect) Conditional Mutual Information, via the recommended
+#    "atomic" intervention strategy (see "Alternative Intervention Constructions").
+results = compare_intervention_strategies(
+    scm, sequence, context_len=3, adjacency=adjacency, n_particles=32, max_lag=3,
+)
+cmi_matrix = results["atomic"].cmi_matrix  # [L-c, L-c]
+
+# 4. Turn CMI scores into a binary causal graph via a validation-selected
+#    threshold (see "Threshold Selection" -- never hardcode a constant tau).
+scores, labels = cmi_matrix.flatten(), adjacency[3:, 3:].flatten()
+tau = select_threshold_by_validation(scores, labels, delta=0.05).tau
+causal_graph = cmi_matrix >= tau
+```
 
 ## 📚 How It Works
 
-seq2cause implements the **TRACE** framework (Temporal Reconstruction via Autoregressive Causal Estimation) for the event-to-event causal discovery and **OSCAR** for the event-to-outcome. <talk abvout cmi>
+seq2cause implements the **TRACE** framework (Temporal Reconstruction via
+Autoregressive Causal Estimation) for event-to-event causal discovery: an
+autoregressive model's own next-token conditionals are used as a density
+estimator to run parallelized conditional-independence tests, comparing
+predicted probabilities with and without a candidate cause intervened on
+(`seq2cause.sampling.do_interventions`) via Conditional Mutual Information
+(`seq2cause.diagnostics`).
 
 ## Graph Types
-You can precise the graph types, which includes [redo graph namming and parameters in packages, put time instrance, summary graph]:
 
-- **Event-to-Event (per sequence):** Implements the **TRACE** algorithm using Conditional Mutual Information (CMI) approximation.
-- **Event-to-Outcome (per sequence):** Implements the **OSCAR** algorithm which target event-to-outcome relationships using a second autoregressive models to predict outcomes.
-- **Event-to-Outcome (global):** Implements the **CARGO** algorithm which aggregate the per-sequence causal graph to provide a global causal relationship of observational data.
+- **Event-to-Event (per sequence):** implemented here -- the **TRACE**
+  algorithm using Conditional Mutual Information (CMI) approximation (see
+  Quick Start above).
+- **Event-to-Outcome (per sequence / global):** the **OSCAR**/**CARGO**
+  algorithms described in the paper for event-to-outcome and aggregated
+  global causal graphs are not yet implemented in this repository -- see
+  "Future works".
 
 ## Future works
 
-- **Time series**: Implements causal discovery for time series using autoregressive models (normalizing flows, AR models)
+- **Event-to-outcome (OSCAR) and global aggregation (CARGO)**: as described
+  in the paper, but not yet implemented in this codebase.
+- **Time series**: causal discovery for time series using autoregressive
+  models (normalizing flows, AR models).
+
+## 🎯 Threshold Selection
+
+Fixed CMI thresholds (e.g. the `tau=3e-5` printed in our paper's example
+configs) do not transfer across generator/backbone setups. Following an
+independent replication -- Chadyuk, Zhang, and Kucukates, "Replicating
+TRACE: A Practitioner's Guide to Its Threshold and Particle Budget"
+(LotusFlare Inc., Aug 2026) -- the recommended practice is to *select* the
+threshold by maximizing F1 on a held-out validation split instead of
+hardcoding a constant:
+
+```python
+from seq2cause.threshold import select_threshold_by_validation
+
+result = select_threshold_by_validation(
+    cmi_scores,      # per-pair CMI on a held-out validation split
+    labels,           # aligned boolean ground-truth edge labels
+    delta=0.05,       # the KL margin used to define a ground-truth edge, if known
+    hardcoded_defaults={"paper_table_2": 3e-5},
+)
+print(result.summary())
+tau = result.tau
+```
+
+`select_threshold_by_validation` reports the selected `tau` *relative to*
+the truth margin `delta` (Chadyuk et al. found the blind validation optimum
+typically lands within roughly `[delta/2, delta]` for a level-calibrated
+estimator) rather than as a bare number, and warns if the selection lands
+suspiciously close to a hardcoded default -- a sign the validation split may
+be too small or unrepresentative. `resolve_threshold({"type": "validation_sweep", ...})`
+makes this the default when resolving a `params["threshold"]` config, while
+`{"type": "static", "value": ...}` remains available as an explicit
+opt-out/override for reproducing a specific prior run.
+
+## 🔬 Alternative Intervention Constructions
+
+The same replication note found that the default "full" staircase
+intervention construction (`seq2cause.sampling.do_interventions`) collapses
+recall for cause-effect lags >= 2 to near zero: the position immediately
+preceding a distant effect is randomized on both sides of the CMI contrast,
+destroying the local context the model relies on most. `do_interventions`
+now supports pluggable `strategy=` options to diagnose and work around this,
+all opt-in (the default remains `strategy="full"`, unchanged):
+
+- `"full"` (default): the original staircase construction.
+- `"atomic"`: only the candidate-cause position is randomized; every other
+  position, including mediators, stays real.
+- `"windowed"`: preserves a configurable trailing local-context radius
+  (`window_k`) before each candidate effect.
+- `"independent_mediator"`: draws the cause and mediator noise from two
+  statistically independent tensors instead of one shared tensor.
+
+`seq2cause.sampling.unigram_sample` provides an "in-distribution-noise"
+alternative to `uniform_sample` for the do-intervention proposal itself.
+
+Run `python scripts/snr_diagnostic.py` for a self-contained (no trained
+model required) comparison of per-lag recall and CMI magnitude across all
+of the above on a synthetic oracle SCM (`seq2cause.scm.NonlinearSCM`) --
+useful for confirming whether the lag>=2 collapse reproduces on your own
+generator/backbone before assuming it transfers.
 
 ## 🔗 Citation
 If you use seq2cause in your research, please cite our works:
@@ -58,14 +166,13 @@ If you use seq2cause in your research, please cite our works:
 ```
 
 ```bibtex
-@misc{math2026tracescalableamortizedcausal,
-      title={Scalable Sample-Level Causal Discovery in Event Sequences via Autoregressive Density Estimation},
-      author={Hugo Math and Rainer Lienhart},
-      year={2026},
-      eprint={2602.01135},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2602.01135},
+@inproceedings{
+math2026your,
+title={Your Autoregressive Model Already Reveals the Causal Graph},
+author={Hugo Math and Rainer Lienhart},
+booktitle={ICML 2026 Workshop on Structured Probabilistic Inference {\&} Generative Modeling},
+year={2026},
+url={https://openreview.net/forum?id=Q66hINx9fA}
 }
 ```
 

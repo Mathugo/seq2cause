@@ -2,19 +2,19 @@ import torch
 from accelerate import Accelerator
 from torch.utils.data import DataLoader
 
-from src.seq2cause.causal_strength import (
+from seq2cause.causal_strength import (
     calc_granger_score,
     calc_lag_info_gain,
     calc_neural_saliency,
     calc_neural_shapley,
 )
-from src.seq2cause.sampling import (
+from seq2cause.sampling import (
     ancestral_sampling,
     do_interventions,
     multinomial_sample,
     uniform_sample,
 )
-from src.seq2cause.utils import next_token_collate
+from seq2cause.utils import next_token_collate
 
 
 class SampleLevelCausalDiscovery:

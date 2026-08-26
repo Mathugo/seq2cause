@@ -28,6 +28,7 @@ dependencies = [
     "datasets>2.20.0",
     "seaborn",
     "captum",
+    "jaxtyping",
 ]
 
 [project.optional-dependencies]
@@ -43,3 +44,7 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/seq2cause"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

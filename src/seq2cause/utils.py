@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 import torch
 
 
-def next_token_collate(batch, device: str = "cuda"):
+def next_token_collate(batch, device: str | None = None):
     """
     Standard next token collate function to create
     batches of input_ids and attention_mask tensors for the model.
 
     Args:
         batch: A list of dictionaries, each containing 'input_ids' and 'attention_mask'.
-        device: The target device to move the tensors to (default is 'cuda').
+        device: The target device to move the tensors to. Defaults to `"cuda"` if a GPU is
+            available, otherwise `"cpu"` -- never hardcode `"cuda"`, since that raises on any
+            CPU-only machine (this library is regularly used/tested on CPU).
     """
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     input_ids = [item["input_ids"] for item in batch]
     attention_mask = [item["attention_mask"] for item in batch]
