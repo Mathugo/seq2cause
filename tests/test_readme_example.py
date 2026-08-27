@@ -11,7 +11,7 @@ from seq2cause.diagnostics import (
     ground_truth_adjacency,
 )
 from seq2cause.scm import create_scm
-from seq2cause.threshold import otsu_threshold, select_threshold_by_validation
+from seq2cause.threshold import AdaptiveThreshold, select_threshold_by_validation
 
 
 def test_readme_quick_start_example_runs_without_ground_truth():
@@ -30,7 +30,7 @@ def test_readme_quick_start_example_runs_without_ground_truth():
 
     cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32)
 
-    causal_graph = cmi_matrix >= otsu_threshold(cmi_matrix.flatten())
+    causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 
     assert cmi_matrix.shape == (17, 17)
     assert causal_graph.shape == (17, 17)

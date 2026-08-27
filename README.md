@@ -40,7 +40,7 @@ import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 from seq2cause.adapters import HFModelAdapter
 from seq2cause.diagnostics import compute_cmi_matrix
-from seq2cause.threshold import otsu_threshold
+from seq2cause.threshold import AdaptiveThreshold
 
 # 1. Your model (any HF causal LM) and your own event sequence (token ids).
 vocab_size = 20
@@ -55,9 +55,11 @@ sequence = torch.randint(0, vocab_size, (20,))  # <- your real event sequence
 #    is the default (see "Alternative Intervention Constructions").
 cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32)
 
-# 3. Turn CMI scores into a binary causal graph WITHOUT labeled data, via an
-#    unsupervised anomaly-detection-style cutoff (see "Threshold Selection").
-causal_graph = cmi_matrix >= otsu_threshold(cmi_matrix.flatten())
+# 3. Turn CMI scores into a binary causal graph WITHOUT labeled data.
+#    AdaptiveThreshold's default: Otsu fit ONCE globally (not per lag) at
+#    lag=1, then decayed exponentially toward an Otsu-fit floor as lag
+#    increases (see "Threshold Selection").
+causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 ```
 
 ## 🧪 Evaluation (against a known generator)
@@ -129,13 +131,33 @@ predicted probabilities with and without a candidate cause intervened on
 
 ## 🎯 Threshold Selection
 
-Fixed CMI thresholds (e.g. the `tau=3e-5` printed in our paper's example
-configs) do not transfer across generator/backbone setups. Following an
-independent replication -- Chadyuk, Zhang, and Kucukates, "Replicating
-TRACE: A Practitioner's Guide to Its Threshold and Particle Budget"
-(LotusFlare Inc., Aug 2026) -- the recommended practice is to *select* the
-threshold by maximizing F1 on a held-out validation split instead of
-hardcoding a constant:
+**No labeled ground truth (the realistic case, e.g. Quick Start above):**
+`AdaptiveThreshold` is the recommended default -- Otsu fit ONCE globally
+(not independently per lag, which starves deep lags of samples and costs
+~15-18 F1 points), anchored at lag=1, then decayed exponentially toward an
+also-unsupervised, Otsu-fit floor as lag increases:
+
+```python
+from seq2cause.threshold import AdaptiveThreshold
+
+causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
+# Equivalent, if you need the raw per-lag taus (e.g. for your own matrix
+# layout): AdaptiveThreshold().tau_by_lag(scores, lags, max_lag)
+```
+
+Other unsupervised options (`mad_threshold`, `percentile_threshold`,
+`gmm_threshold`, or `AdaptiveThreshold(method=..., decay=False, per_lag=...)`)
+are available in `seq2cause.threshold` but were empirically weaker in our
+own testing (see `reports/particle_sweep/`).
+
+**Labeled ground truth available (e.g. Evaluation above, or when
+benchmarking):** fixed CMI thresholds (e.g. the `tau=3e-5` printed in our
+paper's example configs) do not transfer across generator/backbone setups.
+Following an independent replication -- Chadyuk, Zhang, and Kucukates,
+"Replicating TRACE: A Practitioner's Guide to Its Threshold and Particle
+Budget" (LotusFlare Inc., Aug 2026) -- the recommended practice is to
+*select* the threshold by maximizing F1 on a held-out validation split
+instead of hardcoding a constant:
 
 ```python
 from seq2cause.threshold import select_threshold_by_validation

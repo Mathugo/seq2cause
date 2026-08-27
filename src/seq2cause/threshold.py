@@ -860,6 +860,30 @@ class AdaptiveThreshold:
                 tau_by_lag[lag] = floor + (tau1 - floor) * (lag ** -self.exponent)
         return tau_by_lag
 
+    def causal_graph(self, cmi_matrix: Tensor) -> Tensor:
+        """Convenience one-call entry point: applies this threshold
+        directly to a full `[L_minus_c, L_minus_c]` CMI matrix (as returned
+        by `seq2cause.diagnostics.compute_cmi_matrix`), building the
+        (cause, effect) lag matrix internally, and returns a boolean causal
+        graph of the same shape (`[j, q]` = candidate cause `j` -> effect
+        `q`; only the upper triangle, `lag = q - j > 0`, is ever True).
+        """
+        lc = cmi_matrix.shape[-1]
+        lag_matrix = torch.tensor(
+            [[q - j for q in range(lc)] for j in range(lc)], device=cmi_matrix.device
+        )
+        valid = lag_matrix > 0
+        max_lag = int(lag_matrix.max())
+        tau_by_lag = self.tau_by_lag(cmi_matrix[valid], lag_matrix[valid], max_lag=max_lag)
+
+        tau_matrix = torch.zeros_like(cmi_matrix)
+        for lag, tau in tau_by_lag.items():
+            tau_matrix[lag_matrix == lag] = tau
+
+        graph = torch.zeros_like(cmi_matrix, dtype=torch.bool)
+        graph[valid] = cmi_matrix[valid] >= tau_matrix[valid]
+        return graph
+
 
 @dataclass
 class PowerLawLagThresholdFit:

@@ -634,3 +634,40 @@ def test_adaptive_threshold_supports_other_base_methods():
         tau_by_lag = AdaptiveThreshold(method=method).tau_by_lag(scores, lags, max_lag=3)
         assert set(tau_by_lag) == {1, 2, 3}
         assert all(isinstance(v, float) for v in tau_by_lag.values())
+
+
+def test_adaptive_threshold_causal_graph_thresholds_a_full_cmi_matrix():
+    torch.manual_seed(0)
+    lc = 20  # large enough that every lag group has >= min_group_size pairs
+    cmi_matrix = torch.rand(lc, lc) * 1e-4
+    # Plant true edges with a decaying-with-lag signal, well above the noise
+    # floor at every lag, so a properly-decayed threshold should catch them.
+    cmi_matrix[0, 1] = 0.2   # lag 1
+    cmi_matrix[5, 6] = 0.2   # lag 1
+    cmi_matrix[0, 3] = 0.09  # lag 3
+    cmi_matrix[10, 13] = 0.09  # lag 3
+
+    graph = AdaptiveThreshold().causal_graph(cmi_matrix)
+    assert graph.shape == cmi_matrix.shape
+    assert graph.dtype == torch.bool
+    assert graph[0, 1] and graph[5, 6]
+    assert graph[0, 3] and graph[10, 13]
+    # Lower triangle / diagonal (lag <= 0) must never be flagged.
+    assert not graph.tril().any()
+
+
+def test_adaptive_threshold_causal_graph_no_decay_matches_otsu_global():
+    torch.manual_seed(0)
+    lc = 20
+    cmi_matrix = torch.rand(lc, lc) * 1e-4
+    cmi_matrix[0, 1] = 0.2
+    cmi_matrix[5, 14] = 0.15
+
+    lag_matrix = torch.tensor([[q - j for q in range(lc)] for j in range(lc)])
+    valid = lag_matrix > 0
+    expected_tau = otsu_threshold(cmi_matrix[valid])
+    expected_graph = torch.zeros_like(cmi_matrix, dtype=torch.bool)
+    expected_graph[valid] = cmi_matrix[valid] >= expected_tau
+
+    graph = AdaptiveThreshold(decay=False).causal_graph(cmi_matrix)
+    assert torch.equal(graph, expected_graph)

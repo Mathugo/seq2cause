@@ -70,20 +70,24 @@ STRATEGY_ORDER = ("full", "atomic", "windowed", "independent_mediator", "in_dist
 
 # Every per-lag thresholding scheme compared in this script. "shared" and
 # "tailored"/"exponential" are supervised (need edge/non-edge labels to
-# select tau); "percentile"/"otsu"/"otsu_global"/"adaptive" are unsupervised
+# select tau); "percentile"/"otsu_global"/"adaptive" are unsupervised
 # anomaly-detection-style cutoffs computed from the score distribution alone
 # (labels are only used afterwards, to *evaluate* how good the unsupervised
 # cutoff turned out to be) -- see threshold.py module docstring on each.
 # ("mad"/"gmm"/"power_law" were tried and dropped: consistently the worst
 # performers -- mad/gmm F1~0.10-0.13 vs. otsu_global/adaptive's ~0.5-0.7 --
 # or redundant with "exponential", which fits the same curve shape but
-# supervised; see reports/particle_sweep/ for the full comparison.)
+# supervised. Per-lag "otsu" was ALSO dropped: refitting Otsu independently
+# at every lag starves deep lags of samples and cost ~15-18 F1 points vs.
+# "otsu_global"/"adaptive" -- see reports/particle_sweep/ for the full
+# comparison. "adaptive" (Otsu global + exponential decay to a floor) is
+# now the recommended default -- see AdaptiveThreshold in threshold.py and
+# README Quick Start.)
 SCHEME_ORDER = (
-    "shared", "tailored", "exponential", "percentile", "otsu", "otsu_global", "adaptive", "static",
+    "shared", "tailored", "exponential", "percentile", "otsu_global", "adaptive", "static",
 )
 UNSUPERVISED_SCHEMES = {
     "percentile": percentile_threshold,
-    "otsu": otsu_threshold,
 }
 
 # AdaptiveThreshold's default recipe: anchor tau at lag=1 via Otsu, then
@@ -336,10 +340,9 @@ def evaluate_once(
 
         # "otsu_global": Otsu fit ONCE on the whole pooled (all-lags) score
         # population, then that SAME single tau is reused at every lag --
-        # i.e. no per-lag fitting/override at all, unlike "otsu" above (which
-        # fits an independent Otsu cutoff per lag, falling back to this exact
-        # global value only when a lag's own sample is too small). Comparing
-        # the two isolates whether per-lag Otsu fitting is actually helping.
+        # i.e. no per-lag fitting at all (per-lag Otsu was tried and dropped;
+        # see SCHEME_ORDER comment above). "adaptive" below layers a decay
+        # on top of this same global anchor instead of reusing it flat.
         otsu_global_tau = otsu_threshold(lag_scores_t)
         tau_by_lag_schemes["otsu_global"][name] = {
             lag: otsu_global_tau for lag in range(1, args.memory + 1)
@@ -489,11 +492,10 @@ def main(argv=None) -> None:
         "tailored": "TAU TAILORED TO EACH LAG (independent per-lag validation sweep)",
         "exponential": "3-parameter EXPONENTIAL-DECAY-TO-A-FLOOR tau(lag) curve (joint fit)",
         "percentile": "unsupervised 95th-percentile cutoff, per lag, no labels used to select tau",
-        "otsu": "unsupervised Otsu (between-class-variance) cutoff, PER LAG, no labels used",
         "otsu_global": "unsupervised Otsu, ONE tau fit on the whole pooled (all-lags) population, "
         "no per-lag fitting at all, no labels used",
-        "adaptive": "AdaptiveThreshold default: Otsu anchored at lag=1, exponential decay to an "
-        "Otsu-fit floor, no labels used, no per-lag refitting",
+        "adaptive": "RECOMMENDED DEFAULT (AdaptiveThreshold): Otsu global at lag=1, exponential "
+        "decay to an Otsu-fit floor, no labels used, no per-lag refitting",
         "static": f"FIXED constant tau={STATIC_TAU:g} (the paper's own Table 2 value), never fit "
         "from this run's data, same at every lag -- a lower-bound reference point",
     }
