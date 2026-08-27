@@ -398,3 +398,104 @@ def test_summary_graph_scales_with_sequence_not_vocab_size():
 
     assert active_tokens.numel() < vocab_size
     assert adj.shape[0] < vocab_size
+
+
+def _summary_graph_reference(sequence, causal_graph, context_len, self_loops=False):
+    """Naive, nested-loop reference implementation of `summary_graph`'s
+    projection, used ONLY to cross-check the vectorized implementation
+    (see `test_summary_graph_matches_bruteforce_reference_on_random_data`)."""
+    suffix = sequence[context_len:]
+    active_tokens = sorted(set(suffix.tolist()))
+    index = {t: i for i, t in enumerate(active_tokens)}
+    n = len(active_tokens)
+    adj = torch.zeros((n, n), dtype=torch.bool)
+    lc = causal_graph.shape[-1]
+    for j in range(lc):
+        for q in range(lc):
+            if causal_graph[j, q]:
+                u, v = suffix[j].item(), suffix[q].item()
+                if not self_loops and u == v:
+                    continue
+                adj[index[u], index[v]] = True
+    return torch.tensor(active_tokens, dtype=torch.long), adj
+
+
+def test_summary_graph_matches_bruteforce_reference_on_random_data():
+    """Regression guard for the vectorized `summary_graph` implementation:
+    cross-check it against a naive nested-loop reference across many
+    randomized (sequence, causal_graph) pairs, small vocabularies (to force
+    repeated event types and exercise union-aggregation/self-loop
+    de-duplication), and both `self_loops` settings."""
+    torch.manual_seed(0)
+    for _trial in range(200):
+        lc = int(torch.randint(3, 15, (1,)))
+        context_len = int(torch.randint(1, 5, (1,)))
+        vocab_size = int(torch.randint(2, 10, (1,)))
+        sequence = torch.randint(0, vocab_size, (context_len + lc,))
+        causal_graph = torch.rand(lc, lc) > 0.6
+
+        for self_loops in (False, True):
+            ref_tokens, ref_adj = _summary_graph_reference(
+                sequence, causal_graph, context_len, self_loops
+            )
+            got_tokens, got_adj = summary_graph(sequence, causal_graph, context_len, self_loops)
+            assert torch.equal(ref_tokens, got_tokens)
+            assert torch.equal(ref_adj, got_adj)
+
+
+def test_sample_and_summary_graphs_recover_known_scm_structure():
+    """End-to-end check against a KNOWN ground truth (not just shapes): pick
+    a threshold on a validation split (this project's own recommended
+    methodology -- see threshold.py), then check BOTH the sample-level
+    graph (compute_cmi_matrix + thresholding) and the summary graph
+    (projected via `summary_graph`, applied identically to the recovered
+    graph and to the ground truth) actually recover real causal structure,
+    not just well-shaped output."""
+    from seq2cause.threshold import select_threshold_by_validation
+
+    torch.manual_seed(0)
+    context_len = 4
+    scm, sequences = create_scm(vocab_size=12, memory=2, length=40, seed=0, batch_size=8)
+
+    def _cmi_and_ground_truth(sequence):
+        cmi = compute_cmi_matrix(
+            scm, sequence, context_len=context_len, n_particles=64, strategy="atomic"
+        )
+        adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=15)
+        return cmi, adjacency[context_len:, context_len:]
+
+    # Select tau on a validation split (first 6 sequences)...
+    val_scores, val_labels = [], []
+    for i in range(6):
+        cmi, gt = _cmi_and_ground_truth(sequences[i])
+        val_scores.append(cmi.flatten())
+        val_labels.append(gt.flatten())
+    result = select_threshold_by_validation(
+        torch.cat(val_scores), torch.cat(val_labels), emit_warnings=False
+    )
+    assert result.f1 > 0.5  # the CMI signal itself must be genuinely informative
+
+    # ...then evaluate on held-out sequences never used for tau selection.
+    for i in (6, 7):
+        sequence = sequences[i]
+        cmi, gt = _cmi_and_ground_truth(sequence)
+        causal_graph = cmi >= result.tau
+
+        tp = int((causal_graph & gt).sum())
+        fp = int((causal_graph & ~gt).sum())
+        fn = int((~causal_graph & gt).sum())
+        sample_recall = tp / (tp + fn) if (tp + fn) else 0.0
+        sample_precision = tp / (tp + fp) if (tp + fp) else 0.0
+        assert sample_recall > 0.5
+        assert sample_precision > 0.5
+
+        _, pred_summary = summary_graph(sequence, causal_graph, context_len=context_len)
+        _, gt_summary = summary_graph(sequence, gt, context_len=context_len)
+
+        tp_s = int((pred_summary & gt_summary).sum())
+        fp_s = int((pred_summary & ~gt_summary).sum())
+        fn_s = int((~pred_summary & gt_summary).sum())
+        summary_recall = tp_s / (tp_s + fn_s) if (tp_s + fn_s) else 0.0
+        summary_precision = tp_s / (tp_s + fp_s) if (tp_s + fp_s) else 0.0
+        assert summary_recall > 0.5
+        assert summary_precision > 0.5
