@@ -15,7 +15,12 @@ from seq2cause.sampling import (
     multinomial_sample,
     uniform_sample,
 )
-from seq2cause.utils import estimate_tensor_bytes, format_bytes, next_token_collate
+from seq2cause.utils import (
+    check_memory_budget,
+    estimate_tensor_bytes,
+    format_bytes,
+    next_token_collate,
+)
 
 
 class SampleLevelCausalDiscovery:
@@ -137,6 +142,8 @@ class SampleLevelCausalDiscovery:
                     "est. VRAM/RAM": format_bytes(est_bytes) if est_bytes else "n/a",
                 }
             )
+            if est_bytes and self.params.get("check_memory_budget", True):
+                check_memory_budget(est_bytes, batch["input_ids"].device)
 
             # Causal Strength measures TODO: could be refactored to be more modular and cleaner
             cs = self.params.get("causal_strength", None)

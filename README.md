@@ -101,6 +101,19 @@ A `tqdm` progress bar shows batch/context progress along with a rough estimate o
 
 To test multi-GPU correctness without real GPU hardware, `accelerate launch --num_processes=2 --cpu your_script.py` runs two real processes over the `gloo` backend, exercising the same sharding and `gather()` code paths a real multi-GPU launch uses. `tests/test_multi_gpu.py` does exactly this: it checks that each process gets a disjoint shard of the data, that `gather()` reassembles it correctly, and that every process produces a valid adjacency matrix.
 
+### Avoiding an out-of-memory crash
+
+Before running a batch, `SampleLevelCausalDiscovery` compares its estimated tensor size against the memory currently available on the device and raises a clear `MemoryError` if it would use more than 80% of it, instead of letting the run crash deep inside a forward pass. Call `seq2cause.utils.check_memory_budget` directly if you want the same check in your own code:
+
+```python
+from seq2cause.utils import check_memory_budget, estimate_tensor_bytes
+
+est_bytes = estimate_tensor_bytes(batch_size, n_particles, context_len, seq_len, vocab_size)
+check_memory_budget(est_bytes, device="cuda")  # raises MemoryError if too tight
+```
+
+This works reliably on CUDA (`torch.cuda.mem_get_info`) and on CPU if `psutil` is installed. Apple Silicon's MPS backend has no public "free memory" query as of this writing, so the check silently does nothing there; an MPS run can still run out of memory without a warning.
+
 ## 🎯 Threshold Selection
 
 **No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default. It fits Otsu once, globally, anchored at lag 1, then decays it exponentially toward an Otsu-fit floor as lag increases. Fitting Otsu independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points.

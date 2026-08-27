@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- `seq2cause.utils.check_memory_budget` and `get_available_memory_bytes`:
+  a pre-flight check that compares an estimated tensor size against the
+  memory currently available on a device, and raises a clear `MemoryError`
+  before an allocation that would likely run out of memory, instead of
+  crashing deep inside a forward pass. Works on CUDA
+  (`torch.cuda.mem_get_info`) and on CPU with `psutil` installed; a no-op
+  on MPS, which has no public free-memory query. Wired into
+  `SampleLevelCausalDiscovery`'s batch loop.
+- README "Avoiding an out-of-memory crash" section.
+- Tests for `check_memory_budget`/`get_available_memory_bytes`, including
+  the fallback behavior when the available memory can't be determined.
+
 ## [0.1.7] - 2026-08-27
 
 ### Added

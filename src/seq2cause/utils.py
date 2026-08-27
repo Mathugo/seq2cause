@@ -34,6 +34,70 @@ def format_bytes(n_bytes: int) -> str:
     return f"{value:.1f} {units[exponent]}"
 
 
+def get_available_memory_bytes(device: torch.device | str) -> int | None:
+    """Best-effort query of the currently AVAILABLE (free) memory on
+    `device`, in bytes.
+
+    Returns `None` if this can't be determined for the given device/backend,
+    rather than 0 -- callers should treat `None` as "unknown, skip the
+    check", not "no memory available":
+      - CUDA: `torch.cuda.mem_get_info` (always available).
+      - CPU: requires the optional `psutil` package; `None` if not
+        installed (it isn't one of seq2cause's own dependencies).
+      - MPS and any other backend: PyTorch has no public "free VRAM" query
+        for MPS as of this writing (only allocated-memory counters), so
+        this always returns `None` there.
+    """
+    device = torch.device(device)
+    if device.type == "cuda":
+        free_bytes, _total_bytes = torch.cuda.mem_get_info(device)
+        return free_bytes
+    if device.type == "cpu":
+        try:
+            import psutil
+        except ImportError:
+            return None
+        return psutil.virtual_memory().available
+    return None
+
+
+def check_memory_budget(
+    estimated_bytes: int, device: torch.device | str, safety_margin: float = 0.8
+) -> None:
+    """Raises `MemoryError` BEFORE attempting an allocation likely to run
+    out of memory, instead of letting a real allocation fail deep inside a
+    forward pass with a much less actionable "CUDA out of memory" (or
+    similar) error.
+
+    Compares `estimated_bytes` (e.g. from `estimate_tensor_bytes`) against
+    the currently available memory on `device` (`get_available_memory_bytes`).
+    If that can't be determined for this device/backend (e.g. MPS, or CPU
+    without `psutil` installed), this silently does nothing -- it can only
+    catch what it can actually measure.
+
+    Args:
+        estimated_bytes: the estimated size of the tensor about to be
+            allocated (see `estimate_tensor_bytes`).
+        device: the device the allocation would happen on.
+        safety_margin: fraction of *available* memory this allocation is
+            allowed to use (default 0.8, i.e. refuse if the estimate would
+            use more than 80% of what's currently free). Lower this if
+            other processes/allocations also need headroom.
+    """
+    available = get_available_memory_bytes(device)
+    if available is None:
+        return
+    budget = available * safety_margin
+    if estimated_bytes > budget:
+        raise MemoryError(
+            f"Estimated allocation ({format_bytes(estimated_bytes)}) exceeds "
+            f"{safety_margin:.0%} of the memory currently available on {device} "
+            f"({format_bytes(available)} free). Reduce n_particles/batch_size, "
+            "or use compute_cmi_matrix_sparse for long sequences with a "
+            "known or assumed memory bound, before this actually allocates and OOMs."
+        )
+
+
 def next_token_collate(batch, device: str | None = None):
     """
     Standard next token collate function to create
