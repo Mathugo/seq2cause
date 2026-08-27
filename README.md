@@ -1,37 +1,31 @@
 # seq2cause
-seq2cause: Turns any discrete sequence of events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba).
+
+Turn any sequence of discrete events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba).
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19068730.svg)](https://doi.org/10.5281/zenodo.19068730)
 [![PyPI version](https://img.shields.io/pypi/v/seq2cause.svg)](https://pypi.org/project/seq2cause/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-**seq2cause** is a Python library for **Causal Discovery on Discrete Event Sequences**. It bridges the gap between Autoregressive Models (Language Models, RNN, Mamba) and Causal Discovery by treating autoregressive models as density estimators to perform parallelized CI-tests on GPUs.
+**seq2cause** is a Python library for causal discovery on discrete event sequences. It treats any autoregressive model as a density estimator and runs parallelized conditional-independence tests on GPU, so you can recover what caused what directly from a sequence of logs, codes, or symbols.
 
-## 🚀 Key Features
+## Key Features
 
-- **Bring Your Own Model:** Plug in any HuggingFace/PyTorch model (`GPT-2`, `LLaMA`, `RNN`) trained on your discrete sequences (logs, codes, symbols).
-- **Scaling:** To thousands of events: The memory complexity scales linearly with the vocabulary and sequence length. Optimized for sparse, high-dimensional streams (e.g., Vehicle Diagnostics, Server Logs, User Journeys).
-- **Multiple GPUs Acceleration:** Batch processing for analyzing thousands of events in seconds using multiple GPUs, powered by [🤗 Accelerate](https://github.com/huggingface/accelerate) -- tested on CPU, Apple Silicon (**MPS**), and **NVIDIA CUDA** GPUs (single- and multi-device).
-- **Delayed Effects:** Are identifiable up to the sequence length
-- **Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences. Future work will tackle also an aggregation of global event-to-event and event-to-outcome scenarios.
+- **Bring your own model**: plug in any HuggingFace/PyTorch model (GPT-2, LLaMA, RNN) trained on your own event sequences.
+- **Scales to long sequences**: memory grows linearly with vocabulary and sequence length, well suited to sparse, high-dimensional streams like vehicle diagnostics, server logs, or user journeys.
+- **Multi-GPU ready**: powered by 🤗 Accelerate, tested on CPU, Apple Silicon (MPS), and NVIDIA CUDA, single or multi-device.
+- **Delayed effects**: causal lags are identifiable up to the sequence length.
+- **Event-to-event and event-to-outcome graphs** from a single sequence. Aggregating these into a global causal graph across many sequences is on the roadmap.
 
-## 📦 Installation
+## Installation
 
 ```bash
 pip install seq2cause
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
-Recover a causal graph from your own sequence of discrete events (log/event
-ids) with your own model -- no known data-generating process, no labeled
-ground truth required. `HFModelAdapter` accepts any HuggingFace causal LM
-(`GPT-2`, `LLaMA`, a fine-tuned checkpoint, ...); we use a small randomly
-initialized `LlamaForCausalLM` below purely so this snippet runs standalone
--- swap it for `LlamaForCausalLM.from_pretrained(...)` or your own trained
-model. This exact example is run as part of the test suite
-(`tests/test_readme_example.py`).
+Recover a causal graph from your own sequence of events, using your own model. No known generator and no labeled ground truth needed. `HFModelAdapter` wraps any HuggingFace causal LM (a fine-tuned checkpoint, `LlamaForCausalLM.from_pretrained(...)`, etc.); here we use a small, randomly initialized model just so the snippet runs standalone. This exact example is part of the test suite (`tests/test_readme_example.py`).
 
 ```python
 import torch
@@ -47,26 +41,18 @@ model = LlamaForCausalLM(LlamaConfig(
     num_hidden_layers=2, num_attention_heads=2, max_position_embeddings=32,
 )).eval()
 adapter = HFModelAdapter(model, vocab_size=vocab_size)
-sequence = torch.randint(0, vocab_size, (20,))  # <- your real event sequence
+sequence = torch.randint(0, vocab_size, (20,))  # your real event sequence
 
-# 2. Per-(cause, effect) Conditional Mutual Information. `strategy="atomic"`
-#    is the default (see "Alternative Intervention Constructions").
+# 2. Conditional Mutual Information between every (cause, effect) pair.
 cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32)
 
-# 3. Turn CMI scores into a binary causal graph WITHOUT labeled data.
-#    AdaptiveThreshold's default: Otsu fit ONCE globally (not per lag) at
-#    lag=1, then decayed exponentially toward an Otsu-fit floor as lag
-#    increases (see "Threshold Selection").
+# 3. Turn CMI scores into a binary causal graph, no labels needed.
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 ```
 
-## 🧪 Evaluation (against a known generator)
+## Evaluation (against a known generator)
 
-To validate the method itself (e.g. when developing/benchmarking, or
-reproducing our own experiments), `seq2cause.scm.NonlinearSCM` is a
-synthetic oracle generator with a known ground-truth causal graph, letting
-you measure recall/F1 directly and pick a threshold by maximizing F1 on a
-held-out validation split instead of an unsupervised cutoff:
+To validate the method itself, `seq2cause.scm.NonlinearSCM` is a synthetic generator with a known ground-truth causal graph. This lets you measure recall and F1 directly, and pick a threshold by maximizing F1 on a held-out validation split.
 
 ```python
 import torch
@@ -76,197 +62,101 @@ from seq2cause.threshold import select_threshold_by_validation
 
 torch.manual_seed(0)
 
-# 1. A sequence of discrete events from a KNOWN generator (for validation).
+# 1. A sequence from a known generator, so we can check our own answers.
 scm, sequences = create_scm(vocab_size=15, memory=3, length=20, seed=0, sparsity=0.5)
 sequence = sequences[0]
 
-# 2. Ground-truth edges -- only available/needed because the generator is known.
+# 2. Ground-truth edges, only possible because the generator is known.
 adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=16)
 
-# 3. Same recovery step as Quick Start (the SCM satisfies the same
-#    `.vocab_size` + `forward(input_ids=...)` interface as `HFModelAdapter`).
+# 3. Same recovery step as Quick Start.
 results = compare_intervention_strategies(
     scm, sequence, context_len=3, adjacency=adjacency, n_particles=32, max_lag=3,
 )
-cmi_matrix = results["atomic"].cmi_matrix  # [L-c, L-c]
+cmi_matrix = results["atomic"].cmi_matrix
 
-# 4. With labels available, select tau by maximizing F1 on this validation
-#    split instead of an unsupervised cutoff (see "Threshold Selection" --
-#    never hardcode a constant tau).
+# 4. With labels available, pick tau by maximizing F1 instead of guessing.
 scores, labels = cmi_matrix.flatten(), adjacency[3:, 3:].flatten()
 result = select_threshold_by_validation(scores, labels, delta=0.05)
 causal_graph = cmi_matrix >= result.tau
 print(result.summary())  # e.g. F1=0.800, precision=0.800, recall=0.800
 ```
 
-## 📚 How It Works
+## How It Works
 
-seq2cause implements sample-level causal discovery: an
-autoregressive model's own next-token conditionals are used as a density
-estimator to run parallelized conditional-independence tests, comparing
-predicted probabilities with and without a candidate cause intervened on
-(`seq2cause.sampling.do_interventions`) via Conditional Mutual Information
-(`seq2cause.diagnostics`).
+seq2cause treats an autoregressive model's own next-token predictions as a density estimator. For each candidate (cause, effect) pair, it compares the model's predicted probability of the effect with and without the cause intervened on (`seq2cause.sampling.do_interventions`), and reports the Conditional Mutual Information between them (`seq2cause.diagnostics`).
 
 ## Graph Types
 
-- **Event-to-Event (per sequence):** implemented here -- the **TRACE**
-  algorithm using Conditional Mutual Information (CMI) approximation (see
-  Quick Start above).
-- **Event-to-Outcome (per sequence / global):** the **OSCAR**/**CARGO**
-  algorithms described in the paper for event-to-outcome and aggregated
-  global causal graphs are not yet implemented in this repository -- see
-  "Future works".
+- **Event-to-event** (implemented here): the TRACE algorithm, using CMI to recover a causal graph from a single sequence.
+- **Event-to-outcome and global aggregation**: the OSCAR/CARGO algorithms from the paper aren't implemented in this repo yet.
 
-## Future works
+Also on the roadmap: causal discovery for time series, using normalizing flows or AR models.
 
-- **Event-to-outcome (OSCAR) and global aggregation (CARGO)**: as described
-  in the paper, but not yet implemented in this codebase.
-- **Time series**: causal discovery for time series using autoregressive
-  models (normalizing flows, AR models).
+## GPU and Multi-GPU
 
-## 🖥️ GPU / Multi-GPU Acceleration
+`seq2cause.core.SampleLevelCausalDiscovery` wraps your model and dataloader with [🤗 Accelerate](https://github.com/huggingface/accelerate), so the same code runs unchanged on CPU, one GPU, or many (`accelerate launch --multi_gpu`). Tested on CPU, Apple Silicon (MPS), and NVIDIA CUDA.
 
-`seq2cause.core.SampleLevelCausalDiscovery` wraps your model and dataloader
-with [🤗 Accelerate](https://github.com/huggingface/accelerate)'s
-`Accelerator().prepare(...)`, so the exact same code runs unchanged on CPU, a
-single GPU, or multiple GPUs (`accelerate launch --multi_gpu`) -- tested on
-CPU, Apple Silicon (**MPS**), and **NVIDIA CUDA** GPUs.
+A `tqdm` progress bar shows batch/context progress along with a rough estimate of the VRAM or RAM the current step needs (a lower bound, see `seq2cause.utils.estimate_tensor_bytes`), so you get an early signal before a run runs out of memory.
 
-A `tqdm` progress bar reports "batch x context" progress with a rough
-estimated VRAM/RAM footprint (the single biggest tensor materialized per
-step -- see `seq2cause.utils.estimate_tensor_bytes`'s caveats: it's a lower
-bound, not an exact figure) for the current step, so you have an early
-signal of whether a given `(batch_size, n_particles, context)` configuration
-will fit in memory before it OOMs partway through a run.
+To test multi-GPU correctness without real GPU hardware, `accelerate launch --num_processes=2 --cpu your_script.py` runs two real processes over the `gloo` backend, exercising the same sharding and `gather()` code paths a real multi-GPU launch uses. `tests/test_multi_gpu.py` does exactly this: it checks that each process gets a disjoint shard of the data, that `gather()` reassembles it correctly, and that every process produces a valid adjacency matrix.
 
-**Testing multi-GPU/multi-process correctness without real GPU hardware:**
-`accelerate launch --num_processes=2 --cpu your_script.py` runs 2 real,
-independent processes over the `gloo` backend -- exercising the same
-dataloader-sharding and `accelerator.gather()` code paths a real
-`--multi_gpu` launch does, without needing GPUs. `tests/test_multi_gpu.py`
-does exactly this (via `torch.multiprocessing.spawn`, which was more
-portable across platforms than shelling out to `accelerate launch` itself)
-and checks that (1) each process's shard of the data is disjoint (no
-sequence processed twice), (2) `accelerator.gather()` reassembles the full,
-non-duplicated batch across processes, and (3) the causal discovery pipeline
-produces a finite, correctly-shaped adjacency matrix on every process.
+## Threshold Selection
 
-## 🎯 Threshold Selection
-
-**No labeled ground truth (the realistic case, e.g. Quick Start above):**
-`AdaptiveThreshold` is the recommended default -- Otsu fit ONCE globally
-(not independently per lag, which starves deep lags of samples and costs
-~15-18 F1 points), anchored at lag=1, then decayed exponentially toward an
-also-unsupervised, Otsu-fit floor as lag increases:
+**No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default. It fits Otsu once, globally, anchored at lag 1, then decays it exponentially toward an Otsu-fit floor as lag increases. Fitting Otsu independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points.
 
 ```python
 from seq2cause.threshold import AdaptiveThreshold
 
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
-# Equivalent, if you need the raw per-lag taus (e.g. for your own matrix
-# layout): AdaptiveThreshold().tau_by_lag(scores, lags, max_lag)
 ```
 
-Other unsupervised options (`mad_threshold`, `percentile_threshold`,
-`gmm_threshold`, or `AdaptiveThreshold(method=..., decay=False, per_lag=...)`)
-are available in `seq2cause.threshold` but were empirically weaker in our
-own testing (see `reports/particle_sweep/`).
+Other unsupervised options (`mad_threshold`, `percentile_threshold`, `gmm_threshold`) are available in `seq2cause.threshold` but were weaker in our own testing.
 
-**Labeled ground truth available (e.g. Evaluation above, or when
-benchmarking):** fixed CMI thresholds (e.g. the `tau=3e-5` printed in our
-paper's example configs) do not transfer across generator/backbone setups.
-Following an independent replication -- Chadyuk, Zhang, and Kucukates,
-"Replicating TRACE: A Practitioner's Guide to Its Threshold and Particle
-Budget" (LotusFlare Inc., Aug 2026) -- the recommended practice is to
-*select* the threshold by maximizing F1 on a held-out validation split
-instead of hardcoding a constant:
+**Labeled ground truth available** (Evaluation above, or benchmarking): a fixed CMI threshold doesn't transfer across generators or backbones. Following an independent replication (Chadyuk, Zhang, and Kucukates, "Replicating TRACE: A Practitioner's Guide to Its Threshold and Particle Budget", LotusFlare Inc., Aug 2026), the recommended practice is to select the threshold by maximizing F1 on a held-out validation split instead of hardcoding a constant.
 
 ```python
 from seq2cause.threshold import select_threshold_by_validation
 
 result = select_threshold_by_validation(
-    cmi_scores,      # per-pair CMI on a held-out validation split
-    labels,           # aligned boolean ground-truth edge labels
-    delta=0.05,       # the KL margin used to define a ground-truth edge, if known
-    hardcoded_defaults={"paper_table_2": 3e-5},
+    cmi_scores,  # per-pair CMI on a held-out validation split
+    labels,      # aligned boolean ground-truth edge labels
+    delta=0.05,  # the KL margin used to define a ground-truth edge, if known
 )
 print(result.summary())
 tau = result.tau
 ```
 
-`select_threshold_by_validation` reports the selected `tau` *relative to*
-the truth margin `delta` (Chadyuk et al. found the blind validation optimum
-typically lands within roughly `[delta/2, delta]` for a level-calibrated
-estimator) rather than as a bare number, and warns if the selection lands
-suspiciously close to a hardcoded default -- a sign the validation split may
-be too small or unrepresentative. `resolve_threshold({"type": "validation_sweep", ...})`
-makes this the default when resolving a `params["threshold"]` config, while
-`{"type": "static", "value": ...}` remains available as an explicit
-opt-out/override for reproducing a specific prior run.
+## Alternative Intervention Constructions
 
-## 🔬 Alternative Intervention Constructions
+An independent replication found that the paper's original "full" staircase construction (`seq2cause.sampling.do_interventions`) tends to collapse when the true causal strength decays with lag. `do_interventions` supports a few strategies to work around this. `"atomic"` is the recommended default, though `do_interventions` itself still defaults to `"full"` for backward compatibility with the paper's original results.
 
-The same replication note found that the paper's original "full" staircase
-intervention construction (`seq2cause.sampling.do_interventions`) often
-collapses for decaying causal strength in the DGP. `do_interventions`
-supports pluggable `strategy=` options to diagnose and work around this.
-**`"atomic"` is the recommended default**. `do_interventions` itself still
-defaults to `strategy="full"` for backward compatibility (e.g. to exactly
-reproduce the paper's Table 2); pass `strategy="atomic"` explicitly when
-calling it directly:
+- **`atomic`** (recommended): only the candidate-cause position is randomized, everything else stays real.
+- **`full`** (default): the original staircase construction.
+- **`windowed`**: preserves a trailing local-context window before each candidate effect.
+- **`independent_mediator`**: draws the cause and mediator noise independently instead of from a shared tensor.
 
-- `"atomic"` (recommended): only the candidate-cause position is randomized;
-  every other position, including mediators, stays real.
-- `"full"` (`do_interventions`'s own default): the original staircase
-  construction.
-- `"windowed"`: preserves a configurable trailing local-context radius
-  (`window_k`) before each candidate effect.
-- `"independent_mediator"`: draws the cause and mediator noise from two
-  statistically independent tensors instead of one shared tensor.
+Run `python scripts/snr_diagnostic.py` for a self-contained comparison of all four on a synthetic oracle SCM.
 
-`seq2cause.sampling.unigram_sample` provides an "in-distribution-noise"
-alternative to `uniform_sample` for the do-intervention proposal itself.
+## Sparse / Bounded-Memory Construction
 
-Run `python scripts/snr_diagnostic.py` for a self-contained (no trained
-model required) comparison of per-lag recall and CMI magnitude across all
-of the above on a synthetic oracle SCM (`seq2cause.scm.NonlinearSCM`) --
-useful for confirming whether the lag>=2 collapse reproduces on your own
-generator/backbone before assuming it transfers.
-
-## � Sparse / Bounded-Memory Construction
-
-If you know (or are willing to assume) an upper bound on the true causal
-lag -- e.g. a `NonlinearSCM(memory=m)` generator, or any process with a
-finite receptive field -- `seq2cause.diagnostics.compute_cmi_matrix_sparse`
-recovers the SAME causal graph as the unbounded
-`compute_cmi_matrix(strategy="full")` for a fraction of the compute on long
-sequences, by sliding a short local window (length `O(memory)`) across the
-sequence instead of running the staircase once on the WHOLE sequence
-(`O(L)` rows each of length `O(L)`):
+If you know, or are willing to assume, an upper bound on the true causal lag (for example a `NonlinearSCM(memory=m)` generator), `compute_cmi_matrix_sparse` recovers the same causal graph as the unbounded computation for a fraction of the compute on long sequences. It slides a short local window across the sequence instead of processing it all at once.
 
 ```python
 from seq2cause.diagnostics import compute_cmi_matrix_sparse
 
 cmi_matrix = compute_cmi_matrix_sparse(
     adapter, sequence, context_len=5, memory=3, n_particles=32,
-)  # context_len must be > memory
+)  # context_len must be greater than memory
 ```
 
-This is exact, not an approximation, whenever `memory` truly bounds the
-lag: a memory-`m` generator's conditional at position `t` never depends on
-anything before `t - m`, and a causal transformer's logits at `t` never
-depend on anything after `t` either, so cells beyond `lag > memory` are
-provably 0 and never need to be computed. `scripts/evaluate_sparse_vs_full.py`
-empirically confirms this on a decayed, memory-bounded `NonlinearSCM`
-(pooled F1 typically within ~0.01-0.02 of the unbounded computation, with a
-2-5x wall-clock speedup that grows with sequence length):
+This is exact, not an approximation, whenever `memory` truly bounds the lag. `scripts/evaluate_sparse_vs_full.py` confirms this empirically: pooled F1 is typically within 0.01 to 0.02 of the unbounded computation, with a 2x to 5x speedup that grows with sequence length.
 
 ```bash
 python scripts/evaluate_sparse_vs_full.py --seq-len 400 --memory 3 --context 4
 ```
 
-## �🔗 Citation
+## Citation
 If you use seq2cause in your research, please cite our works:
 
 ```bibtex
@@ -314,16 +204,15 @@ url={https://openreview.net/forum?id=1HZfpuDVeW}
 }
 ```
 
-## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## License
+This project is licensed under the MIT License, see the LICENSE file for details.
 
-## 🔧 Building
-Ruff is used to add only clean code. A pre-commit will be automatically run.
+## Building
+Ruff keeps the code clean; pre-commit runs it automatically before every commit.
 
-```
+```bash
 pre-commit run --all-files
 git add .
-git commit -m "corrected import jaxtyping"
+git commit -m "your message"
 git push origin main
-git push origin v0.1.4
 ```
