@@ -3,6 +3,8 @@ import torch
 
 from seq2cause.diagnostics import (
     compare_intervention_strategies,
+    compute_cmi_matrix,
+    compute_cmi_matrix_sparse,
     estimate_oracle_score,
     ground_truth_adjacency,
     recall_by_lag,
@@ -231,3 +233,119 @@ def test_compare_intervention_strategies_without_unigram_freqs_skips_that_strate
     )
     assert "in_distribution_noise" not in results
     assert "full" in results
+
+
+# ---------------------------------------------------------------------------
+# compute_cmi_matrix_sparse: bounded-memory ("sparse") construction.
+# ---------------------------------------------------------------------------
+
+
+def test_compute_cmi_matrix_sparse_matches_shape_of_full():
+    memory, context_len = 3, 4
+    scm, seq = create_scm(vocab_size=15, memory=memory, length=20, seed=0)
+    sequence = seq[0]
+
+    full_cmi = compute_cmi_matrix(
+        scm, sequence, context_len=context_len, n_particles=16, strategy="full"
+    )
+    sparse_cmi = compute_cmi_matrix_sparse(
+        scm, sequence, context_len=context_len, memory=memory, n_particles=16
+    )
+    assert sparse_cmi.shape == full_cmi.shape
+
+
+def test_compute_cmi_matrix_sparse_never_writes_beyond_the_memory_bound():
+    memory, context_len = 2, 5
+    scm, seq = create_scm(vocab_size=12, memory=memory, length=18, seed=1)
+    sequence = seq[0]
+
+    sparse_cmi = compute_cmi_matrix_sparse(
+        scm, sequence, context_len=context_len, memory=memory, n_particles=16
+    )
+    lc = sparse_cmi.shape[-1]
+    for j in range(lc):
+        for q in range(lc):
+            lag = q - j
+            if lag < 1 or lag > memory:
+                assert sparse_cmi[j, q] == 0.0
+
+
+def test_compute_cmi_matrix_sparse_requires_context_greater_than_memory():
+    scm, seq = create_scm(vocab_size=10, memory=3, length=10, seed=0)
+    with pytest.raises(ValueError):
+        compute_cmi_matrix_sparse(scm, seq[0], context_len=3, memory=3, n_particles=8)
+    with pytest.raises(ValueError):
+        compute_cmi_matrix_sparse(scm, seq[0], context_len=2, memory=3, n_particles=8)
+
+
+def test_compute_cmi_matrix_sparse_matches_full_within_the_bounded_lag_region():
+    """Core correctness requirement: on a memory-bounded, decayed DGP, the
+    sparse (bounded-memory) construction and the unbounded "full"
+    construction should recover essentially the SAME per-cell CMI values
+    within `lag <= memory` (small differences are only due to independently
+    drawn do-intervention particles, not a systematic discrepancy -- see the
+    correlation check below, which is robust to that noise)."""
+    torch.manual_seed(0)
+    memory, context_len = 3, 4
+    scm, seq = create_scm(
+        vocab_size=15, memory=memory, length=30, seed=0, sparsity=0.6, decay_rate=0.4
+    )
+    sequence = seq[0]
+
+    full_cmi = compute_cmi_matrix(
+        scm, sequence, context_len=context_len, n_particles=128, strategy="full"
+    )
+    sparse_cmi = compute_cmi_matrix_sparse(
+        scm, sequence, context_len=context_len, memory=memory, n_particles=128
+    )
+
+    lc = full_cmi.shape[-1]
+    lag = torch.tensor([[q - j for q in range(lc)] for j in range(lc)])
+    mask = (lag >= 1) & (lag <= memory)
+
+    f, s = full_cmi[mask], sparse_cmi[mask]
+    assert torch.corrcoef(torch.stack([f, s]))[0, 1] > 0.9
+    assert (f - s).abs().mean() < 0.02
+
+
+def test_compute_cmi_matrix_sparse_f1_matches_full_f1():
+    """The user-facing requirement: F1 (via a validation-selected threshold)
+    computed from the sparse CMI matrix should match F1 from the full CMI
+    matrix, pooled across several sequences from the same memory-bounded,
+    decayed DGP."""
+    from seq2cause.threshold import select_threshold_by_validation
+
+    torch.manual_seed(0)
+    memory, context_len = 3, 4
+    scm, sequences = create_scm(
+        vocab_size=15, memory=memory, length=30, seed=0, sparsity=0.6, decay_rate=0.4,
+        batch_size=6,
+    )
+
+    def _pooled(strategy_fn):
+        scores, labels = [], []
+        for i in range(sequences.shape[0]):
+            sequence = sequences[i]
+            cmi = strategy_fn(sequence)
+            adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=12)
+            adj_suffix = adjacency[context_len:, context_len:]
+            scores.append(cmi.flatten())
+            labels.append(adj_suffix.flatten())
+        return torch.cat(scores), torch.cat(labels)
+
+    full_scores, full_labels = _pooled(
+        lambda sequence: compute_cmi_matrix(
+            scm, sequence, context_len=context_len, n_particles=64, strategy="full"
+        )
+    )
+    sparse_scores, sparse_labels = _pooled(
+        lambda sequence: compute_cmi_matrix_sparse(
+            scm, sequence, context_len=context_len, memory=memory, n_particles=64
+        )
+    )
+
+    full_result = select_threshold_by_validation(full_scores, full_labels, emit_warnings=False)
+    sparse_result = select_threshold_by_validation(
+        sparse_scores, sparse_labels, emit_warnings=False
+    )
+    assert abs(full_result.f1 - sparse_result.f1) < 0.15

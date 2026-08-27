@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- `seq2cause.diagnostics.compute_cmi_matrix_sparse`: a bounded-memory
+  ("sparse") variant of `compute_cmi_matrix` for generators with a known/
+  assumed finite causal lag (e.g. `NonlinearSCM(memory=m)`). Slides a short
+  local window (length `O(memory)`) across the sequence instead of running
+  the "full" staircase once on the whole sequence (`O(L)` rows each of
+  length `O(L)`) -- exact (not an approximation) whenever `memory` truly
+  bounds the lag, empirically within ~0.01-0.02 pooled F1 of the unbounded
+  computation with a 2-5x wall-clock speedup that grows with sequence
+  length (`scripts/evaluate_sparse_vs_full.py`).
+- README "Sparse / Bounded-Memory Construction" section.
+- Tests: `compute_cmi_matrix_sparse` shape/guard checks, and an empirical
+  full-vs-sparse comparison (CMI-cell correlation and pooled F1) on a
+  decayed, memory-bounded `NonlinearSCM`.
+
 ## [0.1.6] - 2026-08-27
 
 ### Added

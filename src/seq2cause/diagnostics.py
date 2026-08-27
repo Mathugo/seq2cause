@@ -38,6 +38,7 @@ __all__ = [
     "StrategyResult",
     "compare_intervention_strategies",
     "compute_cmi_matrix",
+    "compute_cmi_matrix_sparse",
     "estimate_oracle_score",
 ]
 
@@ -366,6 +367,107 @@ def compute_cmi_matrix(
     baseline_rows = sequence.unsqueeze(0)  # [1, L], fully real, no intervention
     p_baseline = _predicted_true_token_probs(model, baseline_rows, rest.squeeze(0), context_len)
     return _cmi_matrix_from_atomic(p_atomic.mean(dim=0), p_baseline.squeeze(0))
+
+
+@torch.no_grad()
+def compute_cmi_matrix_sparse(
+    model,
+    sequence: Tensor,
+    context_len: int,
+    memory: int,
+    n_particles: int = 32,
+) -> Tensor:
+    """Bounded-memory ("sparse") variant of `compute_cmi_matrix`.
+
+    Assumes the true causal structure has no edges beyond lag `memory`
+    (matching e.g. a `NonlinearSCM(memory=memory)` generator, or any
+    autoregressive process with a known/assumed finite receptive field).
+    Instead of running the "full" staircase once on the WHOLE sequence
+    (`compute_cmi_matrix(strategy="full")`: O(L) rows, each of length O(L)),
+    this slides a LOCAL window across the sequence and runs the SAME "full"
+    staircase construction independently on each short local slice -- O(L)
+    total rows, but each of length O(memory) instead of O(L). Since a
+    transformer's causal attention means logits at position `t` never
+    depend on anything after `t` anyway, and a memory-bounded generator's
+    conditional at `t` never depends on anything before `t - memory`, this
+    is exact (not an approximation): whenever `memory` truly bounds the
+    generator's memory, this recovers the SAME causal graph as the
+    unbounded "full" computation (see `tests/test_scm_and_diagnostics.py`
+    for an empirical full-vs-sparse comparison on a decayed, memory-bounded
+    `NonlinearSCM`), for a fraction of the compute on long sequences.
+
+    Construction, per non-overlapping chunk of `memory` new effect
+    positions `[chunk_start, chunk_end)` (Lc-relative):
+      - local, testable suffix = `[chunk_start - memory, chunk_end)`
+        (Lc-relative; the `memory` positions immediately before this chunk
+        are included so cross-chunk-boundary causes can still be tested,
+        not just intra-chunk ones).
+      - local, FIXED (never-intervened) context = the `memory` real tokens
+        immediately before that local suffix (or fewer, near the start of
+        `sequence` -- see `context_len` requirement below).
+      - `compute_cmi_matrix(..., strategy="full")` is run on this short
+        local slice; only the cells attributing an effect that's actually
+        NEW to this chunk (and whose cause isn't inside the original,
+        always-fixed `context_len` prefix) are written into the full
+        `[Lc, Lc]` result -- every valid (lag <= memory) cell is written by
+        exactly one chunk, so there is no double-counting.
+
+    Args:
+        model: same interface as `compute_cmi_matrix`.
+        sequence: `[L]` (context + suffix).
+        context_len: length of the always-real fixed prefix/context. Must
+            be `> memory` (strictly) so every local computation has a
+            non-empty fixed context of its own.
+        memory: assumed maximum true causal lag; only cells with
+            `1 <= lag <= memory` are ever computed -- everything else stays
+            0 (never tested, not "found to be zero").
+        n_particles: number of do-intervention noise particles per chunk.
+
+    Returns:
+        `[L - context_len, L - context_len]` CMI matrix, same convention as
+        `compute_cmi_matrix(strategy="full")`.
+    """
+    if context_len <= memory:
+        raise ValueError(
+            f"context_len ({context_len}) must be > memory ({memory}) -- every local "
+            "chunk needs its own non-empty fixed context."
+        )
+    seq_len = sequence.shape[-1]
+    lc = seq_len - context_len
+    full_cmi = torch.zeros((lc, lc), device=sequence.device)
+
+    chunk_start = 0
+    while chunk_start < lc:
+        chunk_end = min(chunk_start + memory, lc)
+
+        local_suffix_start_lc = chunk_start - memory  # may be negative
+        local_suffix_start_abs = context_len + local_suffix_start_lc
+        local_context_start_abs = max(0, local_suffix_start_abs - memory)
+        local_context_len = local_suffix_start_abs - local_context_start_abs
+        local_suffix_end_abs = context_len + chunk_end
+
+        local_sequence = sequence[local_context_start_abs:local_suffix_end_abs]
+        local_cmi = compute_cmi_matrix(
+            model, local_sequence, context_len=local_context_len,
+            n_particles=n_particles, strategy="full",
+        )
+        local_suffix_len = local_suffix_end_abs - local_suffix_start_abs
+
+        for local_j in range(local_suffix_len):
+            global_j_lc = local_suffix_start_lc + local_j
+            if global_j_lc < 0:
+                continue  # cause falls inside the original fixed context -- never tested
+            for local_q in range(local_j + 1, local_suffix_len):
+                if local_q - local_j > memory:
+                    continue
+                global_q_lc = local_suffix_start_lc + local_q
+                if not (chunk_start <= global_q_lc < chunk_end):
+                    continue  # this effect belongs to a different chunk (already written)
+                full_cmi[global_j_lc, global_q_lc] = local_cmi[local_j, local_q]
+
+        chunk_start += memory
+
+    return full_cmi
 
 
 def _cmi_matrix_from_windowed(
