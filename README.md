@@ -9,7 +9,7 @@ Turn any sequence of discrete events into a causal graph using autoregressive mo
 
 **seq2cause** is a Python library for causal discovery on discrete event sequences. It treats any autoregressive model as a density estimator and runs parallelized conditional-independence tests on GPU, so you can recover what caused what directly from a sequence of logs, codes, or symbols.
 
-![seq2cause running do-intervention CI-tests (atomic strategy) over several event sequences, with a live progress bar and VRAM/RAM estimate, then printing the recovered results](assets/demo.gif)
+![the seq2cause CLI running do-intervention CI-tests (atomic strategy) over a tokenized event-sequence dataset, with a live progress bar and VRAM/RAM estimate, then printing the recovered results](assets/demo.gif)
 
 ## 🚀 Key Features
 
@@ -51,6 +51,16 @@ cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32
 # 3. Turn CMI scores into a binary causal graph, no labels needed.
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 ```
+
+### Command-line interface
+
+The same three steps are available as a `seq2cause` command, so you can run causal discovery over your own tokenized dataset without writing any Python:
+
+```bash
+seq2cause --dataset events.txt --vocab-size 400 --model gpt2
+```
+
+`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; omit it to fall back to a small randomly initialized model for quick experimentation (`--vocab-size` is then required). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
 
 ## 🧪 Evaluation (against a known generator)
 

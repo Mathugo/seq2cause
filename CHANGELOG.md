@@ -5,12 +5,19 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Added
-- A demo GIF at the top of the README (`assets/demo.gif`), showing
-  `compute_cmi_matrix`'s recommended `"atomic"` do-intervention strategy
-  running over several synthetic event sequences, with a `tqdm` progress
-  bar and VRAM/RAM estimate running live, then the recovered CMI results.
+- A `seq2cause` command-line interface (`seq2cause.cli`, registered as a
+  console script): recovers a causal graph from a tokenized event-sequence
+  dataset (`--dataset`, accepting a plain text file, `.pt`, or `.npy`)
+  using `compute_cmi_matrix`'s `"atomic"` do-intervention strategy and
+  `AdaptiveThreshold`, wrapping any HuggingFace causal LM (`--model`) or a
+  small randomly-initialized one for quick experimentation. See README
+  "Command-line interface".
+- A demo GIF at the top of the README (`assets/demo.gif`), showing the
+  `seq2cause` CLI running over a tokenized example dataset
+  (`examples/event_sequences.txt`), with a `tqdm` progress bar and
+  VRAM/RAM estimate running live, then the recovered CMI results.
   Generated with [vhs](https://github.com/charmbracelet/vhs) from
-  `demo.tape`, driving `scripts/demo_tqdm.py`.
+  `demo.tape`.
 - `seq2cause.utils.check_memory_budget` and `get_available_memory_bytes`:
   a pre-flight check that compares an estimated tensor size against the
   memory currently available on a device, and raises a clear `MemoryError`
