@@ -9,7 +9,7 @@ Turn any sequence of discrete events into a causal graph using autoregressive mo
 
 **seq2cause** is a Python library for causal discovery on discrete event sequences. It treats any autoregressive model as a density estimator and runs parallelized conditional-independence tests on GPU, so you can recover what caused what directly from a sequence of logs, codes, or symbols.
 
-## Key Features
+## 🚀 Key Features
 
 - **Bring your own model**: plug in any HuggingFace/PyTorch model (GPT-2, LLaMA, RNN) trained on your own event sequences.
 - **Scales to long sequences**: memory grows linearly with vocabulary and sequence length, well suited to sparse, high-dimensional streams like vehicle diagnostics, server logs, or user journeys.
@@ -17,13 +17,13 @@ Turn any sequence of discrete events into a causal graph using autoregressive mo
 - **Delayed effects**: causal lags are identifiable up to the sequence length.
 - **Event-to-event and event-to-outcome graphs** from a single sequence. Aggregating these into a global causal graph across many sequences is on the roadmap.
 
-## Installation
+## 📦 Installation
 
 ```bash
 pip install seq2cause
 ```
 
-## Quick Start
+## ⚡ Quick Start
 
 Recover a causal graph from your own sequence of events, using your own model. No known generator and no labeled ground truth needed. `HFModelAdapter` wraps any HuggingFace causal LM (a fine-tuned checkpoint, `LlamaForCausalLM.from_pretrained(...)`, etc.); here we use a small, randomly initialized model just so the snippet runs standalone. This exact example is part of the test suite (`tests/test_readme_example.py`).
 
@@ -50,7 +50,7 @@ cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 ```
 
-## Evaluation (against a known generator)
+## 🧪 Evaluation (against a known generator)
 
 To validate the method itself, `seq2cause.scm.NonlinearSCM` is a synthetic generator with a known ground-truth causal graph. This lets you measure recall and F1 directly, and pick a threshold by maximizing F1 on a held-out validation split.
 
@@ -82,7 +82,7 @@ causal_graph = cmi_matrix >= result.tau
 print(result.summary())  # e.g. F1=0.800, precision=0.800, recall=0.800
 ```
 
-## How It Works
+## 📚 How It Works
 
 seq2cause treats an autoregressive model's own next-token predictions as a density estimator. For each candidate (cause, effect) pair, it compares the model's predicted probability of the effect with and without the cause intervened on (`seq2cause.sampling.do_interventions`), and reports the Conditional Mutual Information between them (`seq2cause.diagnostics`).
 
@@ -93,7 +93,7 @@ seq2cause treats an autoregressive model's own next-token predictions as a densi
 
 Also on the roadmap: causal discovery for time series, using normalizing flows or AR models.
 
-## GPU and Multi-GPU
+## 🖥️ GPU / Multi-GPU Acceleration
 
 `seq2cause.core.SampleLevelCausalDiscovery` wraps your model and dataloader with [🤗 Accelerate](https://github.com/huggingface/accelerate), so the same code runs unchanged on CPU, one GPU, or many (`accelerate launch --multi_gpu`). Tested on CPU, Apple Silicon (MPS), and NVIDIA CUDA.
 
@@ -101,7 +101,7 @@ A `tqdm` progress bar shows batch/context progress along with a rough estimate o
 
 To test multi-GPU correctness without real GPU hardware, `accelerate launch --num_processes=2 --cpu your_script.py` runs two real processes over the `gloo` backend, exercising the same sharding and `gather()` code paths a real multi-GPU launch uses. `tests/test_multi_gpu.py` does exactly this: it checks that each process gets a disjoint shard of the data, that `gather()` reassembles it correctly, and that every process produces a valid adjacency matrix.
 
-## Threshold Selection
+## 🎯 Threshold Selection
 
 **No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default. It fits Otsu once, globally, anchored at lag 1, then decays it exponentially toward an Otsu-fit floor as lag increases. Fitting Otsu independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points.
 
@@ -167,7 +167,7 @@ If you use seq2cause in your research, please cite our works:
   publisher = {Zenodo},
   doi = {10.5281/zenodo.19068730},
   url = {https://doi.org/10.5281/zenodo.19068730},
-  version = {0.1.6}
+  version = {0.1.7}
 }
 ```
 

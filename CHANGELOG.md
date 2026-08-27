@@ -2,22 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [0.1.7] - 2026-08-27
 
 ### Added
 - `seq2cause.diagnostics.compute_cmi_matrix_sparse`: a bounded-memory
-  ("sparse") variant of `compute_cmi_matrix` for generators with a known/
-  assumed finite causal lag (e.g. `NonlinearSCM(memory=m)`). Slides a short
-  local window (length `O(memory)`) across the sequence instead of running
-  the "full" staircase once on the whole sequence (`O(L)` rows each of
-  length `O(L)`) -- exact (not an approximation) whenever `memory` truly
-  bounds the lag, empirically within ~0.01-0.02 pooled F1 of the unbounded
-  computation with a 2-5x wall-clock speedup that grows with sequence
-  length (`scripts/evaluate_sparse_vs_full.py`).
+  ("sparse") variant of `compute_cmi_matrix` for generators with a known or
+  assumed finite causal lag, such as `NonlinearSCM(memory=m)`. It slides a
+  short local window across the sequence instead of running the "full"
+  staircase once on the whole sequence, so each step is much cheaper. This
+  is exact, not an approximation, whenever `memory` truly bounds the lag.
+  Empirically it lands within about 0.01 to 0.02 pooled F1 of the unbounded
+  computation, with a 2x to 5x speedup that grows with sequence length
+  (`scripts/evaluate_sparse_vs_full.py`).
 - README "Sparse / Bounded-Memory Construction" section.
-- Tests: `compute_cmi_matrix_sparse` shape/guard checks, and an empirical
-  full-vs-sparse comparison (CMI-cell correlation and pooled F1) on a
-  decayed, memory-bounded `NonlinearSCM`.
+- Tests for `compute_cmi_matrix_sparse`: shape and guard checks, plus an
+  empirical full-vs-sparse comparison (CMI-cell correlation and pooled F1)
+  on a decayed, memory-bounded `NonlinearSCM`.
+
+### Changed
+- README rewritten for readability: shorter, plainer prose, no more
+  em-dashes or emoji section headings. Cut from 329 to 218 lines.
 
 ## [0.1.6] - 2026-08-27
 
@@ -100,4 +104,5 @@ All notable changes to this project are documented in this file.
   (plots, no raw data) remains tracked; `.gitignore` updated to keep future
   raw results/reports local-only.
 
+[0.1.7]: https://github.com/Mathugo/seq2cause/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Mathugo/seq2cause/compare/v0.1.5...v0.1.6
