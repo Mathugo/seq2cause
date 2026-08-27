@@ -57,10 +57,8 @@ from seq2cause.diagnostics import (  # noqa: E402
 )
 from seq2cause.scm import NonlinearSCM  # noqa: E402
 from seq2cause.threshold import (  # noqa: E402
+    AdaptiveThreshold,
     fit_exponential_lag_threshold,
-    fit_power_law_lag_threshold,
-    gmm_threshold,
-    mad_threshold,
     otsu_threshold,
     percentile_threshold,
     pooled_f1_for_tau_by_lag,
@@ -72,20 +70,26 @@ STRATEGY_ORDER = ("full", "atomic", "windowed", "independent_mediator", "in_dist
 
 # Every per-lag thresholding scheme compared in this script. "shared" and
 # "tailored"/"exponential" are supervised (need edge/non-edge labels to
-# select tau); "mad"/"percentile"/"otsu"/"gmm" are unsupervised
+# select tau); "percentile"/"otsu"/"otsu_global"/"adaptive" are unsupervised
 # anomaly-detection-style cutoffs computed from the score distribution alone
 # (labels are only used afterwards, to *evaluate* how good the unsupervised
 # cutoff turned out to be) -- see threshold.py module docstring on each.
+# ("mad"/"gmm"/"power_law" were tried and dropped: consistently the worst
+# performers -- mad/gmm F1~0.10-0.13 vs. otsu_global/adaptive's ~0.5-0.7 --
+# or redundant with "exponential", which fits the same curve shape but
+# supervised; see reports/particle_sweep/ for the full comparison.)
 SCHEME_ORDER = (
-    "shared", "tailored", "exponential", "power_law", "mad", "percentile", "otsu", "otsu_global",
-    "gmm", "static",
+    "shared", "tailored", "exponential", "percentile", "otsu", "otsu_global", "adaptive", "static",
 )
 UNSUPERVISED_SCHEMES = {
-    "mad": mad_threshold,
     "percentile": percentile_threshold,
     "otsu": otsu_threshold,
-    "gmm": lambda scores: gmm_threshold(scores).tau,
 }
+
+# AdaptiveThreshold's default recipe: anchor tau at lag=1 via Otsu, then
+# decay that anchor exponentially toward an (also unsupervised, Otsu-fit)
+# floor as lag increases -- see threshold.py's AdaptiveThreshold docstring.
+ADAPTIVE_THRESHOLD = AdaptiveThreshold()
 
 # The paper's own printed Table 2 constant (see threshold.py module docstring):
 # a single FIXED tau, never re-fit from data at all -- the simplest possible
@@ -99,7 +103,7 @@ def _unsupervised_tau_by_lag(
     fn, lag_scores_t: torch.Tensor, lag_groups_t: torch.Tensor, max_lag: int, min_group_size: int = 8
 ) -> dict[int, float]:
     """Applies an unsupervised, label-free threshold function `fn` (e.g.
-    `mad_threshold`) separately to each lag's own pooled score population,
+    `otsu_threshold`) separately to each lag's own pooled score population,
     falling back to the whole population's threshold when a lag has too few
     samples to fit reliably -- mirroring `select_thresholds_by_group`'s
     fallback semantics, but without ever touching labels."""
@@ -294,8 +298,6 @@ def evaluate_once(
     tau_by_lag_schemes: dict[str, dict[str, dict[int, float]]] = {s: {} for s in SCHEME_ORDER}
     pooled_f1_schemes: dict[str, dict[str, float]] = {s: {} for s in SCHEME_ORDER}
     exponential_fit: dict[str, object] = {}
-    power_law_fit: dict[str, object] = {}
-    gmm_fit: dict[str, object] = {}
 
     for name in STRATEGY_ORDER:
         if not pooled_scores[name]:
@@ -324,10 +326,6 @@ def evaluate_once(
             lag_scores_t, lag_labels_t, lag_groups_t, max_lag=args.memory,
         )
         tau_by_lag_schemes["exponential"][name] = exponential_fit[name].tau_by_lag
-        power_law_fit[name] = fit_power_law_lag_threshold(
-            lag_scores_t, lag_labels_t, lag_groups_t, max_lag=args.memory,
-        )
-        tau_by_lag_schemes["power_law"][name] = power_law_fit[name].tau_by_lag
 
         # Unsupervised, anomaly-detection-style schemes: select tau from the
         # score distribution alone (labels only used below, to evaluate it).
@@ -335,7 +333,6 @@ def evaluate_once(
             tau_by_lag_schemes[scheme_name][name] = _unsupervised_tau_by_lag(
                 fn, lag_scores_t, lag_groups_t, max_lag=args.memory,
             )
-        gmm_fit[name] = gmm_threshold(lag_scores_t)
 
         # "otsu_global": Otsu fit ONCE on the whole pooled (all-lags) score
         # population, then that SAME single tau is reused at every lag --
@@ -353,6 +350,12 @@ def evaluate_once(
         tau_by_lag_schemes["static"][name] = {
             lag: STATIC_TAU for lag in range(1, args.memory + 1)
         }
+
+        # "adaptive": AdaptiveThreshold's default recipe (Otsu at lag=1,
+        # exponential decay to an Otsu-fit floor) -- see threshold.py.
+        tau_by_lag_schemes["adaptive"][name] = ADAPTIVE_THRESHOLD.tau_by_lag(
+            lag_scores_t, lag_groups_t, max_lag=args.memory,
+        )
 
         # Put every scheme's thresholds on the exact same footing: pooled F1
         # across ALL lags (lag>0 only), same population for every scheme.
@@ -384,8 +387,6 @@ def evaluate_once(
         "pooled_f1_schemes": pooled_f1_schemes,
         "recall_by_strategy_lag_schemes": recall_by_strategy_lag_schemes,
         "exponential_fit": exponential_fit,
-        "power_law_fit": power_law_fit,
-        "gmm_fit": gmm_fit,
         "snr_medians": snr_medians,
     }
 
@@ -487,13 +488,12 @@ def main(argv=None) -> None:
         "shared": "SINGLE shared tau per strategy (one validation-swept tau, same at every lag)",
         "tailored": "TAU TAILORED TO EACH LAG (independent per-lag validation sweep)",
         "exponential": "3-parameter EXPONENTIAL-DECAY-TO-A-FLOOR tau(lag) curve (joint fit)",
-        "power_law": "3-parameter SUB-LINEAR POWER-LAW tau(lag) = floor + (tau1-floor)*lag^-b (joint fit)",
-        "mad": "unsupervised MAD (median + k*MAD) cutoff, per lag, no labels used to select tau",
         "percentile": "unsupervised 95th-percentile cutoff, per lag, no labels used to select tau",
         "otsu": "unsupervised Otsu (between-class-variance) cutoff, PER LAG, no labels used",
         "otsu_global": "unsupervised Otsu, ONE tau fit on the whole pooled (all-lags) population, "
         "no per-lag fitting at all, no labels used",
-        "gmm": "unsupervised 2-component Gaussian-mixture crossover, per lag, no labels used",
+        "adaptive": "AdaptiveThreshold default: Otsu anchored at lag=1, exponential decay to an "
+        "Otsu-fit floor, no labels used, no per-lag refitting",
         "static": f"FIXED constant tau={STATIC_TAU:g} (the paper's own Table 2 value), never fit "
         "from this run's data, same at every lag -- a lower-bound reference point",
     }
@@ -515,17 +515,6 @@ def main(argv=None) -> None:
                     rate = statistics.mean(f.decay_rate for f in fits)
                     floor = statistics.mean(f.noise_floor for f in fits)
                     curve_str = f"  tau(lag)={floor:.4g}+({t1:.4g}-{floor:.4g})*exp(-{rate:.3g}*(lag-1))"
-            elif scheme_name == "power_law":
-                fits = [rep["power_law_fit"][name] for rep in repeats if name in rep["power_law_fit"]]
-                if fits:
-                    t1 = statistics.mean(f.tau_at_lag1 for f in fits)
-                    exponent = statistics.mean(f.exponent for f in fits)
-                    floor = statistics.mean(f.noise_floor for f in fits)
-                    curve_str = f"  tau(lag)={floor:.4g}+({t1:.4g}-{floor:.4g})*lag^-{exponent:.3g}"
-            elif scheme_name == "gmm":
-                fits = [rep["gmm_fit"][name] for rep in repeats if name in rep["gmm_fit"]]
-                if fits:
-                    curve_str = f"  pooled-fit {fits[0].summary()}"
             print(f"  {name}:{f1_str}{curve_str}")
             for lag in range(1, args.memory + 1):
                 taus_this_lag = [
@@ -610,13 +599,6 @@ def _dump_results_json(args, oracle, n_true_edges, repeats, n_params) -> None:
                 "tau_at_lag1": _mean_std([f.tau_at_lag1 for f in exp_fits]),
                 "decay_rate": _mean_std([f.decay_rate for f in exp_fits]),
                 "noise_floor": _mean_std([f.noise_floor for f in exp_fits]),
-            }
-        pow_fits = [rep["power_law_fit"][name] for rep in repeats if name in rep["power_law_fit"]]
-        if pow_fits:
-            entry["schemes"]["power_law"]["fit_params"] = {
-                "tau_at_lag1": _mean_std([f.tau_at_lag1 for f in pow_fits]),
-                "exponent": _mean_std([f.exponent for f in pow_fits]),
-                "noise_floor": _mean_std([f.noise_floor for f in pow_fits]),
             }
         payload["strategies"][name] = entry
 

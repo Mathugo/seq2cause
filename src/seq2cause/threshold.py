@@ -25,7 +25,7 @@ from __future__ import annotations
 import math
 import warnings
 from dataclasses import dataclass, field
-from typing import Iterable, Mapping, Sequence
+from typing import Callable, Iterable, Mapping, Sequence
 
 import torch
 from torch import Tensor
@@ -45,6 +45,7 @@ __all__ = [
     "otsu_threshold",
     "GMM1DFit",
     "gmm_threshold",
+    "AdaptiveThreshold",
     "PowerLawLagThresholdFit",
     "power_law_lag_threshold",
     "fit_power_law_lag_threshold",
@@ -736,6 +737,128 @@ def gmm_threshold(
         tau = (mu0 + mu1) / 2.0
 
     return GMM1DFit(weights=(w0, w1), means=(mu0, mu1), stds=(sigma0, sigma1), tau=tau)
+
+
+# ---------------------------------------------------------------------------
+# AdaptiveThreshold: a single configurable, label-free tau(lag) construction.
+#
+# `mad_threshold`/`percentile_threshold`/`otsu_threshold`/`gmm_threshold`
+# above are all label-free *point* estimators (one scalar tau from one score
+# population). The natural way to use one across multiple lags is either
+# (a) refit it independently at EVERY lag ("per_lag=True" below), or (b) fit
+# it once, globally, and reuse that single value everywhere. (a) tends to
+# perform poorly in practice: deeper lags have far fewer (cause, effect)
+# pairs pooled across a batch of sequences, so an independent per-lag fit is
+# fit on a much noisier, smaller sample -- see
+# `scripts/train_and_test_lagged_effects.py`'s "otsu" (per-lag) vs.
+# "otsu_global" (single fit) comparison, where per-lag Otsu cost ~15-18 F1
+# points relative to a single global fit.
+#
+# `AdaptiveThreshold` generalizes (b) with a middle ground informed by the
+# same lag-decay shape `fit_exponential_lag_threshold`/
+# `fit_power_law_lag_threshold` already use for LABELED validation-swept
+# thresholds: anchor tau at lag=1 (usually the best-populated, highest
+# signal-to-noise lag) using `method`, then decay that anchor toward a floor
+# as lag increases, entirely without labels.
+# ---------------------------------------------------------------------------
+
+_UNSUPERVISED_METHOD_FNS: dict[str, Callable[[Tensor], float]] = {
+    "mad": mad_threshold,
+    "percentile": percentile_threshold,
+    "otsu": otsu_threshold,
+    "gmm": lambda scores: gmm_threshold(scores).tau,
+}
+
+
+@dataclass
+class AdaptiveThreshold:
+    """Configurable, label-free tau(lag) construction.
+
+    Args:
+        method: base unsupervised cutoff used to anchor tau -- one of
+            "otsu" (default), "mad", "percentile", "gmm".
+        per_lag: if True, independently refits `method` at EVERY lag
+            (noisy for deep lags with few pooled pairs -- see module note
+            above). If False (default), a single lag=1 anchor is used,
+            optionally decayed via `decay`/`decay_type`.
+        decay: if True (default), decays the lag=1 anchor toward `floor` as
+            lag increases, instead of reusing one tau at every lag. Ignored
+            if `per_lag=True`.
+        decay_type: "exponential" (default, `tau(lag) = floor + (tau1 -
+            floor) * exp(-decay_rate * (lag - 1))`), "power_law" (`tau(lag)
+            = floor + (tau1 - floor) * lag ** -exponent`), or "none" (reuse
+            tau1 unchanged at every lag -- equivalent to `decay=False`).
+        decay_rate: shape parameter for `decay_type="exponential"`. Not fit
+            from data (no labels available here) -- a tunable knob; default
+            0.3 matches the lag-decay rate used throughout this project's
+            own synthetic DGPs (`NonlinearSCM(decay_rate=...)`).
+        exponent: shape parameter for `decay_type="power_law"`.
+        floor: absolute floor value the decay approaches. If None (default),
+            estimated unsupervised as `method` applied to the deepest
+            available lag's own score population (falls back to `10%` of
+            the lag=1 anchor if that lag has too few samples).
+        min_group_size: minimum pooled samples a lag needs before fitting
+            `method` on it directly; below this, falls back to the whole
+            population's fit (mirrors `select_thresholds_by_group`'s
+            fallback semantics).
+    """
+
+    method: str = "otsu"
+    per_lag: bool = False
+    decay: bool = True
+    decay_type: str = "exponential"
+    decay_rate: float = 0.3
+    exponent: float = 0.5
+    floor: float | None = None
+    min_group_size: int = 8
+
+    def __post_init__(self) -> None:
+        if self.method not in _UNSUPERVISED_METHOD_FNS:
+            raise ValueError(
+                f"method must be one of {sorted(_UNSUPERVISED_METHOD_FNS)}, got {self.method!r}"
+            )
+        if self.decay_type not in ("exponential", "power_law", "none"):
+            raise ValueError(
+                f"decay_type must be 'exponential', 'power_law', or 'none', got {self.decay_type!r}"
+            )
+
+    def tau_by_lag(
+        self, scores: Tensor | Sequence[float], lags: Tensor | Sequence[int], max_lag: int
+    ) -> dict[int, float]:
+        """Returns `{lag: tau}` for `lag` in `1..max_lag`, from pooled,
+        label-free `scores` and their matching per-pair `lags`."""
+        fn = _UNSUPERVISED_METHOD_FNS[self.method]
+        scores_t = torch.as_tensor(scores, dtype=torch.float32)
+        lags_t = torch.as_tensor(lags)
+        global_tau = fn(scores_t)
+
+        if self.per_lag:
+            tau_by_lag = {}
+            for lag in range(1, max_lag + 1):
+                group = scores_t[lags_t == lag]
+                tau_by_lag[lag] = (
+                    fn(group) if group.numel() >= self.min_group_size else global_tau
+                )
+            return tau_by_lag
+
+        lag1_group = scores_t[lags_t == 1]
+        tau1 = fn(lag1_group) if lag1_group.numel() >= self.min_group_size else global_tau
+
+        if not self.decay or self.decay_type == "none":
+            return {lag: tau1 for lag in range(1, max_lag + 1)}
+
+        floor = self.floor
+        if floor is None:
+            deep_group = scores_t[lags_t == max_lag]
+            floor = fn(deep_group) if deep_group.numel() >= self.min_group_size else 0.1 * tau1
+
+        tau_by_lag = {}
+        for lag in range(1, max_lag + 1):
+            if self.decay_type == "exponential":
+                tau_by_lag[lag] = floor + (tau1 - floor) * math.exp(-self.decay_rate * (lag - 1))
+            else:  # "power_law"
+                tau_by_lag[lag] = floor + (tau1 - floor) * (lag ** -self.exponent)
+        return tau_by_lag
 
 
 @dataclass

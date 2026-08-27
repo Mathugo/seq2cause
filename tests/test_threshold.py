@@ -1,9 +1,11 @@
+import math
 import warnings
 
 import pytest
 import torch
 
 from seq2cause.threshold import (
+    AdaptiveThreshold,
     ExponentialLagThresholdFit,
     GMM1DFit,
     JointLagVocabThresholdFit,
@@ -527,3 +529,108 @@ def test_fit_joint_lag_vocab_threshold_empty_raises():
         fit_joint_lag_vocab_threshold(
             torch.tensor([]), torch.tensor([]), torch.tensor([]), torch.tensor([])
         )
+
+
+# ---------------------------------------------------------------------------
+# AdaptiveThreshold: configurable, label-free tau(lag) construction.
+# ---------------------------------------------------------------------------
+
+
+def _multi_lag_scores():
+    """3 lags, each with its own bimodal (true/false) score scale that
+    shrinks with lag -- mirrors the decaying-CMI-with-lag DGPs used
+    throughout this project."""
+    torch.manual_seed(0)
+    lag1 = torch.cat([torch.rand(100) * 1e-3, 0.1 + torch.rand(30) * 0.05])
+    lag2 = torch.cat([torch.rand(100) * 1e-4, 0.02 + torch.rand(30) * 0.01])
+    lag3 = torch.cat([torch.rand(100) * 1e-5, 0.005 + torch.rand(30) * 0.002])
+    scores = torch.cat([lag1, lag2, lag3])
+    lags = torch.cat(
+        [torch.full((130,), lag, dtype=torch.long) for lag in (1, 2, 3)]
+    )
+    return scores, lags
+
+
+def test_adaptive_threshold_default_anchors_at_lag1_otsu_and_decays():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold().tau_by_lag(scores, lags, max_lag=3)
+
+    tau1 = otsu_threshold(scores[lags == 1])
+    floor = otsu_threshold(scores[lags == 3])
+    assert tau_by_lag[1] == pytest.approx(tau1)
+    for lag in range(1, 4):
+        expected = floor + (tau1 - floor) * math.exp(-0.3 * (lag - 1))
+        assert tau_by_lag[lag] == pytest.approx(expected)
+    values = [tau_by_lag[lag] for lag in range(1, 4)]
+    assert all(a > b for a, b in zip(values, values[1:]))
+
+
+def test_adaptive_threshold_per_lag_refits_independently():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold(per_lag=True).tau_by_lag(scores, lags, max_lag=3)
+    for lag in range(1, 4):
+        assert tau_by_lag[lag] == pytest.approx(otsu_threshold(scores[lags == lag]))
+
+
+def test_adaptive_threshold_no_decay_reuses_lag1_tau_everywhere():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold(decay=False).tau_by_lag(scores, lags, max_lag=3)
+    tau1 = otsu_threshold(scores[lags == 1])
+    assert all(v == pytest.approx(tau1) for v in tau_by_lag.values())
+
+
+def test_adaptive_threshold_decay_type_none_reuses_lag1_tau_everywhere():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold(decay_type="none").tau_by_lag(scores, lags, max_lag=3)
+    tau1 = otsu_threshold(scores[lags == 1])
+    assert all(v == pytest.approx(tau1) for v in tau_by_lag.values())
+
+
+def test_adaptive_threshold_power_law_decay_matches_formula():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold(decay_type="power_law", exponent=0.5).tau_by_lag(
+        scores, lags, max_lag=3
+    )
+    tau1 = otsu_threshold(scores[lags == 1])
+    floor = otsu_threshold(scores[lags == 3])
+    for lag in range(1, 4):
+        expected = floor + (tau1 - floor) * (lag ** -0.5)
+        assert tau_by_lag[lag] == pytest.approx(expected)
+
+
+def test_adaptive_threshold_explicit_floor_overrides_auto_estimate():
+    scores, lags = _multi_lag_scores()
+    tau_by_lag = AdaptiveThreshold(floor=1e-4).tau_by_lag(scores, lags, max_lag=3)
+    tau1 = otsu_threshold(scores[lags == 1])
+    for lag in range(1, 4):
+        expected = 1e-4 + (tau1 - 1e-4) * math.exp(-0.3 * (lag - 1))
+        assert tau_by_lag[lag] == pytest.approx(expected)
+
+
+def test_adaptive_threshold_falls_back_to_global_when_lag1_group_too_small():
+    torch.manual_seed(0)
+    lag1_scores = torch.tensor([0.1, 0.1001])  # below default min_group_size=8
+    lag2_scores = torch.cat([torch.rand(50) * 1e-3, 0.05 + torch.rand(20) * 0.02])
+    scores = torch.cat([lag1_scores, lag2_scores])
+    lags = torch.cat([torch.full((2,), 1, dtype=torch.long), torch.full((70,), 2, dtype=torch.long)])
+
+    tau_by_lag = AdaptiveThreshold(decay=False).tau_by_lag(scores, lags, max_lag=2)
+    assert tau_by_lag[1] == pytest.approx(otsu_threshold(scores))
+
+
+def test_adaptive_threshold_rejects_invalid_method():
+    with pytest.raises(ValueError):
+        AdaptiveThreshold(method="bogus")
+
+
+def test_adaptive_threshold_rejects_invalid_decay_type():
+    with pytest.raises(ValueError):
+        AdaptiveThreshold(decay_type="bogus")
+
+
+def test_adaptive_threshold_supports_other_base_methods():
+    scores, lags = _multi_lag_scores()
+    for method in ("mad", "percentile", "gmm"):
+        tau_by_lag = AdaptiveThreshold(method=method).tau_by_lag(scores, lags, max_lag=3)
+        assert set(tau_by_lag) == {1, 2, 3}
+        assert all(isinstance(v, float) for v in tau_by_lag.values())
