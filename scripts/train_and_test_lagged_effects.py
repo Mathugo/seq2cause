@@ -77,7 +77,8 @@ STRATEGY_ORDER = ("full", "atomic", "windowed", "independent_mediator", "in_dist
 # (labels are only used afterwards, to *evaluate* how good the unsupervised
 # cutoff turned out to be) -- see threshold.py module docstring on each.
 SCHEME_ORDER = (
-    "shared", "tailored", "exponential", "power_law", "mad", "percentile", "otsu", "gmm",
+    "shared", "tailored", "exponential", "power_law", "mad", "percentile", "otsu", "otsu_global",
+    "gmm", "static",
 )
 UNSUPERVISED_SCHEMES = {
     "mad": mad_threshold,
@@ -85,6 +86,13 @@ UNSUPERVISED_SCHEMES = {
     "otsu": otsu_threshold,
     "gmm": lambda scores: gmm_threshold(scores).tau,
 }
+
+# The paper's own printed Table 2 constant (see threshold.py module docstring):
+# a single FIXED tau, never re-fit from data at all -- the simplest possible
+# baseline, included here because Chadyuk et al. (2026) found it does not
+# transfer across generator/backbone setups; kept as an explicit reference
+# point for "how much does per-lag/per-run fitting actually buy you".
+STATIC_TAU = 3e-5
 
 
 def _unsupervised_tau_by_lag(
@@ -329,6 +337,23 @@ def evaluate_once(
             )
         gmm_fit[name] = gmm_threshold(lag_scores_t)
 
+        # "otsu_global": Otsu fit ONCE on the whole pooled (all-lags) score
+        # population, then that SAME single tau is reused at every lag --
+        # i.e. no per-lag fitting/override at all, unlike "otsu" above (which
+        # fits an independent Otsu cutoff per lag, falling back to this exact
+        # global value only when a lag's own sample is too small). Comparing
+        # the two isolates whether per-lag Otsu fitting is actually helping.
+        otsu_global_tau = otsu_threshold(lag_scores_t)
+        tau_by_lag_schemes["otsu_global"][name] = {
+            lag: otsu_global_tau for lag in range(1, args.memory + 1)
+        }
+
+        # "static": the paper's own fixed Table 2 constant, never fit from
+        # this run's data at all (see STATIC_TAU above).
+        tau_by_lag_schemes["static"][name] = {
+            lag: STATIC_TAU for lag in range(1, args.memory + 1)
+        }
+
         # Put every scheme's thresholds on the exact same footing: pooled F1
         # across ALL lags (lag>0 only), same population for every scheme.
         for scheme_name in SCHEME_ORDER:
@@ -465,8 +490,12 @@ def main(argv=None) -> None:
         "power_law": "3-parameter SUB-LINEAR POWER-LAW tau(lag) = floor + (tau1-floor)*lag^-b (joint fit)",
         "mad": "unsupervised MAD (median + k*MAD) cutoff, per lag, no labels used to select tau",
         "percentile": "unsupervised 95th-percentile cutoff, per lag, no labels used to select tau",
-        "otsu": "unsupervised Otsu (between-class-variance) cutoff, per lag, no labels used",
+        "otsu": "unsupervised Otsu (between-class-variance) cutoff, PER LAG, no labels used",
+        "otsu_global": "unsupervised Otsu, ONE tau fit on the whole pooled (all-lags) population, "
+        "no per-lag fitting at all, no labels used",
         "gmm": "unsupervised 2-component Gaussian-mixture crossover, per lag, no labels used",
+        "static": f"FIXED constant tau={STATIC_TAU:g} (the paper's own Table 2 value), never fit "
+        "from this run's data, same at every lag -- a lower-bound reference point",
     }
     for scheme_name in SCHEME_ORDER:
         print(f"\n=== Per-lag recall: {scheme_descriptions[scheme_name]} ===")
