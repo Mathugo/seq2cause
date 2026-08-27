@@ -1,6 +1,7 @@
 import torch
 from accelerate import Accelerator
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from seq2cause.causal_strength import (
     calc_granger_score,
@@ -14,7 +15,7 @@ from seq2cause.sampling import (
     multinomial_sample,
     uniform_sample,
 )
-from seq2cause.utils import next_token_collate
+from seq2cause.utils import estimate_tensor_bytes, format_bytes, next_token_collate
 
 
 class SampleLevelCausalDiscovery:
@@ -74,6 +75,21 @@ class SampleLevelCausalDiscovery:
                 )
             self.printed_max_bs = True
 
+    def estimate_memory_bytes(self, batch_size: int, seq_len: int) -> int:
+        """Rough VRAM/RAM estimate (see `utils.estimate_tensor_bytes`'s
+        caveats -- this is a lower bound, not an exact figure) for the
+        single biggest tensor materialized per batch: the post-intervention
+        logits, shape `[batch_size, n_particles, interv_dim, seq_len,
+        vocab_size]`. Returns 0 if `vocab_size` can't be determined (e.g.
+        the model has no HuggingFace-style `.config.vocab_size`).
+        """
+        model = getattr(self.tfx, "module", self.tfx)  # unwrap DDP, if wrapped
+        vocab_size = getattr(getattr(model, "config", None), "vocab_size", None)
+        if vocab_size is None:
+            return 0
+        interv_dim = seq_len - self.context
+        return estimate_tensor_bytes(batch_size, self.N, interv_dim, seq_len, vocab_size)
+
     def prepare(self):
         """
         Load the huggingface dataset, create a local dataloader and prepare the models for inference.
@@ -110,8 +126,17 @@ class SampleLevelCausalDiscovery:
             A tuple containing the original batch and the computed adjacency matrix representing causal relationships.
         """
 
-        for _, batch in enumerate(self._dl_test):
+        pbar = tqdm(self._dl_test, desc="CI-tests (batch x context)", unit="batch")
+        for _, batch in enumerate(pbar):
             self.print_real_bs(batch["input_ids"].shape)
+            bs_i, seq_len_i = batch["input_ids"].shape
+            est_bytes = self.estimate_memory_bytes(bs_i, seq_len_i)
+            pbar.set_postfix(
+                {
+                    "batch x context": f"{bs_i}x{self.context}",
+                    "est. VRAM/RAM": format_bytes(est_bytes) if est_bytes else "n/a",
+                }
+            )
 
             # Causal Strength measures TODO: could be refactored to be more modular and cleaner
             cs = self.params.get("causal_strength", None)

@@ -2,6 +2,9 @@ import torch
 from captum.attr import InputXGradient, ShapleyValueSampling
 from jaxtyping import Float
 from torch import Tensor
+from tqdm.auto import tqdm
+
+from seq2cause.utils import estimate_tensor_bytes, format_bytes
 
 
 def calc_lag_info_gain(
@@ -119,17 +122,30 @@ def calc_neural_shapley(
 
     final_adj = torch.zeros((bs, L, L), device=device)
 
-    print(f"Computing Shapley for suffix (L={L})...")
+    # Rough VRAM/RAM estimate: `perturbations_per_eval` forward passes of
+    # shape [perturbations_per_eval, L, hidden_size] per suffix position --
+    # see utils.estimate_tensor_bytes's caveats (lower bound, not exact).
+    perturbations_per_eval = bs * 4
+    hidden_size = getattr(tfx.config, "hidden_size", None)
+    est_bytes = (
+        estimate_tensor_bytes(perturbations_per_eval, L, hidden_size)
+        if hidden_size is not None
+        else 0
+    )
+    print(
+        f"Computing Shapley for suffix (L={L}, bs={bs}), "
+        f"est. VRAM/RAM per position: {format_bytes(est_bytes) if est_bytes else 'n/a'}"
+    )
 
     # --- 3. Iterate ---
-    for t in range(c, L):
+    for t in tqdm(range(c, L), desc="CI-tests (batch x context), Shapley", unit="pos"):
         attributions = shapley.attribute(
             inputs=input_ids,
             baselines=baseline_ids,
             additional_forward_args=(t,),  # <--- Passes 't' to 'target_pos'
             n_samples=10,
-            perturbations_per_eval=bs * 4,
-            show_progress=True,
+            perturbations_per_eval=perturbations_per_eval,
+            show_progress=False,
         )
 
         final_adj[:, :, t] = attributions.detach()
@@ -179,9 +195,21 @@ def calc_neural_saliency(
 
     final_adj = torch.zeros((bs, L - c, L - c), device=device)
 
+    # Rough VRAM/RAM estimate for the tracked embedding tensor (the biggest
+    # tensor Captum keeps gradients for here) -- see
+    # utils.estimate_tensor_bytes's caveats (lower bound, not exact).
+    hidden_size = getattr(tfx.config, "hidden_size", None)
+    est_bytes = estimate_tensor_bytes(bs, L, hidden_size) if hidden_size is not None else 0
+    print(
+        f"Computing Saliency for suffix (L={L}, bs={bs}), "
+        f"est. VRAM/RAM: {format_bytes(est_bytes) if est_bytes else 'n/a'}"
+    )
+
     # 4. Iterate over Suffix Targets
     # We explain why token 't' happened, based on history
-    for i, t in enumerate(range(c, L)):
+    for i, t in enumerate(
+        tqdm(range(c, L), desc="CI-tests (batch x context), Saliency", unit="pos")
+    ):
         target_class = input_ids[:, t]  # [bs] (The token indices we want to explain)
 
         # Compute attribution

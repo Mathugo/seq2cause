@@ -1,6 +1,37 @@
 from __future__ import annotations
 
+import math
+
 import torch
+
+
+def estimate_tensor_bytes(*dims: int, dtype_bytes: int = 4) -> int:
+    """Estimates the memory footprint (in bytes) of a dense tensor of shape
+    `dims`, assuming `dtype_bytes` bytes per element (default 4, i.e.
+    float32/int32 -- halve it for float16/bfloat16).
+
+    This is a rough, allocation-count estimate (the single largest tensor
+    materialized during a computation, e.g. the do-intervention logits of
+    shape `[batch_size, n_particles, L-context, L, vocab_size]`) -- it does
+    NOT account for autograd's saved-activation memory, optimizer states, or
+    framework/CUDA-allocator overhead, so treat it as a lower bound / rough
+    order-of-magnitude guide for "will this batch fit in VRAM/RAM", not an
+    exact figure.
+    """
+    numel = 1
+    for d in dims:
+        numel *= max(int(d), 0)
+    return numel * dtype_bytes
+
+
+def format_bytes(n_bytes: int) -> str:
+    """Formats a byte count as a human-readable string (e.g. `"512.0 MB"`)."""
+    if n_bytes <= 0:
+        return "0 B"
+    units = ("B", "KB", "MB", "GB", "TB")
+    exponent = min(int(math.log(n_bytes, 1024)), len(units) - 1)
+    value = n_bytes / (1024**exponent)
+    return f"{value:.1f} {units[exponent]}"
 
 
 def next_token_collate(batch, device: str | None = None):

@@ -12,7 +12,7 @@ seq2cause: Turns any discrete sequence of events into a causal graph using autor
 
 - **Bring Your Own Model:** Plug in any HuggingFace/PyTorch model (`GPT-2`, `LLaMA`, `RNN`) trained on your discrete sequences (logs, codes, symbols).
 - **Scaling:** To thousands of events: The memory complexity scales linearly with the vocabulary and sequence length. Optimized for sparse, high-dimensional streams (e.g., Vehicle Diagnostics, Server Logs, User Journeys).
-- **Multiple GPUs Acceleration:** Batch processing for analyzing thousands of events in seconds using multiple GPUs.
+- **Multiple GPUs Acceleration:** Batch processing for analyzing thousands of events in seconds using multiple GPUs, powered by [🤗 Accelerate](https://github.com/huggingface/accelerate) -- tested on CPU, Apple Silicon (**MPS**), and **NVIDIA CUDA** GPUs (single- and multi-device).
 - **Delayed Effects:** Are identifiable up to the sequence length
 - **Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences. Future work will tackle also an aggregation of global event-to-event and event-to-outcome scenarios.
 
@@ -124,6 +124,33 @@ predicted probabilities with and without a candidate cause intervened on
   in the paper, but not yet implemented in this codebase.
 - **Time series**: causal discovery for time series using autoregressive
   models (normalizing flows, AR models).
+
+## 🖥️ GPU / Multi-GPU Acceleration
+
+`seq2cause.core.SampleLevelCausalDiscovery` wraps your model and dataloader
+with [🤗 Accelerate](https://github.com/huggingface/accelerate)'s
+`Accelerator().prepare(...)`, so the exact same code runs unchanged on CPU, a
+single GPU, or multiple GPUs (`accelerate launch --multi_gpu`) -- tested on
+CPU, Apple Silicon (**MPS**), and **NVIDIA CUDA** GPUs.
+
+A `tqdm` progress bar reports "batch x context" progress with a rough
+estimated VRAM/RAM footprint (the single biggest tensor materialized per
+step -- see `seq2cause.utils.estimate_tensor_bytes`'s caveats: it's a lower
+bound, not an exact figure) for the current step, so you have an early
+signal of whether a given `(batch_size, n_particles, context)` configuration
+will fit in memory before it OOMs partway through a run.
+
+**Testing multi-GPU/multi-process correctness without real GPU hardware:**
+`accelerate launch --num_processes=2 --cpu your_script.py` runs 2 real,
+independent processes over the `gloo` backend -- exercising the same
+dataloader-sharding and `accelerator.gather()` code paths a real
+`--multi_gpu` launch does, without needing GPUs. `tests/test_multi_gpu.py`
+does exactly this (via `torch.multiprocessing.spawn`, which was more
+portable across platforms than shelling out to `accelerate launch` itself)
+and checks that (1) each process's shard of the data is disjoint (no
+sequence processed twice), (2) `accelerator.gather()` reassembles the full,
+non-duplicated batch across processes, and (3) the causal discovery pipeline
+produces a finite, correctly-shaped adjacency matrix on every process.
 
 ## 🎯 Threshold Selection
 
