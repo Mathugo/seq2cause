@@ -5,16 +5,26 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Added
+- `seq2cause.diagnostics.summary_graph`: projects a single sequence's
+  sample-level (time-step/position) causal graph down to a summary graph
+  whose nodes are event TYPES instead -- an edge `u -> v` exists iff some
+  position holding type `u` causally affected a later position holding
+  type `v` at least once in that sequence (union/"at least once"
+  aggregation). Scales with the sequence length, not `vocab_size`. See
+  README Quick Start.
 - A `seq2cause` command-line interface (`seq2cause.cli`, registered as a
   console script): recovers a causal graph from a tokenized event-sequence
   dataset (`--dataset`, accepting a plain text file, `.pt`, or `.npy`)
   using `compute_cmi_matrix`'s `"atomic"` do-intervention strategy and
   `AdaptiveThreshold`, wrapping any HuggingFace causal LM (`--model`) or a
-  small randomly-initialized one for quick experimentation. `--vocab-size`
-  is optional: it's read from `--model`'s own config when given (a
-  conflicting `--vocab-size` is ignored, with a warning), or otherwise
-  inferred from the dataset's own token ids. See README "Command-line
-  interface".
+  small randomly-initialized one for quick experimentation. `vocab_size`
+  is always inferred automatically (from `--model`'s config, or otherwise
+  from the dataset's own token ids) -- there is no `--vocab-size` flag.
+  `--threshold-method` selects `AdaptiveThreshold`'s unsupervised cutoff
+  (`otsu`/`mad`/`percentile`/`gmm`). `--graph-level` (`sample`/`summary`/
+  `both`, default `both`) picks which of the sample-level and summary
+  graphs to compute/report/save; `--self-loops` keeps `u -> u` edges in
+  the summary graph. See README "Command-line interface".
 - A demo GIF at the top of the README (`assets/demo.gif`), showing
   `seq2cause --help` (the available CLI arguments), then the CLI loading a
   tokenized example dataset (`examples/event_sequences.txt`) and a real

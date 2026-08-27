@@ -10,6 +10,7 @@ from seq2cause.diagnostics import (
     recall_by_lag,
     recall_by_lag_with_tau_by_lag,
     snr_by_lag,
+    summary_graph,
 )
 from seq2cause.scm import NonlinearSCM, create_scm
 
@@ -349,3 +350,51 @@ def test_compute_cmi_matrix_sparse_f1_matches_full_f1():
         sparse_scores, sparse_labels, emit_warnings=False
     )
     assert abs(full_result.f1 - sparse_result.f1) < 0.15
+
+
+def test_summary_graph_projects_position_edges_to_event_types_with_union_aggregation():
+    # context_len=2 -> suffix tokens are [3, 7, 3, 7, 5] at positions [0..4].
+    sequence = torch.tensor([9, 9, 3, 7, 3, 7, 5])
+    causal_graph = torch.zeros((5, 5), dtype=torch.bool)
+    causal_graph[0, 1] = True  # pos0(3) -> pos1(7)
+    causal_graph[2, 3] = True  # pos2(3) -> pos3(7): same type pair, union'd away
+    causal_graph[1, 4] = True  # pos1(7) -> pos4(5)
+
+    active_tokens, adj = summary_graph(sequence, causal_graph, context_len=2)
+
+    assert torch.equal(active_tokens, torch.tensor([3, 5, 7]))
+    assert adj.dtype == torch.bool
+    assert adj.shape == (3, 3)
+    # 3 -> 7
+    assert adj[0, 2].item() is True
+    # 7 -> 5
+    assert adj[2, 1].item() is True
+    assert int(adj.sum()) == 2
+
+
+def test_summary_graph_excludes_self_loops_by_default():
+    # suffix = [4, 4]: a position-level edge pos0 -> pos1 connects two
+    # occurrences of the SAME event type.
+    sequence = torch.tensor([0, 4, 4])
+    causal_graph = torch.tensor([[False, True], [False, False]])
+
+    active_tokens, adj = summary_graph(sequence, causal_graph, context_len=1)
+    assert torch.equal(active_tokens, torch.tensor([4]))
+    assert not bool(adj.any())
+
+    active_tokens, adj = summary_graph(sequence, causal_graph, context_len=1, self_loops=True)
+    assert bool(adj[0, 0])
+
+
+def test_summary_graph_scales_with_sequence_not_vocab_size():
+    """The summary graph must stay bounded by the number of DISTINCT event
+    types actually observed, not by (a possibly huge) vocab_size."""
+    vocab_size = 50_257  # e.g. GPT-2's real vocabulary
+    sequence = torch.tensor([1, 2, 3, 2, 1])
+    causal_graph = torch.zeros((4, 4), dtype=torch.bool)
+    causal_graph[0, 1] = True
+
+    active_tokens, adj = summary_graph(sequence, causal_graph, context_len=1)
+
+    assert active_tokens.numel() < vocab_size
+    assert adj.shape[0] < vocab_size

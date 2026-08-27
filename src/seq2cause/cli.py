@@ -5,7 +5,7 @@ Wraps exactly the same three calls as the README Quick Start
 (`HFModelAdapter` -> `compute_cmi_matrix` -> `AdaptiveThreshold`), so you can
 run seq2cause against your own tokenized data without writing any Python:
 
-    seq2cause --dataset events.txt --vocab-size 400 --model gpt2
+    seq2cause --dataset events.txt --model gpt2
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import torch
 from tqdm import tqdm
 
 from seq2cause.adapters import HFModelAdapter
-from seq2cause.diagnostics import compute_cmi_matrix
+from seq2cause.diagnostics import compute_cmi_matrix, summary_graph
 from seq2cause.threshold import AdaptiveThreshold
 from seq2cause.utils import check_memory_budget, estimate_tensor_bytes, format_bytes
 
@@ -103,16 +103,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="A HuggingFace causal LM to use as the density estimator -- a model id "
         "(e.g. 'gpt2') or a local checkpoint path. If omitted, a small randomly "
         "initialized model is used (for quick experimentation only -- see README "
-        "Quick Start).",
-    )
-    parser.add_argument(
-        "--vocab-size",
-        type=int,
-        default=None,
-        help="Vocabulary size. Usually not needed: inferred from --model's config when "
-        "--model is given, or from the dataset's own token ids (max id + 1) otherwise. "
-        "Pass this explicitly to override either, e.g. if your dataset doesn't happen "
-        "to contain the full vocabulary.",
+        "Quick Start). Either way, vocab_size is inferred automatically (from the "
+        "model's config, or otherwise from the dataset's own token ids) -- never "
+        "passed explicitly.",
     )
     parser.add_argument(
         "--context-len",
@@ -134,6 +127,30 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "see README).",
     )
     parser.add_argument(
+        "--threshold-method",
+        choices=["otsu", "mad", "percentile", "gmm"],
+        default="otsu",
+        help="Unsupervised cutoff `AdaptiveThreshold` anchors tau on, since no labeled "
+        "ground truth is available here (default: 'otsu' -- see README Threshold "
+        "Selection).",
+    )
+    parser.add_argument(
+        "--graph-level",
+        choices=["sample", "summary", "both"],
+        default="both",
+        help="Which graph(s) to report (default: 'both'). 'sample': the raw "
+        "position-indexed (time-step) causal graph for each sequence. 'summary': "
+        "projects that down to an event-TYPE-indexed graph per sequence (an edge "
+        "u -> v exists iff some position with type u causally affected a later "
+        "position with type v at least once in that sequence). See README.",
+    )
+    parser.add_argument(
+        "--self-loops",
+        action="store_true",
+        help="When --graph-level includes 'summary', keep u -> u edges (an event type "
+        "causing itself). Off by default.",
+    )
+    parser.add_argument(
         "--max-sequences",
         type=int,
         default=None,
@@ -142,8 +159,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         default=None,
-        help="Optional path to save the recovered causal graphs to (torch.save, a list "
-        "of boolean [L-context_len, L-context_len] tensors, one per sequence).",
+        help="Optional path to save the recovered graph(s) to (torch.save, a list of "
+        "dicts, one per sequence, with a 'sample_graph' and/or 'summary_graph' key "
+        "depending on --graph-level).",
     )
     parser.add_argument(
         "--device",
@@ -172,15 +190,10 @@ def main(argv: list[str] | None = None) -> None:
 
         hf_model = AutoModelForCausalLM.from_pretrained(args.model).eval().to(device)
         vocab_size = hf_model.config.vocab_size
-        if args.vocab_size is not None and args.vocab_size != vocab_size:
-            print(
-                f"Warning: --vocab-size {args.vocab_size} ignored -- using {args.model}'s "
-                f"own vocab_size ({vocab_size}) instead.\n"
-            )
     else:
         from transformers import LlamaConfig, LlamaForCausalLM
 
-        vocab_size = args.vocab_size or (max(int(seq.max()) for seq in sequences) + 1)
+        vocab_size = max(int(seq.max()) for seq in sequences) + 1
         max_len = max(seq.numel() for seq in sequences)
         config = LlamaConfig(
             vocab_size=vocab_size,
@@ -193,24 +206,27 @@ def main(argv: list[str] | None = None) -> None:
         hf_model = LlamaForCausalLM(config).eval().to(device)
         print(
             f"No --model given: using a small, randomly initialized LlamaForCausalLM "
-            f"(vocab_size={vocab_size}) -- for real causal discovery, pass a trained "
-            "checkpoint via --model.\n"
+            f"(vocab_size={vocab_size}, inferred from the dataset) -- for real causal "
+            "discovery, pass a trained checkpoint via --model.\n"
         )
 
     adapter = HFModelAdapter(hf_model, vocab_size=vocab_size)
-    threshold = AdaptiveThreshold()
+    threshold = AdaptiveThreshold(method=args.threshold_method)
+    want_sample = args.graph_level in ("sample", "both")
+    want_summary = args.graph_level in ("summary", "both")
 
     print(
         f"seq2cause: {len(sequences)} event sequence(s), "
-        f"do-intervention strategy={args.strategy!r}"
+        f"do-intervention strategy={args.strategy!r}, threshold={args.threshold_method!r}"
     )
     first = sequences[0]
     first_lc = first.numel() - args.context_len
     est_bytes = estimate_tensor_bytes(args.n_particles, first_lc, first.numel(), vocab_size)
     print(f"est. VRAM/RAM per sequence (approx.): {format_bytes(est_bytes)}\n")
 
-    graphs = []
-    total_edges = 0
+    results = []
+    total_sample_edges = 0
+    total_summary_edges = 0
     top_score = float("-inf")
     t0 = time.perf_counter()
     for sequence in tqdm(sequences, desc="CI-tests (do-intervention)", unit="seq"):
@@ -226,19 +242,36 @@ def main(argv: list[str] | None = None) -> None:
             strategy=args.strategy,
         )
         causal_graph = threshold.causal_graph(cmi_matrix)
-        graphs.append(causal_graph)
-        total_edges += int(causal_graph.sum())
         top_score = max(top_score, cmi_matrix.max().item())
+
+        entry = {}
+        if want_sample:
+            entry["sample_graph"] = causal_graph
+            total_sample_edges += int(causal_graph.sum())
+        if want_summary:
+            active_tokens, summary_adj = summary_graph(
+                sequence, causal_graph, context_len=args.context_len, self_loops=args.self_loops
+            )
+            entry["summary_graph"] = {"active_tokens": active_tokens, "adj": summary_adj}
+            total_summary_edges += int(summary_adj.sum())
+        results.append(entry)
     elapsed = time.perf_counter() - t0
 
-    print(
-        f"\nDone in {elapsed:.1f}s. {total_edges} candidate causal edges across "
-        f"{len(sequences)} sequence(s). Top CMI score: {top_score:.2e}"
-    )
+    print(f"\nDone in {elapsed:.1f}s. Top CMI score: {top_score:.2e}")
+    if want_sample:
+        print(
+            f"Sample-level (time-step): {total_sample_edges} candidate causal edges "
+            f"across {len(sequences)} sequence(s)."
+        )
+    if want_summary:
+        print(
+            f"Summary graph (event type): {total_summary_edges} candidate causal edges "
+            f"across {len(sequences)} sequence(s)."
+        )
 
     if args.output:
-        torch.save(graphs, args.output)
-        print(f"Saved {len(graphs)} causal graph(s) to {args.output}")
+        torch.save(results, args.output)
+        print(f"Saved {len(results)} result(s) to {args.output}")
 
 
 if __name__ == "__main__":

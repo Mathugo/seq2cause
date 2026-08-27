@@ -39,6 +39,7 @@ __all__ = [
     "compare_intervention_strategies",
     "compute_cmi_matrix",
     "compute_cmi_matrix_sparse",
+    "summary_graph",
     "estimate_oracle_score",
 ]
 
@@ -367,6 +368,68 @@ def compute_cmi_matrix(
     baseline_rows = sequence.unsqueeze(0)  # [1, L], fully real, no intervention
     p_baseline = _predicted_true_token_probs(model, baseline_rows, rest.squeeze(0), context_len)
     return _cmi_matrix_from_atomic(p_atomic.mean(dim=0), p_baseline.squeeze(0))
+
+
+def summary_graph(
+    sequence: Tensor,
+    causal_graph: Tensor,
+    context_len: int,
+    self_loops: bool = False,
+) -> tuple[Tensor, Tensor]:
+    """Projects a single sequence's SAMPLE-level (a.k.a. time-step-level)
+    causal graph -- nodes are POSITIONS, as returned by
+    `AdaptiveThreshold.causal_graph(compute_cmi_matrix(...))` -- down to a
+    SUMMARY graph, whose nodes are EVENT TYPES (token ids) instead.
+
+    Construction (union / "at least once" aggregation): for every true edge
+    (cause position `j`, effect position `q`) in `causal_graph`, let
+    `u = sequence[context_len + j]` and `v = sequence[context_len + q]` be
+    the event types observed at those positions, and mark `u -> v` in the
+    summary graph. A type-level edge `u -> v` is thus present iff cause
+    type `u` was followed by a causal effect on type `v` at least once,
+    anywhere in this sequence -- the same "sample-level graph first, then
+    project" construction used for the type-level ("summary graph")
+    evaluation in this project's own experiments.
+
+    Unlike a naive `[vocab_size, vocab_size]` matrix (impractical for a
+    real tokenizer's vocabulary -- e.g. 50257 for GPT-2), the returned
+    graph is indexed only by the event types that actually appear in this
+    sequence's scored suffix (`sequence[context_len:]`), so its size scales
+    with the sequence length, not the vocabulary size.
+
+    Args:
+        sequence: `[L]` the same single sequence passed to
+            `compute_cmi_matrix` (context + candidate-effect suffix).
+        causal_graph: `[Lc, Lc]` boolean, as returned by
+            `AdaptiveThreshold.causal_graph` (`Lc = L - context_len`).
+        context_len: same value passed to `compute_cmi_matrix` -- needed to
+            map `causal_graph`'s position indices back to `sequence`.
+        self_loops: if False (default), an event type is never marked as a
+            cause of ITSELF (`u == v`), even if a position-level edge
+            happens to connect two occurrences of the same type. If True,
+            such edges are kept (e.g. to model a self-reinforcing/periodic
+            event type).
+
+    Returns:
+        `(active_tokens, adj)`: `active_tokens` is a sorted 1D `LongTensor`
+        of the distinct event types appearing in `sequence[context_len:]`;
+        `adj` is a boolean `[len(active_tokens), len(active_tokens)]`
+        matrix, `adj[i, k]` iff `active_tokens[i]` causes `active_tokens[k]`.
+    """
+    suffix = sequence[context_len:]
+    active_tokens, inverse = torch.unique(suffix, sorted=True, return_inverse=True)
+    n = active_tokens.numel()
+    adj = torch.zeros((n, n), dtype=torch.bool, device=sequence.device)
+
+    j_idx, q_idx = torch.nonzero(causal_graph, as_tuple=True)
+    if j_idx.numel() > 0:
+        u = inverse[j_idx]
+        v = inverse[q_idx]
+        if not self_loops:
+            keep = u != v
+            u, v = u[keep], v[keep]
+        adj[u, v] = True
+    return active_tokens, adj
 
 
 @torch.no_grad()

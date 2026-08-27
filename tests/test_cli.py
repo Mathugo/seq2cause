@@ -66,8 +66,6 @@ def test_main_runs_end_to_end_with_default_model(tmp_path, capsys):
         [
             "--dataset",
             str(dataset_path),
-            "--vocab-size",
-            "30",
             "--context-len",
             "3",
             "--n-particles",
@@ -81,25 +79,97 @@ def test_main_runs_end_to_end_with_default_model(tmp_path, capsys):
 
     captured = capsys.readouterr()
     assert "Done in" in captured.out
-    assert "candidate causal edges" in captured.out
+    assert "Sample-level (time-step): " in captured.out
+    assert "Summary graph (event type): " in captured.out
 
-    graphs = torch.load(output_path, weights_only=True)
-    assert len(graphs) == 2
-    for graph in graphs:
-        assert graph.shape == (13, 13)
-        assert graph.dtype == torch.bool
+    results = torch.load(output_path, weights_only=True)
+    assert len(results) == 2
+    for result in results:
+        assert result["sample_graph"].shape == (13, 13)
+        assert result["sample_graph"].dtype == torch.bool
+        assert set(result["summary_graph"].keys()) == {"active_tokens", "adj"}
+        n = result["summary_graph"]["active_tokens"].numel()
+        assert result["summary_graph"]["adj"].shape == (n, n)
 
 
-def test_main_infers_vocab_size_from_dataset_when_model_and_vocab_size_omitted(tmp_path, capsys):
+def test_main_infers_vocab_size_from_dataset_when_model_omitted(tmp_path, capsys):
     dataset_path = tmp_path / "events.txt"
     dataset_path.write_text("1 2 3 4 5\n4 29 7 12 3\n")
 
-    main(["--dataset", str(dataset_path), "--n-particles", "4", "--context-len", "2", "--seed", "0"])
+    main(
+        ["--dataset", str(dataset_path), "--n-particles", "4", "--context-len", "2", "--seed", "0"]
+    )
 
     captured = capsys.readouterr()
     # Max token id across the dataset is 29 -> inferred vocab_size = 30.
     assert "vocab_size=30" in captured.out
     assert "Done in" in captured.out
+
+
+def test_main_graph_level_sample_only_omits_summary_graph(tmp_path):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(0, 30, (2, 16))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+    output_path = tmp_path / "graphs.pt"
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--context-len", "3",
+            "--n-particles", "4",
+            "--seed", "0",
+            "--graph-level", "sample",
+            "--output", str(output_path),
+        ]
+    )
+
+    results = torch.load(output_path, weights_only=True)
+    for result in results:
+        assert "sample_graph" in result
+        assert "summary_graph" not in result
+
+
+def test_main_graph_level_summary_only_omits_sample_graph(tmp_path):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(0, 30, (2, 16))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+    output_path = tmp_path / "graphs.pt"
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--context-len", "3",
+            "--n-particles", "4",
+            "--seed", "0",
+            "--graph-level", "summary",
+            "--output", str(output_path),
+        ]
+    )
+
+    results = torch.load(output_path, weights_only=True)
+    for result in results:
+        assert "summary_graph" in result
+        assert "sample_graph" not in result
+
+
+def test_main_accepts_each_threshold_method(tmp_path):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(0, 30, (2, 16))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+
+    for method in ("otsu", "mad", "percentile", "gmm"):
+        main(
+            [
+                "--dataset", str(dataset_path),
+                "--context-len", "3",
+                "--n-particles", "4",
+                "--seed", "0",
+                "--threshold-method", method,
+            ]
+        )
 
 
 class _FakeConfig:
@@ -122,7 +192,7 @@ class _FakeCausalLM(torch.nn.Module):
         return type("FakeCausalLMOutput", (), {"logits": logits})()
 
 
-def test_main_uses_models_own_vocab_size_and_warns_on_conflicting_flag(tmp_path, capsys, monkeypatch):
+def test_main_uses_models_own_vocab_size(tmp_path, capsys, monkeypatch):
     torch.manual_seed(0)
     dataset_path = tmp_path / "events.txt"
     seqs = torch.randint(0, 50, (2, 12))
@@ -137,7 +207,6 @@ def test_main_uses_models_own_vocab_size_and_warns_on_conflicting_flag(tmp_path,
         [
             "--dataset", str(dataset_path),
             "--model", "fake/tiny-model",
-            "--vocab-size", "999",  # deliberately conflicting -- should be ignored.
             "--n-particles", "4",
             "--context-len", "2",
             "--seed", "0",
@@ -145,6 +214,4 @@ def test_main_uses_models_own_vocab_size_and_warns_on_conflicting_flag(tmp_path,
     )
 
     captured = capsys.readouterr()
-    assert "--vocab-size 999 ignored" in captured.out
-    assert "vocab_size (50)" in captured.out
     assert "Done in" in captured.out

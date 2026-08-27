@@ -52,6 +52,15 @@ cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=3, n_particles=32
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 ```
 
+`causal_graph` is a **sample-level** (time-step) graph: its nodes are *positions* in `sequence`. To instead ask "does event type A cause event type B" (nodes are *event types*, i.e. token ids), project it into a **summary graph**: an edge `u -> v` exists iff some position holding type `u` causally affected a later position holding type `v` at least once in this sequence.
+
+```python
+from seq2cause.diagnostics import summary_graph
+
+active_tokens, type_graph = summary_graph(sequence, causal_graph, context_len=3)
+# type_graph[i, k] is True iff active_tokens[i] causes active_tokens[k].
+```
+
 ### Command-line interface
 
 The same three steps are available as a `seq2cause` command, so you can run causal discovery over your own tokenized dataset without writing any Python:
@@ -60,7 +69,13 @@ The same three steps are available as a `seq2cause` command, so you can run caus
 seq2cause --dataset events.txt --model gpt2
 ```
 
-`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; its vocabulary size is read from the model automatically. Omit `--model` to fall back to a small randomly initialized model for quick experimentation, in which case the vocabulary size is inferred from the dataset's own token ids (or set explicitly with `--vocab-size`). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
+`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; its vocabulary size is read from the model automatically. Omit `--model` to fall back to a small randomly initialized model for quick experimentation, in which case the vocabulary size is inferred from the dataset's own token ids instead -- there's no `--vocab-size` flag to set.
+
+By default the CLI reports two graphs per sequence (`--graph-level both`):
+- **Sample-level (time-step) graph**: nodes are *positions* -- the raw `[L-context_len, L-context_len]` causal graph, exactly like the Quick Start above.
+- **Summary graph**: nodes are *event types* (token ids). It's built by projecting the sample-level graph down: an edge `u -> v` exists iff some position holding type `u` causally affected a later position holding type `v` *at least once* in that sequence (union aggregation). This answers "does event A cause event B", not just "did position 3 affect position 9".
+
+Use `--graph-level sample` or `--graph-level summary` to compute only one. `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `otsu`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
 
 ## 🧪 Evaluation (against a known generator)
 

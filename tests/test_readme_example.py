@@ -9,6 +9,7 @@ from seq2cause.diagnostics import (
     compare_intervention_strategies,
     compute_cmi_matrix,
     ground_truth_adjacency,
+    summary_graph,
 )
 from seq2cause.scm import create_scm
 from seq2cause.threshold import AdaptiveThreshold, select_threshold_by_validation
@@ -35,6 +36,11 @@ def test_readme_quick_start_example_runs_without_ground_truth():
     assert cmi_matrix.shape == (17, 17)
     assert causal_graph.shape == (17, 17)
     assert causal_graph.dtype == torch.bool
+
+    active_tokens, type_graph = summary_graph(sequence, causal_graph, context_len=3)
+
+    assert type_graph.shape == (active_tokens.numel(), active_tokens.numel())
+    assert type_graph.dtype == torch.bool
 
 
 def test_readme_evaluation_example_recovers_a_sensible_causal_graph():
