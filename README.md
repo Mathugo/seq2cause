@@ -9,7 +9,7 @@ Turn any sequence of discrete events into a causal graph using autoregressive mo
 
 **seq2cause** is a Python library for causal discovery on discrete event sequences. It treats any autoregressive model as a density estimator and runs parallelized conditional-independence tests on GPU, so you can recover what caused what directly from a sequence of logs, codes, or symbols.
 
-![seq2cause running a causal-strength CI-test with a live progress bar and VRAM/RAM estimate, then printing the recovered causal-strength scores](assets/demo.gif)
+![seq2cause running do-intervention CI-tests (atomic strategy) over several event sequences, with a live progress bar and VRAM/RAM estimate, then printing the recovered results](assets/demo.gif)
 
 ## 🚀 Key Features
 
