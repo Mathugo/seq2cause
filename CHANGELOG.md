@@ -15,10 +15,11 @@ All notable changes to this project are documented in this file.
   conflicting `--vocab-size` is ignored, with a warning), or otherwise
   inferred from the dataset's own token ids. See README "Command-line
   interface".
-- A demo GIF at the top of the README (`assets/demo.gif`), showing the
-  `seq2cause` CLI running over a tokenized example dataset
-  (`examples/event_sequences.txt`), with a `tqdm` progress bar and
-  VRAM/RAM estimate running live, then the recovered CMI results.
+- A demo GIF at the top of the README (`assets/demo.gif`), showing
+  `seq2cause --help` (the available CLI arguments), then the CLI loading a
+  tokenized example dataset (`examples/event_sequences.txt`) and a real
+  pretrained HuggingFace model (`distilgpt2`), with a `tqdm` progress bar
+  and VRAM/RAM estimate running live, then the recovered CMI results.
   Generated with [vhs](https://github.com/charmbracelet/vhs) from
   `demo.tape`.
 - `seq2cause.utils.check_memory_budget` and `get_available_memory_bytes`:

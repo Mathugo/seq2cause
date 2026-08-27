@@ -1,9 +1,9 @@
 Output assets/demo.gif
 
 Set Shell "zsh"
-Set FontSize 18
+Set FontSize 15
 Set Width 1000
-Set Height 400
+Set Height 700
 Set Theme "Dracula"
 Set Padding 20
 Set TypingSpeed 40ms
@@ -19,6 +19,16 @@ Type "clear"
 Enter
 Show
 
-Type "seq2cause --dataset examples/event_sequences.txt --vocab-size 400 --n-particles 64 --seed 0"
+Type "seq2cause --help"
 Enter
-Sleep 9s
+Sleep 5s
+
+Hide
+Type "clear"
+Enter
+Show
+
+Type "seq2cause --dataset examples/event_sequences.txt --model distilgpt2 --n-particles 2 --max-sequences 3 --seed 0"
+Enter
+Sleep 10s
+
