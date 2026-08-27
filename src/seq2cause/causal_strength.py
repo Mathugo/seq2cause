@@ -265,6 +265,9 @@ def calc_granger_score(
         eps = 1e-9
         score_raw = torch.log(p_inter + eps) - torch.log(p_base + eps)
 
+    else:
+        raise ValueError(f"mode must be 'diff' or 'log_ratio', got {mode!r}")
+
     # Average over particles
     score_window = torch.mean(score_raw, dim=1)  # [bs, num_rows-1, Lc]
 

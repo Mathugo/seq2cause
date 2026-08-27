@@ -1,5 +1,3 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19068730.svg)](https://doi.org/10.5281/zenodo.19068730)
-
 # seq2cause
 seq2cause: Turns any discrete sequence of events into a causal graph using autoregressive models (LLaMA, GPT, RNN, Mamba).
 
@@ -16,7 +14,7 @@ seq2cause: Turns any discrete sequence of events into a causal graph using autor
 - **Scaling:** To thousands of events: The memory complexity scales linearly with the vocabulary and sequence length. Optimized for sparse, high-dimensional streams (e.g., Vehicle Diagnostics, Server Logs, User Journeys).
 - **Multiple GPUs Acceleration:** Batch processing for analyzing thousands of events in seconds using multiple GPUs.
 - **Delayed Effects:** Are identifiable up to the sequence length
-- **Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences and also an aggregation of global event-to-outcome scenarios with instance time causal graphs and summary causal graph.
+- **Causal Relationships Type**: We explain event-to-event, event-to-outcome causal graphs from single sequences. Future work will tackle also an aggregation of global event-to-event and event-to-outcome scenarios.
 
 ## 📦 Installation
 
@@ -101,11 +99,9 @@ causal_graph = cmi_matrix >= result.tau
 print(result.summary())  # e.g. F1=0.800, precision=0.800, recall=0.800
 ```
 
-
 ## 📚 How It Works
 
-seq2cause implements the **TRACE** framework (Temporal Reconstruction via
-Autoregressive Causal Estimation) for event-to-event causal discovery: an
+seq2cause implements sample-level causal discovery: an
 autoregressive model's own next-token conditionals are used as a density
 estimator to run parallelized conditional-independence tests, comparing
 predicted probabilities with and without a candidate cause intervened on
@@ -185,18 +181,13 @@ opt-out/override for reproducing a specific prior run.
 ## 🔬 Alternative Intervention Constructions
 
 The same replication note found that the paper's original "full" staircase
-intervention construction (`seq2cause.sampling.do_interventions`) collapses
-recall for cause-effect lags >= 2 to near zero: the position immediately
-preceding a distant effect is randomized on both sides of the CMI contrast,
-destroying the local context the model relies on most. `do_interventions`
-now supports pluggable `strategy=` options to diagnose and work around this.
-**`"atomic"` is the recommended default** -- it does not exhibit the lag>=2
-collapse and consistently outperformed every other strategy across all
-threshold schemes we tested -- and is what `compute_cmi_matrix` (used in
-"Quick Start" above) defaults to. `do_interventions` itself still defaults
-to `strategy="full"` for backward compatibility (e.g. to exactly reproduce
-the paper's Table 2); pass `strategy="atomic"` explicitly when calling it
-directly:
+intervention construction (`seq2cause.sampling.do_interventions`) often
+collapses for decaying causal strength in the DGP. `do_interventions`
+supports pluggable `strategy=` options to diagnose and work around this.
+**`"atomic"` is the recommended default**. `do_interventions` itself still
+defaults to `strategy="full"` for backward compatibility (e.g. to exactly
+reproduce the paper's Table 2); pass `strategy="atomic"` explicitly when
+calling it directly:
 
 - `"atomic"` (recommended): only the candidate-cause position is randomized;
   every other position, including mediators, stays real.
@@ -206,7 +197,6 @@ directly:
   (`window_k`) before each candidate effect.
 - `"independent_mediator"`: draws the cause and mediator noise from two
   statistically independent tensors instead of one shared tensor.
-
 
 `seq2cause.sampling.unigram_sample` provides an "in-distribution-noise"
 alternative to `uniform_sample` for the do-intervention proposal itself.
@@ -228,7 +218,7 @@ If you use seq2cause in your research, please cite our works:
   publisher = {Zenodo},
   doi = {10.5281/zenodo.19068730},
   url = {https://doi.org/10.5281/zenodo.19068730},
-  version = {0.1.4}
+  version = {0.1.6}
 }
 ```
 

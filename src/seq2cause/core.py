@@ -33,7 +33,7 @@ class SampleLevelCausalDiscovery:
     def __init__(
         self, tfx: any, params: dict, ds_test: any, logits_key_of_output_tfx: str = "logits"
     ):
-        self._params = params
+        self.params = params
         self._logits_key_of_output_tfx = logits_key_of_output_tfx
         self.tfx = tfx
         self._ds_test = ds_test
@@ -48,6 +48,7 @@ class SampleLevelCausalDiscovery:
         self.guidance = params["sampling"].get("guidance", 3)
         self.N = params["sampling"].get("value", 0)
         self.full = params.get("full", True)
+        self.printed_max_bs = False
 
         print(
             f"[!] Starting the sample level causal discovery with full version {self.full} "
@@ -71,6 +72,7 @@ class SampleLevelCausalDiscovery:
                     "[!] Real BS on GPU with sampling is ",
                     self.params["BS"] * self.params["sampling"].get("value", 64),
                 )
+            self.printed_max_bs = True
 
     def prepare(self):
         """
@@ -147,8 +149,16 @@ class SampleLevelCausalDiscovery:
                 prop = self.proposal_fct_for_inter
 
                 # we don't need the cls token since it's the rest
+                # NOTE: `prop` (uniform_sample by default) has a narrow, explicit
+                # signature (no **kwargs catch-all), unlike ancestral_sampling/
+                # do_interventions below -- splatting the whole sampling dict
+                # here would raise "unexpected keyword argument" for keys like
+                # "value"/"guidance"/"context", so only its actual accepted
+                # kwargs are forwarded.
                 rest_upsampled_using_q = prop(
-                    prob_x[:, self.context :, :], **self.params["sampling"]
+                    prob_x[:, self.context :, :],
+                    n_samples=self.N,
+                    cls_token_id=self.params["sampling"]["cls_token_id"],
                 )
                 rest_expanded_intervened = do_interventions(
                     rest_upsampled_using_q,
@@ -188,5 +198,8 @@ class SampleLevelCausalDiscovery:
                 prob_x_inter = torch.nn.functional.softmax(o_b_upsampled_intervene, dim=-1)
                 print("[!] Tensor shape after intervention and inference: ", prob_x_inter.shape)
 
-                adj = cs(self.tfx, prob_x_inter, batch, self.params)
+                # By this point `cs` is always calc_lag_info_gain or
+                # calc_granger_score (the InputXGradient/SHAPLEY branches
+                # above already returned) -- neither takes `tfx`.
+                adj = cs(prob_x_inter, batch, self.params)
                 return batch, adj

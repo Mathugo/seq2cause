@@ -606,7 +606,8 @@ def ancestral_sampling(
         sampled_tokens: The generated token sequences. Shape [bs*value, context].
     """
 
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     start_time = time.time()
     N = value
 
@@ -629,7 +630,8 @@ def ancestral_sampling(
             random_token = proposal(prob_x)
             start_tokens = torch.cat([start_tokens, random_token], dim=-1)
 
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     elapsed = time.time() - start_time
     print("Ancestral Sampling - Elapsed time: ", elapsed)
     return start_tokens
