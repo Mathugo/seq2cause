@@ -57,10 +57,10 @@ causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
 The same three steps are available as a `seq2cause` command, so you can run causal discovery over your own tokenized dataset without writing any Python:
 
 ```bash
-seq2cause --dataset events.txt --vocab-size 400 --model gpt2
+seq2cause --dataset events.txt --model gpt2
 ```
 
-`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; omit it to fall back to a small randomly initialized model for quick experimentation (`--vocab-size` is then required). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
+`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; its vocabulary size is read from the model automatically. Omit `--model` to fall back to a small randomly initialized model for quick experimentation, in which case the vocabulary size is inferred from the dataset's own token ids (or set explicitly with `--vocab-size`). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
 
 ## 🧪 Evaluation (against a known generator)
 

@@ -90,13 +90,61 @@ def test_main_runs_end_to_end_with_default_model(tmp_path, capsys):
         assert graph.dtype == torch.bool
 
 
-def test_main_requires_vocab_size_without_model(tmp_path):
+def test_main_infers_vocab_size_from_dataset_when_model_and_vocab_size_omitted(tmp_path, capsys):
     dataset_path = tmp_path / "events.txt"
-    dataset_path.write_text("1 2 3\n")
+    dataset_path.write_text("1 2 3 4 5\n4 29 7 12 3\n")
 
-    try:
-        main(["--dataset", str(dataset_path)])
-    except SystemExit as exc:
-        assert "vocab-size" in str(exc)
-    else:
-        raise AssertionError("expected SystemExit when --vocab-size and --model are both omitted")
+    main(["--dataset", str(dataset_path), "--n-particles", "4", "--context-len", "2", "--seed", "0"])
+
+    captured = capsys.readouterr()
+    # Max token id across the dataset is 29 -> inferred vocab_size = 30.
+    assert "vocab_size=30" in captured.out
+    assert "Done in" in captured.out
+
+
+class _FakeConfig:
+    def __init__(self, vocab_size):
+        self.vocab_size = vocab_size
+
+
+class _FakeCausalLM(torch.nn.Module):
+    """Minimal stand-in for a HuggingFace causal LM, avoiding a real Hub
+    download in tests."""
+
+    def __init__(self, vocab_size):
+        super().__init__()
+        self.config = _FakeConfig(vocab_size)
+        self.embed = torch.nn.Embedding(vocab_size, 8)
+        self.head = torch.nn.Linear(8, vocab_size)
+
+    def forward(self, input_ids, **kwargs):
+        logits = self.head(self.embed(input_ids))
+        return type("FakeCausalLMOutput", (), {"logits": logits})()
+
+
+def test_main_uses_models_own_vocab_size_and_warns_on_conflicting_flag(tmp_path, capsys, monkeypatch):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(0, 50, (2, 12))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+
+    fake_model = _FakeCausalLM(vocab_size=50)
+    monkeypatch.setattr(
+        "transformers.AutoModelForCausalLM.from_pretrained", lambda *a, **k: fake_model
+    )
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--model", "fake/tiny-model",
+            "--vocab-size", "999",  # deliberately conflicting -- should be ignored.
+            "--n-particles", "4",
+            "--context-len", "2",
+            "--seed", "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert "--vocab-size 999 ignored" in captured.out
+    assert "vocab_size (50)" in captured.out
+    assert "Done in" in captured.out

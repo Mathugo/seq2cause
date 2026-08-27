@@ -109,8 +109,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--vocab-size",
         type=int,
         default=None,
-        help="Vocabulary size. Required when --model is omitted; inferred from "
-        "--model's config otherwise.",
+        help="Vocabulary size. Usually not needed: inferred from --model's config when "
+        "--model is given, or from the dataset's own token ids (max id + 1) otherwise. "
+        "Pass this explicitly to override either, e.g. if your dataset doesn't happen "
+        "to contain the full vocabulary.",
     )
     parser.add_argument(
         "--context-len",
@@ -169,13 +171,16 @@ def main(argv: list[str] | None = None) -> None:
         from transformers import AutoModelForCausalLM
 
         hf_model = AutoModelForCausalLM.from_pretrained(args.model).eval().to(device)
-        vocab_size = args.vocab_size or hf_model.config.vocab_size
+        vocab_size = hf_model.config.vocab_size
+        if args.vocab_size is not None and args.vocab_size != vocab_size:
+            print(
+                f"Warning: --vocab-size {args.vocab_size} ignored -- using {args.model}'s "
+                f"own vocab_size ({vocab_size}) instead.\n"
+            )
     else:
-        if args.vocab_size is None:
-            raise SystemExit("--vocab-size is required when --model is not given.")
         from transformers import LlamaConfig, LlamaForCausalLM
 
-        vocab_size = args.vocab_size
+        vocab_size = args.vocab_size or (max(int(seq.max()) for seq in sequences) + 1)
         max_len = max(seq.numel() for seq in sequences)
         config = LlamaConfig(
             vocab_size=vocab_size,

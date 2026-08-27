@@ -10,8 +10,11 @@ All notable changes to this project are documented in this file.
   dataset (`--dataset`, accepting a plain text file, `.pt`, or `.npy`)
   using `compute_cmi_matrix`'s `"atomic"` do-intervention strategy and
   `AdaptiveThreshold`, wrapping any HuggingFace causal LM (`--model`) or a
-  small randomly-initialized one for quick experimentation. See README
-  "Command-line interface".
+  small randomly-initialized one for quick experimentation. `--vocab-size`
+  is optional: it's read from `--model`'s own config when given (a
+  conflicting `--vocab-size` is ignored, with a warning), or otherwise
+  inferred from the dataset's own token ids. See README "Command-line
+  interface".
 - A demo GIF at the top of the README (`assets/demo.gif`), showing the
   `seq2cause` CLI running over a tokenized example dataset
   (`examples/event_sequences.txt`), with a `tqdm` progress bar and
