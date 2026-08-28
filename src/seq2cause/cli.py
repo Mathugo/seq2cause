@@ -129,12 +129,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--threshold-method",
         choices=["otsu", "mad", "percentile", "gmm"],
-        default="mad",
+        default="percentile",
         help="Unsupervised cutoff `AdaptiveThreshold` anchors tau on, since no labeled "
-        "ground truth is available here (default: 'mad'; 'otsu' can collapse to almost "
-        "no edges when a score distribution has a single dominant outlier, which is "
-        "common on short sequences -- see README Threshold Selection). Fit ONCE on "
-        "scores pooled across every sequence in --dataset, not per sequence.",
+        "ground truth is available here (default: 'percentile' -- a broad benchmark "
+        "found no method is universally best zero-shot; see README Threshold "
+        "Selection). Fit ONCE on scores pooled across every sequence in --dataset, "
+        "not per sequence.",
     )
     parser.add_argument(
         "--graph-level",

@@ -776,14 +776,18 @@ class AdaptiveThreshold:
 
     Args:
         method: base unsupervised cutoff used to anchor tau -- one of
-            "mad" (default), "percentile", "gmm", "otsu". Prefer "mad" over
-            "otsu": Otsu maximizes between-class variance, which on a CMI
-            score distribution with one dominant outlier and a long
-            near-zero tail (common on a single, short sequence) often
-            isolates JUST that one outlier as its own "class" instead of
-            finding the true/false-edge break -- see README "Threshold
-            Selection" for a worked example (F1 0.13 for otsu vs. 0.57 for
-            mad/gmm on the same data).
+            "percentile" (default), "otsu", "gmm", "mad". No single method
+            is universally best zero-shot: a broad sweep across vocab_size,
+            memory, and sequence length (`scripts/threshold_benchmark.py`)
+            found "percentile" wins or ties in 16/27 configs, "otsu" 10/27,
+            "gmm" 5/27, and "mad" only 2/27 -- but every method has regimes
+            where it fails badly (e.g. "mad"/"gmm" flood the result with
+            false positives when the true graph is very sparse, since both
+            implicitly assume a few-percent edge rate; "otsu" can isolate a
+            single outlier instead of the true/false-edge break when there
+            is one). See README "Threshold Selection" -- if you have ANY
+            labels at all, prefer `select_threshold_by_validation` instead
+            of trusting any of these blindly.
         per_lag: if True, independently refits `method` at EVERY lag
             (noisy for deep lags with few pooled pairs -- see module note
             above). If False (default), a single lag=1 anchor is used,
@@ -810,7 +814,7 @@ class AdaptiveThreshold:
             fallback semantics).
     """
 
-    method: str = "mad"
+    method: str = "percentile"
     per_lag: bool = False
     decay: bool = True
     decay_type: str = "exponential"

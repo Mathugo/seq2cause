@@ -5,14 +5,21 @@ All notable changes to this project are documented in this file.
 ## [Unreleased]
 
 ### Changed
-- **`AdaptiveThreshold`'s default `method` is now `"mad"`, not `"otsu"`.**
-  Otsu maximizes between-class variance, which on a CMI score distribution
-  with one dominant outlier and a long near-zero tail (common on a single,
-  short sequence) often isolates JUST that one outlier as its own "class"
-  rather than the true/false-edge break. Measured on one worked example
-  (`NonlinearSCM`, memory 2, vocab 12, length 40): F1 = 0.13 for `otsu` vs.
-  0.57 for `mad`/`gmm` on the *same* CMI matrix. If you were relying on the
-  old default, pass `AdaptiveThreshold(method="otsu")` explicitly.
+- **`AdaptiveThreshold`'s default `method` is now `"percentile"`.** It was
+  briefly changed to `"mad"` based on a single worked example where
+  `otsu` isolated one dominant CMI outlier instead of the true/false-edge
+  break (F1 0.13 vs 0.57 for `mad`/`gmm` on that one case). A broader
+  sweep (`scripts/threshold_benchmark.py`: vocab_size 10-200, memory 1-6,
+  length 20-120, 3 seeds) showed the opposite trend in other regimes --
+  `mad`/`gmm` implicitly assume a few-percent edge rate and flood the
+  result with false positives when the true graph is very sparse (e.g.
+  199 predicted edges for 3 true ones at vocab=200, memory=6, length=120),
+  while `otsu`'s single-outlier isolation is actually well matched there.
+  Overall: `percentile` best-or-tied in 16/27 configs, `otsu` 10/27, `gmm`
+  5/27, `mad` only 2/27. **There is no universally best unsupervised
+  method** -- see README "Threshold Selection" for the full picture and
+  why validation-based selection is preferred whenever any labels exist.
+  If you were relying on a previous default, pass `method=...` explicitly.
 - The `seq2cause` CLI now fits its threshold ONCE on CMI scores pooled
   across every sequence in `--dataset` (via the new
   `AdaptiveThreshold.apply_tau_by_lag`), instead of re-fitting a fresh
@@ -20,9 +27,14 @@ All notable changes to this project are documented in this file.
   generator, pooling reduces the standard deviation of per-sequence F1
   from 0.12 to 0.09 (`mad`) and 0.18 to 0.08 (`gmm`), i.e. a materially
   more consistent result run to run. `--threshold-method`'s CLI default
-  is also now `mad` (previously `otsu`), for the same reason as above.
+  is also `percentile` (see above), matching the class default.
 
 ### Added
+- `scripts/threshold_benchmark.py`: the reusable benchmark behind the
+  threshold-method comparison above (vocab_size/memory/length grid x 3
+  seeds x 4 methods x per-sequence/pooled fitting, against
+  `NonlinearSCM`'s ground truth). Re-run it after any change to the
+  unsupervised threshold methods.
 - `AdaptiveThreshold.apply_tau_by_lag(cmi_matrix, tau_by_lag)`: applies an
   externally fit `tau_by_lag` (e.g. from scores pooled across several
   sequences) to a single sequence's own CMI matrix, without re-fitting.

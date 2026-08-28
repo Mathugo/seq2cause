@@ -641,11 +641,12 @@ def test_adaptive_threshold_causal_graph_thresholds_a_full_cmi_matrix():
     lc = 20  # large enough that every lag group has >= min_group_size pairs
     cmi_matrix = torch.rand(lc, lc) * 1e-4
     # Plant true edges with a decaying-with-lag signal, well above the noise
-    # floor at every lag, so a properly-decayed threshold should catch them.
+    # floor at every lag, so a properly-decayed threshold should catch them
+    # regardless of which unsupervised `method` is the current default.
     cmi_matrix[0, 1] = 0.2   # lag 1
     cmi_matrix[5, 6] = 0.2   # lag 1
-    cmi_matrix[0, 3] = 0.09  # lag 3
-    cmi_matrix[10, 13] = 0.09  # lag 3
+    cmi_matrix[0, 3] = 0.16  # lag 3
+    cmi_matrix[10, 13] = 0.16  # lag 3
 
     graph = AdaptiveThreshold().causal_graph(cmi_matrix)
     assert graph.shape == cmi_matrix.shape

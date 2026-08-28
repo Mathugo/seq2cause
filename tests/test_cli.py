@@ -200,10 +200,10 @@ def test_main_pools_threshold_across_all_sequences(tmp_path, capsys):
     )
 
 
-def test_main_default_threshold_method_is_mad(tmp_path):
+def test_main_default_threshold_method_is_percentile(tmp_path):
     assert build_arg_parser().parse_args(
         ["--dataset", str(tmp_path / "events.txt")]
-    ).threshold_method == "mad"
+    ).threshold_method == "percentile"
 
 
 class _FakeConfig:
