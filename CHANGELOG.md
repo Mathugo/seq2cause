@@ -30,6 +30,18 @@ All notable changes to this project are documented in this file.
   is also `percentile` (see above), matching the class default.
 
 ### Added
+- `scripts/threshold_benchmark_trained.py`: re-runs the threshold-method
+  comparison against SEPARATELY TRAINED, genuinely imperfect
+  `LlamaForCausalLM`s (not the SCM's own exact-conditional oracle),
+  sweeping vocab_size 100-1000 plus memory/length/sparsity/decay_rate one
+  at a time around a baseline, reporting each trained model's own oracle
+  score (epsilon_hat). Confirms the oracle-based ranking holds with real
+  model-approximation error: `percentile` best-or-tied in 9/13
+  trained-model configs (mean pooled F1 0.364) vs. `otsu` 5/13 (0.180),
+  `gmm` 4/13 (0.172), `mad` 4/13 (0.170). Also surfaces a second finding:
+  when the underlying model is poorly trained (oracle score epsilon_hat
+  > ~0.7), every threshold method scores 0 F1 -- method choice can't
+  recover signal a poorly-trained model never captured.
 - `scripts/threshold_benchmark.py`: the reusable benchmark behind the
   threshold-method comparison above (vocab_size/memory/length grid x 3
   seeds x 4 methods x per-sequence/pooled fitting, against

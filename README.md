@@ -158,6 +158,17 @@ For the base cutoff itself: **there is no universally best method.** `scripts/th
 
 An earlier, narrower worked example (one sequence, vocab 12, memory 2) made `otsu` look uniformly bad -- it isolated a single dominant CMI outlier instead of the true/false-edge break (F1 0.13, vs 0.57 for `mad`/`gmm` on that one case) -- and briefly became the reasoning for defaulting to `mad`. The broader sweep shows the opposite trend in other regimes: at `vocab=200, memory=6, length=120` (true edges are extremely sparse -- 3 out of 6216 pairs), `mad` predicted 199 edges and `gmm` 101 (both implicitly assume a few-percent edge rate, badly wrong here), while `otsu` predicted 1 (precision 100%). Whichever method "wins" depends on how sparse the true causal graph is relative to what that method implicitly assumes -- unknowable without labels. `percentile` had the best overall track record in this sweep and no catastrophic failure mode, hence the default, but treat it as "least bad on average", not "safe in every regime".
 
+**Does this hold up with a real (imperfect) model, not the SCM's own exact-conditional oracle?** `scripts/threshold_benchmark_trained.py` trains a separate, genuinely imperfect `LlamaForCausalLM` (reporting each one's own oracle score epsilon_hat = `(loss - H(P)) / (H_max - H(P))`, Eq. 22) per configuration, sweeping vocab_size from 100 to 1000 plus memory/length/sparsity/decay_rate one at a time around a baseline (a full factorial with real training would take many hours on a laptop CPU, so this is a deliberately reduced, documented design -- see the script's own docstring). Result, pooled F1 across 13 trained-model configurations:
+
+| method | mean F1 | best-or-tied in |
+|---|---|---|
+| `percentile` (default) | 0.364 | 9/13 configs |
+| `otsu` | 0.180 | 5/13 configs |
+| `gmm` | 0.172 | 4/13 configs |
+| `mad` | 0.170 | 4/13 configs |
+
+`percentile`'s advantage holds -- if anything it's more pronounced with real model noise layered on top. A second, honest finding from this run: at `vocab=1000`, `length=20`, and `sparsity=0.9`, the model's own oracle score was poor (epsilon_hat 0.68-0.86, i.e. barely better than random -- the training budget here is deliberately small, ~500 steps, to keep the sweep tractable) and EVERY method scored 0 F1. No thresholding method can recover signal a poorly-trained model never captured in the first place -- method choice only matters once the underlying model has actually learned something.
+
 ```python
 from seq2cause.threshold import AdaptiveThreshold
 
