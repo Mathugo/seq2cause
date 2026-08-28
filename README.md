@@ -69,15 +69,15 @@ The same three steps are available as a `seq2cause` command, so you can run caus
 seq2cause --dataset events.txt --model gpt2
 ```
 
-`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; its vocabulary size is read from the model automatically. Omit `--model` to fall back to a small randomly initialized model for quick experimentation, in which case the vocabulary size is inferred from the dataset's own token ids instead -- there's no `--vocab-size` flag to set.
+`--dataset` accepts a plain text file (one sequence per line, whitespace/comma-separated token ids), or a `.pt`/`.npy` file (a tensor, or a list of variable-length sequences). `--model` is any HuggingFace causal LM id or local checkpoint path; its vocabulary size is read from the model automatically. Omit `--model` to fall back to a small randomly initialized model for quick experimentation, in which case the vocabulary size is inferred from the dataset's own token ids instead. There's no `--vocab-size` flag to set.
 
 By default the CLI reports two graphs per sequence (`--graph-level both`):
-- **Sample-level (time-step) graph**: nodes are *positions* -- the raw `[L-context_len, L-context_len]` causal graph, exactly like the Quick Start above.
+- **Sample-level (time-step) graph**: nodes are *positions*: the raw `[L-context_len, L-context_len]` causal graph, exactly like the Quick Start above.
 - **Summary graph**: nodes are *event types* (token ids). It's built by projecting the sample-level graph down: an edge `u -> v` exists iff some position holding type `u` causally affected a later position holding type `v` *at least once* in that sequence (union aggregation). This answers "does event A cause event B", not just "did position 3 affect position 9".
 
 Use `--graph-level sample` or `--graph-level summary` to compute only one. `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `percentile`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
 
-The threshold is fit ONCE on CMI scores pooled across every sequence in `--dataset`, then applied to each sequence individually -- not re-fit per sequence. A cutoff fit on a single sequence's own (often small) score distribution can be unstable; pooling shares one calibration across the whole dataset and is markedly more consistent (see Threshold Selection).
+The threshold is fit ONCE on CMI scores pooled across every sequence in `--dataset`, then applied to each sequence individually, not re-fit per sequence. A cutoff fit on a single sequence's own (often small) score distribution can be unstable; pooling shares one calibration across the whole dataset and is markedly more consistent (see Threshold Selection).
 
 ## 🧪 Evaluation (against a known generator)
 
@@ -153,7 +153,7 @@ from seq2cause.threshold import AdaptiveThreshold
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)  # method="percentile" by default
 ```
 
-**Getting a consistent answer across runs**: the biggest lever isn't which base method you pick, it's *how much data you fit it on*. Fitting a fresh cutoff on every single sequence's own (small, noisy) CMI distribution gives a different, less reliable answer each time. Pooling scores across several sequences before fitting onz cutoff, then applying it to every sequence via `AdaptiveThreshold.apply_tau_by_lag` is both more accurate on average and much more stable.
+**Getting a consistent answer across runs**: the biggest lever isn't which base method you pick, it's *how much data you fit it on*. Fitting a fresh cutoff on every single sequence's own (small, noisy) CMI distribution gives a different, less reliable answer each time. Pooling scores across several sequences before fitting one cutoff, then applying it to every sequence via `AdaptiveThreshold.apply_tau_by_lag` is both more accurate on average and much more stable.
 
 ```python
 from seq2cause.threshold import AdaptiveThreshold
