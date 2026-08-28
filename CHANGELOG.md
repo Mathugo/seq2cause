@@ -4,7 +4,29 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **`AdaptiveThreshold`'s default `method` is now `"mad"`, not `"otsu"`.**
+  Otsu maximizes between-class variance, which on a CMI score distribution
+  with one dominant outlier and a long near-zero tail (common on a single,
+  short sequence) often isolates JUST that one outlier as its own "class"
+  rather than the true/false-edge break. Measured on one worked example
+  (`NonlinearSCM`, memory 2, vocab 12, length 40): F1 = 0.13 for `otsu` vs.
+  0.57 for `mad`/`gmm` on the *same* CMI matrix. If you were relying on the
+  old default, pass `AdaptiveThreshold(method="otsu")` explicitly.
+- The `seq2cause` CLI now fits its threshold ONCE on CMI scores pooled
+  across every sequence in `--dataset` (via the new
+  `AdaptiveThreshold.apply_tau_by_lag`), instead of re-fitting a fresh
+  cutoff per sequence. Measured across 8 sequences from the same
+  generator, pooling reduces the standard deviation of per-sequence F1
+  from 0.12 to 0.09 (`mad`) and 0.18 to 0.08 (`gmm`), i.e. a materially
+  more consistent result run to run. `--threshold-method`'s CLI default
+  is also now `mad` (previously `otsu`), for the same reason as above.
+
 ### Added
+- `AdaptiveThreshold.apply_tau_by_lag(cmi_matrix, tau_by_lag)`: applies an
+  externally fit `tau_by_lag` (e.g. from scores pooled across several
+  sequences) to a single sequence's own CMI matrix, without re-fitting.
+  `causal_graph` is now implemented in terms of it.
 - `seq2cause.diagnostics.summary_graph`: projects a single sequence's
   sample-level (time-step/position) causal graph down to a summary graph
   whose nodes are event TYPES instead -- an edge `u -> v` exists iff some

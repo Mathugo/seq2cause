@@ -75,7 +75,9 @@ By default the CLI reports two graphs per sequence (`--graph-level both`):
 - **Sample-level (time-step) graph**: nodes are *positions* -- the raw `[L-context_len, L-context_len]` causal graph, exactly like the Quick Start above.
 - **Summary graph**: nodes are *event types* (token ids). It's built by projecting the sample-level graph down: an edge `u -> v` exists iff some position holding type `u` causally affected a later position holding type `v` *at least once* in that sequence (union aggregation). This answers "does event A cause event B", not just "did position 3 affect position 9".
 
-Use `--graph-level sample` or `--graph-level summary` to compute only one. `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `otsu`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
+Use `--graph-level sample` or `--graph-level summary` to compute only one. `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `mad`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
+
+The threshold is fit ONCE on CMI scores pooled across every sequence in `--dataset`, then applied to each sequence individually -- not re-fit per sequence. A cutoff fit on a single sequence's own (often small) score distribution can be unstable; pooling shares one calibration across the whole dataset and is markedly more consistent (see Threshold Selection).
 
 ## 🧪 Evaluation (against a known generator)
 
@@ -143,15 +145,39 @@ This works reliably on CUDA (`torch.cuda.mem_get_info`) and on CPU if `psutil` i
 
 ## 🎯 Threshold Selection
 
-**No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default. It fits Otsu once, globally, anchored at lag 1, then decays it exponentially toward an Otsu-fit floor as lag increases. Fitting Otsu independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points.
+**No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default -- it fits a base unsupervised cutoff once, anchored at lag 1, then decays it toward a fitted floor as lag increases (fitting the cutoff independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points).
+
+For the base cutoff itself, `method="mad"` (median absolute deviation, the default) is the recommended choice, not `"otsu"`. Otsu maximizes between-class variance, which sounds like exactly what you want -- but on a CMI score distribution with one dominant outlier and a long tail of near-zero noise (common on a single, short sequence), the split that maximizes that objective is often to isolate JUST the single largest score as its own "class", rather than the natural break between true and false edges. On one worked example (`NonlinearSCM`, memory 2, vocab 12, length 40): the top CMI scores at lag 1 were `[0.955, 0.073, 0.047, 0.041, ...]`; Otsu drew the cutoff at 0.514, keeping only 1 of 35 scores. Across a full sequence (all lags, `AdaptiveThreshold`'s exponential decay), that gave F1 = 0.13, against F1 = 0.57 for `mad` (and `gmm`) and F1 = 0.55 for `percentile` on the *same* data -- Otsu's outlier-isolation failure mode is not a small effect.
 
 ```python
 from seq2cause.threshold import AdaptiveThreshold
 
-causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)
+causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)  # method="mad" by default
 ```
 
-Other unsupervised options (`mad_threshold`, `percentile_threshold`, `gmm_threshold`) are available in `seq2cause.threshold` but were weaker in our own testing.
+**Getting a consistent answer across runs**: the biggest lever isn't which base method you pick, it's *how much data you fit it on*. Fitting a fresh cutoff on every single sequence's own (small, noisy) CMI distribution gives a different, less reliable answer each time. Pooling scores across several sequences before fitting ONE cutoff -- then applying it to every sequence via `AdaptiveThreshold.apply_tau_by_lag` -- is both more accurate on average and much more stable (measured as the standard deviation of per-sequence F1 across 8 sequences from the same generator):
+
+| method | per-sequence fit (mean F1, std) | pooled fit (mean F1, std) |
+|---|---|---|
+| otsu | 0.24, 0.23 | 0.12, 0.06 |
+| percentile | 0.40, 0.18 | 0.37, 0.05 |
+| gmm | 0.61, 0.18 | 0.68, 0.08 |
+| mad | 0.69, 0.12 | 0.72, 0.09 |
+
+```python
+from seq2cause.threshold import AdaptiveThreshold
+
+threshold = AdaptiveThreshold()
+lag_matrix = ...  # same [Lc, Lc] "q - j" lag matrix for every sequence's cmi_matrix
+valid = lag_matrix > 0
+pooled_scores = torch.cat([cmi[valid] for cmi in cmi_matrices])
+pooled_lags = torch.cat([lag_matrix[valid] for _ in cmi_matrices])
+tau_by_lag = threshold.tau_by_lag(pooled_scores, pooled_lags, max_lag=int(pooled_lags.max()))
+
+causal_graphs = [threshold.apply_tau_by_lag(cmi, tau_by_lag) for cmi in cmi_matrices]
+```
+
+The CLI (above) does exactly this automatically across every sequence in `--dataset`.
 
 **Labeled ground truth available** (Evaluation above, or benchmarking): a fixed CMI threshold doesn't transfer across generators or backbones. Following an independent replication (Chadyuk, Zhang, and Kucukates, "Replicating TRACE: A Practitioner's Guide to Its Threshold and Particle Budget", LotusFlare Inc., Aug 2026), the recommended practice is to select the threshold by maximizing F1 on a held-out validation split instead of hardcoding a constant.
 

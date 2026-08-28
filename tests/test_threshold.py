@@ -553,7 +553,7 @@ def _multi_lag_scores():
 
 def test_adaptive_threshold_default_anchors_at_lag1_otsu_and_decays():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold().tau_by_lag(scores, lags, max_lag=3)
+    tau_by_lag = AdaptiveThreshold(method="otsu").tau_by_lag(scores, lags, max_lag=3)
 
     tau1 = otsu_threshold(scores[lags == 1])
     floor = otsu_threshold(scores[lags == 3])
@@ -567,28 +567,28 @@ def test_adaptive_threshold_default_anchors_at_lag1_otsu_and_decays():
 
 def test_adaptive_threshold_per_lag_refits_independently():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold(per_lag=True).tau_by_lag(scores, lags, max_lag=3)
+    tau_by_lag = AdaptiveThreshold(method="otsu", per_lag=True).tau_by_lag(scores, lags, max_lag=3)
     for lag in range(1, 4):
         assert tau_by_lag[lag] == pytest.approx(otsu_threshold(scores[lags == lag]))
 
 
 def test_adaptive_threshold_no_decay_reuses_lag1_tau_everywhere():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold(decay=False).tau_by_lag(scores, lags, max_lag=3)
+    tau_by_lag = AdaptiveThreshold(method="otsu", decay=False).tau_by_lag(scores, lags, max_lag=3)
     tau1 = otsu_threshold(scores[lags == 1])
     assert all(v == pytest.approx(tau1) for v in tau_by_lag.values())
 
 
 def test_adaptive_threshold_decay_type_none_reuses_lag1_tau_everywhere():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold(decay_type="none").tau_by_lag(scores, lags, max_lag=3)
+    tau_by_lag = AdaptiveThreshold(method="otsu", decay_type="none").tau_by_lag(scores, lags, max_lag=3)
     tau1 = otsu_threshold(scores[lags == 1])
     assert all(v == pytest.approx(tau1) for v in tau_by_lag.values())
 
 
 def test_adaptive_threshold_power_law_decay_matches_formula():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold(decay_type="power_law", exponent=0.5).tau_by_lag(
+    tau_by_lag = AdaptiveThreshold(method="otsu", decay_type="power_law", exponent=0.5).tau_by_lag(
         scores, lags, max_lag=3
     )
     tau1 = otsu_threshold(scores[lags == 1])
@@ -600,7 +600,7 @@ def test_adaptive_threshold_power_law_decay_matches_formula():
 
 def test_adaptive_threshold_explicit_floor_overrides_auto_estimate():
     scores, lags = _multi_lag_scores()
-    tau_by_lag = AdaptiveThreshold(floor=1e-4).tau_by_lag(scores, lags, max_lag=3)
+    tau_by_lag = AdaptiveThreshold(method="otsu", floor=1e-4).tau_by_lag(scores, lags, max_lag=3)
     tau1 = otsu_threshold(scores[lags == 1])
     for lag in range(1, 4):
         expected = 1e-4 + (tau1 - 1e-4) * math.exp(-0.3 * (lag - 1))
@@ -614,7 +614,7 @@ def test_adaptive_threshold_falls_back_to_global_when_lag1_group_too_small():
     scores = torch.cat([lag1_scores, lag2_scores])
     lags = torch.cat([torch.full((2,), 1, dtype=torch.long), torch.full((70,), 2, dtype=torch.long)])
 
-    tau_by_lag = AdaptiveThreshold(decay=False).tau_by_lag(scores, lags, max_lag=2)
+    tau_by_lag = AdaptiveThreshold(method="otsu", decay=False).tau_by_lag(scores, lags, max_lag=2)
     assert tau_by_lag[1] == pytest.approx(otsu_threshold(scores))
 
 
@@ -669,5 +669,65 @@ def test_adaptive_threshold_causal_graph_no_decay_matches_otsu_global():
     expected_graph = torch.zeros_like(cmi_matrix, dtype=torch.bool)
     expected_graph[valid] = cmi_matrix[valid] >= expected_tau
 
-    graph = AdaptiveThreshold(decay=False).causal_graph(cmi_matrix)
+    graph = AdaptiveThreshold(method="otsu", decay=False).causal_graph(cmi_matrix)
     assert torch.equal(graph, expected_graph)
+
+
+def test_apply_tau_by_lag_matches_causal_graph_when_fit_on_the_same_matrix():
+    """causal_graph() == tau_by_lag(...) + apply_tau_by_lag(...) when both
+    are fit/applied on the SAME matrix -- apply_tau_by_lag must be a pure
+    refactor, not a behavior change."""
+    torch.manual_seed(0)
+    lc = 15
+    cmi_matrix = torch.rand(lc, lc) * 1e-4
+    cmi_matrix[0, 1] = 0.2
+    cmi_matrix[2, 5] = 0.1
+
+    th = AdaptiveThreshold(method="mad")
+    expected = th.causal_graph(cmi_matrix)
+
+    lag_matrix = torch.tensor([[q - j for q in range(lc)] for j in range(lc)])
+    valid = lag_matrix > 0
+    tau_by_lag = th.tau_by_lag(cmi_matrix[valid], lag_matrix[valid], max_lag=int(lag_matrix.max()))
+    got = th.apply_tau_by_lag(cmi_matrix, tau_by_lag)
+
+    assert torch.equal(got, expected)
+
+
+def test_apply_tau_by_lag_pooled_across_sequences_is_more_stable_than_per_sequence():
+    """The whole point of `apply_tau_by_lag`: fit tau ONCE on scores pooled
+    across several sequences, then apply it to each -- instead of fitting a
+    fresh (noisier) cutoff per sequence. Regression guard that pooling
+    actually reduces variance across sequences for a method sensitive to a
+    single sequence's own idiosyncrasies."""
+    torch.manual_seed(0)
+    lc = 20
+    n_sequences = 6
+    lag_matrix = torch.tensor([[q - j for q in range(lc)] for j in range(lc)])
+    valid = lag_matrix > 0
+    max_lag = int(lag_matrix.max())
+
+    # Same underlying bimodal structure every time, but each sequence's own
+    # small sample of it is noisy -- exactly what makes per-sequence fitting
+    # unstable in practice.
+    matrices = []
+    for _ in range(n_sequences):
+        m = torch.rand(lc, lc) * 1e-4
+        true_mask = torch.rand(lc, lc) < 0.05
+        m[true_mask & valid] = 0.05 + torch.rand((true_mask & valid).sum()) * 0.05
+        matrices.append(m)
+
+    th = AdaptiveThreshold(method="mad")
+
+    per_sequence_edge_counts = [int(th.causal_graph(m).sum()) for m in matrices]
+
+    pooled_scores = torch.cat([m[valid] for m in matrices])
+    pooled_lags = torch.cat([lag_matrix[valid] for _ in matrices])
+    tau_by_lag = th.tau_by_lag(pooled_scores, pooled_lags, max_lag=max_lag)
+    pooled_edge_counts = [int(th.apply_tau_by_lag(m, tau_by_lag).sum()) for m in matrices]
+
+    # Pooling shares one calibration across all sequences, so the resulting
+    # edge counts must vary less across sequences than fitting independently.
+    assert torch.tensor(pooled_edge_counts, dtype=torch.float).std() <= torch.tensor(
+        per_sequence_edge_counts, dtype=torch.float
+    ).std()

@@ -129,10 +129,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--threshold-method",
         choices=["otsu", "mad", "percentile", "gmm"],
-        default="otsu",
+        default="mad",
         help="Unsupervised cutoff `AdaptiveThreshold` anchors tau on, since no labeled "
-        "ground truth is available here (default: 'otsu' -- see README Threshold "
-        "Selection).",
+        "ground truth is available here (default: 'mad'; 'otsu' can collapse to almost "
+        "no edges when a score distribution has a single dominant outlier, which is "
+        "common on short sequences -- see README Threshold Selection). Fit ONCE on "
+        "scores pooled across every sequence in --dataset, not per sequence.",
     )
     parser.add_argument(
         "--graph-level",
@@ -224,10 +226,8 @@ def main(argv: list[str] | None = None) -> None:
     est_bytes = estimate_tensor_bytes(args.n_particles, first_lc, first.numel(), vocab_size)
     print(f"est. VRAM/RAM per sequence (approx.): {format_bytes(est_bytes)}\n")
 
-    results = []
-    total_sample_edges = 0
-    total_summary_edges = 0
-    top_score = float("-inf")
+    # Pass 1: run the (expensive) do-intervention CI-test for every sequence.
+    cmi_matrices = []
     t0 = time.perf_counter()
     for sequence in tqdm(sequences, desc="CI-tests (do-intervention)", unit="seq"):
         sequence = sequence.to(device)
@@ -241,7 +241,35 @@ def main(argv: list[str] | None = None) -> None:
             n_particles=args.n_particles,
             strategy=args.strategy,
         )
-        causal_graph = threshold.causal_graph(cmi_matrix)
+        cmi_matrices.append(cmi_matrix)
+    elapsed = time.perf_counter() - t0
+
+    # Pass 2: fit ONE threshold from scores POOLED across every sequence,
+    # then apply it to each -- much more stable than re-fitting a fresh,
+    # noisier cutoff per sequence (see README "Threshold Selection"). A
+    # no-op (identical to per-sequence fitting) when there's only 1
+    # sequence.
+    pooled_scores, pooled_lags = [], []
+    for cmi_matrix in cmi_matrices:
+        lc = cmi_matrix.shape[-1]
+        lag_matrix = torch.tensor(
+            [[q - j for q in range(lc)] for j in range(lc)], device=cmi_matrix.device
+        )
+        valid = lag_matrix > 0
+        pooled_scores.append(cmi_matrix[valid])
+        pooled_lags.append(lag_matrix[valid])
+    pooled_scores = torch.cat(pooled_scores)
+    pooled_lags = torch.cat(pooled_lags)
+    tau_by_lag = threshold.tau_by_lag(
+        pooled_scores, pooled_lags, max_lag=int(pooled_lags.max())
+    )
+
+    results = []
+    total_sample_edges = 0
+    total_summary_edges = 0
+    top_score = float("-inf")
+    for sequence, cmi_matrix in zip(sequences, cmi_matrices):
+        causal_graph = threshold.apply_tau_by_lag(cmi_matrix, tau_by_lag)
         top_score = max(top_score, cmi_matrix.max().item())
 
         entry = {}
@@ -250,14 +278,17 @@ def main(argv: list[str] | None = None) -> None:
             total_sample_edges += int(causal_graph.sum())
         if want_summary:
             active_tokens, summary_adj = summary_graph(
-                sequence, causal_graph, context_len=args.context_len, self_loops=args.self_loops
+                sequence.to(cmi_matrix.device),
+                causal_graph,
+                context_len=args.context_len,
+                self_loops=args.self_loops,
             )
             entry["summary_graph"] = {"active_tokens": active_tokens, "adj": summary_adj}
             total_summary_edges += int(summary_adj.sum())
         results.append(entry)
-    elapsed = time.perf_counter() - t0
 
     print(f"\nDone in {elapsed:.1f}s. Top CMI score: {top_score:.2e}")
+    print(f"Threshold fit on {pooled_scores.numel()} scores pooled across {len(sequences)} sequence(s).")
     if want_sample:
         print(
             f"Sample-level (time-step): {total_sample_edges} candidate causal edges "

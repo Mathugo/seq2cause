@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import torch
 
-from seq2cause.cli import load_tokenized_dataset, main
+from seq2cause.cli import build_arg_parser, load_tokenized_dataset, main
 
 
 def test_load_tokenized_dataset_from_text(tmp_path):
@@ -170,6 +170,40 @@ def test_main_accepts_each_threshold_method(tmp_path):
                 "--threshold-method", method,
             ]
         )
+
+
+def test_main_pools_threshold_across_all_sequences(tmp_path, capsys):
+    """The threshold must be fit ONCE on scores pooled across every
+    sequence in the dataset, not re-fit per sequence -- this is the main
+    fix for run-to-run threshold instability (see README "Threshold
+    Selection")."""
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    n_sequences, seq_len, context_len = 3, 16, 3
+    seqs = torch.randint(0, 30, (n_sequences, seq_len))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--context-len", str(context_len),
+            "--n-particles", "4",
+            "--seed", "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    lc = seq_len - context_len
+    expected_pooled = n_sequences * lc * (lc - 1) // 2  # one score per (cause, effect) pair, lag > 0
+    assert f"Threshold fit on {expected_pooled} scores pooled across {n_sequences} sequence(s)." in (
+        captured.out
+    )
+
+
+def test_main_default_threshold_method_is_mad(tmp_path):
+    assert build_arg_parser().parse_args(
+        ["--dataset", str(tmp_path / "events.txt")]
+    ).threshold_method == "mad"
 
 
 class _FakeConfig:

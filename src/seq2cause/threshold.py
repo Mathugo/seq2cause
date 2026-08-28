@@ -776,7 +776,14 @@ class AdaptiveThreshold:
 
     Args:
         method: base unsupervised cutoff used to anchor tau -- one of
-            "otsu" (default), "mad", "percentile", "gmm".
+            "mad" (default), "percentile", "gmm", "otsu". Prefer "mad" over
+            "otsu": Otsu maximizes between-class variance, which on a CMI
+            score distribution with one dominant outlier and a long
+            near-zero tail (common on a single, short sequence) often
+            isolates JUST that one outlier as its own "class" instead of
+            finding the true/false-edge break -- see README "Threshold
+            Selection" for a worked example (F1 0.13 for otsu vs. 0.57 for
+            mad/gmm on the same data).
         per_lag: if True, independently refits `method` at EVERY lag
             (noisy for deep lags with few pooled pairs -- see module note
             above). If False (default), a single lag=1 anchor is used,
@@ -803,7 +810,7 @@ class AdaptiveThreshold:
             fallback semantics).
     """
 
-    method: str = "otsu"
+    method: str = "mad"
     per_lag: bool = False
     decay: bool = True
     decay_type: str = "exponential"
@@ -867,6 +874,13 @@ class AdaptiveThreshold:
         (cause, effect) lag matrix internally, and returns a boolean causal
         graph of the same shape (`[j, q]` = candidate cause `j` -> effect
         `q`; only the upper triangle, `lag = q - j > 0`, is ever True).
+
+        Fits `tau_by_lag` from THIS `cmi_matrix` alone. If you have several
+        sequences, prefer pooling their scores and fitting tau ONCE (see
+        `apply_tau_by_lag`) -- an unsupervised cutoff fit on a single
+        sequence's own (often small, noisy) score population can be
+        unstable, especially for `method="otsu"` (see README "Threshold
+        Selection").
         """
         lc = cmi_matrix.shape[-1]
         lag_matrix = torch.tensor(
@@ -875,6 +889,38 @@ class AdaptiveThreshold:
         valid = lag_matrix > 0
         max_lag = int(lag_matrix.max())
         tau_by_lag = self.tau_by_lag(cmi_matrix[valid], lag_matrix[valid], max_lag=max_lag)
+        return self.apply_tau_by_lag(cmi_matrix, tau_by_lag)
+
+    def apply_tau_by_lag(self, cmi_matrix: Tensor, tau_by_lag: Mapping[int, float]) -> Tensor:
+        """Applies an EXTERNALLY fit `tau_by_lag` (e.g. from `self.tau_by_lag`
+        called on scores POOLED across many sequences) to a single
+        sequence's own `cmi_matrix`, without re-fitting anything.
+
+        This is what lets you calibrate a threshold ONCE across a whole
+        dataset ("population-level") and then apply it consistently to
+        every individual sequence's own CMI matrix ("sample-level"),
+        instead of re-fitting a fresh (and often noisier/less stable) cutoff
+        per sequence -- see README "Threshold Selection".
+
+        Args:
+            cmi_matrix: `[Lc, Lc]` CMI matrix for ONE sequence (its own `Lc`
+                may differ from whatever sequence(s) `tau_by_lag` was fit
+                on -- only the lag VALUES need to match up).
+            tau_by_lag: `{lag: tau}`, as returned by `self.tau_by_lag(...)`.
+                Lags present in `cmi_matrix` but missing from `tau_by_lag`
+                are never flagged as edges (tau defaults to 0, and CMI is
+                always >= 0, so this only matters for negative estimator
+                noise -- effectively "no threshold available at this lag").
+
+        Returns:
+            Boolean `[Lc, Lc]` causal graph, same convention as
+            `causal_graph`.
+        """
+        lc = cmi_matrix.shape[-1]
+        lag_matrix = torch.tensor(
+            [[q - j for q in range(lc)] for j in range(lc)], device=cmi_matrix.device
+        )
+        valid = lag_matrix > 0
 
         tau_matrix = torch.zeros_like(cmi_matrix)
         for lag, tau in tau_by_lag.items():
