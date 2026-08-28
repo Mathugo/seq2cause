@@ -145,29 +145,7 @@ This works reliably on CUDA (`torch.cuda.mem_get_info`) and on CPU if `psutil` i
 
 ## 🎯 Threshold Selection
 
-**No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default -- it fits a base unsupervised cutoff once, anchored at lag 1, then decays it toward a fitted floor as lag increases (fitting the cutoff independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points).
-
-For the base cutoff itself: **there is no universally best method.** `scripts/threshold_benchmark.py` sweeps `vocab_size` (10-200), `memory` (1-6), and sequence `length` (20-120) against `NonlinearSCM`'s known ground truth, fitting each of the 4 unsupervised methods and evaluating both per-sequence and pooled-across-sequences. Result, pooled-fit F1 averaged over 27 configs x 3 seeds:
-
-| method | mean F1 | best-or-tied in |
-|---|---|---|
-| `percentile` (default) | 0.431 | 16/27 configs |
-| `otsu` | 0.361 | 10/27 configs |
-| `gmm` | 0.254 | 5/27 configs |
-| `mad` | 0.263 | 2/27 configs |
-
-An earlier, narrower worked example (one sequence, vocab 12, memory 2) made `otsu` look uniformly bad -- it isolated a single dominant CMI outlier instead of the true/false-edge break (F1 0.13, vs 0.57 for `mad`/`gmm` on that one case) -- and briefly became the reasoning for defaulting to `mad`. The broader sweep shows the opposite trend in other regimes: at `vocab=200, memory=6, length=120` (true edges are extremely sparse -- 3 out of 6216 pairs), `mad` predicted 199 edges and `gmm` 101 (both implicitly assume a few-percent edge rate, badly wrong here), while `otsu` predicted 1 (precision 100%). Whichever method "wins" depends on how sparse the true causal graph is relative to what that method implicitly assumes -- unknowable without labels. `percentile` had the best overall track record in this sweep and no catastrophic failure mode, hence the default, but treat it as "least bad on average", not "safe in every regime".
-
-**Does this hold up with a real (imperfect) model, not the SCM's own exact-conditional oracle?** `scripts/threshold_benchmark_trained.py` trains a separate, genuinely imperfect `LlamaForCausalLM` (reporting each one's own oracle score epsilon_hat = `(loss - H(P)) / (H_max - H(P))`, Eq. 22) per configuration, sweeping vocab_size from 100 to 1000 plus memory/length/sparsity/decay_rate one at a time around a baseline (a full factorial with real training would take many hours on a laptop CPU, so this is a deliberately reduced, documented design -- see the script's own docstring). Result, pooled F1 across 13 trained-model configurations:
-
-| method | mean F1 | best-or-tied in |
-|---|---|---|
-| `percentile` (default) | 0.364 | 9/13 configs |
-| `otsu` | 0.180 | 5/13 configs |
-| `gmm` | 0.172 | 4/13 configs |
-| `mad` | 0.170 | 4/13 configs |
-
-`percentile`'s advantage holds -- if anything it's more pronounced with real model noise layered on top. A second, honest finding from this run: at `vocab=1000`, `length=20`, and `sparsity=0.9`, the model's own oracle score was poor (epsilon_hat 0.68-0.86, i.e. barely better than random -- the training budget here is deliberately small, ~500 steps, to keep the sweep tractable) and EVERY method scored 0 F1. No thresholding method can recover signal a poorly-trained model never captured in the first place -- method choice only matters once the underlying model has actually learned something.
+**No labeled ground truth** (the realistic case, see Quick Start above): `AdaptiveThreshold` is the recommended default, it fits a base unsupervised cutoff once, anchored at lag 1, then decays it toward a fitted floor as lag increases (fitting the cutoff independently per lag instead starves deeper lags of samples and costs 15 to 18 F1 points).
 
 ```python
 from seq2cause.threshold import AdaptiveThreshold
@@ -175,14 +153,7 @@ from seq2cause.threshold import AdaptiveThreshold
 causal_graph = AdaptiveThreshold().causal_graph(cmi_matrix)  # method="percentile" by default
 ```
 
-**Getting a consistent answer across runs**: the biggest lever isn't which base method you pick, it's *how much data you fit it on*. Fitting a fresh cutoff on every single sequence's own (small, noisy) CMI distribution gives a different, less reliable answer each time. Pooling scores across several sequences before fitting ONE cutoff -- then applying it to every sequence via `AdaptiveThreshold.apply_tau_by_lag` -- is both more accurate on average and much more stable (measured as the standard deviation of per-sequence F1 across 8 sequences from the same generator):
-
-| method | per-sequence fit (mean F1, std) | pooled fit (mean F1, std) |
-|---|---|---|
-| otsu | 0.24, 0.23 | 0.12, 0.06 |
-| percentile | 0.40, 0.18 | 0.37, 0.05 |
-| gmm | 0.61, 0.18 | 0.68, 0.08 |
-| mad | 0.69, 0.12 | 0.72, 0.09 |
+**Getting a consistent answer across runs**: the biggest lever isn't which base method you pick, it's *how much data you fit it on*. Fitting a fresh cutoff on every single sequence's own (small, noisy) CMI distribution gives a different, less reliable answer each time. Pooling scores across several sequences before fitting onz cutoff, then applying it to every sequence via `AdaptiveThreshold.apply_tau_by_lag` is both more accurate on average and much more stable.
 
 ```python
 from seq2cause.threshold import AdaptiveThreshold
