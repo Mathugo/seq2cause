@@ -224,7 +224,7 @@ If you use seq2cause in your research, please cite our works:
   publisher = {Zenodo},
   doi = {10.5281/zenodo.19068730},
   url = {https://doi.org/10.5281/zenodo.19068730},
-  version = {0.1.7}
+  version = {0.1.9}
 }
 ```
 

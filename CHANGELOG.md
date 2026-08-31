@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-08-31
+
 ### Changed
 - **`AdaptiveThreshold`'s default `method` is now `"percentile"`.** It was
   briefly changed to `"mad"` based on a single worked example where
@@ -192,5 +194,6 @@ All notable changes to this project are documented in this file.
   (plots, no raw data) remains tracked; `.gitignore` updated to keep future
   raw results/reports local-only.
 
+[0.1.9]: https://github.com/Mathugo/seq2cause/compare/v0.1.7...v0.1.9
 [0.1.7]: https://github.com/Mathugo/seq2cause/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Mathugo/seq2cause/compare/v0.1.5...v0.1.6
