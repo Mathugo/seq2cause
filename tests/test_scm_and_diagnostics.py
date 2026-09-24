@@ -499,3 +499,33 @@ def test_sample_and_summary_graphs_recover_known_scm_structure():
         summary_precision = tp_s / (tp_s + fp_s) if (tp_s + fp_s) else 0.0
         assert summary_recall > 0.5
         assert summary_precision > 0.5
+
+
+def test_compute_cmi_matrix_forwards_noise_min_id():
+    """With `noise_min_id = vocab - 1` there is exactly one admissible noise token,
+    so the estimator no longer depends on the RNG; with the default it does."""
+    vocab_size, context_len = 8, 3
+    scm, seq = create_scm(vocab_size=vocab_size, memory=2, length=10, seed=0)
+    sequence = seq[0]
+    for strategy in ("full", "atomic"):
+        torch.manual_seed(0)
+        a = compute_cmi_matrix(
+            scm, sequence, context_len=context_len, n_particles=4, strategy=strategy,
+            noise_min_id=vocab_size - 1,
+        )
+        torch.manual_seed(1)
+        b = compute_cmi_matrix(
+            scm, sequence, context_len=context_len, n_particles=4, strategy=strategy,
+            noise_min_id=vocab_size - 1,
+        )
+        assert torch.equal(a, b), strategy
+        torch.manual_seed(0)
+        c = compute_cmi_matrix(
+            scm, sequence, context_len=context_len, n_particles=4, strategy=strategy
+        )
+        assert not torch.equal(a, c), strategy
+    sparse = compute_cmi_matrix_sparse(
+        scm, sequence, context_len=context_len, memory=2, n_particles=4,
+        noise_min_id=vocab_size - 1,
+    )
+    assert torch.isfinite(sparse).all()

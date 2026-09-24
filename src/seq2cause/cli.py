@@ -120,6 +120,15 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Number of do-intervention noise particles per candidate cause (default: 32).",
     )
     parser.add_argument(
+        "--noise-min-id",
+        type=int,
+        default=0,
+        help="Smallest token id the do-intervention noise may take: the counterfactual "
+        "draw is uniform over [noise-min-id, vocab_size). Pass the number of reserved "
+        "special ids (e.g. 4 for PAD/BOS/EOS/UNK at 0-3) so no counterfactual places a "
+        "padding or boundary token mid-sequence (default: 0, the whole id range).",
+    )
+    parser.add_argument(
         "--strategy",
         choices=["atomic", "full"],
         default="atomic",
@@ -219,7 +228,8 @@ def main(argv: list[str] | None = None) -> None:
 
     print(
         f"seq2cause: {len(sequences)} event sequence(s), "
-        f"do-intervention strategy={args.strategy!r}, threshold={args.threshold_method!r}"
+        f"do-intervention strategy={args.strategy!r}, threshold={args.threshold_method!r}, "
+        f"noise_min_id={args.noise_min_id}"
     )
     first = sequences[0]
     first_lc = first.numel() - args.context_len
@@ -240,6 +250,7 @@ def main(argv: list[str] | None = None) -> None:
             context_len=args.context_len,
             n_particles=args.n_particles,
             strategy=args.strategy,
+            noise_min_id=args.noise_min_id,
         )
         cmi_matrices.append(cmi_matrix)
     elapsed = time.perf_counter() - t0

@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `uniform_sample(..., min_id=0)`, `compute_cmi_matrix(..., noise_min_id=0)`,
+  `compute_cmi_matrix_sparse(..., noise_min_id=0)`,
+  `params["sampling"]["noise_min_id"]` for `SampleLevelCausalDiscovery`, and
+  `seq2cause --noise-min-id N`: the do-intervention noise is drawn uniformly
+  over `[min_id, vocab_size)` instead of the whole id range. The do-operator
+  is "uniform over the alphabet" of events, but any vocabulary that reserves
+  its first ids for special tokens (PAD/BOS/EOS/UNK at 0-3 in most
+  tokenizers) previously had counterfactuals placing padding or boundary
+  tokens mid-sequence -- inputs the model never saw there. Pass the number
+  of reserved ids (e.g. `4`). The default `0` keeps the previous draw bit
+  for bit. Reported by Alex Chadyuk (trace-bench harness; sibling
+  implementation deviation D-CB-3).
+
 ## [0.1.9] - 2026-08-31
 
 ### Changed

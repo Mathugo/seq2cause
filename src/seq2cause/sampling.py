@@ -409,6 +409,7 @@ def uniform_sample(
     n_samples: int = 128,
     cls_token_id: int | None = None,
     device: torch.device | None = None,
+    min_id: int = 0,
 ) -> Int[Tensor, "bs n_samples"] | Int[Tensor, "bs n_samples L"]:
     """Uniform sampling over the vocabulary for virtual do-interventions.
 
@@ -421,6 +422,13 @@ def uniform_sample(
         n_samples: Number of samples (particles) to generate per batch element.
         cls_token_id: If provided, forces the first token of every sample to this ID.
         device: Target device for sampled tensors.
+        min_id: Smallest id the noise may take; the draw is uniform over
+            `[min_id, vocab)`. The do-operator is "uniform over the alphabet"
+            of events, and a vocabulary that reserves its first ids for
+            special tokens (PAD/BOS/EOS/UNK at 0-3 in most tokenizers) should
+            pass `min_id=n_specials` so no counterfactual ever places a
+            padding or boundary token mid-sequence. `0` (the default) is the
+            pre-0.1.10 behaviour: the whole id range, specials included.
 
     Returns:
         sampled_tokens: The discrete samples. [bs, n_samples] for 2D input
@@ -428,12 +436,15 @@ def uniform_sample(
     """
 
     device = device or prob_x.device
+    vocab = prob_x.shape[-1]
+    if not 0 <= min_id < vocab:
+        raise ValueError(f"min_id must satisfy 0 <= min_id < vocab ({vocab}), got {min_id}")
 
     if prob_x.dim() == 2:
         # ---- Single-step intervention ----
         bs, vocab = prob_x.shape
 
-        sampled_tokens = torch.randint(low=0, high=vocab, size=(bs,), device=device)
+        sampled_tokens = torch.randint(low=min_id, high=vocab, size=(bs,), device=device)
 
         if cls_token_id is not None:
             sampled_tokens[:] = cls_token_id
@@ -445,7 +456,7 @@ def uniform_sample(
         bs, L, vocab = prob_x.shape
         n = n_samples
 
-        sampled = torch.randint(low=0, high=vocab, size=(bs, n, L), device=device)
+        sampled = torch.randint(low=min_id, high=vocab, size=(bs, n, L), device=device)
 
         # Force CLS token if needed
         if cls_token_id is not None:
