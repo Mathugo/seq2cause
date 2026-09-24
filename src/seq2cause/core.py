@@ -9,6 +9,7 @@ from seq2cause.causal_strength import (
     calc_neural_saliency,
     calc_neural_shapley,
 )
+from seq2cause.kl import DEFAULT_KL_MODE, check_kl_mode
 from seq2cause.sampling import (
     ancestral_sampling,
     do_interventions,
@@ -32,6 +33,9 @@ class SampleLevelCausalDiscovery:
     Attributes:
         tfx (any): The autoregressive model used to compute next-token probabilities.
         params (dict): A dictionary of parameters for sampling and causal discovery.
+            `params["kl_mode"]` (`"logspace"`, the default, or `"clamp"`) selects the
+            Bernoulli-KL algebra of `calc_lag_info_gain` (see `seq2cause.kl`), and an
+            optional dict at `params["kl_stats"]` accumulates the corrupted-cell counts.
         ds_test (any): The test dataset containing input sequences.
         logits_key_of_output_tfx (str): The key to access logits from the model's output.
     """
@@ -54,6 +58,7 @@ class SampleLevelCausalDiscovery:
         self.guidance = params["sampling"].get("guidance", 3)
         self.N = params["sampling"].get("value", 0)
         self.full = params.get("full", True)
+        self.kl_mode = check_kl_mode(params.get("kl_mode", DEFAULT_KL_MODE))
         self.printed_max_bs = False
 
         print(
@@ -226,8 +231,14 @@ class SampleLevelCausalDiscovery:
                     self._logits_key_of_output_tfx
                 ].reshape(bs, self.N, interv_dim, L, -1)  # put back
 
-                # crazy amount of operations here
-                prob_x_inter = torch.nn.functional.softmax(o_b_upsampled_intervene, dim=-1)
+                # crazy amount of operations here. The lagged information gain reads
+                # LOG-probabilities in "logspace" mode (a float32 softmax saturates to
+                # exactly 1.0 and breaks the v0.1.9 clamp -- see `seq2cause.kl`);
+                # "clamp" mode and the Granger read-out take probabilities.
+                if cs is calc_lag_info_gain and self.kl_mode == "logspace":
+                    prob_x_inter = torch.nn.functional.log_softmax(o_b_upsampled_intervene, dim=-1)
+                else:
+                    prob_x_inter = torch.nn.functional.softmax(o_b_upsampled_intervene, dim=-1)
                 print("[!] Tensor shape after intervention and inference: ", prob_x_inter.shape)
 
                 # By this point `cs` is always calc_lag_info_gain or

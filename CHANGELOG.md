@@ -4,6 +4,36 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **The float32 `1 - 1e-9` clamp in the Bernoulli KL was a no-op at the
+  upper end.** `float32(1 - 1e-9) == 1.0`, so a next-token probability that
+  saturates to exactly `1.0` (a logit gap of about 17 nats) produced `NaN`
+  (observed branch) or `+inf` (baseline branch) in both
+  `causal_strength.calc_lag_info_gain` and `diagnostics.compute_cmi_matrix`.
+  `calc_lag_info_gain`'s `nan_to_num` then silently coerced those cells to
+  `0` and to the float32 maximum (`3.4e38`); in the CLI a single `NaN` made
+  the pooled percentile threshold `NaN` and returned zero edges for every
+  sequence. Both estimators now default to `kl_mode="logspace"`: the same
+  divergence evaluated from `log_softmax` log-probabilities in float64 with
+  `log(1 - p) = log1mexp(log p)` (new module `seq2cause.kl`), which is
+  finite for every finite input and agrees with the old algebra to rounding
+  wherever that was finite. `kl_mode="clamp"` keeps the v0.1.9 algebra
+  verbatim (`tests/fixtures/lag_info_gain_v019.json` pins it bit for bit),
+  and in either mode an optional `stats` dict (`params["kl_stats"]` for
+  `SampleLevelCausalDiscovery`) accumulates how many cells the clamp
+  algebra would corrupt, split into collapsed (NaN) and saturated (+inf).
+  Reported by Alex Chadyuk (trace-bench harness; sibling implementation
+  `alex-chadyuk/trace-cmi-bench`, deviation D-CB-6).
+
+### Added
+- `seq2cause --kl-mode {logspace,clamp}` (default `logspace`); the CLI
+  prints the clamp-mode corruption count and warns when a `clamp` run's
+  pooled threshold is `NaN`.
+- `compute_cmi_matrix(..., kl_mode=, stats=)`, `compute_cmi_matrix_sparse`
+  (forwarded), `calc_lag_info_gain(..., kl_mode=, stats=)`, and
+  `SampleLevelCausalDiscovery` reading `params["kl_mode"]` /
+  `params["kl_stats"]`.
+
 ## [0.1.9] - 2026-08-31
 
 ### Changed
