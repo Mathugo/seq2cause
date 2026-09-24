@@ -56,6 +56,16 @@ class SampleLevelCausalDiscovery:
         self.full = params.get("full", True)
         self.printed_max_bs = False
 
+        strategy = params["sampling"].get("strategy", "full")
+        if strategy != "full":
+            raise ValueError(
+                "SampleLevelCausalDiscovery drives the 'full' staircase construction only "
+                f"(got strategy={strategy!r}): `calc_lag_info_gain` compares each staircase row "
+                "with the previous one, which under 'atomic' are two different noised causes "
+                "rather than cause-noised vs cause-observed. Use "
+                "`diagnostics.compute_cmi_matrix(strategy='atomic')` instead."
+            )
+
         print(
             f"[!] Starting the sample level causal discovery with full version {self.full} "
             f"context {self.context} cls_token_id {self.cls_token_id} context sampling {self.proposal_fct} "
@@ -128,9 +138,13 @@ class SampleLevelCausalDiscovery:
         adjacency matrix.
 
         Returns:
-            A tuple containing the original batch and the computed adjacency matrix representing causal relationships.
+            A tuple containing the original batch and the computed adjacency matrix representing causal relationships,
+            each concatenated over EVERY batch of the dataloader along dimension 0 (`[n_sequences, L]` /
+            `[n_sequences, L-c, L-c]`), so all sequences must share one length.
         """
 
+        batches: list[dict] = []
+        adjs: list[torch.Tensor] = []
         pbar = tqdm(self._dl_test, desc="CI-tests (batch x context)", unit="batch")
         for _, batch in enumerate(pbar):
             self.print_real_bs(batch["input_ids"].shape)
@@ -151,9 +165,15 @@ class SampleLevelCausalDiscovery:
             if cs == "Granger":
                 cs = calc_granger_score
             elif cs == "InputXGradient":
-                return calc_neural_saliency(self.tfx, batch, self.params)
+                batch, adj = calc_neural_saliency(self.tfx, batch, self.params)
+                batches.append(batch)
+                adjs.append(adj)
+                continue
             elif cs == "SHAPLEY":
-                return calc_neural_shapley(self.tfx, batch, self.params)
+                batch, adj = calc_neural_shapley(self.tfx, batch, self.params)
+                batches.append(batch)
+                adjs.append(adj)
+                continue
             else:
                 cs = calc_lag_info_gain
 
@@ -165,10 +185,12 @@ class SampleLevelCausalDiscovery:
                 prob_x = torch.nn.functional.softmax(hidden_states, dim=-1)  # p(.|z)
                 expanded_attention_mask = batch["attention_mask"].unsqueeze(1).repeat(1, self.N, 1)
 
-                # Truncated context
+                # Truncated context: `ancestral_sampling` returns `[bs * N, c]` with the
+                # particle index fastest, so it regroups per sequence as `[bs, N, c]`
+                # (the previous `unsqueeze(0)` gave `[1, bs * N, c]`, which only matched
+                # the `[bs, N, ...]` intervention tensor below when bs == 1).
                 prefix_upsampled = ancestral_sampling(self.tfx, batch, **self.params["sampling"])
-                if len(prefix_upsampled.size()) == 2:
-                    prefix_upsampled = prefix_upsampled.unsqueeze(0)
+                prefix_upsampled = prefix_upsampled.reshape(bs, self.N, -1)
                 rest = batch["input_ids"][:, self.context :]  # [bs, L - c]
 
                 """Intervention: stairways"""
@@ -232,6 +254,18 @@ class SampleLevelCausalDiscovery:
 
                 # By this point `cs` is always calc_lag_info_gain or
                 # calc_granger_score (the InputXGradient/SHAPLEY branches
-                # above already returned) -- neither takes `tfx`.
+                # above already continued) -- neither takes `tfx`.
                 adj = cs(prob_x_inter, batch, self.params)
-                return batch, adj
+                batches.append(batch)
+                adjs.append(adj)
+
+        # Every batch has been processed (the return used to sit inside the loop, so
+        # only the first batch of the dataloader was ever scored).
+        return _concat_batches(batches), torch.cat(adjs, dim=0)
+
+
+def _concat_batches(batches: list[dict]) -> dict:
+    """Concatenate a list of collated batch dicts along dimension 0."""
+    if not batches:
+        raise ValueError("SampleLevelCausalDiscovery.run(): the dataloader yielded no batch")
+    return {key: torch.cat([b[key] for b in batches], dim=0) for key in batches[0]}

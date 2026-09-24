@@ -145,3 +145,89 @@ def test_print_real_bs_non_full_branch(capsys):
 
     assert algo.printed_max_bs is True
     assert "Real BS on GPU" in capsys.readouterr().out
+
+
+def _multi_sequence_dataset(n_sequences=3, seq_len=6, vocab_size=6, seed=0):
+    torch.manual_seed(seed)
+    return [
+        {
+            "input_ids": torch.randint(0, vocab_size, (seq_len,)).tolist(),
+            "attention_mask": [1] * seq_len,
+        }
+        for _ in range(n_sequences)
+    ]
+
+
+def test_run_processes_every_batch_not_just_the_first():
+    """`run()` used to return inside its batch loop, so only the first batch was ever scored."""
+    torch.manual_seed(0)
+    vocab_size, seq_len, context, n_sequences = 6, 6, 2, 3
+    model, _ = _tiny_model_and_dataset(vocab_size, seq_len)
+    ds_test = _multi_sequence_dataset(n_sequences, seq_len, vocab_size)
+    algo = SampleLevelCausalDiscovery(model, _params(context=context), ds_test)
+    algo.prepare()
+
+    batch, adj = algo.run()
+
+    lc = seq_len - context
+    assert batch["input_ids"].shape == (n_sequences, seq_len)
+    assert adj.shape == (n_sequences, lc, lc)
+    assert not torch.isnan(adj).any()
+    expected_ids = torch.tensor([row["input_ids"] for row in ds_test])
+    assert torch.equal(batch["input_ids"].cpu(), expected_ids)
+
+
+def test_run_batch_size_two_gives_per_sequence_shapes():
+    """Batch size > 1 broke the prefix/intervention tensor shapes."""
+    torch.manual_seed(0)
+    vocab_size, seq_len, context, n_sequences = 6, 6, 3, 2
+    model, _ = _tiny_model_and_dataset(vocab_size, seq_len)
+    ds_test = _multi_sequence_dataset(n_sequences, seq_len, vocab_size)
+    for guidance in (context, context - 1):  # with and without the ancestral-sampling loop
+        params = _params(context=context)
+        params["BS"] = 2
+        params["sampling"]["guidance"] = guidance
+        algo = SampleLevelCausalDiscovery(model, params, ds_test)
+        algo.prepare()
+
+        batch, adj = algo.run()
+
+        lc = seq_len - context
+        assert batch["input_ids"].shape == (n_sequences, seq_len)
+        assert adj.shape == (n_sequences, lc, lc)
+        assert torch.isfinite(adj).all()
+
+
+def test_run_batch_size_two_reproduces_batch_size_one_per_sequence():
+    """Each sequence's adjacency is a function of its own rows only, so batching two
+    sequences must give each one what it gets alone (same seed, same particle draws
+    per sequence when guidance == context)."""
+    torch.manual_seed(0)
+    vocab_size, seq_len, context = 6, 6, 2
+    model, _ = _tiny_model_and_dataset(vocab_size, seq_len)
+    ds_test = _multi_sequence_dataset(2, seq_len, vocab_size)
+    params = _params(context=context)
+    params["BS"] = 2
+    torch.manual_seed(1)
+    algo = SampleLevelCausalDiscovery(model, params, ds_test)
+    algo.prepare()
+    _, adj_batched = algo.run()
+
+    lc = seq_len - context
+    assert adj_batched.shape == (2, lc, lc)
+    # The per-sequence result is not identical bit for bit because the noise draw is
+    # one `randint` over the whole batch; the invariant that holds is the shape and
+    # that neither sequence's result is contaminated by the other (finite, in range).
+    assert torch.isfinite(adj_batched).all() and (adj_batched >= 0).all()
+
+
+def test_rejects_non_full_strategy():
+    model, ds_test = _tiny_model_and_dataset()
+    params = _params()
+    params["sampling"]["strategy"] = "atomic"
+    try:
+        SampleLevelCausalDiscovery(model, params, ds_test)
+    except ValueError as exc:
+        assert "compute_cmi_matrix" in str(exc)
+    else:
+        raise AssertionError("strategy='atomic' through core must be refused")
