@@ -1,0 +1,56 @@
+# --- seq2cause-trace-bench --------------------------------------------------
+# Generated data and binary run artifacts never enter version control (PRD
+# non-negotiable 13). Corpora come from the published dataset; models, score
+# matrices, prediction and ranking files live in object storage under content
+# hashes; this directory carries code, configuration and the record of a run.
+corpora/
+data/
+out/
+*.parquet
+*.npz
+*.npy
+*.pt
+*.safetensors
+*.gz
+*.jsonl
+*.log
+prediction-*.json
+ranking-*.json
+shippedcut-*.json
+val-table.json
+
+# Committed fixtures are the one exception: small JSON records.
+!tests/fixtures/*.json
+
+# Private-side material must never be here even by accident.
+*.tfvars
+denylist*.json
+.env
+.envrc
+
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[codz]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+.ipynb_checkpoints
+
+# --- OS / editors ---------------------------------------------------------------
+.DS_Store
+._*
+.idea/
+.vscode/
+.claude/

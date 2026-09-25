@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seq2cause-trace-bench"
+version = "0.1.0"
+description = "Benchmark harness: the shipped seq2cause (TRACE) scored on the trace-bench corpora through the benchmark's own scorer"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.0",
+    "numpy>=2.0,<3",
+    "pyarrow>=25.0,<26",
+    "scipy>=1.11",
+    "huggingface_hub>=0.30",
+    "safetensors>=0.4",
+    "transformers>=5.0",
+    "accelerate",
+    "captum",
+    "jaxtyping",
+    "datasets",
+    "seaborn",
+    "tqdm",
+    "trace-bench[sid] @ git+https://github.com/alex-chadyuk/trace-bench@v0.3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff"]
+
+[tool.setuptools]
+packages = ["seq2causebench"]
+package-dir = { "" = "src" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]

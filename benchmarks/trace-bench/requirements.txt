@@ -1,0 +1,20 @@
+# Runtime deps of the harness. The benchmark package is pinned to the release tag
+# whose corpora this directory scores (one tool version per report cell; `report`
+# refuses a mix); `sid` pulls gadjid for SID / AID on the observable twin. The
+# method under test, seq2cause itself, is installed from the repository root
+# WITHOUT its dependency pins (`pip install --no-deps -e ../..`, deviation D-SB-1
+# in RUN.md); its runtime dependencies are listed here instead.
+torch>=2.0
+numpy>=2.0,<3
+pyarrow>=25.0,<26
+scipy>=1.11
+huggingface_hub>=0.30
+safetensors>=0.4
+transformers>=5.0
+accelerate
+captum
+jaxtyping
+datasets
+seaborn
+tqdm
+trace-bench[sid] @ git+https://github.com/alex-chadyuk/trace-bench@v0.3.0

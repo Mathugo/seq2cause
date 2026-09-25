@@ -1,0 +1,88 @@
+# RUN — environment, deviation record, verification, run registry
+
+The reproducibility record for `seq2cause-trace-bench`, the harness that
+scores the shipped seq2cause package (TRACE, Math & Lienhart 2026,
+arXiv:2602.01135) on the trace-bench corpora: what runs where, every numbered
+departure from the paper or from the shipped code (each dated **before** the
+run that depends on it, PRD non-negotiable 12), how a result is verified, and
+one registry row per run. "The shipped code" is seq2cause v0.1.9 (commit
+`67416a2`); "the sibling" is `alex-chadyuk/trace-cmi-bench` at `f54776a`, the
+source of the copied and adapted harness modules (see `NOTICE`).
+
+## Environment
+
+- **Local:** one conda env from `environment.yml` (python 3.11; torch, numpy 2,
+  pyarrow 25, scipy, huggingface_hub, safetensors, transformers, accelerate,
+  captum, jaxtyping, datasets, seaborn, tqdm and `trace-bench[sid]` at tag
+  `v0.3.0` via `requirements.txt`), with the method under test installed from
+  the repository root **without its dependency pins**:
+  `pip install --no-deps -e ../..` (D-SB-1). Local use is the test suite on
+  tiny fixtures and record rendering only: **nothing runs locally, the
+  smallest rung included** (PRD non-negotiable 2, an operating rule of the
+  owner; the package itself runs anywhere).
+- **Runs:** cloud GPU instances provisioned by the workspace's private
+  terraform, one dated replica file per run, no command-line overrides (PRD
+  non-negotiable 3). The replica carries the verbatim invocation; the run
+  record (`run/arguments.json`) republishes every algorithm value.
+  Provisioning values never appear here.
+- **Records:** every run writes `run/{arguments,results,run_meta}.json`
+  (`run_meta` = repository commit, the shipped package's version, torch/CUDA,
+  GPU model, host RAM, CPU count, wall clock, peak device and resident memory,
+  `pip freeze`, and the replica name and AWS profile name a stage is told);
+  binaries ride object storage under content hashes with a location-free
+  `artifacts.json` manifest.
+- **Benchmark:** trace-bench corpora at tool version **0.3.0** only; `report`
+  refuses a cell that mixes tool versions.
+
+## Deviations from the paper and from the shipped code (D-SB-n)
+
+Each entry states what it **follows** and what it **deviates from**. Dated
+2026-09-24 unless noted; all predate the first run.
+
+| id | follows | deviates from |
+|---|---|---|
+| D-SB-1 | the shipped `pyproject.toml` (`numpy<2.0`, `pyarrow<17`, Python ≥ 3.8) | the package is installed `--no-deps` under numpy 2.4.6 / pyarrow 25.0.1 / torch 2.14.0 / transformers 5.17.0 / captum 0.9.0 (the shipped suite passes 160/160 under this set, verified 2026-09-24); retired when fix PR #4 (`fix-relax-pins`) reaches the author's main line. |
+| D-SB-2 | `SampleLevelCausalDiscovery.run()` and `diagnostics.compute_cmi_matrix` as the entry points | the harness calls the shipped functions in the shipped order from **one** forward pass per `(probe, noise, c, N)` — `ancestral_sampling`, `uniform_sample`, `do_interventions`, the model forward, then `calc_lag_info_gain` / `calc_granger_score` (core) or `_predicted_true_token_(log_)probs` and `_cmi_matrix_from_*` (cli) — because each entry point returns a single coerced matrix while three read-outs (shipped KL, fixed KL, Granger) need the same tensor, and `run()` builds an `Accelerator` per instance. Bit-equal parity tests against both entry points on the fixture, and the shipped cut is checked against `seq2cause.cli.main`'s own boolean graphs. |
+| D-SB-3 | the v0.1.9 Bernoulli KL (`clamp(p, 1e-9, 1 − 1e-9)` in float32) | fix PR #1 (`fix-fp32-clamp-logspace-kl`, `1cc3d83`) merged into the harness branch: `kl_mode="logspace"` evaluates the divergence from `log_softmax` in float64 (`seq2cause.kl`); the `fixed-kl` path runs it on the same forward and draws as the `shipped` path (`kl_mode="clamp"`, pinned bit for bit by `tests/fixtures/lag_info_gain_v019.json` in the shipped suite). The corrupted-cell counts (collapsed / saturated) are recorded on every path. |
+| D-SB-4 | the v0.1.9 atomic construction and batch loop | fix PR #2 (`fix-atomic-and-batch`, `aaa2970`) merged: the atomic mask lives on the KL's device (as shipped it raised on every accelerator), `run()` processes every batch, batch size > 1 shapes, `strategy="atomic"` through `core` refused. No measured quantity changes at batch size 1 with `strategy="full"`; the harness moves the small atomic tensors to the CPU so `trace/cli-atomic` runs with or without the merge. |
+| D-SB-5 | the v0.1.9 noise draw over `[0, V)` (specials included) | fix PR #3 (`fix-noise-real-ids`, `9ce172a`) merged: `noise_min_id = N_SPECIALS` draws over real event ids only on the `fixed` path (a separate forward, paired by corpus, seed and model hash but not by draw); the `shipped` and `fixed-kl` paths keep `noise_min_id = 0`. |
+| D-SB-6 | bare integer ids, vocabulary inferred from `max(id) + 1` | tokens are the shipped `views/<view>/model-vocab.json` as-is (specials 0–3, base ops = `op:ok`, minted non-OK variants above the correlator's `min_count`); unminted variants fold to their base op (fold count reported by `prepare`) and the number of scoring-universe tokens the method can never emit is reported per corpus (sibling D-CB-16). |
+| D-SB-7 | one dataset, one model | one model per corpus, trained on the `end-session` view; both grains are probed from that frozen model (request sequences from `end-request`, session sequences from `end-session` under `--max-len 64`); `end` ordering (callee precedes caller = the direction outcomes propagate in the target), `start` one flag away (sibling D-CB-17, D-CB-11). Sequence = `BOS + ids + EOS`, BOS counts toward `c`. |
+| D-SB-8 | `--context-len 4` | `c` is a required knob swept blind on validation per grain (request {1, 2, 3}, session {2, 4, 8}) and frozen with τ and N; `guidance g = min(3, c)` for the core probe (sibling D-CB-4). |
+| D-SB-9 | `--n-particles 32` | `N` is swept on {2, 8, 32} (xl: {2, 8, 16}) and frozen; the saliency and Shapley baselines have no particle axis. |
+| D-SB-10 | the boolean per-sequence union projection (`summary_graph`) | the type-level score of a token pair is the **max** over every within-sequence occurrence (mean and count recorded beside it); within-operation pairs and special tokens are dropped at projection; two files per read (thresholded prediction + full ranking) because the scorer treats every listed edge as present (sibling D-CB-8, D-CB-12, D-CB-18). |
+| D-SB-11 | one threshold rule (the CLI's pooled percentile with lag decay) | two cuts of one score table for the cli arms: `shipped` (the tool's rule, every knob passed explicitly and recorded, fitted on the full strict-upper triangle of every stored matrix exactly as `cli.py` pools it, no truth) and `frozen` (the validation-swept τ every arm uses). The shipped cut inherits `(c, N)` from its frozen sibling cell. |
+| D-SB-12 | the shipped memory estimate (`cli.estimate_tensor_bytes`, the logits tensor only) | the harness estimate is twice the shipped one (logits plus the softmax) plus an activation term, refused above the declared cap of `plans/caps.md` (PRD scenario 18); shipped estimate, harness estimate, cap and measured peak are recorded per run. |
+| D-SB-13 | no trainer in the package (the author's research script is toy-scale) | the sibling's clean-room trainer adapted to a Hugging Face `LlamaForCausalLM` built from a `LlamaConfig`, saved per checkpoint in the Hugging Face directory format; the model hash is the sha256 of `model.safetensors`; the oracle score ε̂ is taken against an independent order-2 n-gram entropy floor, never the minimum validation loss (sibling D-CB-7). The frozen model is the last checkpoint unless the pre-registered trigger fires (`plans/`). |
+| D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample; the coverage rule of the arm plans may raise the sample in a new dated replica before a freeze. |
+
+Deviations for later stages are numbered here before the run that depends
+on them; the arm plans under `plans/` reference these ids.
+
+## Verification
+
+- **Every commit:** `pytest tests/` green in the harness env;
+  `tests/test_no_defaults.py` (no algorithm knob has a default),
+  `tests/test_repo_hygiene.py` (no private identifier, location or binary in
+  any file this work touches) and `tests/test_notice_present.py` (copied code
+  keeps its notice) fail the build. The shipped suite (`pytest tests/` at the
+  repository root, 190 tests after the four fix merges) stays green.
+- **Per run:** the executing host's log shows the command exiting with
+  status 0 and the output sync completing; `run/*.json` carry every
+  scenario-24 field, the replica name and the profile; a registry row lands
+  below.
+- **Per rung:** `report` builds every cell from five seeds or records the
+  reason; the estimator-difference and cut-difference tables exist per axis
+  and per lag with the paired test; every bidirected column carries the
+  structural-limitation note; per-sequence tables stand alone per grain with
+  the scoreable fraction and the predict-all value; the wall clock lands within
+  twice its estimate before the next rung opens.
+
+## Run registry
+
+One row per run, newest last. Object-store locations are never written here;
+the run directory's `artifacts.json` (hashes only) and the private replica
+are the pointers.
+
+| date (UTC) | run | command | rung/variant/seed | split | model sha256 (8) | exit | wall clock | gpu | outcome |
+|---|---|---|---|---|---|---|---|---|---|
