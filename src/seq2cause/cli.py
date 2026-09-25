@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 from seq2cause.adapters import HFModelAdapter
 from seq2cause.diagnostics import compute_cmi_matrix, summary_graph
+from seq2cause.kl import DEFAULT_KL_MODE, KL_MODES
 from seq2cause.threshold import AdaptiveThreshold
 from seq2cause.utils import check_memory_budget, estimate_tensor_bytes, format_bytes
 
@@ -136,6 +137,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "see README).",
     )
     parser.add_argument(
+        "--kl-mode",
+        choices=list(KL_MODES),
+        default=DEFAULT_KL_MODE,
+        help="Bernoulli-KL algebra of the CI-test (default: 'logspace', evaluated from "
+        "log-probabilities in float64 so a next-token probability that saturates to 1.0 "
+        "in float32 stays finite). 'clamp' reproduces v0.1.9 exactly, whose upper clamp "
+        "is a no-op in float32: one saturated cell yields NaN/+inf and a single NaN makes "
+        "the pooled threshold NaN, i.e. zero edges for every sequence. Either way the "
+        "number of cells 'clamp' would corrupt is reported.",
+    )
+    parser.add_argument(
         "--threshold-method",
         choices=["otsu", "mad", "percentile", "gmm"],
         default="percentile",
@@ -229,8 +241,10 @@ def main(argv: list[str] | None = None) -> None:
     print(
         f"seq2cause: {len(sequences)} event sequence(s), "
         f"do-intervention strategy={args.strategy!r}, threshold={args.threshold_method!r}, "
+        f"kl_mode={args.kl_mode!r}, "
         f"noise_min_id={args.noise_min_id}"
     )
+    kl_stats: dict[str, int] = {}
     first = sequences[0]
     first_lc = first.numel() - args.context_len
     est_bytes = estimate_tensor_bytes(args.n_particles, first_lc, first.numel(), vocab_size)
@@ -250,6 +264,8 @@ def main(argv: list[str] | None = None) -> None:
             context_len=args.context_len,
             n_particles=args.n_particles,
             strategy=args.strategy,
+            kl_mode=args.kl_mode,
+            stats=kl_stats,
             noise_min_id=args.noise_min_id,
         )
         cmi_matrices.append(cmi_matrix)
@@ -300,6 +316,17 @@ def main(argv: list[str] | None = None) -> None:
 
     print(f"\nDone in {elapsed:.1f}s. Top CMI score: {top_score:.2e}")
     print(f"Threshold fit on {pooled_scores.numel()} scores pooled across {len(sequences)} sequence(s).")
+    n_corrupt = kl_stats.get("n_cell_collapsed", 0) + kl_stats.get("n_cell_saturated", 0)
+    print(
+        f"Clamp-mode corruption: {kl_stats.get('n_cell_collapsed', 0)} collapsed (NaN) and "
+        f"{kl_stats.get('n_cell_saturated', 0)} saturated (+inf) of {kl_stats.get('n_cells', 0)} "
+        f"cells{' would be' if args.kl_mode != 'clamp' else ''} produced by the v0.1.9 algebra."
+    )
+    if args.kl_mode == "clamp" and any(tau != tau for tau in tau_by_lag.values()):
+        print(
+            f"WARNING: the pooled threshold is NaN ({n_corrupt} corrupted cell(s) under --kl-mode "
+            "clamp), so every sequence gets zero edges. Re-run with --kl-mode logspace."
+        )
     if want_sample:
         print(
             f"Sample-level (time-step): {total_sample_edges} candidate causal edges "

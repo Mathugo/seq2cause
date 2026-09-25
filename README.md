@@ -5,7 +5,7 @@ Turn any sequence of discrete events into a causal graph using autoregressive mo
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19068730.svg)](https://doi.org/10.5281/zenodo.19068730)
 [![PyPI version](https://img.shields.io/pypi/v/seq2cause.svg)](https://pypi.org/project/seq2cause/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 **seq2cause** is a Python library for causal discovery on discrete event sequences. It treats any autoregressive model as a density estimator and runs parallelized conditional-independence tests on GPU, so you can recover what caused what directly from a sequence of logs, codes, or symbols.
 
@@ -75,7 +75,7 @@ By default the CLI reports two graphs per sequence (`--graph-level both`):
 - **Sample-level (time-step) graph**: nodes are *positions*: the raw `[L-context_len, L-context_len]` causal graph, exactly like the Quick Start above.
 - **Summary graph**: nodes are *event types* (token ids). It's built by projecting the sample-level graph down: an edge `u -> v` exists iff some position holding type `u` causally affected a later position holding type `v` *at least once* in that sequence (union aggregation). This answers "does event A cause event B", not just "did position 3 affect position 9".
 
-Use `--graph-level sample` or `--graph-level summary` to compute only one. `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `percentile`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
+Use `--graph-level sample` or `--graph-level summary` to compute only one. `--kl-mode {logspace,clamp}` selects the Bernoulli-KL algebra of the CI-test: `logspace` (default) evaluates it from log-probabilities so a next-token probability that saturates to `1.0` in float32 stays finite; `clamp` reproduces v0.1.9 exactly, whose `1 - 1e-9` clamp rounds to `1.0` in float32 and turns a saturated cell into NaN or +inf (a single NaN makes the pooled threshold NaN, i.e. zero edges everywhere). The number of cells `clamp` corrupts is printed either way (see `seq2cause.kl`). `--threshold-method {otsu,mad,percentile,gmm}` picks the unsupervised cutoff `AdaptiveThreshold` anchors on (default `percentile`, see Threshold Selection below); `--self-loops` keeps `u -> u` edges in the summary graph (off by default). See `seq2cause --help` for the full set of options (`--context-len`, `--n-particles`, `--strategy`, `--output`, `--device`, ...).
 
 The threshold is fit ONCE on CMI scores pooled across every sequence in `--dataset`, then applied to each sequence individually, not re-fit per sequence. A cutoff fit on a single sequence's own (often small) score distribution can be unstable; pooling shares one calibration across the whole dataset and is markedly more consistent (see Threshold Selection).
 

@@ -27,6 +27,14 @@ from dataclasses import dataclass, field
 import torch
 from torch import Tensor
 
+from seq2cause.kl import (
+    DEFAULT_KL_MODE,
+    accumulate_counts,
+    bernoulli_kl_from_log,
+    check_kl_mode,
+    corrupted_cell_counts,
+    logmeanexp,
+)
 from seq2cause.sampling import do_interventions, uniform_sample, unigram_sample
 from seq2cause.scm import NonlinearSCM
 
@@ -296,8 +304,68 @@ def _cmi_matrix_from_atomic(p_event_mean: Tensor, baseline_probs: Tensor) -> Ten
     lc = p_event_mean.shape[-1]
     baseline_exp = baseline_probs.unsqueeze(0).expand(lc, lc)
     kl = _bernoulli_kl(baseline_exp, p_event_mean)
-    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool), diagonal=1)
+    # The mask must live where `kl` lives: `torch.where` refuses mixed devices, so a
+    # CPU-only mask made `strategy="atomic"` fail on every accelerator (CUDA, MPS).
+    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=kl.device), diagonal=1)
     return torch.where(mask, kl, torch.zeros_like(kl))
+
+
+# --- "logspace" counterparts (see `seq2cause.kl`): same estimators, evaluated from
+# log-probabilities so a float32 softmax that saturates to 1.0 stays finite. ---
+
+
+def _predicted_true_token_log_probs(
+    model, rows: Tensor, true_tokens: Tensor, context_len: int
+) -> Tensor:
+    """`_predicted_true_token_probs` from `log_softmax`: `[..., L_minus_c]`
+    log-probabilities of the real observed suffix token at every suffix position."""
+    out = model.forward(input_ids=rows)
+    log_probs = torch.log_softmax(out["logits"], dim=-1)  # [..., L, vocab]
+    seq_len = rows.shape[-1]
+    pred = log_probs[..., context_len - 1 : seq_len - 1, :]  # [..., Lc, vocab]
+    lc = pred.shape[-2]
+    idx = true_tokens.view(*([1] * (pred.dim() - 2)), lc, 1).expand(*pred.shape[:-1], 1)
+    return torch.gather(pred, dim=-1, index=idx).squeeze(-1)
+
+
+def _cmi_matrix_from_staircase_log(logp_event_mean: Tensor) -> Tensor:
+    """`_cmi_matrix_from_staircase` on `[num_rows, Lc]` LOG particle means
+    (`logmeanexp` over particles). Returns float32 on the input's device."""
+    num_rows, lc = logp_event_mean.shape
+    lp = logp_event_mean[:-1, :]
+    lq = logp_event_mean[1:, :]
+    kl = bernoulli_kl_from_log(lq, lp).to(torch.float32)  # [num_rows-1, Lc]
+    full = torch.zeros((lc, lc), device=kl.device)
+    start_row = lc - (num_rows - 1)
+    full[start_row:, :] = kl
+    return full
+
+
+def _cmi_matrix_from_atomic_log(logp_event_mean: Tensor, log_baseline: Tensor) -> Tensor:
+    """`_cmi_matrix_from_atomic` on LOG particle means and the LOG fully-real
+    baseline. Returns float32 on the input's device."""
+    lc = logp_event_mean.shape[-1]
+    baseline_exp = log_baseline.unsqueeze(0).expand(lc, lc)
+    kl = bernoulli_kl_from_log(baseline_exp, logp_event_mean).to(torch.float32)
+    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=kl.device), diagonal=1)
+    return torch.where(mask, kl, torch.zeros_like(kl))
+
+
+def _count_staircase(stats: dict, q32: Tensor, p32: Tensor) -> None:
+    """Corrupted-cell count for the staircase row-pair window (`[num_rows-1, Lc]`
+    each): row `r` tests cause `start_row + r`; only effects after the cause count."""
+    num_pairs, lc = q32.shape
+    start_row = lc - num_pairs
+    causes = torch.arange(num_pairs, device=q32.device) + start_row
+    band = torch.arange(lc, device=q32.device).unsqueeze(0) > causes.unsqueeze(1)
+    accumulate_counts(stats, corrupted_cell_counts(q32, p32, band=band))
+
+
+def _count_atomic(stats: dict, q32: Tensor, p32: Tensor) -> None:
+    """Corrupted-cell count for the atomic `[Lc, Lc]` cell matrix (strict upper triangle)."""
+    lc = q32.shape[-1]
+    band = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=q32.device), diagonal=1)
+    accumulate_counts(stats, corrupted_cell_counts(q32, p32, band=band))
 
 
 @torch.no_grad()
@@ -308,6 +376,8 @@ def compute_cmi_matrix(
     n_particles: int = 32,
     strategy: str = "atomic",
     max_pairs: int | None = 20000,
+    kl_mode: str = DEFAULT_KL_MODE,
+    stats: dict | None = None,
     noise_min_id: int = 0,
 ) -> Tensor:
     """Computes the per-(cause, effect) Conditional Mutual Information matrix
@@ -338,6 +408,16 @@ def compute_cmi_matrix(
             paper's original staircase). Use `compare_intervention_strategies`
             for `"windowed"`/`"independent_mediator"`/`"in_distribution_noise"`.
         max_pairs: forwarded to `do_interventions` as an O(L^2) guard.
+        kl_mode: `"logspace"` (default) evaluates the Bernoulli KL from
+            `log_softmax` log-probabilities in float64, so a next-token
+            probability that saturates to `1.0` in float32 stays finite;
+            `"clamp"` is the v0.1.9 algebra from `softmax` probabilities,
+            whose upper clamp is a no-op in float32 (one saturated cell then
+            yields NaN or +inf, and a single NaN makes the CLI's pooled
+            percentile threshold NaN). See `seq2cause.kl`.
+        stats: optional dict into which the corrupted-cell counts -- what
+            `"clamp"` mode would turn into NaN or +inf on these inputs -- are
+            accumulated, in either mode.
         noise_min_id: the do-intervention noise is drawn uniformly over
             `[noise_min_id, vocab_size)`; pass the number of reserved special
             ids (PAD/BOS/EOS/UNK) so no counterfactual places one of them
@@ -349,6 +429,7 @@ def compute_cmi_matrix(
         estimated causal strength of candidate cause `j` on candidate
         effect `q`.
     """
+    check_kl_mode(kl_mode)
     if strategy not in ("full", "atomic"):
         raise ValueError(
             f"strategy must be 'full' or 'atomic', got {strategy!r} -- use "
@@ -366,14 +447,33 @@ def compute_cmi_matrix(
 
     if strategy == "full":
         rows = do_interventions(noise, rest, prefix, strategy="full").squeeze(0)
-        p = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
-        return _cmi_matrix_from_staircase(p.mean(dim=0))
+        if kl_mode == "clamp":
+            p = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
+            p_mean = p.mean(dim=0)
+            if stats is not None:
+                _count_staircase(stats, p_mean[1:, :], p_mean[:-1, :])
+            return _cmi_matrix_from_staircase(p_mean)
+        logp = _predicted_true_token_log_probs(model, rows, rest.squeeze(0), context_len)
+        logp_mean = logmeanexp(logp, dim=0)
+        if stats is not None:
+            _count_staircase(stats, logp_mean[1:, :].exp(), logp_mean[:-1, :].exp())
+        return _cmi_matrix_from_staircase_log(logp_mean)
 
     rows = do_interventions(noise, rest, prefix, strategy="atomic", max_pairs=max_pairs).squeeze(0)
-    p_atomic = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
     baseline_rows = sequence.unsqueeze(0)  # [1, L], fully real, no intervention
-    p_baseline = _predicted_true_token_probs(model, baseline_rows, rest.squeeze(0), context_len)
-    return _cmi_matrix_from_atomic(p_atomic.mean(dim=0), p_baseline.squeeze(0))
+    if kl_mode == "clamp":
+        p_atomic = _predicted_true_token_probs(model, rows, rest.squeeze(0), context_len)
+        p_baseline = _predicted_true_token_probs(model, baseline_rows, rest.squeeze(0), context_len)
+        p_mean, p_base = p_atomic.mean(dim=0), p_baseline.squeeze(0)
+        if stats is not None:
+            _count_atomic(stats, p_base.unsqueeze(0).expand(lc, lc), p_mean)
+        return _cmi_matrix_from_atomic(p_mean, p_base)
+    logp_atomic = _predicted_true_token_log_probs(model, rows, rest.squeeze(0), context_len)
+    logp_baseline = _predicted_true_token_log_probs(model, baseline_rows, rest.squeeze(0), context_len)
+    logp_mean, logp_base = logmeanexp(logp_atomic, dim=0), logp_baseline.squeeze(0)
+    if stats is not None:
+        _count_atomic(stats, logp_base.exp().unsqueeze(0).expand(lc, lc), logp_mean.exp())
+    return _cmi_matrix_from_atomic_log(logp_mean, logp_base)
 
 
 def summary_graph(
@@ -445,6 +545,8 @@ def compute_cmi_matrix_sparse(
     context_len: int,
     memory: int,
     n_particles: int = 32,
+    kl_mode: str = DEFAULT_KL_MODE,
+    stats: dict | None = None,
     noise_min_id: int = 0,
 ) -> Tensor:
     """Bounded-memory ("sparse") variant of `compute_cmi_matrix`.
@@ -492,6 +594,7 @@ def compute_cmi_matrix_sparse(
             `1 <= lag <= memory` are ever computed -- everything else stays
             0 (never tested, not "found to be zero").
         n_particles: number of do-intervention noise particles per chunk.
+        kl_mode, stats: forwarded to `compute_cmi_matrix`.
         noise_min_id: forwarded to `compute_cmi_matrix`.
 
     Returns:
@@ -520,7 +623,8 @@ def compute_cmi_matrix_sparse(
         local_sequence = sequence[local_context_start_abs:local_suffix_end_abs]
         local_cmi = compute_cmi_matrix(
             model, local_sequence, context_len=local_context_len,
-            n_particles=n_particles, strategy="full", noise_min_id=noise_min_id,
+            n_particles=n_particles, strategy="full",
+            kl_mode=kl_mode, stats=stats, noise_min_id=noise_min_id,
         )
         local_suffix_len = local_suffix_end_abs - local_suffix_start_abs
 
