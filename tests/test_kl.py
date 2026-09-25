@@ -104,6 +104,29 @@ def test_corrupted_cell_counts_definition():
     assert counts == {"n_cell_collapsed": 1, "n_cell_saturated": 1, "n_cells": 4}
 
 
+def test_corrupted_cell_counts_band_broadcasts_when_particles_and_rows_differ():
+    """bs=1, N=2 particles, 3 row pairs, Lc=4: the band [3, 4] must count cells, not particles."""
+    torch.manual_seed(0)
+    q = torch.rand(1, 2, 3, 4)
+    p = torch.rand(1, 2, 3, 4)
+    q[0, 1, 2, 3] = 1.0  # one collapsed particle in cell (row 2, effect 3)
+    band = torch.ones(3, 4, dtype=torch.bool)
+    band[2, 3] = False  # ... which sits outside the band
+    counts = corrupted_cell_counts(q, p, band=band, particle_dim=1)
+    assert (
+        counts["n_cells"] == 11
+        and counts["n_cell_collapsed"] == 0
+        and counts["n_particle_collapsed"] == 0
+    )
+    band[2, 3] = True
+    counts = corrupted_cell_counts(q, p, band=band, particle_dim=1)
+    assert (
+        counts["n_cells"] == 12
+        and counts["n_cell_collapsed"] == 1
+        and counts["n_particle_collapsed"] == 1
+    )
+
+
 def test_corrupted_cell_counts_over_particles_any_particle_spoils_the_cell():
     # particles on dim 0: cell 0 has one collapsed particle, cell 1 one saturated, cell 2 clean
     q = torch.tensor([[1.0, 0.5, 0.5], [0.5, 0.5, 0.5]])

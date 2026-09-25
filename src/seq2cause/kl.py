@@ -129,13 +129,13 @@ def corrupted_cell_counts(
     p32 = p32.detach().to(torch.float32)
     collapsed = q32 >= 1.0
     saturated = (p32 >= 1.0) & ~collapsed
+    # `band` is over the trailing cell dimensions and broadcasts against `[..., N, rows, Lc]`
+    # and `[..., rows, Lc]` alike (right-aligned), so it is never reshaped.
     out: dict[str, int] = {}
     if particle_dim is not None:
-        band_p = band.unsqueeze(particle_dim) if band is not None else None
-        if band_p is not None:
-            band_p = torch.broadcast_to(band_p, collapsed.shape)
-            out["n_particle_collapsed"] = int((collapsed & band_p).sum())
-            out["n_particle_saturated"] = int((saturated & band_p).sum())
+        if band is not None:
+            out["n_particle_collapsed"] = int((collapsed & band).sum())
+            out["n_particle_saturated"] = int((saturated & band).sum())
         else:
             out["n_particle_collapsed"] = int(collapsed.sum())
             out["n_particle_saturated"] = int(saturated.sum())
