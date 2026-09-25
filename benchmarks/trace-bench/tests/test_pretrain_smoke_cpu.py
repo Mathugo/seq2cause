@@ -60,6 +60,8 @@ ARGS = [
     "4",
     "--checkpoint-every",
     "20",
+    "--model-choice",
+    "last",
     "--entropy-order",
     "2",
     "--seed",
@@ -143,6 +145,13 @@ def test_pretrain_smoke(tmp_path):
     assert r["architecture"]["hidden_size"] == 32 and r["architecture"]["vocab_size"] == 14
     assert r["architecture"]["pad_token_id"] == 0 if "pad_token_id" in r["architecture"] else True
     assert r["val_final_over_min"] >= 1.0 and r["prepare_record"]["path"] == str(prep_dir)
+    mc = r["model_choice"]
+    assert mc["choice"] == "last" and mc["step"] == 40 and mc["last_step"] == 40
+    assert (
+        mc["last_sha256"] == r["model_sha256"]
+        and mc["val_final_over_min"] == r["val_final_over_min"]
+    )
+    assert r["oracle"]["step"] == 40 and r["oracle_last"] == r["oracle"]
     m, extra = load_model(out / "model")
     assert extra["step"] == 40 and m.config.hidden_size == 32 and m.config.pad_token_id == 0
     assert (
@@ -240,3 +249,66 @@ def test_model_hash_is_the_weights_file_only(tmp_path):
     assert again == model_sha256(out / "model")
     (tmp_path / "again" / "config.json").write_text("{}")
     assert model_sha256(tmp_path / "again") == again
+
+
+def test_argmin_val_selection(tmp_path):
+    """`--model-choice argmin-val` makes model/ the validated step with the smallest validation
+    loss (plans/caps.md addendum 2026-09-25): its hash equals that checkpoint's, the oracle is
+    taken there, and the last checkpoint's facts stay recorded beside it."""
+    prep_dir = _prepare(tmp_path)
+    out = tmp_path / "pre"
+    args = [*ARGS]
+    args[args.index("--model-choice") + 1] = "argmin-val"
+    args[args.index("--steps") + 1] = "60"
+    assert (
+        pt.main(
+            [
+                "--corpus",
+                str(fixture_corpus("latent")),
+                "--prepare-record",
+                str(prep_dir),
+                *args,
+                "--output-folder",
+                str(out),
+            ]
+        )
+        == 0
+    )
+    r = read_json(out / RUN_DIR / RESULTS_JSON)
+    curve = {v["step"]: v["loss"] for v in r["val_curve"]}
+    assert sorted(curve) == [20, 40, 60]
+    best = min(curve, key=lambda k: (curve[k], k))
+    mc = r["model_choice"]
+    assert mc["choice"] == "argmin-val" and mc["step"] == best and mc["val_loss"] == curve[best]
+    assert mc["last_step"] == 60 and mc["last_val_loss"] == curve[60]
+    assert r["model_sha256"] == model_sha256(out / "model")
+    if best != 60:
+        ck = next(c for c in r["checkpoints"] if c["step"] == best)
+        assert r["model_sha256"] == ck["sha256"] == model_sha256(out / ck["dir"])
+        assert r["model_sha256"] != mc["last_sha256"]
+    else:
+        assert r["model_sha256"] == mc["last_sha256"]
+    _, extra = load_model(out / "model")
+    assert extra["step"] == best
+    assert r["oracle"]["step"] == best and r["oracle"]["val_loss"] == curve[best]
+    assert r["oracle_last"]["step"] == 60 and r["oracle_last"]["val_loss"] == curve[60]
+    assert r["val_loss_min"] == curve[best] and mc["val_loss_min"] == r["val_loss_min"]
+
+
+def test_argmin_val_needs_matching_checkpoint_and_val_periods(tmp_path):
+    prep_dir = _prepare(tmp_path)
+    args = [*ARGS]
+    args[args.index("--model-choice") + 1] = "argmin-val"
+    args[args.index("--checkpoint-every") + 1] = "10"
+    with pytest.raises(pt.ModelChoiceRefusal, match="checkpoint-every"):
+        pt.main(
+            [
+                "--corpus",
+                str(fixture_corpus("latent")),
+                "--prepare-record",
+                str(prep_dir),
+                *args,
+                "--output-folder",
+                str(tmp_path / "pre"),
+            ]
+        )

@@ -53,8 +53,8 @@ Each entry states what it **follows** and what it **deviates from**. Dated
 | D-SB-10 | the boolean per-sequence union projection (`summary_graph`) | the type-level score of a token pair is the **max** over every within-sequence occurrence (mean and count recorded beside it); within-operation pairs and special tokens are dropped at projection; two files per read (thresholded prediction + full ranking) because the scorer treats every listed edge as present (sibling D-CB-8, D-CB-12, D-CB-18). |
 | D-SB-11 | one threshold rule (the CLI's pooled percentile with lag decay) | two cuts of one score table for the cli arms: `shipped` (the tool's rule, every knob passed explicitly and recorded, fitted on the full strict-upper triangle of every stored matrix exactly as `cli.py` pools it, no truth) and `frozen` (the validation-swept τ every arm uses). The shipped cut inherits `(c, N)` from its frozen sibling cell. |
 | D-SB-12 | the shipped memory estimate (`cli.estimate_tensor_bytes`, the logits tensor only) | the harness estimate is twice the shipped one (logits plus the softmax) plus an activation term, refused above the declared cap of `plans/caps.md` (PRD scenario 18); shipped estimate, harness estimate, cap and measured peak are recorded per run. |
-| D-SB-13 | no trainer in the package (the author's research script is toy-scale) | the sibling's clean-room trainer adapted to a Hugging Face `LlamaForCausalLM` built from a `LlamaConfig`, saved per checkpoint in the Hugging Face directory format; the model hash is the sha256 of `model.safetensors`; the oracle score ε̂ is taken against an independent order-2 n-gram entropy floor, never the minimum validation loss (sibling D-CB-7). The frozen model is the last checkpoint unless the pre-registered trigger fires (`plans/`). |
-| D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample; the coverage rule of the arm plans may raise the sample in a new dated replica before a freeze. |
+| D-SB-13 | no trainer in the package (the author's research script is toy-scale) | the sibling's clean-room trainer adapted to a Hugging Face `LlamaForCausalLM` built from a `LlamaConfig`, saved per checkpoint in the Hugging Face directory format; the model hash is the sha256 of `model.safetensors`; the oracle score ε̂ is taken against an independent order-2 n-gram entropy floor, never the minimum validation loss (sibling D-CB-7). The frozen model is the checkpoint `--model-choice` names: **`argmin-val`** (the validated step with the smallest validation loss, validated and checkpointed every 250 steps) since the 2026-09-25 addendum of `plans/caps.md`; the 2026-09-24 rule (last checkpoint + a `1.01×` trigger) was withdrawn after the xs calibration run, whose last checkpoint sat at 1.498× the curve minimum with the argmin at the first checkpoint. The oracle is reported at the chosen and at the last checkpoint. |
+| D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample; the reachable-recall coverage ceiling is reported per cell (freeze `diagnostics`, `annotate`), not gated — the 2026-09-24 rule (raise the sample below 0.90) was withdrawn on 2026-09-25 after the whole xs validation split gave 0.48 / 0.59. |
 
 Deviations for later stages are numbered here before the run that depends
 on them; the arm plans under `plans/` reference these ids.
@@ -73,7 +73,12 @@ on them; the arm plans under `plans/` reference these ids.
   runs prepare → pretrain → sweep → scoresweep → freeze in a git repository → three test
   reads under the freeze → annotate → seqscore → report, and every refusal of scenarios
   3, 7, 9, 13, 22, 23, 29, 39, 46 and 47 is asserted; `score.json` is byte-identical to a
-  direct `score_corpus` call (scenario 28).
+  direct `score_corpus` call (scenario 28). Since 2026-09-25: `pretrain --model-choice
+  argmin-val` selects the argmin-validation checkpoint (`tests/test_pretrain_smoke_cpu.py`),
+  the freeze records the soundness diagnostics (model choice, oracle, coverage ceiling,
+  grid-edge flags) and refuses only tables bound to another model, and the replica checker's
+  `--args-diff` compares a repeated module by output folder
+  (`tests/test_tfvars_check_parses.py`).
 - **Per run:** the executing host's log shows the command exiting with
   status 0 and the output sync completing; `run/*.json` carry every
   scenario-24 field, the replica name and the profile; a registry row lands
@@ -93,3 +98,4 @@ are the pointers.
 
 | date (UTC) | run | command | rung/variant/seed | split | model sha256 (8) | exit | wall clock | gpu | outcome |
 |---|---|---|---|---|---|---|---|---|---|
+| 2026-09-25 | `xs-latent-s0-val-26-09-24` (Job V, replica `seq2cause-bench-26-09-24-xs-latent-s0-val.tfvars`) | pull → prepare → pretrain 12k × 256 → sweep request c{1,2,3} → sweep session c{2,4,8} (5 probes × 2 noises × N{2,8,32}, whole val split) → pull score → scoresweep × 2 | xs / latent / 0 | val | `c5c9d641` (last checkpoint, `--model-choice` predates this knob) | 0 (all 8 stages) | 2 h 41 min (pretrain 305 s; sweeps 59 + 95 min, Shapley 74 % / 89 %) | A10G, peak 3.07 GB | **calibration only, not frozen**: validation loss rose 2.20 → 3.30 from step 1000 (≈ 750 epochs), ε̂ = 0.62; coverage ceiling 0.48 / 0.59 on the whole split; session τ argmax at the grid top. Records verified against the manifest; `--args-diff` clean. Package commit `1832f45` (pre-rebase; tree = `cd1e48c` up to line wrapping in `cli.py` / `diagnostics.py` and the CHANGELOG order). Led to the 2026-09-25 addenda (`plans/`); superseded by the next xs replica. |

@@ -207,9 +207,8 @@ STRUCTURAL_LIMITATION = "causal_sufficiency"
 
 # --- PRD-pinned values (reported against, never chosen) -------------------------------------
 ORACLE_IN_REGIME = 0.1  # eps_hat below this = in regime (paper's phase transition)
-CHECKPOINT_TRIGGER_RATIO = (
-    1.01  # final val loss above this x its minimum -> argmin checkpoint also swept
-)
+MODEL_CHOICES = ("last", "argmin-val")  # --model-choice (pretrain): which checkpoint is model/
+# (the 1.01x checkpoint trigger of 2026-09-24 was withdrawn on 2026-09-25: plans/caps.md addendum)
 
 # --- added at M6 ---------------------------------------------------------------------------------
 SHIPPED_CUT_READ_JSON_FMT = (

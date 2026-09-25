@@ -112,17 +112,23 @@ def check(path):
 
 
 def args_diff(parsed, run_dir):
+    """The record's arguments against the replica segment of the same module; when a module
+    appears in several segments (the two grains' sweeps, the two pull tiers, the two
+    scoresweeps) the segment whose `output_folder` equals the record's is the one compared."""
     rec = json.loads((Path(run_dir) / "run" / "arguments.json").read_text(encoding="utf-8"))
     module = "seq2causebench." + rec["command"]
-    for mod, args in parsed:
-        if mod == module:
-            diffs = {
-                k: (args.get(k), rec["arguments"].get(k))
-                for k in set(args) | set(rec["arguments"])
-                if args.get(k) != rec["arguments"].get(k)
-            }
-            return diffs
-    return {"_": (f"no {module} segment in the replica", None)}
+    candidates = [args for mod, args in parsed if mod == module]
+    if not candidates:
+        return {"_": (f"no {module} segment in the replica", None)}
+    same_folder = [
+        a for a in candidates if a.get("output_folder") == rec["arguments"].get("output_folder")
+    ]
+    args = (same_folder or candidates)[0]
+    return {
+        k: (args.get(k), rec["arguments"].get(k))
+        for k in set(args) | set(rec["arguments"])
+        if args.get(k) != rec["arguments"].get(k)
+    }
 
 
 def main(argv=None):

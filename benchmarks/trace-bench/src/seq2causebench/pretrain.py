@@ -6,7 +6,8 @@ next-token prediction (PRD Behavior, "Learning the density"; D-SB-13).
         --prepare-record <prepare run-dir> --n-layers 6 --d-model 256 --n-heads 8 --ff-mult 2 \
         --dropout 0.0 --rope-theta 10000 --lr 3e-4 --adam-beta1 0.9 --adam-beta2 0.95 \
         --warmup-steps 500 --lr-schedule cosine --weight-decay 0.1 --batch-size 256 --steps 12000 \
-        --grad-clip 1.0 --amp bf16 --val-every 1000 --val-batches 50 --checkpoint-every 1000 \
+        --grad-clip 1.0 --amp bf16 --val-every 250 --val-batches 50 --checkpoint-every 250 \
+        --model-choice argmin-val \
         --entropy-order 2 --seed 0 --device cuda --replica <tfvars name> --aws-profile-name default \
         --output-folder <run-dir>
 
@@ -14,11 +15,15 @@ Nothing causal-specific: plain maximum likelihood. One model per corpus,
 trained on the `end-session` view and shared by every arm scored on that
 corpus (D-SB-7). The backbone is a Hugging Face `LlamaForCausalLM` saved in
 the library's directory format so the shipped tool loads it unchanged
-(`backbone.py`). A checkpoint is written before every validation and the
-final model into `model/`; `results.json.model_sha256` (the sha256 of the
-saved weights) is the hash every arm and comparison record carries. The
-oracle score is reported against an independent order-k entropy floor and
-never gated. A training run names a completed `prepare` record for the same
+(`backbone.py`). A checkpoint is written before every validation; `model/`
+is the checkpoint `--model-choice` names — `argmin-val` (the validated step
+with the smallest validation loss, ties to the smaller step; the plans'
+2026-09-25 addendum) or `last` — and `results.json.model_sha256` (the sha256
+of its saved weights) is the hash every arm and comparison record carries;
+`model_choice` records the chosen step, its loss, the final loss and their
+ratio. The oracle score is reported at the chosen checkpoint (and at the
+last, `oracle_last`) against an independent order-k entropy floor and never
+gated. A training run names a completed `prepare` record for the same
 corpus and view and refuses to start without one (PRD scenario 47); the
 provisioning replica and the AWS profile it was told are recorded
 (scenarios 17, 25, 30).
@@ -27,7 +32,9 @@ provisioning replica and the AWS profile it was told are recorded
 from __future__ import annotations
 
 import argparse
+import json
 import math
+import shutil
 import time
 from pathlib import Path
 
@@ -35,11 +42,13 @@ import numpy as np
 import torch
 
 from .backbone import (
+    TRAINING_JSON,
     architecture,
     architecture_sha256,
     build_model,
     loss,
     lr_at,
+    model_sha256,
     n_params,
     save_model,
 )
@@ -49,6 +58,7 @@ from .constants import (
     DEVICES,
     GRAINS,
     LR_SCHEDULES,
+    MODEL_CHOICES,
     MODEL_DIR,
     MODEL_WEIGHTS,
     ORACLE_IN_REGIME,
@@ -119,6 +129,10 @@ def validate(model, store, batch_size, val_batches, device, amp):
 
 
 def pretrain(args, out_dir):
+    if args.model_choice == "argmin-val" and args.checkpoint_every != args.val_every:
+        raise ModelChoiceRefusal(
+            "--model-choice argmin-val needs --checkpoint-every == --val-every (every validated step must have a checkpoint)"
+        )
     seed_all(args.seed)
     device = args.device
     if device == "cuda" and not torch.cuda.is_available():
@@ -221,14 +235,45 @@ def pretrain(args, out_dir):
     vloss, vn = validate(model, val, args.batch_size, args.val_batches, device, args.amp)
     val_curve.append({"step": args.steps, "loss": vloss, "n_targets": vn})
     model_dir = out_dir / MODEL_DIR
-    model_sha = save_model(model, model_dir, {"step": args.steps, "vocab_size": vocab.size})
-    oracle = oracle_score(vloss, floor["entropy_floor"], log_alphabet, ORACLE_IN_REGIME)
-    oracle["entropy_order"] = args.entropy_order
+    last_sha = save_model(model, model_dir, {"step": args.steps, "vocab_size": vocab.size})
     min_loss = min(v["loss"] for v in val_curve)
+    choice = choose_model(args.model_choice, val_curve, checkpoints, args.steps, last_sha)
+    if choice["step"] != args.steps:
+        # the argmin checkpoint becomes model/ (same weights file, same hash as its checkpoint)
+        shutil.rmtree(model_dir)
+        shutil.copytree(out_dir / choice["checkpoint_dir"], model_dir)
+        (model_dir / TRAINING_JSON).write_text(
+            json.dumps({"step": choice["step"], "vocab_size": vocab.size}, sort_keys=True, indent=1)
+        )
+    model_sha = model_sha256(model_dir)
+    if model_sha != choice["sha256"]:
+        raise RuntimeError(
+            f"model/ hashes to {model_sha} but the chosen checkpoint (step {choice['step']}) is {choice['sha256']}"
+        )
+    oracle = oracle_score(
+        choice["val_loss"], floor["entropy_floor"], log_alphabet, ORACLE_IN_REGIME
+    )
+    oracle["entropy_order"] = args.entropy_order
+    oracle["step"] = choice["step"]
+    oracle_last = oracle_score(vloss, floor["entropy_floor"], log_alphabet, ORACLE_IN_REGIME)
+    oracle_last["entropy_order"] = args.entropy_order
+    oracle_last["step"] = args.steps
     results = {
         "model_dir": MODEL_DIR,
         "model_weights": f"{MODEL_DIR}/{MODEL_WEIGHTS}",
         "model_sha256": model_sha,
+        "model_choice": {
+            "choice": args.model_choice,
+            "step": choice["step"],
+            "val_loss": choice["val_loss"],
+            "checkpoint_dir": choice["checkpoint_dir"],
+            "last_step": args.steps,
+            "last_val_loss": vloss,
+            "last_sha256": last_sha,
+            "val_loss_min": min_loss,
+            "val_final_over_min": (vloss / min_loss) if min_loss > 0 else None,
+        },
+        "oracle_last": oracle_last,
         "params": n_params(model),
         "architecture": arch,
         "architecture_sha256": architecture_sha256(model),
@@ -265,6 +310,42 @@ def pretrain(args, out_dir):
         }
     )
     return results
+
+
+class ModelChoiceRefusal(ValueError):
+    pass
+
+
+def choose_model(model_choice, val_curve, checkpoints, total_steps, last_sha):
+    """Which saved model becomes `model/` (plans/caps.md addendum 2026-09-25).
+
+    `last`: the final step. `argmin-val`: the validated step with the smallest validation loss
+    (ties -> the smaller step); every validated step before the last must have a checkpoint, so
+    `--checkpoint-every` must equal `--val-every` under this choice."""
+    if model_choice not in MODEL_CHOICES:
+        raise ModelChoiceRefusal(f"--model-choice {model_choice!r} not in {MODEL_CHOICES}")
+    last = {
+        "step": total_steps,
+        "val_loss": val_curve[-1]["loss"],
+        "checkpoint_dir": MODEL_DIR,
+        "sha256": last_sha,
+    }
+    if model_choice == "last":
+        return last
+    by_step = {c["step"]: c for c in checkpoints}
+    best = min(val_curve, key=lambda v: (v["loss"], v["step"]))
+    if best["step"] == total_steps:
+        return last
+    if best["step"] not in by_step:
+        raise ModelChoiceRefusal(
+            f"argmin-val step {best['step']} has no checkpoint; --checkpoint-every must equal --val-every"
+        )
+    return {
+        "step": best["step"],
+        "val_loss": best["loss"],
+        "checkpoint_dir": by_step[best["step"]]["dir"],
+        "sha256": by_step[best["step"]]["sha256"],
+    }
 
 
 def build_parser():
@@ -304,6 +385,12 @@ def build_parser():
     p.add_argument("--val-every", required=True, type=int)
     p.add_argument("--val-batches", required=True, type=int)
     p.add_argument("--checkpoint-every", required=True, type=int)
+    p.add_argument(
+        "--model-choice",
+        required=True,
+        choices=MODEL_CHOICES,
+        help="which checkpoint becomes model/: 'argmin-val' needs --checkpoint-every == --val-every (plans/caps.md addendum 2026-09-25)",
+    )
     p.add_argument(
         "--entropy-order",
         required=True,

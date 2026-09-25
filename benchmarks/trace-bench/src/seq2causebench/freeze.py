@@ -1,23 +1,23 @@
 # Adapted from alex-chadyuk/trace-cmi-bench@f54776a (MIT) -- see NOTICE
 """Freeze the validation-selected values of one corpus (PRD non-negotiable 10; scenarios 13, 29;
-`plans/reference-arms.md` §4 and `plans/caps.md`'s checkpoint rule).
+`plans/reference-arms.md` §4 with its 2026-09-25 addendum and `plans/caps.md`'s checkpoint rule).
 
     python -m seq2causebench.freeze --val-tables out/<scoresweep-request>/val-table.json out/<scoresweep-session>/val-table.json \
-        --pretrain-results out/<pretrain>/run/results.json --alt-val-tables '' --checkpoint-choice last \
+        --pretrain-results out/<pretrain>/run/results.json \
         --rung xs --variant latent --seed 0 --freezes-dir freezes --output-folder out/<run>
 
 Per frozen cell `<arm>/<path>/frozen/<grain>` the full-grid argmax of the scorer's directed F1 at
 the default floor over `(c, N, τ)`; ties → smaller `N`, then smaller `c`, then larger τ. A cli
 arm's shipped cut `<arm>/<path>/shipped/<grain>` inherits the frozen sibling's `(c, N, g)` and has
-no τ. The checkpoint trigger: if the pretrain record's final validation loss exceeds
-`CHECKPOINT_TRIGGER_RATIO` × its minimum, the argmin-val checkpoint must also have been swept
-(`--alt-val-tables`, a second scoresweep on that checkpoint's model) and the freeze binds whichever
-model won on `trace/core/shipped/frozen/request` directed F1; otherwise the last checkpoint is
-frozen and `--alt-val-tables ''`. Writes `freezes/<date>-<rung>-<variant>-s<k>.json` with the
-corpus identity, the benchmark tool version and config hash, the model hash, the package commit
-at freeze time, the val tables' sha256, the grids and the chosen values per cell; refuses to
-overwrite. The record is then committed (one freeze commit per rung) and `discover --split test`
-asserts on that commit.
+no τ. The model is the one the pretrain record names (`model_choice`, the argmin-validation
+checkpoint under the plans' addendum); the val tables must bind that hash. Instrument-soundness
+facts are recorded, never gated (`diagnostics`): the pretrain record's `model_choice` and oracle
+(chosen and last checkpoint), and per frozen cell the reachable-recall coverage ceiling and an
+`at_grid_edge` flag (a grid-sourced τ at either end of its grid). Writes
+`freezes/<date>-<rung>-<variant>-s<k>.json` with the corpus identity, the benchmark tool version
+and config hash, the model hash, the package commit at freeze time, the val tables' sha256, the
+grids and the chosen values per cell; refuses to overwrite. The record is then committed (one
+freeze commit per rung) and `discover --split test` asserts on that commit.
 """
 
 from __future__ import annotations
@@ -28,11 +28,10 @@ from pathlib import Path
 
 from .arms import arm_spec, cell_key
 from .constants import (
-    ARM_CORE,
-    CHECKPOINT_TRIGGER_RATIO,
+    ARM_GRANGER,
     CUT_FROZEN,
     CUT_SHIPPED,
-    PATH_SHIPPED,
+    REFERENCE_ARMS,
     RUNGS,
     SEEDS,
     VARIANTS,
@@ -40,8 +39,7 @@ from .constants import (
 from .log import log, now_iso
 from .record import RunRecord, git_commit, read_json, sha256_file, write_json
 
-FREEZE_SCHEMA = "seq2causebench/freeze@1"
-TRIGGER_CELL = (ARM_CORE, PATH_SHIPPED, "request")
+FREEZE_SCHEMA = "seq2causebench/freeze@2"
 
 
 class FreezeExists(FileExistsError):
@@ -50,6 +48,17 @@ class FreezeExists(FileExistsError):
 
 class FreezeRefusal(RuntimeError):
     pass
+
+
+def grid_of(arm, tau_source):
+    """The val table's grid list a grid-sourced τ came from; None for quantile-sourced τ."""
+    if tau_source != "grid":
+        return None
+    if arm in REFERENCE_ARMS:
+        return "taus"
+    if arm == ARM_GRANGER:
+        return "granger_taus"
+    return None
 
 
 def select_cells(table):
@@ -66,11 +75,18 @@ def select_cells(table):
             )
         by_cell.setdefault(cell_key(r["arm"], r["path"], CUT_FROZEN, r["grain"]), []).append(r)
     chosen = {}
+    coverage = table.get("coverage", {})
     for key, rows in by_cell.items():
         best = max(rows, key=lambda r: (r["directed"]["f1"], -r["N"], -r["c"], r["tau"]))
+        grid_name = grid_of(best["arm"], best.get("tau_source"))
+        grid = table.get(grid_name) if grid_name else None
+        cov = coverage.get(f"{key}/c{best['c']}/N{best['N']}", {}).get("coverage", {})
         chosen[key] = {
             "tau": float(best["tau"]),
             "tau_source": best.get("tau_source"),
+            "grid": grid_name,
+            "at_grid_edge": (None if not grid else bool(best["tau"] in (min(grid), max(grid)))),
+            "reachable_recall_ceiling": cov.get("reachable_recall_ceiling"),
             "c": int(best["c"]),
             "N": int(best["N"]),
             "g": int(best["g"]),
@@ -132,74 +148,28 @@ def merge_tables(tables):
     }
 
 
-def trigger_facts(pretrain_results):
+def pretrain_facts(pretrain_results, table):
+    """The pretrain record's model identity and soundness facts; refuses tables bound to another
+    model (the tables must have been swept on the model the record names)."""
     pre = read_json(pretrain_results)
-    ratio = pre.get("val_final_over_min")
-    fired = ratio is not None and ratio > CHECKPOINT_TRIGGER_RATIO
-    curve = pre.get("val_curve", [])
-    argmin = min(curve, key=lambda v: v["loss"]) if curve else None
+    if table["model_sha256"] != pre.get("model_sha256"):
+        raise FreezeRefusal(
+            f"the val tables bind model {table['model_sha256']} but the pretrain record's model is "
+            f"{pre.get('model_sha256')}"
+        )
     return {
-        "ratio": ratio,
-        "threshold": CHECKPOINT_TRIGGER_RATIO,
-        "fired": bool(fired),
-        "argmin_step": None if argmin is None else argmin["step"],
-        "last_model_sha256": pre.get("model_sha256"),
+        "model_choice": pre.get("model_choice"),
+        "oracle": pre.get("oracle"),
+        "oracle_last": pre.get("oracle_last"),
+        "val_loss_final": pre.get("val_loss_final"),
+        "val_loss_min": pre.get("val_loss_min"),
+        "val_final_over_min": pre.get("val_final_over_min"),
     }
 
 
-def _trigger_f1(table):
-    key = cell_key(*TRIGGER_CELL[:2], CUT_FROZEN, TRIGGER_CELL[2])
-    cells = select_cells(table)
-    if key not in cells:
-        raise FreezeRefusal(
-            f"the checkpoint trigger compares {key}, which the val tables do not contain"
-        )
-    return cells[key]["val_directed_f1"]
-
-
-def choose_tables(main_tables, alt_tables, trigger, checkpoint_choice):
-    """The tables to freeze from, per the checkpoint rule; returns `(table, choice facts)`."""
-    main = merge_tables(main_tables)
-    if main["model_sha256"] != trigger["last_model_sha256"]:
-        raise FreezeRefusal(
-            f"the val tables bind model {main['model_sha256']} but the pretrain record's last model is "
-            f"{trigger['last_model_sha256']}"
-        )
-    if not trigger["fired"]:
-        if alt_tables:
-            raise FreezeRefusal("the checkpoint trigger did not fire; --alt-val-tables must be ''")
-        if checkpoint_choice != "last":
-            raise FreezeRefusal(
-                "the checkpoint trigger did not fire; --checkpoint-choice must be 'last'"
-            )
-        return main, {"choice": "last", "trigger": trigger}
-    if not alt_tables:
-        raise FreezeRefusal(
-            f"the checkpoint trigger fired (val_final / val_min = {trigger['ratio']:.4f} > "
-            f"{CHECKPOINT_TRIGGER_RATIO}); sweep the argmin-val checkpoint (step {trigger['argmin_step']}) "
-            "and pass its scoresweep tables as --alt-val-tables (plans/caps.md)"
-        )
-    alt = merge_tables(alt_tables)
-    if alt["model_sha256"] == main["model_sha256"]:
-        raise FreezeRefusal("--alt-val-tables bind the same model as the main tables")
-    f_main, f_alt = _trigger_f1(main), _trigger_f1(alt)
-    winner = "argmin" if f_alt > f_main else "last"
-    if checkpoint_choice != winner:
-        raise FreezeRefusal(
-            f"--checkpoint-choice {checkpoint_choice!r} but the trigger cell's val F1 picks {winner!r} "
-            f"(last {f_main:.4f} vs argmin {f_alt:.4f})"
-        )
-    return (alt if winner == "argmin" else main), {
-        "choice": winner,
-        "trigger": trigger,
-        "f1_last": f_main,
-        "f1_argmin": f_alt,
-    }
-
-
-def build_freeze(table, val_table_paths, alt_paths, choice, rung, variant, seed):
+def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
     paths = [Path(p) for p in val_table_paths]
-    alts = [Path(p) for p in alt_paths]
+    cells = select_cells(table)
     return {
         "schema": FREEZE_SCHEMA,
         "rung": rung,
@@ -212,26 +182,27 @@ def build_freeze(table, val_table_paths, alt_paths, choice, rung, variant, seed)
         "commit": git_commit(),
         "frozen_at": now_iso(),
         "val_tables": [{"name": p.name, "sha256": sha256_file(p)} for p in paths],
-        "alt_val_tables": [{"name": p.name, "sha256": sha256_file(p)} for p in alts],
-        "checkpoint": choice,
         "taus": table.get("taus"),
         "granger_taus": table.get("granger_taus"),
         "quantiles": table.get("quantiles"),
         "grains": table.get("grains"),
-        "cells": select_cells(table),
+        "cells": cells,
+        "diagnostics": {
+            **pretrain,
+            "coverage": {
+                k: c.get("reachable_recall_ceiling")
+                for k, c in cells.items()
+                if "inherits" not in c
+            },
+            "at_grid_edge": [k for k, c in cells.items() if c.get("at_grid_edge")],
+        },
     }
 
 
 def run_freeze(args, rec):
-    trigger = trigger_facts(args.pretrain_results)
-    alt = [p for p in args.alt_val_tables if p]
-    table, choice = choose_tables(
-        [read_json(p) for p in args.val_tables],
-        [read_json(p) for p in alt],
-        trigger,
-        args.checkpoint_choice,
-    )
-    freeze = build_freeze(table, args.val_tables, alt, choice, args.rung, args.variant, args.seed)
+    table = merge_tables([read_json(p) for p in args.val_tables])
+    pretrain = pretrain_facts(args.pretrain_results, table)
+    freeze = build_freeze(table, args.val_tables, pretrain, args.rung, args.variant, args.seed)
     date = dt.datetime.now(dt.UTC).date().isoformat()
     path = Path(args.freezes_dir) / freeze_name(date, args.rung, args.variant, args.seed)
     if path.exists():
@@ -245,7 +216,8 @@ def run_freeze(args, rec):
             "event": "freeze_written",
             "path": str(path),
             "n_cells": len(freeze["cells"]),
-            "checkpoint": choice["choice"],
+            "model_step": (pretrain.get("model_choice") or {}).get("step"),
+            "at_grid_edge": freeze["diagnostics"]["at_grid_edge"],
         }
     )
     return {
@@ -254,7 +226,7 @@ def run_freeze(args, rec):
         "cells": freeze["cells"],
         "corpus_id": freeze["corpus_id"],
         "model_sha256": freeze["model_sha256"],
-        "checkpoint": choice,
+        "diagnostics": freeze["diagnostics"],
     }
 
 
@@ -266,24 +238,12 @@ def build_parser():
         "--val-tables",
         required=True,
         nargs="+",
-        help="one val-table.json per grain of one corpus (the last checkpoint's model)",
+        help="one val-table.json per grain of one corpus, swept on the pretrain record's model",
     )
     p.add_argument(
         "--pretrain-results",
         required=True,
-        help="the pretrain run's results.json (the checkpoint trigger)",
-    )
-    p.add_argument(
-        "--alt-val-tables",
-        required=True,
-        nargs="+",
-        help="the argmin-val checkpoint's tables when the trigger fired, else ''",
-    )
-    p.add_argument(
-        "--checkpoint-choice",
-        required=True,
-        choices=["last", "argmin"],
-        help="must equal what the trigger rule picks",
+        help="the pretrain run's results.json (model hash, model_choice, oracle: recorded, never gated)",
     )
     p.add_argument("--rung", required=True, choices=RUNGS)
     p.add_argument("--variant", required=True, choices=VARIANTS)

@@ -38,3 +38,17 @@ scorer supplies its own trivial baselines (`shd_empty_*`,
 ## Addenda
 
 (none)
+
+## Addenda
+
+### 2026-09-25 — after the xs calibration run (owner-reviewed)
+
+- **§2 Grids — granger.** The pre-registered text said "half-decades `1e-4 … 1` (12 values)";
+  the xs replica ran the nine half-decades `1e-4 … 1` (the text miscounted). The request-grain
+  argmax sat at the bottom (`1e-4`), so the grid widens to **`1e-5 … 3`** (12 values: `1e-5,
+  3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1, 3`); a bottom-edge argmax is
+  recorded (`at_grid_edge`), never refused (arm plan addendum of the same date).
+- **§2 Grids — quantiles.** Unchanged (`p50` won at xs on both grains for saliency and
+  Shapley; the quantile family already brackets it).
+- **Coverage rule** → reported, per the arm plan's addendum.
+
