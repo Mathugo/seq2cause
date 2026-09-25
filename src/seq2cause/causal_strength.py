@@ -1,10 +1,28 @@
+from __future__ import annotations
+
 import torch
 from captum.attr import InputXGradient, ShapleyValueSampling
 from jaxtyping import Float
 from torch import Tensor
 from tqdm.auto import tqdm
 
+from seq2cause.kl import (
+    DEFAULT_KL_MODE,
+    accumulate_counts,
+    bernoulli_kl_from_log,
+    check_kl_mode,
+    corrupted_cell_counts,
+)
 from seq2cause.utils import estimate_tensor_bytes, format_bytes
+
+
+def _band_mask(num_pairs: int, lc: int, start_row: int, device) -> Tensor:
+    """`[num_pairs, lc]` boolean mask of the cells that are read from the
+    row-pair window: row `r` tests cause `start_row + r`, and only effects
+    strictly after the cause (`t > start_row + r`) are meaningful."""
+    causes = torch.arange(num_pairs, device=device) + start_row
+    effects = torch.arange(lc, device=device)
+    return effects.unsqueeze(0) > causes.unsqueeze(1)
 
 
 def calc_lag_info_gain(
@@ -12,20 +30,37 @@ def calc_lag_info_gain(
     batch: dict[str, Float[Tensor, "bs L"]],
     params: dict,
     eps: float = 1e-9,
+    kl_mode: str | None = None,
+    stats: dict | None = None,
 ) -> Float[Tensor, "bs L_minus_c L_minus_c"]:
     """Calculates Lagged Information Gain (KL Divergence) between the intervention and baseline distributions.
     This method quantifies how much information about the true token is gained by observing the cause (intervention)
     compared to not observing it (baseline). By averaging over the particles, this is equivalent to the conditional
     mutual information I(X_t; X'_t | History) for each potential cause X_t' and effect X_t.
     Args:
-        prob_x_inter: The probability distributions obtained from the intervention sampling.
+        prob_x_inter: The next-token distributions obtained from the intervention sampling. In
+            `"logspace"` mode (the default) these are LOG-probabilities (`log_softmax` of the
+            logits); in `"clamp"` mode they are probabilities (`softmax`), as in v0.1.9.
         batch: The original input batch containing 'input_ids' and 'attention_mask'.
         params: A dictionary of parameters, including sampling context and clamping epsilon.
-        eps: A small constant to prevent log(0).
+        eps: A small constant to prevent log(0) (`"clamp"` mode only).
+        kl_mode: `"logspace"` evaluates the Bernoulli KL from log-probabilities in float64, so a
+            next-token probability that saturates to `1.0` in float32 stays finite; `"clamp"`
+            is the v0.1.9 algebra, whose `1 - eps` clamp is a no-op at the upper end in
+            float32 (see `seq2cause.kl`). Defaults to `params.get("kl_mode", "logspace")`.
+        stats: An optional dict into which the corrupted-cell counts (what `"clamp"` mode
+            turns into NaN or +inf on these inputs) are accumulated, in either mode. Defaults
+            to `params.get("kl_stats")`; `None` skips the count.
 
     Returns:
         A tensor of shape [bs, L_minus_c, L_minus_c] representing the lagged information gain for each potential cause-effect pair.
     """
+
+    if kl_mode is None:
+        kl_mode = params.get("kl_mode", DEFAULT_KL_MODE)
+    check_kl_mode(kl_mode)
+    if stats is None:
+        stats = params.get("kl_stats")
 
     device = prob_x_inter.device
     c = params["sampling"]["context"]
@@ -53,19 +88,29 @@ def calc_lag_info_gain(
     p = p_event_full[:, :, :-1, :]  # Baseline (X_j is noise)
     q = p_event_full[:, :, 1:, :]  # Interv (X_j is observed)
 
-    p = torch.clamp(p, eps, 1 - eps)
-    q = torch.clamp(q, eps, 1 - eps)
+    # The causes we just tested are the LAST (num_rows-1) causes.
+    # If m=6 and Lc=12, we tested causes 7, 8, 9, 10, 11 (indices 6-11).
+    start_row = Lc - (num_rows - 1)
 
-    kl = q * torch.log(q / p) + (1 - q) * torch.log((1 - q) / (1 - p))
-    cmi_window = torch.mean(kl, dim=1)  # [bs, num_rows-1, Lc]
+    if stats is not None:
+        band = _band_mask(num_rows - 1, Lc, start_row, device)
+        q32, p32 = (q, p) if kl_mode == "clamp" else (q.exp(), p.exp())
+        accumulate_counts(stats, corrupted_cell_counts(q32, p32, band=band, particle_dim=1))
+
+    if kl_mode == "clamp":
+        # v0.1.9 algebra, verbatim.
+        p = torch.clamp(p, eps, 1 - eps)
+        q = torch.clamp(q, eps, 1 - eps)
+
+        kl = q * torch.log(q / p) + (1 - q) * torch.log((1 - q) / (1 - p))
+        cmi_window = torch.mean(kl, dim=1)  # [bs, num_rows-1, Lc]
+    else:
+        kl = bernoulli_kl_from_log(q, p)  # float64, finite for every finite input
+        cmi_window = torch.mean(kl, dim=1).to(prob_x_inter.dtype)  # [bs, num_rows-1, Lc]
 
     # --- Step 3: Sparse-to-Full Matrix Mapping ---
     # We need to map these (num_rows-1) causes to their actual positions in the (Lc x Lc) matrix
     full_cmi = torch.zeros((bs, Lc, Lc), device=device)
-
-    # The causes we just tested are the LAST (num_rows-1) causes.
-    # If m=6 and Lc=12, we tested causes 7, 8, 9, 10, 11 (indices 6-11).
-    start_row = Lc - (num_rows - 1)
     full_cmi[:, start_row:, :] = cmi_window
 
     return torch.nan_to_num(full_cmi, nan=0.0)
