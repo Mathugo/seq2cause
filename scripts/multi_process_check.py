@@ -88,9 +88,15 @@ def main() -> None:
 
     local_batch, adj = algo.run()
 
-    # --- Check 3: every process gets a sane, finite adjacency matrix ---
+    # --- Check 3: every process gets a sane, finite adjacency matrix covering
+    # EVERY sequence of its shard (`run()` concatenates over all batches) ---
     lc = seq_len - context
-    assert adj.shape == (batch_size, lc, lc), (
+    n_local = local_batch["input_ids"].shape[0]
+    assert n_local == n_sequences // accelerator.num_processes, (
+        f"rank {accelerator.process_index}: shard holds {n_local} sequence(s), expected "
+        f"{n_sequences // accelerator.num_processes}"
+    )
+    assert adj.shape == (n_local, lc, lc), (
         f"rank {accelerator.process_index}: bad adj shape {tuple(adj.shape)}"
     )
     assert torch.isfinite(adj).all(), f"rank {accelerator.process_index}: non-finite adjacency"
@@ -100,10 +106,11 @@ def main() -> None:
     accelerator.wait_for_everyone()
 
     if accelerator.is_main_process:
-        expected_total = accelerator.num_processes * batch_size
+        expected_total = n_sequences
         assert gathered_ids.shape[0] == expected_total, (
             f"gather() returned {gathered_ids.shape[0]} rows, expected {expected_total} "
-            f"({accelerator.num_processes} processes x BS={batch_size})"
+            f"(every sequence of the dataset exactly once across "
+            f"{accelerator.num_processes} processes)"
         )
         rows = [tuple(row.tolist()) for row in gathered_ids]
         assert len(set(rows)) == len(rows), (
