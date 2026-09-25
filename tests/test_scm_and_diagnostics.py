@@ -499,3 +499,42 @@ def test_sample_and_summary_graphs_recover_known_scm_structure():
         summary_precision = tp_s / (tp_s + fp_s) if (tp_s + fp_s) else 0.0
         assert summary_recall > 0.5
         assert summary_precision > 0.5
+
+
+def _accelerator_device():
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return None
+
+
+@pytest.mark.skipif(_accelerator_device() is None, reason="needs a CUDA or MPS device")
+def test_compute_cmi_matrix_atomic_runs_on_an_accelerator():
+    """`_cmi_matrix_from_atomic` built its mask on the CPU, so the CLI's default
+    `--strategy atomic` raised a device-mismatch error on every GPU. (The oracle
+    SCM cannot draw sequences off the CPU, so a tiny HF model stands in.)"""
+    from transformers import LlamaConfig, LlamaForCausalLM
+
+    from seq2cause.adapters import HFModelAdapter
+
+    device = _accelerator_device()
+    vocab_size, seq_len, context_len = 10, 12, 3
+    torch.manual_seed(0)
+    config = LlamaConfig(
+        vocab_size=vocab_size,
+        hidden_size=8,
+        intermediate_size=16,
+        num_hidden_layers=1,
+        num_attention_heads=2,
+        max_position_embeddings=seq_len + 4,
+    )
+    model = HFModelAdapter(LlamaForCausalLM(config).eval().to(device), vocab_size=vocab_size)
+    sequence = torch.randint(0, vocab_size, (seq_len,)).to(device)
+    for strategy in ("atomic", "full"):
+        torch.manual_seed(0)
+        cmi = compute_cmi_matrix(
+            model, sequence, context_len=context_len, n_particles=4, strategy=strategy
+        )
+        assert cmi.shape == (seq_len - context_len, seq_len - context_len), strategy
+        assert torch.isfinite(cmi.cpu()).all(), strategy

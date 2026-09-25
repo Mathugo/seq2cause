@@ -304,7 +304,9 @@ def _cmi_matrix_from_atomic(p_event_mean: Tensor, baseline_probs: Tensor) -> Ten
     lc = p_event_mean.shape[-1]
     baseline_exp = baseline_probs.unsqueeze(0).expand(lc, lc)
     kl = _bernoulli_kl(baseline_exp, p_event_mean)
-    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool), diagonal=1)
+    # The mask must live where `kl` lives: `torch.where` refuses mixed devices, so a
+    # CPU-only mask made `strategy="atomic"` fail on every accelerator (CUDA, MPS).
+    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=kl.device), diagonal=1)
     return torch.where(mask, kl, torch.zeros_like(kl))
 
 

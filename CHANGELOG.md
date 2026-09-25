@@ -33,6 +33,28 @@ All notable changes to this project are documented in this file.
   (forwarded), `calc_lag_info_gain(..., kl_mode=, stats=)`, and
   `SampleLevelCausalDiscovery` reading `params["kl_mode"]` /
   `params["kl_stats"]`.
+- **`strategy="atomic"` failed on every accelerator.** `diagnostics._cmi_matrix_from_atomic`
+  built its upper-triangle mask on the CPU, and `torch.where` refuses mixed
+  devices, so the CLI's default (`--strategy atomic` on a CUDA or MPS device)
+  raised "Expected all tensors to be on the same device". The mask now lives
+  on the KL tensor's device. Only CPU runs (and the CPU-only test suite) were
+  unaffected.
+- **`SampleLevelCausalDiscovery.run()` returned inside its batch loop**, so only
+  the first batch of the dataloader was ever scored. It now processes every
+  batch and returns the batch dict and adjacency concatenated along
+  dimension 0 (`[n_sequences, L]`, `[n_sequences, L-c, L-c]`); the
+  single-batch result is unchanged. `scripts/multi_process_check.py` now
+  asserts that the gathered sequences cover the whole dataset exactly once.
+- **Batch size > 1 broke `run()`'s tensor shapes.** The ancestral-sampling
+  prefix (`[bs * N, c]`) was `unsqueeze(0)`-ed to `[1, bs * N, c]` and only
+  matched the `[bs, N, ...]` intervention tensor when `bs == 1`; it is now
+  regrouped as `[bs, N, c]`.
+- **`strategy="atomic"` through `SampleLevelCausalDiscovery` is refused** with
+  a `ValueError`: `calc_lag_info_gain` compares adjacent staircase rows, which
+  under the atomic construction are two different noised causes, so the
+  result was silently mis-paired. `diagnostics.compute_cmi_matrix` implements
+  the atomic estimator correctly.
+  Reported by Alex Chadyuk (trace-bench harness; lab gap report G15).
 
 ## [0.1.9] - 2026-08-31
 
