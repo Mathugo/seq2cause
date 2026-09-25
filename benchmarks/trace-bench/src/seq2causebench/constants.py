@@ -210,3 +210,11 @@ ORACLE_IN_REGIME = 0.1  # eps_hat below this = in regime (paper's phase transiti
 CHECKPOINT_TRIGGER_RATIO = (
     1.01  # final val loss above this x its minimum -> argmin checkpoint also swept
 )
+
+# --- added at M6 ---------------------------------------------------------------------------------
+SHIPPED_CUT_READ_JSON_FMT = (
+    "shippedcut-{grain}-{arm}-{path}.json"  # a discover read's shipped-cut record
+)
+SEQUENCES_JSON_FMT = "sequences-{grain}.json"  # the probed sequences (trace ids, lengths) of a read
+SMALLEST_RUNG_TOKEN = "smallest-rung"  # --prior-rung-record at the smallest rung
+STAGING_LEDGER_SCHEMA = "seq2causebench/staging-ledger@1"
