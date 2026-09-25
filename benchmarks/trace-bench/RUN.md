@@ -78,7 +78,9 @@ on them; the arm plans under `plans/` reference these ids.
   the freeze records the soundness diagnostics (model choice, oracle, coverage ceiling,
   grid-edge flags) and refuses only tables bound to another model, and the replica checker's
   `--args-diff` compares a repeated module by output folder
-  (`tests/test_tfvars_check_parses.py`).
+  (`tests/test_tfvars_check_parses.py`); a replica may name a tracked job script
+  (`bash scripts/jobs/<replica>.sh`, one command per line) when its chain would cross the
+  provisioning user-data cap, and the checker follows it with the same parsers.
 - **Per run:** the executing host's log shows the command exiting with
   status 0 and the output sync completing; `run/*.json` carry every
   scenario-24 field, the replica name and the profile; a registry row lands
@@ -99,3 +101,4 @@ are the pointers.
 | date (UTC) | run | command | rung/variant/seed | split | model sha256 (8) | exit | wall clock | gpu | outcome |
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-09-25 | `xs-latent-s0-val-26-09-24` (Job V, replica `seq2cause-bench-26-09-24-xs-latent-s0-val.tfvars`) | pull → prepare → pretrain 12k × 256 → sweep request c{1,2,3} → sweep session c{2,4,8} (5 probes × 2 noises × N{2,8,32}, whole val split) → pull score → scoresweep × 2 | xs / latent / 0 | val | `c5c9d641` (last checkpoint, `--model-choice` predates this knob) | 0 (all 8 stages) | 2 h 41 min (pretrain 305 s; sweeps 59 + 95 min, Shapley 74 % / 89 %) | A10G, peak 3.07 GB | **calibration only, not frozen**: validation loss rose 2.20 → 3.30 from step 1000 (≈ 750 epochs), ε̂ = 0.62; coverage ceiling 0.48 / 0.59 on the whole split; session τ argmax at the grid top. Records verified against the manifest; `--args-diff` clean. Package commit `1832f45` (pre-rebase; tree = `cd1e48c` up to line wrapping in `cli.py` / `diagnostics.py` and the CHANGELOG order). Led to the 2026-09-25 addenda (`plans/`); superseded by the next xs replica. |
+| 2026-09-25 | `xs-latent-s0-val-26-09-25` (Job V, second replica, `seq2cause-bench-26-09-25-xs-latent-s0-val.tfvars`) | the same chain with `--val-every 250 --checkpoint-every 250 --model-choice argmin-val` and the widened τ grids (plans' 2026-09-25 addenda) | xs / latent / 0 | val | `ba7725c4` (argmin-val checkpoint, step 500) | 0 (all 8 stages) | 2 h 40 min (pretrain 302 s; sweeps 58 + 92 min) | A10G, peak 3.07 GB | **frozen**: `freezes/2026-09-25-xs-latent-s0.json` (38 cells, no grid-edge τ). Backbone in regime: val loss 1.586 at step 500 vs the order-2 floor 1.608 (ε̂ = −0.008; the floor is a plug-in estimate, not a bound; last checkpoint 3.33). Zero corrupted cells; shipped vs fixed-kl ≤ 0.0013 F1. Val directed F1 (floor 0.05): trace arms 0.316–0.327 request, 0.341–0.367 session; granger 0.32–0.34; saliency 0.26 / 0.34; Shapley 0.27 / 0.30; predict-all 0.21. Shipped cut 5–65 edges (request), 15–162 (session). Records verified against the manifest; `--args-diff` clean on all 8 stages; package commit `56d6122`. Ledger: two `sweep` entries. Job T = `scripts/jobs/seq2cause-bench-26-09-25-xs-latent-s0-test.sh` (20 discover reads, 38 annotate, 38 seqscore). |
