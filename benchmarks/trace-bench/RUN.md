@@ -67,6 +67,13 @@ on them; the arm plans under `plans/` reference these ids.
   any file this work touches) and `tests/test_notice_present.py` (copied code
   keeps its notice) fail the build. The shipped suite (`pytest tests/` at the
   repository root, 190 tests after the four fix merges) stays green.
+- **M5 / M6 (`tests/test_engine_parity.py`, `tests/test_m6_pipeline.py`):** the engine
+  adapter reproduces `SampleLevelCausalDiscovery.run()` and `compute_cmi_matrix` bit for
+  bit on the fixture and the shipped cut equals `seq2cause`'s own CLI output; the fixture
+  runs prepare → pretrain → sweep → scoresweep → freeze in a git repository → three test
+  reads under the freeze → annotate → seqscore → report, and every refusal of scenarios
+  3, 7, 9, 13, 22, 23, 29, 39, 46 and 47 is asserted; `score.json` is byte-identical to a
+  direct `score_corpus` call (scenario 28).
 - **Per run:** the executing host's log shows the command exiting with
   status 0 and the output sync completing; `run/*.json` carry every
   scenario-24 field, the replica name and the profile; a registry row lands

@@ -29,11 +29,11 @@ results are co-published with the trace-bench dataset paper.
 |---|---|---|
 | M0 | the four bug-fix branches (Bug Policy), merged into the harness branch | done 2026-09-24 |
 | M1 | scaffold: packaging, constants and arm registry, records, artifacts, hygiene / no-defaults / notice gates, deviation register | built 2026-09-24 |
-| M2 | corpus adapter, vocabulary, `pull`, `prepare`, entropy floor, fixture corpus | — |
-| M3 | `pretrain` (Hugging Face Llama backbone) | — |
-| M4 | pre-registered plans (arms, baselines, per-sequence rules, caps, staging ledger) | — |
-| M5 | engine adapter over the shipped functions, projection, selection, the two cuts | — |
-| M6 | `sweep`, `scoresweep`, `freeze`, `discover`, `annotate`, `seqscore`, `report` | — |
+| M2 | corpus adapter, vocabulary, `pull`, `prepare`, entropy floor, fixture corpus | built 2026-09-24 |
+| M3 | `pretrain` (Hugging Face Llama backbone) | built 2026-09-24 |
+| M4 | pre-registered plans (arms, baselines, per-sequence rules, caps, staging ledger) | committed 2026-09-24, before the engine code |
+| M5 | engine adapter over the shipped functions, projection, selection, the two cuts | built 2026-09-24 (bit-equal parity against `run()` and `compute_cmi_matrix`; the shipped cut equals the shipped CLI's output) |
+| M6 | `sweep`, `scoresweep`, `freeze`, `discover`, `annotate`, `seqscore`, `report` | built 2026-09-24 (`tests/test_m6_pipeline.py`) |
 | M7+ | the benchmark ladder xs → s → m → l → xl | — |
 
 ## Install
