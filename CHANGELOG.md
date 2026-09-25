@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **Dependency pins relaxed:** `numpy<2.0` -> `numpy>=1.24` and `pyarrow<17`
+  -> `pyarrow>=14`. Both upper bounds date from the first packaging commit
+  (February 2026) and excluded every current data stack; the code uses no
+  numpy-2-removed API and no pyarrow API directly. The full test suite
+  passes under numpy 2.4.6 / pyarrow 25.0.1 / torch 2.14.0 / transformers
+  5.17.0 / captum 0.9.0 (and under the previous pins).
+- `requires-python` is now `>=3.9`: the package already used built-in
+  generic annotations evaluated at import time (`dict[str, ...]` in
+  `causal_strength.py`), which Python 3.8 rejects, so 3.8 never actually
+  ran. Reported by Alex Chadyuk (trace-bench harness).
+
 ## [0.1.9] - 2026-08-31
 
 ### Changed
