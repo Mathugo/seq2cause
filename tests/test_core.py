@@ -231,3 +231,19 @@ def test_rejects_non_full_strategy():
         assert "compute_cmi_matrix" in str(exc)
     else:
         raise AssertionError("strategy='atomic' through core must be refused")
+
+
+def test_run_honours_noise_min_id():
+    torch.manual_seed(0)
+    vocab_size, seq_len, context = 6, 6, 2
+    model, ds_test = _tiny_model_and_dataset(vocab_size, seq_len)
+    params = _params(context=context)
+    params["sampling"]["noise_min_id"] = vocab_size - 1  # one admissible noise token
+    outs = []
+    for seed in (0, 1):
+        torch.manual_seed(seed)
+        algo = SampleLevelCausalDiscovery(model, params, ds_test)
+        algo.prepare()
+        _, adj = algo.run()
+        outs.append(adj.cpu())
+    assert torch.equal(outs[0], outs[1])

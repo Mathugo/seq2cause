@@ -271,3 +271,23 @@ def test_main_kl_mode_flag_reports_clamp_corruption(tmp_path, capsys):
         assert f"kl_mode={mode!r}" in captured.out
         assert "Clamp-mode corruption:" in captured.out
         assert "Done in" in captured.out
+
+
+def test_main_noise_min_id_flag(tmp_path, capsys):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(4, 30, (2, 12))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--context-len", "3",
+            "--n-particles", "4",
+            "--seed", "0",
+            "--noise-min-id", "4",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert "noise_min_id=4" in captured.out
+    assert "Done in" in captured.out

@@ -378,6 +378,7 @@ def compute_cmi_matrix(
     max_pairs: int | None = 20000,
     kl_mode: str = DEFAULT_KL_MODE,
     stats: dict | None = None,
+    noise_min_id: int = 0,
 ) -> Tensor:
     """Computes the per-(cause, effect) Conditional Mutual Information matrix
     for a single sequence, using a single do-intervention `strategy`.
@@ -417,6 +418,11 @@ def compute_cmi_matrix(
         stats: optional dict into which the corrupted-cell counts -- what
             `"clamp"` mode would turn into NaN or +inf on these inputs -- are
             accumulated, in either mode.
+        noise_min_id: the do-intervention noise is drawn uniformly over
+            `[noise_min_id, vocab_size)`; pass the number of reserved special
+            ids (PAD/BOS/EOS/UNK) so no counterfactual places one of them
+            mid-sequence (see `sampling.uniform_sample`). `0` = the whole
+            id range, specials included (pre-0.1.10 behaviour).
 
     Returns:
         `[L - context_len, L - context_len]` CMI matrix; `[j, q]` is the
@@ -437,7 +443,7 @@ def compute_cmi_matrix(
     rest = sequence[context_len:].unsqueeze(0)  # [1, Lc]
 
     dummy = torch.zeros(1, lc, model.vocab_size, device=device)
-    noise = uniform_sample(dummy, n_samples=n_particles, device=device)
+    noise = uniform_sample(dummy, n_samples=n_particles, device=device, min_id=noise_min_id)
 
     if strategy == "full":
         rows = do_interventions(noise, rest, prefix, strategy="full").squeeze(0)
@@ -541,6 +547,7 @@ def compute_cmi_matrix_sparse(
     n_particles: int = 32,
     kl_mode: str = DEFAULT_KL_MODE,
     stats: dict | None = None,
+    noise_min_id: int = 0,
 ) -> Tensor:
     """Bounded-memory ("sparse") variant of `compute_cmi_matrix`.
 
@@ -588,6 +595,7 @@ def compute_cmi_matrix_sparse(
             0 (never tested, not "found to be zero").
         n_particles: number of do-intervention noise particles per chunk.
         kl_mode, stats: forwarded to `compute_cmi_matrix`.
+        noise_min_id: forwarded to `compute_cmi_matrix`.
 
     Returns:
         `[L - context_len, L - context_len]` CMI matrix, same convention as
@@ -615,7 +623,8 @@ def compute_cmi_matrix_sparse(
         local_sequence = sequence[local_context_start_abs:local_suffix_end_abs]
         local_cmi = compute_cmi_matrix(
             model, local_sequence, context_len=local_context_len,
-            n_particles=n_particles, strategy="full", kl_mode=kl_mode, stats=stats,
+            n_particles=n_particles, strategy="full",
+            kl_mode=kl_mode, stats=stats, noise_min_id=noise_min_id,
         )
         local_suffix_len = local_suffix_end_abs - local_suffix_start_abs
 

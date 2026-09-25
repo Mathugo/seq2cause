@@ -68,3 +68,30 @@ def test_uniform_sample_still_uniform_baseline_for_comparison():
     counts = torch.bincount(sampled.flatten(), minlength=vocab).float()
     proportions = counts / counts.sum()
     assert torch.all(proportions > 0.05)  # roughly uniform, not collapsed
+
+
+def test_uniform_sample_min_id_keeps_reserved_ids_out_of_the_draw():
+    torch.manual_seed(0)
+    vocab, n_specials = 9, 4
+    for prob_x in (torch.zeros(3, vocab), torch.zeros(2, 5, vocab)):
+        sampled = uniform_sample(prob_x, n_samples=64, min_id=n_specials)
+        assert int(sampled.min()) >= n_specials
+        assert int(sampled.max()) < vocab
+    # every real id is still reachable
+    sampled = uniform_sample(torch.zeros(1, 2000, vocab), n_samples=1, min_id=n_specials)
+    counts = torch.bincount(sampled.flatten(), minlength=vocab)
+    assert torch.all(counts[:n_specials] == 0) and torch.all(counts[n_specials:] > 0)
+
+
+def test_uniform_sample_min_id_zero_is_the_previous_behaviour():
+    torch.manual_seed(3)
+    before = uniform_sample(torch.zeros(2, 7, 6), n_samples=5)
+    torch.manual_seed(3)
+    after = uniform_sample(torch.zeros(2, 7, 6), n_samples=5, min_id=0)
+    assert torch.equal(before, after)
+
+
+def test_uniform_sample_rejects_min_id_outside_the_vocabulary():
+    for bad in (-1, 6, 7):
+        with pytest.raises(ValueError):
+            uniform_sample(torch.zeros(1, 6), n_samples=2, min_id=bad)

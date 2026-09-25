@@ -214,10 +214,13 @@ class SampleLevelCausalDiscovery:
                 # here would raise "unexpected keyword argument" for keys like
                 # "value"/"guidance"/"context", so only its actual accepted
                 # kwargs are forwarded.
+                # `params["sampling"]["noise_min_id"]` (default 0) keeps reserved ids
+                # (PAD/BOS/EOS/UNK) out of the counterfactual draw -- see `uniform_sample`.
                 rest_upsampled_using_q = prop(
                     prob_x[:, self.context :, :],
                     n_samples=self.N,
                     cls_token_id=self.params["sampling"]["cls_token_id"],
+                    min_id=self.params["sampling"].get("noise_min_id", 0),
                 )
                 rest_expanded_intervened = do_interventions(
                     rest_upsampled_using_q,
