@@ -64,8 +64,26 @@ def read_tfvars(path):
     return out
 
 
-def segments(command):
-    return [s.strip() for s in command.split("&&")]
+def segments(command, base=None):
+    """The `&&`-chained segments of a replica's command. A segment `bash <script>` (a job script
+    tracked under the harness, e.g. `scripts/jobs/<replica>.sh`, used when the chain would cross
+    the provisioning user-data cap) is replaced by that script's command lines: one command per
+    line, comments and `set` lines skipped, `&&` chains within a line split as usual."""
+    out = []
+    for seg in (s.strip() for s in command.split("&&")):
+        words = seg.split()
+        if len(words) == 2 and words[0] == "bash":
+            script = Path(base or ".") / words[1]
+            if not script.exists():
+                raise FileNotFoundError(f"job script {script} named by the replica does not exist")
+            for line in script.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("set "):
+                    continue
+                out.extend(s.strip() for s in line.split("&&"))
+        else:
+            out.append(seg)
+    return out
 
 
 def parse_segment(seg):
@@ -83,7 +101,8 @@ def parse_segment(seg):
     return argv[2], vars(ns)
 
 
-def check(path):
+def check(path, base=None):
+    """`base` is the harness directory a `bash <script>` segment resolves against (default: cwd)."""
     tf = read_tfvars(path)
     problems = []
     for k in CHECKED_KEYS:
@@ -98,7 +117,7 @@ def check(path):
         problems.append(f"repo_subdir must be {BENCH_SUBDIR!r} (the harness directory)")
     parsed = []
     skipped = []
-    for seg in segments(str(tf.get("train_command", ""))):
+    for seg in segments(str(tf.get("train_command", "")), base):
         try:
             r = parse_segment(seg)
         except SystemExit:
