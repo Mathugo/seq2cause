@@ -111,3 +111,30 @@ are reported without a pass / fail clause.
 ## Addenda
 
 (none)
+
+## Addenda
+
+### 2026-09-25 — after the xs calibration run (owner-reviewed; `plans/caps.md` addendum of the same date)
+
+- **§4 Freeze rule — model.** The frozen model is the argmin-validation checkpoint written by
+  `pretrain --model-choice argmin-val` (caps addendum); the `1.01×` trigger, the argmin re-sweep and
+  `freeze --alt-val-tables / --checkpoint-choice` are withdrawn. The freeze record carries
+  `diagnostics`: the pretrain record's `model_choice`, its oracle at the chosen and at the final
+  checkpoint, and per frozen cell the reachable-recall ceiling and an `at_grid_edge` flag.
+- **§4 Freeze rule — grid edges.** A frozen τ that sits at either end of its grid is recorded
+  (`at_grid_edge`), never refused: a bottom-edge argmax is a finding about the arm (its best cut
+  is "every positive score"), not a grid defect. At xs the session argmax of `trace/core` and
+  `trace/cli-atomic` sat at the top (`3e-1`) and the request argmax of `baseline/granger` and
+  `trace/cli-atomic` at the bottom, so the grids widen: **τ = half-decades `1e-7 … 3`** (16
+  values: `1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1, 1,
+  3`). A scoresweep is CPU-only over the stored matrices, so a widened grid needs no new probe.
+- **§5 Coverage rule → reported.** The reachable-recall ceiling is a class-2 instrument check
+  (caps addendum): reported beside every headline, in the freeze per cell and in `annotate`,
+  with no threshold. At xs the whole validation split gave 0.477 (request, `c = 1`) and 0.592
+  (session, `c = 2`), so the rule's action — a larger sample — could not reach 0.90.
+- **H-regime.** Unchanged in substance (reported only); the value reported is ε̂ at the frozen
+  checkpoint. xs `latent/seed=0`: ε̂ = 0.62 at the last checkpoint, ≈ 0.22 at step 1000 —
+  out of regime either way; a result at xs is labelled so.
+- **H-sat, note.** At xs the request-grain F1 is flat in N to ± 0.005 (saturated at N = 2); the
+  session grain prefers N = 32 by ≈ 0.02 on one seed. Scored at the rung's test read as written.
+

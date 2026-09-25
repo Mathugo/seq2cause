@@ -67,4 +67,44 @@ shipped full-vocabulary softmax will be slower. Shapley costs about
 
 ## Addenda
 
-(none)
+### 2026-09-25 — xs calibration run landed (Job V, `xs/latent/seed=0`, g5.xlarge A10G)
+
+**Measured anchors** (the run record; sweep cells are the whole validation split,
+1,154 request / 437 session sequences; owner-reviewed 2026-09-25):
+
+| stage | measured | note |
+|---|---|---|
+| pretrain 12k × 256 bf16 | 305 s; 1.42e5 tok-pos/s; peak device 0.88 GB | 8.8× below the sibling's anchor (HF Llama, no fused kernels) |
+| particle probe cell (core / cli-full / cli-atomic) | request 8–16 s, session 3–18 s | **flat in N** (2 → 32 changes the wall clock by < 10 %): the per-sequence Python loop, not the GPU, is the cost; ≈ 13 ms / request sequence, ≈ 15–40 ms / session sequence |
+| saliency | 0.09 s / request sequence; 0.21 s / session sequence | — |
+| Shapley | 0.90 s / request sequence; 4.6 s / session sequence | 74 % of the request sweep, 89 % of the session sweep |
+| sweep wall clock | request 59 min; session 95 min | chain 2 h 41 min end to end |
+| peak device memory | request sweep 0.20 GB; session sweep 3.07 GB | the session figure equals the activation term of the D-SB-12 formula at `N = 32, L = 64`; the logits term is 0.08 GB at `V = 79` |
+
+**Projection for `s`** (10k / 5k validation sample, 2k / 500 Shapley sample, from the
+per-sequence costs above): particle cells ≈ 2.0 h (request) + 1.5 h (session), Shapley
+≈ 1.5 h + 1.9 h, saliency ≈ 0.25 h, pretrain ≈ 0.1 h → **≈ 7.2 h**, inside the 12 h cap at a
+1.7× margin. The full-vocabulary softmax's growth with `V` is unmeasured at `V = 79` (the
+loop dominates); `s` is the first rung that measures it, so its cap stays at 12 h and is not
+tightened.
+
+**Checkpoint rule (replaces carried decision 3 and the trigger paragraph above; owner
+decision 2026-09-25).** The frozen model is the **argmin-validation checkpoint**: `pretrain`
+validates and checkpoints every **250** steps (`--val-every 250 --checkpoint-every 250`, 48
+candidates plus the final step), writes the argmin checkpoint as `model/`, and records
+`model_choice` (`argmin-val`, the chosen step, its validation loss, the final loss and
+`val_final_over_min`). The oracle score ε̂ is taken at the chosen checkpoint and reported;
+the final checkpoint's ε̂ is recorded beside it. Ties → the smaller step. The `1.01×` trigger,
+`--alt-val-tables` and `--checkpoint-choice` are withdrawn. *Why:* at xs the last checkpoint's
+validation loss was 1.498× the curve minimum (2.20 at step 1000 → 3.30 at step 12,000, monotone;
+train loss 0.62), the argmin was the *first* checkpoint, so the trigger's own action (sweep the
+argmin) could not resolve the minimum; the harness trains the backbone, so an overfit model is a
+harness defect, not a TRACE result. The step budget stays 12,000 × 256 at every rung (cells
+comparable); the selected step is the effective budget and is recorded.
+
+**Threshold classes (owner-agreed 2026-09-25).** A pre-registered threshold is one of:
+(1) a *selection rule* — hard, blocks (the freeze); (2) an *instrument-soundness check* —
+reported beside every headline, gating only where the failure is something the lab can act on;
+(3) a *hypothesis* — a commitment about the claim, never a gate. The coverage rule and the
+oracle regime are class 2 (see the arm plans' addenda of the same date).
+

@@ -74,6 +74,8 @@ PRETRAIN = [
     "2",
     "--checkpoint-every",
     "4",
+    "--model-choice",
+    "argmin-val",
     "--entropy-order",
     "1",
     "--seed",
@@ -267,10 +269,6 @@ def world(tmp_path_factory):
                 str(root / "scoresweep" / VAL_TABLE_JSON),
                 "--pretrain-results",
                 str(pre_results),
-                "--alt-val-tables",
-                "",
-                "--checkpoint-choice",
-                "last",
                 "--rung",
                 "xs",
                 "--variant",
@@ -492,10 +490,23 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
         f["model_sha256"] == read_json(world["pretrain_results"])["model_sha256"]
         and f["corpus_id"] == world["corpus"].name
     )
-    assert f["checkpoint"]["choice"] == "last" and f["checkpoint"]["trigger"]["fired"] in (
-        True,
-        False,
-    )
+    pre = read_json(world["pretrain_results"])
+    d = f["diagnostics"]
+    assert d["model_choice"] == pre["model_choice"] and d["model_choice"]["choice"] == "argmin-val"
+    assert d["model_choice"]["step"] in (4, 8) and d["oracle"]["step"] == d["model_choice"]["step"]
+    assert d["oracle_last"]["step"] == 8 and d["val_final_over_min"] >= 1.0
+    assert f["schema"] == "seq2causebench/freeze@2"
+    for key, cell in f["cells"].items():
+        if "inherits" in cell:
+            continue
+        assert key in d["coverage"] and d["coverage"][key] == cell["reachable_recall_ceiling"]
+        assert cell["reachable_recall_ceiling"] is not None
+        if cell["grid"] is None:
+            assert cell["at_grid_edge"] is None and cell["tau_source"] != "grid"
+        else:
+            grid = f[cell["grid"]]
+            assert cell["at_grid_edge"] == (cell["tau"] in (min(grid), max(grid)))
+    assert set(d["at_grid_edge"]) == {k for k, c in f["cells"].items() if c.get("at_grid_edge")}
     with pytest.raises(fz.FreezeExists):
         fz.main(
             [
@@ -503,10 +514,6 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
                 str(world["root"] / "scoresweep" / VAL_TABLE_JSON),
                 "--pretrain-results",
                 str(world["pretrain_results"]),
-                "--alt-val-tables",
-                "",
-                "--checkpoint-choice",
-                "last",
                 "--rung",
                 "xs",
                 "--variant",
@@ -521,23 +528,19 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
         )
 
 
-def test_freeze_checkpoint_trigger(world, tmp_path):
-    """A pretrain record whose final val loss exceeds 1.01x its minimum refuses to freeze the last
-    checkpoint without the argmin sweep."""
+def test_freeze_refuses_tables_of_another_model(world, tmp_path):
+    """The val tables must bind the model the pretrain record names (the argmin-validation
+    checkpoint under the plans' 2026-09-25 addendum); soundness facts are recorded, never gated."""
     pre = read_json(world["pretrain_results"])
-    fired = dict(pre, val_final_over_min=1.05)
-    write_json(tmp_path / "fired.json", fired)
-    with pytest.raises(fz.FreezeRefusal, match="trigger fired"):
+    other = dict(pre, model_sha256="0" * 64)
+    write_json(tmp_path / "other.json", other)
+    with pytest.raises(fz.FreezeRefusal, match="bind model"):
         fz.main(
             [
                 "--val-tables",
                 str(world["root"] / "scoresweep" / VAL_TABLE_JSON),
                 "--pretrain-results",
-                str(tmp_path / "fired.json"),
-                "--alt-val-tables",
-                "",
-                "--checkpoint-choice",
-                "last",
+                str(tmp_path / "other.json"),
                 "--rung",
                 "s",
                 "--variant",
@@ -550,19 +553,18 @@ def test_freeze_checkpoint_trigger(world, tmp_path):
                 str(tmp_path / "run"),
             ]
         )
-    quiet = dict(pre, val_final_over_min=1.0)
-    write_json(tmp_path / "quiet.json", quiet)
-    with pytest.raises(fz.FreezeRefusal, match="did not fire"):
+    # an out-of-regime, overfit record freezes: reported in diagnostics, not refused
+    noisy = dict(
+        pre, val_final_over_min=1.5, oracle=dict(pre["oracle"], eps_hat=0.62, in_regime=False)
+    )
+    write_json(tmp_path / "noisy.json", noisy)
+    assert (
         fz.main(
             [
                 "--val-tables",
                 str(world["root"] / "scoresweep" / VAL_TABLE_JSON),
                 "--pretrain-results",
-                str(tmp_path / "quiet.json"),
-                "--alt-val-tables",
-                "",
-                "--checkpoint-choice",
-                "argmin",
+                str(tmp_path / "noisy.json"),
                 "--rung",
                 "s",
                 "--variant",
@@ -575,6 +577,13 @@ def test_freeze_checkpoint_trigger(world, tmp_path):
                 str(tmp_path / "run2"),
             ]
         )
+        == 0
+    )
+    f = read_json(next((tmp_path / "fr").glob("*-s-latent-s1.json")))
+    assert (
+        f["diagnostics"]["val_final_over_min"] == 1.5
+        and f["diagnostics"]["oracle"]["eps_hat"] == 0.62
+    )
 
 
 # --- discover: freeze, staging and the test read -------------------------------------------------------------

@@ -59,3 +59,20 @@ def test_args_diff_against_a_record(tmp_path):
     (run / "run" / "arguments.json").write_text(json.dumps(rec))
     assert tc.args_diff(parsed, run) == {"max_len": (64, 32)}
     assert tc.main([str(_tfvars(tmp_path, GOOD)), "--args-diff", str(run)]) == 1
+
+
+def test_args_diff_picks_the_segment_by_output_folder(tmp_path):
+    """A module chained twice (the two grains' sweeps, the two pull tiers, the two scoresweeps) is
+    compared against the segment whose output folder the record names, not the first one."""
+    second = GOOD.replace("--grain session", "--grain request").replace(
+        "--output-folder out/prep", "--output-folder out/prep-request"
+    )
+    assert second != GOOD and "out/prep-request" in second
+    tf, parsed, problems, _ = tc.check(_tfvars(tmp_path, GOOD + " && " + second))
+    assert problems == [] and [m for m, _ in parsed] == ["seq2causebench.prepare"] * 2
+    run = tmp_path / "run-dir"
+    (run / "run").mkdir(parents=True)
+    rec = {"command": "prepare", "arguments": dict(parsed[1][1]), "argv": []}
+    (run / "run" / "arguments.json").write_text(json.dumps(rec))
+    assert tc.args_diff(parsed, run) == {}
+    assert tc.main([str(_tfvars(tmp_path, GOOD + " && " + second)), "--args-diff", str(run)]) == 0
