@@ -19,9 +19,9 @@ FORBIDDEN = [
     (re.compile(r"s3://[a-z0-9]"), "S3 URI"),
     (re.compile(r"arn:aws"), "AWS ARN"),
     (
-        re.compile(r"(?<![\d.])\d{12}(?![\d.])"),
+        re.compile(r"(?<![0-9a-fA-F.])\d{12}(?![0-9a-fA-F.])"),
         "12-digit AWS account id",
-    ),  # not a digit run inside a decimal
+    ),  # not a digit run inside a decimal or a hex hash
     (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS access key id"),
     (re.compile(r"\baidev\b|--profile [a-z]"), "AWS profile name"),
     (re.compile(r"lotusflare|\.mgmt\.|qlab0\d|dc9\d-\d"), "real host or organisation name"),

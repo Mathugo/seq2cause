@@ -101,3 +101,18 @@ table and a session table are never merged.
 ## Addenda
 
 (none)
+
+## Addenda
+
+### 2026-09-25 — after the xs test read (`xs/latent/seed=0`)
+
+- **The ancestor-link column equals the parent-link column in every one of the 38 cells.** The
+  truth induction keeps only candidate pairs whose token pair is a target directed edge, and at
+  xs those are direct call pairs, so no strict-ancestor pair survives the filter and
+  `ancestor_directed` ≡ `directed` by construction. The column stays (it separates on a corpus
+  whose target graph carries a transitive edge) but is reported as redundant wherever the two
+  coincide; it is never a headline (§ above).
+- **Predict-all at the request grain is high** (0.44–0.52 pooled): request windows hold few
+  candidates and most are truth pairs, so the pooled per-sequence F1 of the reference arms sits
+  below it on this seed. Reported per H-perseq, not adjusted.
+
