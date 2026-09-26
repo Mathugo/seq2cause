@@ -133,7 +133,11 @@ def load_cells(results_dir, rung, variant):
                 raise ReportRefusal(
                     f"{cell_dir}: annotate says seed {annotate['seed']} but sits under seed={seed}"
                 )
+            # the job writes `seqscore` into `<cell>/seqscore/` (its own run record beside the
+            # annotate record); a copy at the cell root is accepted too (the pipeline test's layout)
             seq_path = cell_dir / SEQSCORE_JSON
+            if not seq_path.exists():
+                seq_path = cell_dir / "seqscore" / SEQSCORE_JSON
             cells.setdefault(key, {})[seed] = {
                 "flat": flatten(score, annotate),
                 "annotate": annotate,

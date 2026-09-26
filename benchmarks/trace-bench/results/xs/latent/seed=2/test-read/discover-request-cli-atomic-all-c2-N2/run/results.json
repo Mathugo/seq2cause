@@ -1,0 +1,135 @@
+{
+ "N": 2,
+ "c": 2,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 949,
+   "n_pairs": 951,
+   "per_lag_files": 8,
+   "tau": 3e-07
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 180,
+   "n_edges": 54,
+   "n_sequences_pooled": 1242,
+   "n_within_op": 8,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.837198495864868,
+    "10": 0.6158126527454024,
+    "11": 0.5556584270557069,
+    "2": 2.942119755484745,
+    "3": 2.279029115666309,
+    "4": 1.7877994877253134,
+    "5": 1.4238876288079227,
+    "6": 1.1542950929997646,
+    "7": 0.9545760303132931,
+    "8": 0.8066205096576806,
+    "9": 0.6970123641055526
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 949,
+   "n_pairs": 951,
+   "per_lag_files": 8,
+   "tau": 3e-07
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 180,
+   "n_edges": 54,
+   "n_sequences_pooled": 1242,
+   "n_within_op": 8,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.837198495864868,
+    "10": 0.6158126527454024,
+    "11": 0.5556584270557069,
+    "2": 2.942119755484745,
+    "3": 2.279029115666309,
+    "4": 1.7877994877253134,
+    "5": 1.4238876288079227,
+    "6": 1.1542950929997646,
+    "7": 0.9545760303132931,
+    "8": 0.8066205096576806,
+    "9": 0.6970123641055526
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "xs/latent/seed=2",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 13695
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 13695
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-26T08:37:11-04:00",
+  "path": "freezes/2026-09-26-xs-latent-s2.json",
+  "sha": "5797073205b08a2f01fabcbcf56b306ee45d32fd"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 24281600,
+  "max_seq_len": 14,
+  "probe": "cli-atomic",
+  "shipped_estimate": 102144
+ },
+ "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+ "n_cells": 8482,
+ "n_pairs": 951,
+ "n_probed": 1242,
+ "n_sequences": 1242,
+ "n_skipped_short": 0,
+ "n_stored": 1242,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 18.278,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 99915,
+ "tok_pos_per_s": 5466.419347279293
+}
