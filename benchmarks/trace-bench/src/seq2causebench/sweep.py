@@ -4,7 +4,7 @@
 
     python -m seq2causebench.sweep --corpus <dir> --ordering end --grains request --split val \
         --rung xs --model <model dir> --probes core cli-full cli-atomic saliency shapley --noises all real \
-        --contexts 1 2 3 --particles-grid 2 8 32 --guidance 3 --num-sequences 0 \
+        --contexts 1 2 3 --particles-grid 2 8 32 --guidance 3 --num-sequences 0 --shapley-sequences 0 \
         --shipped-method percentile ... --shipped-min-group-size 8 \
         --max-len 64 --max-lag 63 --sequence-sample head --memory-cap-gb 20 --probe-amp none \
         --prior-rung-record smallest-rung --staging-ledger plans/staging-ledger.json \
@@ -12,7 +12,10 @@
 
 Refuses `--split test` (the test split is read once, by `discover`, after a committed freeze).
 The effective guidance per cell is `g = min(--guidance, c)`; the saliency and Shapley probes have
-no particle axis and run once per `c` at `N = 0`; a pass with no read-out under a noise (saliency,
+no particle axis and run once per `c` at `N = 0`; the Shapley probe reads its own, smaller
+sample (`--shapley-sequences`, per grain; `0` = the sweep's sample — D-SB-14, the caps table's
+"Shapley sample" column), drawn by the same `--sequence-sample` rule from the same split, so under
+`head` it is a prefix of the sweep's sample; a pass with no read-out under a noise (saliency,
 Shapley, and `real` for nothing else) is skipped. Emits `scores-<probe>-<noise>-c<c>-N<N>-<grain>.npz`
 per cell and, for the cli probes, `shippedcut-…json` with the tool's own rule fitted on that cell's
 matrices (informational: the shipped cut is never selected on validation, but a NaN pooled threshold
@@ -30,6 +33,7 @@ from .constants import (
     PARTICLE_PROBES,
     PROBE_CLI_ATOMIC,
     PROBE_CLI_FULL,
+    PROBE_SHAPLEY,
     PROBES,
     SHIPPED_CUT_JSON_FMT,
     SPLITS,
@@ -67,11 +71,20 @@ def run_sweep(args, rec):
         raise ValueError(
             "--num-sequences takes one value, or one per grain in the order of --grains"
         )
+    if len(args.shapley_sequences) not in (1, len(args.grains)):
+        raise ValueError(
+            "--shapley-sequences takes one value, or one per grain in the order of --grains"
+        )
     hf_model, adapter, model_sha = load_backbone(args.model, args.device)
     rule = shipped_rule(args)
     cells = []
     for gi, grain in enumerate(args.grains):
         n_seq = args.num_sequences[0] if len(args.num_sequences) == 1 else args.num_sequences[gi]
+        n_shap = (
+            args.shapley_sequences[0]
+            if len(args.shapley_sequences) == 1
+            else args.shapley_sequences[gi]
+        )
         corpus = Corpus(args.corpus, args.ordering, grain)
         if "/" in corpus.corpus_id and not corpus.corpus_id.startswith(args.rung + "/"):
             raise ValueError(f"corpus {corpus.corpus_id!r} is not at rung {args.rung!r}")
@@ -89,7 +102,23 @@ def run_sweep(args, rec):
             mode=args.sequence_sample,
             seed=args.seed,
         )
+        # the Shapley baseline's own sample (D-SB-14): the same rule on the same split, so a
+        # `head` sample is a prefix of the sweep's; 0 = the sweep's sample itself
+        shapley_store = (
+            store
+            if n_shap == 0 or (n_seq != 0 and n_shap >= n_seq)
+            else SequenceStore.from_corpus(
+                corpus,
+                args.split,
+                vocab,
+                args.max_len,
+                n=n_shap,
+                mode=args.sequence_sample,
+                seed=args.seed,
+            )
+        )
         for probe in args.probes:
+            probe_store_ = shapley_store if probe == PROBE_SHAPLEY else store
             for noise in args.noises:
                 if not probe_columns(probe, noise):
                     continue
@@ -104,7 +133,7 @@ def run_sweep(args, rec):
                             hf_model,
                             adapter,
                             vocab,
-                            store,
+                            probe_store_,
                             probe,
                             noise,
                             c,
@@ -163,7 +192,7 @@ def run_sweep(args, rec):
                             },
                         }
                         if probe in (PROBE_CLI_FULL, PROBE_CLI_ATOMIC):
-                            stored_ids = [store.get(s) for s in facts["stored_seq"]]
+                            stored_ids = [probe_store_.get(s) for s in facts["stored_seq"]]
                             sc = {}
                             for arm, paths in probe_columns(probe, noise).items():
                                 for path, col in paths.items():
@@ -257,6 +286,13 @@ def build_parser():
         nargs="+",
         type=int,
         help="per grain (or one value); 0 = whole split",
+    )
+    p.add_argument(
+        "--shapley-sequences",
+        required=True,
+        nargs="+",
+        type=int,
+        help="the Shapley probe's own sample per grain (or one value); 0 = the sweep's sample (D-SB-14)",
     )
     add_shipped_rule_knobs(p)
     add_probe_knobs(p)

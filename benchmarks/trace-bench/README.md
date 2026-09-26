@@ -35,7 +35,8 @@ results are co-published with the trace-bench dataset paper.
 | M5 | engine adapter over the shipped functions, projection, selection, the two cuts | built 2026-09-24 (bit-equal parity against `run()` and `compute_cmi_matrix`; the shipped cut equals the shipped CLI's output) |
 | M6 | `sweep`, `scoresweep`, `freeze`, `discover`, `annotate`, `seqscore`, `report` | built 2026-09-24 (`tests/test_m6_pipeline.py`) |
 | M7 | xs: Job V (validation sweep) per corpus → freeze → Job T (test read) | xs `latent/seed=0` calibration run landed 2026-09-25 (not frozen: the backbone overfit under the 12k-step budget; see `RUN.md` registry). Protocol amended by dated addenda in `plans/` (argmin-validation checkpoint, coverage ceiling reported not gated, wider τ grids); second xs replica landed 2026-09-25 with an in-regime backbone and **frozen** (`freezes/2026-09-25-xs-latent-s0.json`); Job T landed 2026-09-25 — `results/xs/latent/seed=0/`, `findings/xs-latent-s0.md` (one seed, provisional); seeds 1–4 validation runs landed and **frozen** 2026-09-26 (`freezes/2026-09-26-xs-latent-s{1..4}.json`), their Job T scripts authored (`scripts/jobs/`); **all four test reads landed 2026-09-26** — `results/xs/latent/seed={1..4}/`, five-seed tables `tables/xs-latent/` (`report`, 38 cells, 12 pairs, per-sequence document), findings scored on the five-seed paired means in `findings/xs-latent.md` (supersedes `xs-latent-s0.md`). Next: the `s` rung |
-| M8+ | the ladder s → m → l → xl | — |
+| M8 | s: Job V per corpus (10k / 5k validation sample, Shapley 2k / 500 via `sweep --shapley-sequences`, 12 h cap) → freeze → Job T | seed-0 Job V replica authored 2026-09-26 (`infra/`, private); the run measures the full-vocabulary softmax's growth with V = 322 first (caps addendum), seeds 1–4 follow as copies |
+| M9+ | the ladder m → l → xl | — |
 
 ## Install
 

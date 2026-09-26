@@ -229,6 +229,8 @@ def world(tmp_path_factory):
                 "3",
                 "--num-sequences",
                 "0",
+                "--shapley-sequences",
+                "0",
                 *RULE,
                 *probe,
                 "--output-folder",
@@ -417,6 +419,8 @@ def test_sweep_refuses_test_and_out_of_order_rung(world, tmp_path):
                 "3",
                 "--num-sequences",
                 "0",
+                "--shapley-sequences",
+                "0",
                 *RULE,
                 *world["probe"],
                 "--output-folder",
@@ -451,6 +455,8 @@ def test_sweep_refuses_test_and_out_of_order_rung(world, tmp_path):
                 "--guidance",
                 "3",
                 "--num-sequences",
+                "0",
+                "--shapley-sequences",
                 "0",
                 *RULE,
                 *probe_s,
@@ -949,3 +955,65 @@ def test_report_paired_cells_model_hash(world, tmp_path):
             ]
         )
     _five_seeds(results)
+
+
+def test_sweep_shapley_sample_is_its_own_prefix(world, tmp_path):
+    """D-SB-14: the Shapley probe reads `--shapley-sequences` sequences (a `head` prefix of the
+    sweep's sample); every other probe reads the sweep's sample; the knob's arity is checked."""
+    corpus, model = world["corpus"], world["model"]
+    probe = [*PROBE, "--staging-ledger", str(world["ledger"])]
+    common = [
+        "--corpus",
+        str(corpus),
+        "--ordering",
+        "end",
+        "--grains",
+        "request",
+        "--split",
+        "val",
+        "--model",
+        model,
+        "--probes",
+        "core",
+        "shapley",
+        "--noises",
+        "all",
+        "--contexts",
+        "2",
+        "--particles-grid",
+        "2",
+        "--guidance",
+        "3",
+        "--num-sequences",
+        "0",
+    ]
+    assert (
+        sw.main(
+            [
+                *common,
+                "--shapley-sequences",
+                "2",
+                *RULE,
+                *probe,
+                "--output-folder",
+                str(tmp_path / "s"),
+            ]
+        )
+        == 0
+    )
+    r = read_json(tmp_path / "s" / RUN_DIR / RESULTS_JSON)
+    by = {c["probe"]: c for c in r["cells"]}
+    assert by["shapley"]["n_sequences"] == 2 and by["core"]["n_sequences"] > 2
+    with pytest.raises(ValueError):
+        sw.main(
+            [
+                *common,
+                "--shapley-sequences",
+                "2",
+                "3",
+                *RULE,
+                *probe,
+                "--output-folder",
+                str(tmp_path / "bad"),
+            ]
+        )
