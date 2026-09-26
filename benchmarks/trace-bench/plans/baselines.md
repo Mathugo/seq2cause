@@ -37,10 +37,6 @@ scorer supplies its own trivial baselines (`shd_empty_*`,
 
 ## Addenda
 
-(none)
-
-## Addenda
-
 ### 2026-09-25 — after the xs calibration run (owner-reviewed)
 
 - **§2 Grids — granger.** The pre-registered text said "half-decades `1e-4 … 1` (12 values)";

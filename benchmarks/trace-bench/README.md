@@ -34,7 +34,7 @@ results are co-published with the trace-bench dataset paper.
 | M4 | pre-registered plans (arms, baselines, per-sequence rules, caps, staging ledger) | committed 2026-09-24, before the engine code |
 | M5 | engine adapter over the shipped functions, projection, selection, the two cuts | built 2026-09-24 (bit-equal parity against `run()` and `compute_cmi_matrix`; the shipped cut equals the shipped CLI's output) |
 | M6 | `sweep`, `scoresweep`, `freeze`, `discover`, `annotate`, `seqscore`, `report` | built 2026-09-24 (`tests/test_m6_pipeline.py`) |
-| M7 | xs: Job V (validation sweep) per corpus → freeze → Job T (test read) | xs `latent/seed=0` calibration run landed 2026-09-25 (not frozen: the backbone overfit under the 12k-step budget; see `RUN.md` registry). Protocol amended by dated addenda in `plans/` (argmin-validation checkpoint, coverage ceiling reported not gated, wider τ grids); second xs replica landed 2026-09-25 with an in-regime backbone and **frozen** (`freezes/2026-09-25-xs-latent-s0.json`); Job T authored (`scripts/jobs/`) |
+| M7 | xs: Job V (validation sweep) per corpus → freeze → Job T (test read) | xs `latent/seed=0` calibration run landed 2026-09-25 (not frozen: the backbone overfit under the 12k-step budget; see `RUN.md` registry). Protocol amended by dated addenda in `plans/` (argmin-validation checkpoint, coverage ceiling reported not gated, wider τ grids); second xs replica landed 2026-09-25 with an in-regime backbone and **frozen** (`freezes/2026-09-25-xs-latent-s0.json`); Job T landed 2026-09-25 — `results/xs/latent/seed=0/`, `findings/xs-latent-s0.md` (one seed, provisional); seeds 1–4 next, then `tables/` |
 | M8+ | the ladder s → m → l → xl | — |
 
 ## Install

@@ -1,0 +1,103 @@
+{
+ "N": 8,
+ "c": 2,
+ "cells": {
+  "trace/cli/fixed/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 853,
+   "n_pairs": 1102,
+   "per_lag_files": 8,
+   "tau": 3e-05
+  },
+  "trace/cli/fixed/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 184,
+   "n_edges": 18,
+   "n_sequences_pooled": 1219,
+   "n_within_op": 6,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.6644487380981445,
+    "10": 0.427603953061213,
+    "11": 0.3858344561475395,
+    "12": 0.35489085176518137,
+    "13": 0.33196726582516384,
+    "14": 0.31498505567743557,
+    "2": 2.0429298297397787,
+    "3": 1.5824972979296903,
+    "4": 1.2414004889701626,
+    "5": 0.9887097578765534,
+    "6": 0.8015118600850231,
+    "7": 0.6628322465277438,
+    "8": 0.5600958619674117,
+    "9": 0.48398687635815385
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed"
+ ],
+ "corpus_id": "xs/latent/seed=0",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 9605
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-real-request.npz",
+  "scores": "scores-cli-full-real-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-25T17:43:23-04:00",
+  "path": "freezes/2026-09-25-xs-latent-s0.json",
+  "sha": "2a161d7db821c4e0be1dec4f335be7f0497e8512"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 8,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 67247168,
+  "max_seq_len": 17,
+  "probe": "cli-full",
+  "shipped_estimate": 644640
+ },
+ "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+ "n_cells": 9211,
+ "n_pairs": 1102,
+ "n_probed": 1219,
+ "n_sequences": 1223,
+ "n_skipped_short": 4,
+ "n_stored": 1219,
+ "noise": "real",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 9.532,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 371936,
+ "tok_pos_per_s": 39019.72927266551
+}
