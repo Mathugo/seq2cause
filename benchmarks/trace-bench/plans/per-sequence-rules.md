@@ -116,3 +116,16 @@ table and a session table are never merged.
   candidates and most are truth pairs, so the pooled per-sequence F1 of the reference arms sits
   below it on this seed. Reported per H-perseq, not adjusted.
 
+### 2026-09-26 — after the xs test reads of seeds 1–4
+
+- **The ancestor-link column equals the parent-link column on four of the five xs corpora, not
+  five.** On `xs/latent/seed=4` the target graph carries at least one transitive edge, so a
+  strict-ancestor candidate survives the filter on every one of its 38 cells and the two columns
+  separate — by at most 0.0013 pooled F1 (the ancestor column is lower on the trace arms and
+  Granger, higher on saliency). The 2026-09-25 note's "at xs" is a per-corpus fact; the column is
+  reported wherever it differs and stays out of the headline.
+- **Predict-all at the request grain stays above the reference arms on five seeds** (pooled
+  predict-all 0.45–0.50 vs pooled F1 0.42–0.51): only `trace/cli-atomic` clears it, on two seeds.
+  H-perseq therefore fails at request on the five-seed record; at session every reference arm and
+  Granger clear predict-all on every seed while saliency (2 of 5) and Shapley (0 of 5) do not.
+

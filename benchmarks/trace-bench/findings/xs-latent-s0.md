@@ -1,6 +1,6 @@
 # Findings — xs / latent / seed 0 (test read of 2026-09-25)
 
-**Provisional: one seed.** Every pre-registered hypothesis (`plans/reference-arms.md` §6,
+**Superseded 2026-09-26 by `findings/xs-latent.md` (five seeds; `tables/xs-latent/`). Kept as the seed-0 record.** **Provisional: one seed.** Every pre-registered hypothesis (`plans/reference-arms.md` §6,
 `plans/baselines.md` §3, `plans/per-sequence-rules.md`) is stated over the five-seed mean of the
 paired per-seed difference; this file scores the single available seed so the direction is on
 record before seeds 1–4 land, and is superseded by the rung's `tables/` once `report` can run

@@ -1,0 +1,102 @@
+{
+ "N": 2,
+ "c": 2,
+ "cells": {
+  "trace/cli-atomic/fixed/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 709,
+   "n_pairs": 1169,
+   "per_lag_files": 8,
+   "tau": 0.01
+  },
+  "trace/cli-atomic/fixed/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 28,
+   "n_edges": 32,
+   "n_sequences_pooled": 1275,
+   "n_within_op": 7,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 4.2162251472473145,
+    "10": 0.676640730287016,
+    "11": 0.6105446554190098,
+    "12": 0.5615794788412479,
+    "13": 0.5253051838535442,
+    "2": 3.232733285144274,
+    "3": 2.5041445938061497,
+    "4": 1.96439281588022,
+    "5": 1.5645348641473384,
+    "6": 1.2683128078191488,
+    "7": 1.04886611112342,
+    "8": 0.8862959997428094,
+    "9": 0.7658610990937968
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed"
+ ],
+ "corpus_id": "xs/latent/seed=1",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 17024
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-real-request.npz",
+  "scores": "scores-cli-atomic-real-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-26T08:37:11-04:00",
+  "path": "freezes/2026-09-26-xs-latent-s1.json",
+  "sha": "5797073205b08a2f01fabcbcf56b306ee45d32fd"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 27120640,
+  "max_seq_len": 16,
+  "probe": "cli-atomic",
+  "shipped_estimate": 143360
+ },
+ "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+ "n_cells": 11046,
+ "n_pairs": 1169,
+ "n_probed": 1275,
+ "n_sequences": 1304,
+ "n_skipped_short": 29,
+ "n_stored": 1275,
+ "noise": "real",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 16.828,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 118085,
+ "tok_pos_per_s": 7017.343132949696
+}

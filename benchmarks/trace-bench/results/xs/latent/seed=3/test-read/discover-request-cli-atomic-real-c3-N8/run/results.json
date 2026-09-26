@@ -1,0 +1,98 @@
+{
+ "N": 8,
+ "c": 3,
+ "cells": {
+  "trace/cli-atomic/fixed/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 488,
+   "n_pairs": 490,
+   "per_lag_files": 8,
+   "tau": 1e-05
+  },
+  "trace/cli-atomic/fixed/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 65,
+   "n_edges": 12,
+   "n_sequences_pooled": 1004,
+   "n_within_op": 0,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 5.443622589111328,
+    "2": 4.173823579386567,
+    "3": 3.233133336378862,
+    "4": 2.536252864341242,
+    "5": 2.019991113018496,
+    "6": 1.6375350009975516,
+    "7": 1.3542045446013482,
+    "8": 1.1443081800289736,
+    "9": 0.9888131286989059
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed"
+ ],
+ "corpus_id": "xs/latent/seed=3",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 5680
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-real-request.npz",
+  "scores": "scores-cli-atomic-real-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-26T08:37:11-04:00",
+  "path": "freezes/2026-09-26-xs-latent-s3.json",
+  "sha": "5797073205b08a2f01fabcbcf56b306ee45d32fd"
+ },
+ "g": 3,
+ "grain": "request",
+ "memory": {
+  "N": 8,
+  "c": 3,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 42020480,
+  "max_seq_len": 13,
+  "probe": "cli-atomic",
+  "shipped_estimate": 320320
+ },
+ "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+ "n_cells": 2975,
+ "n_pairs": 490,
+ "n_probed": 1004,
+ "n_sequences": 1274,
+ "n_skipped_short": 270,
+ "n_stored": 1004,
+ "noise": "real",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 14.242,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 212098,
+ "tok_pos_per_s": 14892.063642654559
+}

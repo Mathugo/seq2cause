@@ -1,0 +1,137 @@
+{
+ "N": 32,
+ "c": 3,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 400,
+   "n_pairs": 1073,
+   "per_lag_files": 8,
+   "tau": 0.03
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 141,
+   "n_edges": 19,
+   "n_sequences_pooled": 930,
+   "n_within_op": 5,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.1983022689819336,
+    "10": 0.35279445492769096,
+    "11": 0.31833254972132397,
+    "12": 0.2928025424250411,
+    "2": 1.6855183647831946,
+    "3": 1.3056387052804603,
+    "4": 1.024216931854468,
+    "5": 0.8157345544039307,
+    "6": 0.6612870104975292,
+    "7": 0.5468694558321276,
+    "8": 0.4621068465701515,
+    "9": 0.39931316119635474
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 400,
+   "n_pairs": 1073,
+   "per_lag_files": 8,
+   "tau": 0.03
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 141,
+   "n_edges": 19,
+   "n_sequences_pooled": 930,
+   "n_within_op": 5,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.1983025074005127,
+    "10": 0.35279449319028744,
+    "11": 0.3183325842463277,
+    "12": 0.2928025741811682,
+    "2": 1.6855185475873973,
+    "3": 1.3056388468845197,
+    "4": 1.0242170429367103,
+    "5": 0.815734642875055,
+    "6": 0.6612870822179253,
+    "7": 0.546869515143279,
+    "8": 0.4621068966883083,
+    "9": 0.39931320450417357
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "xs/latent/seed=4",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 7941
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 7941
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-26T08:37:11-04:00",
+  "path": "freezes/2026-09-26-xs-latent-s4.json",
+  "sha": "5797073205b08a2f01fabcbcf56b306ee45d32fd"
+ },
+ "g": 3,
+ "grain": "request",
+ "memory": {
+  "N": 32,
+  "c": 3,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 183607296,
+  "max_seq_len": 16,
+  "probe": "cli-atomic",
+  "shipped_estimate": 2103296
+ },
+ "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+ "n_cells": 4753,
+ "n_pairs": 1073,
+ "n_probed": 930,
+ "n_sequences": 1275,
+ "n_skipped_short": 345,
+ "n_stored": 930,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 13.539,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 1000956,
+ "tok_pos_per_s": 73931.55296350582
+}
