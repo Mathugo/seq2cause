@@ -108,3 +108,25 @@ reported beside every headline, gating only where the failure is something the l
 (3) a *hypothesis* — a commitment about the claim, never a gate. The coverage rule and the
 oracle regime are class 2 (see the arm plans' addenda of the same date).
 
+
+### 2026-09-27 — s seed-0 Job V landed (`s-latent-s0-val-26-09-26`, g5.xlarge A10G; owner-reviewed on landing)
+
+**Measured** (10,000 request / 5,000 session head sample; Shapley 2,000 / 500; V = 323):
+
+| stage | measured | note |
+|---|---|---|
+| pretrain 12k × 256 bf16 | 5.8 min; 1.63e5 tok-pos/s; peak 1.69 GB | ≈ 9 epochs of the 347k session rows; argmin-val at step 6750 (xs: 500), last / min 1.015 |
+| particle probe cells | 13–14 ms / request sequence; 13–50 ms / session sequence | equal to xs: the per-sequence loop, not the vocabulary, sets the cost; the full-vocabulary softmax's growth with V is invisible at V = 323 |
+| saliency | 0.07–0.09 s / request; 0.18–0.26 s / session | the 2026-09-25 projection counted 0.25 h; measured 1.5 h (3 cells × 10k + 3 × 5k) |
+| Shapley | 0.67–0.89 s / request; 4.8–6.2 s / session | 1.2 h + 2.2 h on its own sample |
+| sweep wall clock | request 213 min; session 269 min (8.0 h) | projection 7.2 h |
+| scoresweep | request 25 min; **session 271 min** | the benchmark scorer's mixed-SHD loop rebuilt `set(pd)`/`set(pb)` per universe pair → O(pairs × predicted edges); at 85,580 ordered pairs a 20k-edge prediction cost 10.5 s per call, 16 τ + ranking per column. Fixed upstream (`trace-bench` `fix/score-pair-state-sets`, outputs byte-identical, 0.11 s per call); until the harness pins the fix, budget 4.5 h for it |
+| peak device | 0.20 GB (request), 1.98 GB (session) | the D-SB-12 formula's activation term at N = 32; logits 0.17 GB |
+| chain | 13 h 06 min | the 12 h cap would have terminated the instance **without an output sync** (the cap is `sleep; shutdown -h now`); the owner cancelled the timer by SSM at 09:46 UTC |
+
+**Cap amendments for `s` (owner decision on landing).** Job V cap **18 h** while the harness pins
+trace-bench v0.3.0 (13.1 h measured), **12 h** once the scorer fix is pinned (≈ 8.7 h projected); Job T cap
+stays **8 h** (projection ≈ 5 h: discover reads on the 20k / 10k test sample ≈ 3 h with Shapley on 2k / 500,
+annotate ≈ 1 h at the slow scorer, seqscore minutes). Seeds 1–4 are copies of the seed-0 replica. A cap
+that fires must never destroy the run again: until the template syncs on the cap, the replica's cap carries
+a 1.4× margin over the measured chain.
