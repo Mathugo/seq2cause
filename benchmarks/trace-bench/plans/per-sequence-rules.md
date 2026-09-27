@@ -128,4 +128,8 @@ table and a session table are never merged.
   predict-all 0.45–0.50 vs pooled F1 0.42–0.51): only `trace/cli-atomic` clears it, on two seeds.
   H-perseq therefore fails at request on the five-seed record; at session every reference arm and
   Granger clear predict-all on every seed while saliency (2 of 5) and Shapley (0 of 5) do not.
+- **`s/latent/seed=0` (2026-09-27):** the ancestor-link column equals the parent-link column on
+  all 38 cells. Predict-all at request (pooled 0.449) again exceeds every reference arm's pooled
+  F1 except `trace/cli-atomic` (0.531); at session (0.187) every reference arm, Granger and Shapley
+  clear it while saliency does not. One seed, provisional (`findings/s-latent-s0.md`).
 

@@ -130,3 +130,30 @@ stays **8 h** (projection ≈ 5 h: discover reads on the 20k / 10k test sample �
 annotate ≈ 1 h at the slow scorer, seqscore minutes). Seeds 1–4 are copies of the seed-0 replica. A cap
 that fires must never destroy the run again: until the template syncs on the cap, the replica's cap carries
 a 1.4× margin over the measured chain.
+
+### 2026-09-27 — s seed-0 Job T landed (`s-latent-s0-test-26-09-27`, g5.xlarge A10G; owner-reviewed on landing)
+
+**Measured** (20,000 request / 10,000 session head sample; Shapley 2,000 / 500; the harness pinned
+to the fixed scorer, `a1f3a89`):
+
+| stage | measured | note |
+|---|---|---|
+| particle discover reads | 2.6–4.7 min each (13 ms / request sequence; 21–27 ms / session) | 13 reads; peak 2.89 GB at session N = 32 |
+| saliency reads | 30 min (request) + 44 min (session) | 0.09 / 0.26 s per sequence, as in Job V |
+| Shapley reads | 29 min (2,000 request) + 49 min (496 session) | 0.87 / 5.9 s per sequence |
+| annotate × 38 | 6.8 min in total (3–22 s per cell) | the fixed scorer: Job V's session scoresweep had cost 271 min on the same universe |
+| seqscore × 38 | 9.3 min | — |
+| chain | 3 h 47 min | projection ≈ 5 h; cap 8 h holds |
+
+**Registered note — validation sample vs test read (owner decision 2026-09-27).** The caps table
+gives every rung from `s` a 10k / 5k validation sample and a 20k / 10k test read because the sweep
+re-probes its sample on 60 cells per grain and the read once per frozen cell. The two jobs therefore
+see different coverage — 0.388 → 0.474 (request) and 0.560 → 0.690 (session) on `s/latent/seed=0` —
+and the test F1 of a frozen cell lands above its validation value (+0.005 … +0.047 here) as a
+coverage effect, not a split effect; at `xs`, where both jobs probed the whole split, the check was
+like for like. The sizes stay as registered (a 20k / 10k sweep would double the 8 h Job V sweeps);
+the note is carried in every `s` … `xl` findings file, and the ceilings of both jobs are on record
+(freeze `diagnostics.coverage`, `annotate.coverage`). The Shapley sample (2k / 500) bounds that
+baseline's ceiling the same way (0.245 / 0.298 on this corpus). Seeds 1–4 Job V run at the **12 h**
+cap (the pinned scorer; ≈ 8.7 h projected).
+
