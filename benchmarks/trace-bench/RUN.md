@@ -31,7 +31,10 @@ source of the copied and adapted harness modules (see `NOTICE`).
   `pip freeze`, and the replica name and AWS profile name a stage is told);
   binaries ride object storage under content hashes with a location-free
   `artifacts.json` manifest.
-- **Benchmark:** trace-bench corpora at tool version **0.3.0** only; `report`
+- **Benchmark:** trace-bench corpora at tool version **0.3.0** only (since 2026-09-27 the
+  scorer is pinned to trace-bench commit `a1f3a89` — v0.3.0 plus the mixed-SHD loop fix, whose
+  output is byte-identical; `tool_version` stays 0.3.0 in every record; the s seed-0 Job V ran on
+  the v0.3.0 scorer, every later run on the pinned commit); `report`
   refuses a cell that mixes tool versions.
 
 ## Deviations from the paper and from the shipped code (D-SB-n)
