@@ -54,7 +54,7 @@ Each entry states what it **follows** and what it **deviates from**. Dated
 | D-SB-11 | one threshold rule (the CLI's pooled percentile with lag decay) | two cuts of one score table for the cli arms: `shipped` (the tool's rule, every knob passed explicitly and recorded, fitted on the full strict-upper triangle of every stored matrix exactly as `cli.py` pools it, no truth) and `frozen` (the validation-swept τ every arm uses). The shipped cut inherits `(c, N)` from its frozen sibling cell. |
 | D-SB-12 | the shipped memory estimate (`cli.estimate_tensor_bytes`, the logits tensor only) | the harness estimate is twice the shipped one (logits plus the softmax) plus an activation term, refused above the declared cap of `plans/caps.md` (PRD scenario 18); shipped estimate, harness estimate, cap and measured peak are recorded per run. |
 | D-SB-13 | no trainer in the package (the author's research script is toy-scale) | the sibling's clean-room trainer adapted to a Hugging Face `LlamaForCausalLM` built from a `LlamaConfig`, saved per checkpoint in the Hugging Face directory format; the model hash is the sha256 of `model.safetensors`; the oracle score ε̂ is taken against an independent order-2 n-gram entropy floor, never the minimum validation loss (sibling D-CB-7). The frozen model is the checkpoint `--model-choice` names: **`argmin-val`** (the validated step with the smallest validation loss, validated and checkpointed every 250 steps) since the 2026-09-25 addendum of `plans/caps.md`; the 2026-09-24 rule (last checkpoint + a `1.01×` trigger) was withdrawn after the xs calibration run, whose last checkpoint sat at 1.498× the curve minimum with the argmin at the first checkpoint. The oracle is reported at the chosen and at the last checkpoint. |
-| D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample; the reachable-recall coverage ceiling is reported per cell (freeze `diagnostics`, `annotate`), not gated — the 2026-09-24 rule (raise the sample below 0.90) was withdrawn on 2026-09-25 after the whole xs validation split gave 0.48 / 0.59. |
+| D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample (`sweep --shapley-sequences` per grain since 2026-09-26 — the same rule on the same split, so a `head` sample is a prefix of the sweep's; `0` = the sweep's sample; `discover` reads name their sample per call); the reachable-recall coverage ceiling is reported per cell (freeze `diagnostics`, `annotate`), not gated — the 2026-09-24 rule (raise the sample below 0.90) was withdrawn on 2026-09-25 after the whole xs validation split gave 0.48 / 0.59. |
 
 Deviations for later stages are numbered here before the run that depends
 on them; the arm plans under `plans/` reference these ids.
@@ -80,7 +80,9 @@ on them; the arm plans under `plans/` reference these ids.
   `--args-diff` compares a repeated module by output folder
   (`tests/test_tfvars_check_parses.py`); a replica may name a tracked job script
   (`bash scripts/jobs/<replica>.sh`, one command per line) when its chain would cross the
-  provisioning user-data cap, and the checker follows it with the same parsers.
+  provisioning user-data cap, and the checker follows it with the same parsers. Since
+  2026-09-26: `sweep --shapley-sequences` gives the Shapley probe its own sample (D-SB-14;
+  `tests/test_m6_pipeline.py::test_sweep_shapley_sample_is_its_own_prefix`).
 - **Per run:** the executing host's log shows the command exiting with
   status 0 and the output sync completing; `run/*.json` carry every
   scenario-24 field, the replica name and the profile; a registry row lands
