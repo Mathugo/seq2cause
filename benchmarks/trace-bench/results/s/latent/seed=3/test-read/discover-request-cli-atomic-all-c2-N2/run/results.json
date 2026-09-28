@@ -1,0 +1,161 @@
+{
+ "N": 2,
+ "c": 2,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3147,
+   "n_pairs": 7847,
+   "per_lag_files": 8,
+   "tau": 0.1
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 1734,
+   "n_edges": 308,
+   "n_sequences_pooled": 19593,
+   "n_within_op": 68,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 6.660058498382568,
+    "10": 1.0688392314727326,
+    "11": 0.9644321588519085,
+    "12": 0.8870854970863628,
+    "13": 0.8297856807415405,
+    "14": 0.78733693275158,
+    "2": 5.106509267605392,
+    "3": 3.9556116907195924,
+    "4": 3.103005795624155,
+    "5": 2.4713798134768084,
+    "6": 2.0034597772460687,
+    "7": 1.656816088584288,
+    "8": 1.4000161279393195,
+    "9": 1.2097740380231792
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3147,
+   "n_pairs": 7847,
+   "per_lag_files": 8,
+   "tau": 0.1
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 1734,
+   "n_edges": 308,
+   "n_sequences_pooled": 19593,
+   "n_within_op": 68,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 6.660058975219727,
+    "10": 1.0688393079979255,
+    "11": 0.9644322279019161,
+    "12": 0.8870855605986169,
+    "13": 0.829785740151326,
+    "14": 0.7873369891221819,
+    "2": 5.106509633213798,
+    "3": 3.955611973927711,
+    "4": 3.1030060177886396,
+    "5": 2.4713799904190576,
+    "6": 2.0034599206868613,
+    "7": 1.6568162072065906,
+    "8": 1.400016228175633,
+    "9": 1.209774124638817
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "s/latent/seed=3",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 228726
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 228726
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-28T06:40:04-04:00",
+  "path": "freezes/2026-09-28-s-latent-s3.json",
+  "sha": "5cddbb717aa0033af9b81d4c4fbb6ccb25a8640f"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 29934512,
+  "max_seq_len": 17,
+  "probe": "cli-atomic",
+  "shipped_estimate": 663000
+ },
+ "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+ "n_cells": 148702,
+ "n_pairs": 7847,
+ "n_probed": 19593,
+ "n_sequences": 20000,
+ "n_skipped_short": 407,
+ "n_stored": 19593,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 264.414,
+ "rung": "s",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-09-26",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/request",
+    "trace/cli-atomic/fixed-kl/shipped/request",
+    "trace/cli-atomic/shipped/frozen/request",
+    "trace/cli-atomic/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "note": "Job T (test read) under freezes/2026-09-26-xs-latent-s3.json; the `s` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-all-c3-N8",
+   "results_sha256": "268213149ebff5a8bb589cb2137462d8f9e162016bca7287744ce91c8ff5ad6e",
+   "run": "xs-latent-s3-test-26-09-26",
+   "rung": "xs",
+   "seed": 3,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "268213149ebff5a8bb589cb2137462d8f9e162016bca7287744ce91c8ff5ad6e",
+  "rung": "s"
+ },
+ "status": "ok",
+ "tok_pos": 1635064,
+ "tok_pos_per_s": 6183.7153540189665
+}

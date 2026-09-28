@@ -1,0 +1,169 @@
+{
+ "N": 32,
+ "c": 2,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3647,
+   "n_pairs": 9650,
+   "per_lag_files": 8,
+   "tau": 0.1
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 1579,
+   "n_edges": 408,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 104,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 4.010343074798584,
+    "10": 0.6435997538235876,
+    "11": 0.5807312098390865,
+    "12": 0.5341570469476382,
+    "13": 0.49965405846465494,
+    "14": 0.4740936159284895,
+    "15": 0.45515797436901007,
+    "16": 0.44113010608144976,
+    "17": 0.43073800565670184,
+    "18": 0.42303934831089435,
+    "2": 3.0748760063758414,
+    "3": 2.3818649572405617,
+    "4": 1.868469744907394,
+    "5": 1.4881372172002236,
+    "6": 1.2063799507568174,
+    "7": 0.9976490339660689,
+    "8": 0.8430173675878825,
+    "9": 0.7284634116405455
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3647,
+   "n_pairs": 9650,
+   "per_lag_files": 8,
+   "tau": 0.1
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 1579,
+   "n_edges": 408,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 104,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 4.010343074798584,
+    "10": 0.6435997538235876,
+    "11": 0.5807312098390865,
+    "12": 0.5341570469476382,
+    "13": 0.49965405846465494,
+    "14": 0.4740936159284895,
+    "15": 0.45515797436901007,
+    "16": 0.44113010608144976,
+    "17": 0.43073800565670184,
+    "18": 0.42303934831089435,
+    "2": 3.0748760063758414,
+    "3": 2.3818649572405617,
+    "4": 1.868469744907394,
+    "5": 1.4881372172002236,
+    "6": 1.2063799507568174,
+    "7": 0.9976490339660689,
+    "8": 0.8430173675878825,
+    "9": 0.7284634116405455
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "s/latent/seed=4",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 350163
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 350163
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-28T06:40:04-04:00",
+  "path": "freezes/2026-09-28-s-latent-s4.json",
+  "sha": "5cddbb717aa0033af9b81d4c4fbb6ccb25a8640f"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 32,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 362851584,
+  "max_seq_len": 21,
+  "probe": "cli-atomic",
+  "shipped_estimate": 16496256
+ },
+ "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+ "n_cells": 245912,
+ "n_pairs": 9650,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 273.91,
+ "rung": "s",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-09-26",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/request",
+    "trace/cli-atomic/fixed-kl/shipped/request",
+    "trace/cli-atomic/shipped/frozen/request",
+    "trace/cli-atomic/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "note": "Job T (test read) under freezes/2026-09-26-xs-latent-s4.json; the `s` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-all-c3-N32",
+   "results_sha256": "0c3146a667455e50a36fd0f224e476fd11b31cc8132827d9dcbabd2c6e5bd2bb",
+   "run": "xs-latent-s4-test-26-09-26",
+   "rung": "xs",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "0c3146a667455e50a36fd0f224e476fd11b31cc8132827d9dcbabd2c6e5bd2bb",
+  "rung": "s"
+ },
+ "status": "ok",
+ "tok_pos": 34140484,
+ "tok_pos_per_s": 124641.40005060565
+}

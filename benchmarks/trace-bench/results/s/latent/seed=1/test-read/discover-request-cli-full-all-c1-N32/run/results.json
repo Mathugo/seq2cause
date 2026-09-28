@@ -1,0 +1,175 @@
+{
+ "N": 32,
+ "c": 1,
+ "cells": {
+  "trace/cli/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 2973,
+   "n_pairs": 9923,
+   "per_lag_files": 8,
+   "tau": 0.01
+  },
+  "trace/cli/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 516,
+   "n_edges": 116,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 133,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.463209390640259,
+    "10": 0.5557930256048114,
+    "11": 0.5015016774976574,
+    "12": 0.46128165759450385,
+    "13": 0.4314859340140664,
+    "14": 0.4094127190872824,
+    "15": 0.3930604792804971,
+    "16": 0.3809464420826737,
+    "17": 0.37197214260051,
+    "18": 0.3653238180262686,
+    "19": 0.3603986180446646,
+    "2": 2.6553686958241256,
+    "20": 0.3567499401577911,
+    "21": 0.3540469330977967,
+    "3": 2.0569055896961546,
+    "4": 1.6135532162707777,
+    "5": 1.2851096998547733,
+    "6": 1.041792758429022,
+    "7": 0.8615391348202797,
+    "8": 0.7280039661070187,
+    "9": 0.6290786800224278
+   },
+   "threshold_finite": true
+  },
+  "trace/cli/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 2973,
+   "n_pairs": 9923,
+   "per_lag_files": 8,
+   "tau": 0.01
+  },
+  "trace/cli/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 516,
+   "n_edges": 116,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 133,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.463209867477417,
+    "10": 0.5557931021300043,
+    "11": 0.501501746547665,
+    "12": 0.4612817211067579,
+    "13": 0.43148599342385174,
+    "14": 0.4094127754578841,
+    "15": 0.39306053339961633,
+    "16": 0.3809464945338536,
+    "17": 0.37197219381605007,
+    "18": 0.3653238683264242,
+    "19": 0.3603986676666867,
+    "2": 2.655369061432531,
+    "20": 0.3567499892774395,
+    "21": 0.35404698184527755,
+    "3": 2.0569058729042737,
+    "4": 1.6135534384352628,
+    "5": 1.285109876797022,
+    "6": 1.0417929018698144,
+    "7": 0.8615392534425823,
+    "8": 0.7280040663433323,
+    "9": 0.6290787666380656
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed-kl",
+  "trace-cli__shipped"
+ ],
+ "corpus_id": "s/latent/seed=1",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 286798
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 286798
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-all-request.npz",
+  "scores": "scores-cli-full-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-28T06:40:04-04:00",
+  "path": "freezes/2026-09-28-s-latent-s1.json",
+  "sha": "5cddbb717aa0033af9b81d4c4fbb6ccb25a8640f"
+ },
+ "g": 1,
+ "grain": "request",
+ "memory": {
+  "N": 32,
+  "c": 1,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 456108544,
+  "max_seq_len": 23,
+  "probe": "cli-full",
+  "shipped_estimate": 21049600
+ },
+ "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+ "n_cells": 282531,
+ "n_pairs": 9923,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "all",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 160.639,
+ "rung": "s",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-09-26",
+   "cells": [
+    "trace/cli/fixed-kl/frozen/request",
+    "trace/cli/fixed-kl/shipped/request",
+    "trace/cli/shipped/frozen/request",
+    "trace/cli/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "note": "Job T (test read) under freezes/2026-09-26-xs-latent-s1.json; the `s` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-full-all-c1-N8",
+   "results_sha256": "6d99494bb869ec7906f564f1cb0da00917ff44f95f537a21abc38d6f9fe1964f",
+   "run": "xs-latent-s1-test-26-09-26",
+   "rung": "xs",
+   "seed": 1,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "6d99494bb869ec7906f564f1cb0da00917ff44f95f537a21abc38d6f9fe1964f",
+  "rung": "s"
+ },
+ "status": "ok",
+ "tok_pos": 33294464,
+ "tok_pos_per_s": 207262.98989234056
+}

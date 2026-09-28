@@ -1,0 +1,163 @@
+{
+ "N": 8,
+ "c": 4,
+ "cells": {
+  "trace/cli-atomic/fixed/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 5609,
+   "n_pairs": 31084,
+   "per_lag_files": 8,
+   "tau": 0.1
+  },
+  "trace/cli-atomic/fixed/shipped/session": {
+   "cut": "shipped",
+   "n_dropped_special": 4987,
+   "n_edges": 516,
+   "n_sequences_pooled": 9968,
+   "n_within_op": 337,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 5.329807281494141,
+    "10": 0.8553539161905932,
+    "11": 0.7718006597095732,
+    "12": 0.7099028849111408,
+    "13": 0.6640478855208085,
+    "14": 0.6300776664631011,
+    "15": 0.6049119092246023,
+    "16": 0.5862686577250694,
+    "17": 0.5724573973214638,
+    "18": 0.5622257639638928,
+    "19": 0.5546459835452693,
+    "2": 4.086557240317072,
+    "20": 0.5490307441023865,
+    "21": 0.5448708724096083,
+    "22": 0.5417891636639002,
+    "23": 0.5395061776742452,
+    "24": 0.5378149000555479,
+    "25": 0.5365619707793857,
+    "26": 0.5356337779423792,
+    "27": 0.5349461557764185,
+    "28": 0.5344367527469301,
+    "29": 0.5340593777010147,
+    "3": 3.165534956949803,
+    "30": 0.5337798113909701,
+    "31": 0.5335727035746002,
+    "32": 0.5334192743305878,
+    "33": 0.5333056111510379,
+    "34": 0.5332214073966068,
+    "35": 0.5331590277210744,
+    "36": 0.5331128157208398,
+    "37": 0.5330785810290518,
+    "38": 0.5330532193455959,
+    "39": 0.5330344309483847,
+    "4": 2.4832248677774507,
+    "40": 0.533020512161393,
+    "41": 0.53301020087038,
+    "42": 0.5330025620781187,
+    "43": 0.5329969031216275,
+    "44": 0.5329927108635488,
+    "45": 0.5329896051623784,
+    "46": 0.5329873044023632,
+    "47": 0.5329855999574227,
+    "48": 0.5329843372735544,
+    "49": 0.532983401854338,
+    "5": 1.9777571215636038,
+    "50": 0.5329827088787384,
+    "51": 0.5329821955097879,
+    "52": 0.5329818151967153,
+    "53": 0.5329815334538616,
+    "54": 0.5329813247336219,
+    "6": 1.6032974052014637,
+    "7": 1.3258908244090826,
+    "8": 1.1203829748210712,
+    "9": 0.9681390153531546
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed"
+ ],
+ "corpus_id": "s/latent/seed=3",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 1461966
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-real-session.npz",
+  "scores": "scores-cli-atomic-real-session.npz",
+  "sequences": "sequences-session.json"
+ },
+ "freeze": {
+  "committed_at": "2026-09-28T06:40:04-04:00",
+  "path": "freezes/2026-09-28-s-latent-s3.json",
+  "sha": "5cddbb717aa0033af9b81d4c4fbb6ccb25a8640f"
+ },
+ "g": 3,
+ "grain": "session",
+ "memory": {
+  "N": 8,
+  "c": 4,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 721563712,
+  "max_seq_len": 59,
+  "probe": "cli-atomic",
+  "shipped_estimate": 33748000
+ },
+ "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+ "n_cells": 1262433,
+ "n_pairs": 31084,
+ "n_probed": 9968,
+ "n_sequences": 10000,
+ "n_skipped_short": 32,
+ "n_stored": 9968,
+ "noise": "real",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 132.357,
+ "rung": "s",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-09-26",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/session",
+    "trace/cli-atomic/fixed-kl/shipped/session",
+    "trace/cli-atomic/shipped/frozen/session",
+    "trace/cli-atomic/shipped/shipped/session"
+   ],
+   "grain": "session",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "note": "Job T (test read) under freezes/2026-09-26-xs-latent-s3.json; the `s` discover names this sha256 through --prior-rung-record",
+   "read": "discover-session-cli-atomic-all-c8-N2",
+   "results_sha256": "2067d60cc9421a6c740176c28938e683e5034d8aae247ffce09e06f7a1016f92",
+   "run": "xs-latent-s3-test-26-09-26",
+   "rung": "xs",
+   "seed": 3,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "2067d60cc9421a6c740176c28938e683e5034d8aae247ffce09e06f7a1016f92",
+  "rung": "s"
+ },
+ "status": "ok",
+ "tok_pos": 29966031,
+ "tok_pos_per_s": 226403.64643467532
+}
