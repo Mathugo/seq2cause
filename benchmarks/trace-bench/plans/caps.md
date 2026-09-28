@@ -157,3 +157,9 @@ the note is carried in every `s` … `xl` findings file, and the ceilings of bot
 baseline's ceiling the same way (0.245 / 0.298 on this corpus). Seeds 1–4 Job V run at the **12 h**
 cap (the pinned scorer; ≈ 8.7 h projected).
 
+**2026-09-28 — seeds 1–4 Job V measured (pinned scorer).** Chains 8 h 19 min – 10 h 28 min at the
+12 h cap (sweeps 7.3–10.1 h — the corpus, not the vocabulary, sets the spread; scoresweeps 2–7 min,
+confirming the scorer fix); argmin steps 4000–8000, ε̂ −0.060 … −0.112, all in regime. The seed-4
+chain leaves a 1.15× cap margin, inside the 1.4× rule only because nothing fired — the `m` Job V
+replicas must re-project from the seed-4 anchor, not the seed mean.
+
