@@ -163,3 +163,27 @@ confirming the scorer fix); argmin steps 4000–8000, ε̂ −0.060 … −0.112
 chain leaves a 1.15× cap margin, inside the 1.4× rule only because nothing fired — the `m` Job V
 replicas must re-project from the seed-4 anchor, not the seed mean.
 
+### 2026-09-29 — m seed-0 Job V landed (`m-latent-s0-val-26-09-28`, g5.xlarge A10G; owner-reviewed on landing)
+
+**Measured** (10,000 / 5,000 head sample; Shapley 2,000 / 500; V ≈ 2,650; the owner raised the applied
+cap to 24 h in the replica before `terraform apply`):
+
+| stage | measured | note |
+|---|---|---|
+| pretrain 12k × 256 bf16 | 6 min; argmin-val at step 7500 | ε̂ = −0.021, in regime; last / min 1.024 |
+| sweeps | request 205 min; session 263 min (7.8 h) | per-sequence probe costs equal xs and s on all five probes — **the full-vocabulary softmax's growth with V is still invisible at V ≈ 2,650**; `l` / `xl` sweeps project from corpus size alone |
+| scoresweeps | request 103 min; session 229 min (5.5 h) | the fixed scorer is linear per call, but the m universe is ≈ 40× s — **from m the scoring rivals the sweeps**; per-file cost ∝ universe |
+| peak device | 2.13 GB | logits term still small at N = 32 |
+| chain | 13 h 28 min | 1.78× margin at the applied 24 h cap |
+
+**Cap decisions for `m` (owner-applied + this addendum).** Job V cap **24 h** (as applied; 13.5 h
+measured × 1.4 ≈ 19 h — the table's 16 h row is superseded); seeds 1–4 replicas inherit it. Job T cap
+**12 h** (superseding the table's 10 h): discover ≈ 3.5 h (probe costs flat), **annotate ≈ 4 h** — the
+38 annotate calls run the same universe-bound scorer that put the scoresweeps at 5.5 h — seqscore
+minutes; ≈ 8 h projected. A trace-bench improvement is on record as a suggestion, not scheduled: the
+16 τ of one scoresweep column could share a single ranking pass.
+
+**H-hazard observation:** 0 saturated and 0 collapsed cells on every path at m — the first rung where
+the hypothesis is live produced no corrupted cells on the 10k / 5k validation sample; the test read
+and the `l` rung keep it under watch.
+
