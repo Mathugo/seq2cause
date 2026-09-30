@@ -210,3 +210,11 @@ must scale from the 593 min measurement by universe size, not from the discover 
 (request) + 4.7–5.3 h (session); scoresweep pace ≈ 2 min (request) / ≈ 4–5 min (session) per
 file — the m universe cost, consistent with seed 0. The 24 h cap holds for `m`; the `l` Job V
 re-projects from the slowest seed (15.4 h) and the scoresweep's universe growth, not the mean.
+
+**Cap decision for the `l` Job V (2026-09-30, authored with the seed-0 replica).** **30 h**,
+superseding the table's 24, on a **g5.2xlarge** (the table's "32 GB host" instance class):
+sweeps ≈ 8 h (probe costs flat in V through m, fixed 10k / 5k sample), scoresweeps = m's 5.5 h
+× the universe growth (s→m the universe grew ≈ 3.2× while V grew 8.2×; l's V ratio is 2.8× →
+≈ 2–2.5×, so ≈ 11–14 h) → ≈ 20–23 h projected, and 24 h leaves under 1.2× margin against a
+hard kill without sync. First rung near the memory cap: the session logits + softmax term is
+≈ 15.6 GB at N = 32 against the 20 GiB knob — the run's memory events are a landing check.
