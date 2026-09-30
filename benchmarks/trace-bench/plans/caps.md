@@ -187,3 +187,26 @@ minutes; ≈ 8 h projected. A trace-bench improvement is on record as a suggesti
 the hypothesis is live produced no corrupted cells on the 10k / 5k validation sample; the test read
 and the `l` rung keep it under watch.
 
+
+### 2026-09-30 — m seed-0 Job T landed (`m-latent-s0-test-26-09-29`, g5.xlarge A10G) + seeds 1–4 Job V measured
+
+**Job T measured** (20,000 / 10,000 head sample; Shapley 2,000 / 500):
+
+| stage | measured | note |
+|---|---|---|
+| discover (16 reads) | 205 min | probe costs flat: particle reads 2.5–5.0 min, saliency 30 + 46 min, Shapley 28 + 48 min — as projected |
+| annotate (38 cells) | **593 min (9.9 h)** | the projection said ≈ 4 h; each annotate runs the scorer's six-value floor sweep where a scoresweep file runs 16 τ over the same universe, so the per-cell cost tracks the 3.8-min scoresweep file, ≈ 33 min on the session cells — the sweep-to-annotate ratio was mis-carried from `s`, where the whole stage cost 6.8 min |
+| seqscore (38 cells) | 19 min | — |
+| chain | 13 h 46 min | the applied replica carried `max_runtime_hours = 18` against this addendum's 12 — the discrepancy saved the run (a 12 h cap fires mid-annotate, and the box syncs only after the chain exits) |
+
+**Cap decision for the `m` Job T** (superseding this addendum's 2026-09-29 value): **18 h**
+(13.8 h measured × 1.3; the replicas for seeds 1–4 carry it explicitly, ending the
+comment-vs-value drift that has now recurred at `s` and `m`). The annotate projection for `l`
+must scale from the 593 min measurement by universe size, not from the discover stage.
+
+**Seeds 1–4 Job V measured (2026-09-29 runs):** chains 14 h 25 min – 15 h 24 min at the 24 h cap
+(1.56× margin at the slowest); argmin steps 4000 / 4250 / 6500 / 7750, val losses 1.98–2.13
+(ε̂ at each freeze), last / min ≤ 1.026; 0 corrupted cells on every seed; sweeps 3.4–3.7 h
+(request) + 4.7–5.3 h (session); scoresweep pace ≈ 2 min (request) / ≈ 4–5 min (session) per
+file — the m universe cost, consistent with seed 0. The 24 h cap holds for `m`; the `l` Job V
+re-projects from the slowest seed (15.4 h) and the scoresweep's universe growth, not the mean.
