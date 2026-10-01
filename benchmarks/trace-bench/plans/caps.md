@@ -228,3 +228,29 @@ observed scoresweep costs (request 11.6 h vs m's 1.7 h, ≈ 6.8×) an unbatched 
 far beyond a practical cap, so the trace-bench τ-batching improvement (one ranking pass shared
 across the 16 τ of a scoresweep column, suggestion on record 2026-09-29) graduates from
 suggestion to prerequisite for the `l` test reads.
+
+**2026-10-01 — scorer re-pinned to the sparse context (`8e91aa2`); the prerequisite above is
+discharged, by a different route.** Profiling the pinned scorer showed the cost was not the τ
+loop: `score_at_floor` walked the whole universe on every call whatever the prediction's size
+(≈ 4 s per call at the m session universe), and annotate — which has no τ loop — pays the same
+per call, seven floors and up to eight lags per cell. Sharing a ranking pass across τ would have
+left annotate, the Job T cost driver, where it was. The scorer now takes a `ScoreContext` (the
+sorted universe and, per floor, the truth side) and a call costs in proportion to the truth and
+predicted edges; `scoresweep` builds one context per grain and `annotate` one per cell. Output is
+byte-identical — re-scoring the landed sweeps reproduces every landed val table exactly:
+
+| landed table | landed scorer | landed wall clock | re-scored (laptop, same sweep files) |
+|---|---|---|---|
+| s seed 0, request | v0.3.0 | 25 min | 18 s |
+| s seed 0, session | v0.3.0 (quadratic) | 271 min | 66 s |
+| m seed 0, request | `a1f3a89` | 103 min | 158 s |
+| m seed 0, session | `a1f3a89` | 229 min | 449 s |
+
+One m session annotate cell (`trace/core/fixed/frozen/session`, 1,979 s as landed) re-scored its
+`score.json` and `score-ranking.json` byte-identical with all scoring done inside 29 s. What
+remains per file is reading the sweep table and building the prediction documents, so the
+scoring stages no longer scale with the universe. Consequences: the `l` seed-0 Job V (landed on
+the old pin, ≈ 38 h of scoresweeps) is the last run that pays the universe cost — its tables are
+re-scored on the new pin at landing as the l-rung identity check; the `l` Job T and the `l`
+seeds 1–4 caps are re-projected from the sweep and discover stages plus these anchors, not from
+the m annotate or the l scoresweep measurements.

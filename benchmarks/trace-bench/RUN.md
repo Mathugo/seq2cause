@@ -34,7 +34,10 @@ source of the copied and adapted harness modules (see `NOTICE`).
 - **Benchmark:** trace-bench corpora at tool version **0.3.0** only (since 2026-09-27 the
   scorer is pinned to trace-bench commit `a1f3a89` — v0.3.0 plus the mixed-SHD loop fix, whose
   output is byte-identical; `tool_version` stays 0.3.0 in every record; the s seed-0 Job V ran on
-  the v0.3.0 scorer, every later run on the pinned commit); `report`
+  the v0.3.0 scorer, every later run through the l seed-0 Job V on the pinned commit; since
+  2026-10-01 the pin is `8e91aa2` — the scorer's sparse context, per-call cost independent of the
+  universe size, output again byte-identical: the m seed-0 val tables re-scored equal to the
+  landed ones, `plans/caps.md` addendum of that date); `report`
   refuses a cell that mixes tool versions.
 
 ## Deviations from the paper and from the shipped code (D-SB-n)
