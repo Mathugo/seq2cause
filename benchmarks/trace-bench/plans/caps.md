@@ -218,3 +218,13 @@ sweeps ≈ 8 h (probe costs flat in V through m, fixed 10k / 5k sample), scoresw
 ≈ 2–2.5×, so ≈ 11–14 h) → ≈ 20–23 h projected, and 24 h leaves under 1.2× margin against a
 hard kill without sync. First rung near the memory cap: the session logits + softmax term is
 ≈ 15.6 GB at N = 32 against the 20 GiB knob — the run's memory events are a landing check.
+
+**2026-10-01 — m Job T, seeds 1–4 measured.** Chains 15 h 49 min – 16 h 50 min at the 18 h cap —
+the slowest (seed 4, annotate 745 min) left a **1.07× margin**, the tightest of the programme;
+the cap held only because the addendum's 18 h was applied as written. Annotate 680–745 min on
+every seed confirms the stage as the m-rung cost driver. The `l` Job T must re-project from the
+seed-4 anchor (16.8 h) times the scoresweep-measured universe growth — with the l Job V's
+observed scoresweep costs (request 11.6 h vs m's 1.7 h, ≈ 6.8×) an unbatched l Job T projects
+far beyond a practical cap, so the trace-bench τ-batching improvement (one ranking pass shared
+across the 16 τ of a scoresweep column, suggestion on record 2026-09-29) graduates from
+suggestion to prerequisite for the `l` test reads.
