@@ -26,7 +26,7 @@ import argparse
 from pathlib import Path
 
 from tracebench.constants import ALPHABET_JSON, GRAPHS_DIR, SCORING_TARGET_JSON
-from tracebench.score import SCORING_TARGET_SESSION_JSON, score_corpus, truth_sets
+from tracebench.score import SCORING_TARGET_SESSION_JSON, load_context, score_corpus, truth_sets
 
 from .arms import arm_slug, arm_spec, parse_cell_key
 from .constants import (
@@ -122,8 +122,11 @@ def run_annotate(args, rec):
             f"{ranking_path.name} missing: a shipped cut's ranking is its frozen sibling's; run the frozen cell in the same read"
         )
     ranking = read_json(ranking_path)
-    score = score_corpus(corpus_dir, prediction, grain=grain)
-    score_rank = score_corpus(corpus_dir, ranking, grain=grain)
+    context = load_context(
+        corpus_dir, grain
+    )  # one target read and one universe for every score below
+    score = score_corpus(corpus_dir, prediction, grain=grain, context=context)
+    score_rank = score_corpus(corpus_dir, ranking, grain=grain, context=context)
     write_json(rec.out_dir / SCORE_JSON, score)
     write_json(rec.out_dir / SCORE_RANKING_JSON, score_rank)
     per_lag = {}
@@ -133,9 +136,9 @@ def run_annotate(args, rec):
             p = run_dir / PREDICTION_LAG_JSON_FMT.format(grain=grain, arm=slug, path=path, lag=lag)
             if not p.exists():
                 break
-            per_lag[str(lag)] = score_corpus(corpus_dir, read_json(p), grain=grain)["directed"][
-                "recall"
-            ]
+            per_lag[str(lag)] = score_corpus(
+                corpus_dir, read_json(p), grain=grain, context=context
+            )["directed"]["recall"]
     inside = len(ranking["directed"]) - score_rank["universe"]["predictions_outside_universe"]
     scores = read_scores_npz(
         run_dir / SCORES_NPZ_FMT.format(probe=disc["probe"], noise=disc["noise"], grain=grain)

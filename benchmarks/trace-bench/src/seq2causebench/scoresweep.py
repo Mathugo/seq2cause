@@ -8,14 +8,15 @@ non-negotiable 8; score side).
         --quantiles 0.5 0.8 0.9 0.95 0.99 --output-folder out/<run>
 
 Runs only after the method process has exited and the score tier (`graphs/`) has been pulled.
-No metric arithmetic of its own: the target and alphabet are loaded once per grain, the universe
-built once, and `tracebench.score.score_at_floor` is called at the target's default floor for
-every (column, τ). The τ grid is per arm class (`plans/reference-arms.md`, `plans/baselines.md`):
-absolute for the divergence arms and Granger, label-free quantiles of the pooled validation scores
-for saliency and Shapley (the absolute value is recorded). Per column the full ranking is scored
-once more for the threshold-free axes and the coverage rule (the recall of the full ranking is the
-fraction of truth edges that co-occur in the probed sample). The cli probes' shipped-cut unions
-are scored as their own rows (`cut = shipped`, no τ).
+No metric arithmetic of its own: the target and alphabet are loaded once per grain, the scorer's
+context (the universe and the truth side) built once, and `tracebench.score.score_at_floor` is
+called at the target's default floor for every (column, τ). The τ grid is per arm class
+(`plans/reference-arms.md`, `plans/baselines.md`): absolute for the divergence arms and Granger,
+label-free quantiles of the pooled validation scores for saliency and Shapley (the absolute value
+is recorded). Per column the full ranking is scored once more for the threshold-free axes and the
+coverage rule (the recall of the full ranking is the fraction of truth edges that co-occur in the
+probed sample). The cli probes' shipped-cut unions are scored as their own rows (`cut = shipped`,
+no τ).
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 from tracebench.constants import ALPHABET_JSON, GRAPHS_DIR, SCORING_TARGET_JSON
-from tracebench.score import SCORING_TARGET_SESSION_JSON, build_universe, score_at_floor
+from tracebench.score import SCORING_TARGET_SESSION_JSON, ScoreContext, score_at_floor
 
 from .arms import cell_key
 from .constants import (
@@ -57,8 +58,7 @@ def load_target(corpus_dir, grain):
         gdir / (SCORING_TARGET_JSON if grain == "request" else SCORING_TARGET_SESSION_JSON)
     )
     alphabet = read_json(gdir / ALPHABET_JSON)
-    ordered, unordered = build_universe(alphabet, target)
-    return target, alphabet, ordered, unordered
+    return target, alphabet, ScoreContext(target, alphabet)
 
 
 def manifest_facts(corpus_dir):
@@ -86,25 +86,25 @@ def _strip(r):
     }
 
 
-def score_cell(scores, col, tau, vocab, target, alphabet, floor, ordered, unordered):
+def score_cell(scores, col, tau, vocab, target, alphabet, floor, context):
     src, dst, s = select_edges(scores, col, "max", tau)
     doc = prediction_document(src, dst, s, vocab)
-    r = score_at_floor(target, alphabet, doc, floor, ordered, unordered)
+    r = score_at_floor(target, alphabet, doc, floor, context=context)
     return {"n_edges": int(len(src)), **_strip(r)}
 
 
-def score_edges(edges, vocab, target, alphabet, floor, ordered, unordered):
+def score_edges(edges, vocab, target, alphabet, floor, context):
     src = np.array([u for u, _ in edges], dtype=np.int64)
     dst = np.array([v for _, v in edges], dtype=np.int64)
     doc = prediction_document(src, dst, np.ones(len(src)), vocab)
-    r = score_at_floor(target, alphabet, doc, floor, ordered, unordered)
+    r = score_at_floor(target, alphabet, doc, floor, context=context)
     return {"n_edges": int(len(src)), **_strip(r)}
 
 
-def score_ranking(scores, col, vocab, target, alphabet, floor, ordered, unordered):
+def score_ranking(scores, col, vocab, target, alphabet, floor, context):
     src, dst, s = ranking(scores, col, "max")
     doc = prediction_document(src, dst, s, vocab)
-    r = score_at_floor(target, alphabet, doc, floor, ordered, unordered)
+    r = score_at_floor(target, alphabet, doc, floor, context=context)
     inside = int(len(src)) - int(r["universe"]["predictions_outside_universe"])
     return {
         "n_pairs": int(len(src)),
@@ -145,7 +145,7 @@ def run_scoresweep(args, rec):
     rows, coverage = [], {}
     model_sha = corpus_id = None
     for grain in args.grains:
-        target, alphabet, ordered, unordered = load_target(args.corpus, grain)
+        target, alphabet, context = load_target(args.corpus, grain)
         floor = float(target["default_floor"])
         files = sweep_files(args.sweep_dir, grain)
         if not files:
@@ -170,7 +170,7 @@ def run_scoresweep(args, rec):
                 for path, col in paths.items():
                     key = cell_key(arm, path, CUT_FROZEN, grain)
                     coverage[f"{key}/c{c}/N{N}"] = score_ranking(
-                        scores, col, vocab, target, alphabet, floor, ordered, unordered
+                        scores, col, vocab, target, alphabet, floor, context
                     )
                     for tau, source in taus_for(arm, scores, col, args):
                         rows.append(
@@ -188,15 +188,7 @@ def run_scoresweep(args, rec):
                                 "tau_source": source,
                                 "floor": floor,
                                 **score_cell(
-                                    scores,
-                                    col,
-                                    tau,
-                                    vocab,
-                                    target,
-                                    alphabet,
-                                    floor,
-                                    ordered,
-                                    unordered,
+                                    scores, col, tau, vocab, target, alphabet, floor, context
                                 ),
                             }
                         )
@@ -219,9 +211,7 @@ def run_scoresweep(args, rec):
                                 "floor": floor,
                                 "threshold_finite": sc["threshold_finite"],
                                 "tau_by_lag": sc["tau_by_lag"],
-                                **score_edges(
-                                    edges, vocab, target, alphabet, floor, ordered, unordered
-                                ),
+                                **score_edges(edges, vocab, target, alphabet, floor, context),
                             }
                         )
             log(
