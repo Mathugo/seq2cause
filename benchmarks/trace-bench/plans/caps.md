@@ -254,3 +254,42 @@ the old pin, ≈ 38 h of scoresweeps) is the last run that pays the universe cos
 re-scored on the new pin at landing as the l-rung identity check; the `l` Job T and the `l`
 seeds 1–4 caps are re-projected from the sweep and discover stages plus these anchors, not from
 the m annotate or the l scoresweep measurements.
+
+**2026-10-02 — `l` Job V, seed 0 measured; the l-rung identity check passes.** Chain 46 h 23 min
+on a g5.2xlarge at **cap 40 h as applied** (the owner raised the authored 30 before apply; the
+cap timer was cancelled on the box on 2026-10-01, on the owner's word, once the scoresweep pace
+showed even 40 h would fire before the sync — the same intervention as at `s`).
+
+| stage | measured | note |
+|---|---|---|
+| pretrain | 6 min | argmin-val step 1250 of 12,000, ε̂ = +0.036 (in regime), last / min 1.21 |
+| sweep, request (60 cells) | 191 min | probe costs flat in V through `l` (m: 205 min) |
+| sweep, session (60 cells) | 228 min | m: 263 min; peak device memory 6.37 GB against the 20 GiB knob — the ≈ 15.6 GB logits + softmax projection did not materialise; two allocator out-of-memory retries, recovered |
+| scoresweep, request | **11.9 h** | universe 11.3 M ordered pairs (m ≈ 1.7 M): the universe-bound scorer `a1f3a89` |
+| scoresweep, session | **27.4 h** | universe 25.6 M ordered pairs; 17–45 min per file by probe and noise |
+
+The 2026-09-30 projection (scoresweeps ≈ 11–14 h) carried the s→m universe growth forward; the
+universe grows roughly with V², so m→l it grew ≈ 6.6–6.9× (1.7 M → 11.3 M request, 3.7 M →
+25.6 M session), not 2–2.5×. All of the overrun was the scorer.
+
+**Identity check at `l` (the open item of the 2026-10-01 entry).** Both landed val tables were
+re-scored from the synced sweep files on the pinned sparse-context scorer (`8e91aa2`) and are
+equal on every key (1,596 rows each):
+
+| landed table | landed scorer | landed wall clock | re-scored (laptop, both grains concurrently) |
+|---|---|---|---|
+| l seed 0, request | `a1f3a89` | 11.9 h | 445 s |
+| l seed 0, session | `a1f3a89` | 27.4 h | 1,201 s |
+
+**Coverage at `l`.** The 10k / 5k validation sample co-observes 0.28 % / 0.58 % of the ordered
+pairs and reaches 6.6 % (request) / 10.3 % (session) of the truth edges, so validation F1 is
+ceiling-bound (0.09 / 0.11) and the arms sit within 0.003–0.008 of each other; the two Granger
+request cells freeze at the bottom of the Granger grid (recorded, `at_grid_edge`). The registered
+sample-size note applies with more force than at `m`: the test read's 20k / 10k sample is not
+like-for-like with validation.
+
+**Cap decisions for `l`.** Job V, seeds 1–4 (on the re-pinned scorer): sweeps ≈ 7 h + scoresweeps
+≈ 0.5 h → ≈ 8 h projected; applied at **48 h** (owner's value). Job T: discover ≈ 3.5–4 h (the
+m read cost 205 min at equal probe costs), annotate + seqscore on the re-pinned scorer — first
+measured at `l` by the seed-0 read — projected ≈ 1–2 h; **cap 24 h**. The cap remains a hard
+shutdown without a sync: never tighten it below a measured chain × 1.3.
