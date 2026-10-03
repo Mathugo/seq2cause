@@ -293,3 +293,22 @@ like-for-like with validation.
 m read cost 205 min at equal probe costs), annotate + seqscore on the re-pinned scorer — first
 measured at `l` by the seed-0 read — projected ≈ 1–2 h; **cap 24 h**. The cap remains a hard
 shutdown without a sync: never tighten it below a measured chain × 1.3.
+
+**2026-10-03 — `l` Job V, seeds 1–4 measured (the first runs on the re-pinned scorer).** Chains
+8 h 24 min – 10 h 06 min at the 48 h cap the owner applied (the authored 24 would have held with
+a 2.4× margin at the slowest): sweeps 204–229 min (request) + 253–323 min (session), probe costs
+flat in V as at seed 0; **scoresweeps 11–12 min (request) + 31–37 min (session)** against seed 0's
+11.9 h + 27.4 h on the universe-bound scorer — the sparse context removes the universe term from
+the validation side, as the identity check projected. Peak device memory 4.46–6.70 GB. Argmin
+steps 1750 / 750 / 1500 / 3000, ε̂ +0.042 … +0.063 (all in regime), last / min 1.15–1.23 — the
+uniform 12k budget overfits every `l` corpus as it did at xs and m; the 250-step grid holds.
+0 corrupted cells on every seed (H-hazard: zero incidence on all five `l` corpora, val side). Seed
+2 freezes five request cells at a grid bottom (three trace arms at 1e-7, both Granger at 1e-5);
+seed 0 froze the two Granger request cells there — the coverage-bound validation sample makes the
+lowest τ the argmax on the sparse request grain. The `l` Job V projection for `xl` is sweeps
+≈ 7–9 h (fixed sample; flat probe costs) + scoresweeps ≈ 1 h; the xl Job V cap re-projects from
+the slowest `l` chain (10.1 h) × 1.3 plus the memory step to N = 16.
+
+**Cap for the `l` Job T, seeds 1–4: 24 h**, as for seed 0 (its read is in flight; the first
+measurement of annotate at `l` on the re-pinned scorer lands with it — re-anchor if the seed-0
+chain exceeds 12 h).
