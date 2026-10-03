@@ -75,9 +75,10 @@ def confounded_pair_count(corpus_dir, grain, prediction, floor):
         gdir / (SCORING_TARGET_JSON if grain == "request" else SCORING_TARGET_SESSION_JSON)
     )
     _directed, bidirected = truth_sets(target, floor)
+    pairs = {frozenset(p) for p in bidirected}  # built once: the l truth holds 50k–180k pairs
     hit = 0
     for e in prediction["directed"]:
-        if frozenset((e["src"], e["dst"])) in {frozenset(p) for p in bidirected}:
+        if frozenset((e["src"], e["dst"])) in pairs:
             hit += 1
     return {
         "directed_predictions_on_bidirected_truth_pairs": hit,
