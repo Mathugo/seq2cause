@@ -312,3 +312,36 @@ the slowest `l` chain (10.1 h) × 1.3 plus the memory step to N = 16.
 **Cap for the `l` Job T, seeds 1–4: 24 h**, as for seed 0 (its read is in flight; the first
 measurement of annotate at `l` on the re-pinned scorer lands with it — re-anchor if the seed-0
 chain exceeds 12 h).
+
+**2026-10-03 — `l` Job T: discover measured, annotate stopped and fixed.** All five test reads
+finished discover in 3.1–3.7 h of probe wall clock (16 / 16 / 18 / 17 / 18 reads, peak device
+memory 6.4–6.7 GB, 0 corrupted cells) — the projection held. Annotate did not: a frozen request
+cell took 147–246 min and a shipped-cut cell 2.5–5 min, so the 24 h cap would have fired with
+eleven or twelve request cells still to go on every box and no session cell started. The owner
+stopped annotate on all five boxes; the chains exited 143 and synced.
+
+The cost was in the harness, not the scorer: `annotate.confounded_pair_count` rebuilt the set of
+bidirected truth pairs for every predicted edge. The `l` truth holds 50,291 (request) and 179,049
+(session) such pairs and a frozen prediction 50k–150k edges; measured on the seed-0 truth, 500
+predictions cost 29 s (request) and 179 s (session). The set is now built once per call. Run end
+to end on the synced seed-0 reads (laptop), the fixed stage reproduces the landed cell
+`trace/cli-atomic/fixed-kl/frozen/request` byte for byte — `annotate.json`, `score.json`,
+`score-ranking.json` — in 68 s against 155 min:
+
+| command, one cell | request | session | peak memory |
+|---|---|---|---|
+| annotate (frozen cell) | 68 s | 151 s | 6.3 GB |
+| seqscore | 42 s | 175 s | 5.8 GB |
+
+**What the 2026-10-01 and 2026-10-02 identity checks did and did not cover.** They re-ran the
+scorer (val tables; one m annotate cell's two score files), not the annotate command — the m
+check could not, its discover scores were not local — so the `l` Job T cap was projected from a
+function-level measurement. From here a cap is projected only from the stage's own command run
+end to end on real inputs of the rung, one cell at least per grain.
+
+**Scoring half of the `l` test reads.** The discover reads are kept (verified against the
+manifests); annotate + seqscore run again per seed from the synced reads, fetched as an input
+artifact (`scripts/jobs/seq2cause-bench-26-10-03-l-latent-s{0..4}-annotate.sh`: pull method, pull
+score, 38 annotate, 38 seqscore). Projection ≈ 2.3 h of laptop wall clock for the 76 commands,
+≈ 7 h on the box's CPU; no GPU work, so the smallest instance of the image's GPU families with a
+16 GB host; **cap 24 h**.
