@@ -1,0 +1,171 @@
+{
+ "N": 8,
+ "c": 1,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 40348,
+   "n_pairs": 59777,
+   "per_lag_files": 8,
+   "tau": 0.0003
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 3892,
+   "n_edges": 663,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 126,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.9659481048583984,
+    "10": 0.6364750287834627,
+    "11": 0.5743024469818269,
+    "12": 0.5282438655563505,
+    "13": 0.4941228292176051,
+    "14": 0.4688453437893194,
+    "15": 0.4501193220110288,
+    "16": 0.4362467438767884,
+    "17": 0.42596968522711237,
+    "18": 0.4183562529244177,
+    "19": 0.41271608355265477,
+    "2": 3.040836767007347,
+    "3": 2.355497431768047,
+    "4": 1.8477855648728778,
+    "5": 1.471663363020605,
+    "6": 1.1930251826855145,
+    "7": 0.9866049417156812,
+    "8": 0.8336850660877178,
+    "9": 0.7203992359181404
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 40348,
+   "n_pairs": 59777,
+   "per_lag_files": 8,
+   "tau": 0.0003
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 3892,
+   "n_edges": 663,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 126,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.9659483432769775,
+    "10": 0.6364750670460592,
+    "11": 0.5743024815068306,
+    "12": 0.5282438973124775,
+    "13": 0.4941228589224977,
+    "14": 0.4688453719746203,
+    "15": 0.4501193490705883,
+    "16": 0.43624677010237833,
+    "17": 0.4259697108348824,
+    "18": 0.4183562780744955,
+    "19": 0.41271610836366573,
+    "2": 3.0408369498115495,
+    "3": 2.355497573372106,
+    "4": 1.8477856759551199,
+    "5": 1.4716634514917293,
+    "6": 1.1930252544059103,
+    "7": 0.9866050010268326,
+    "8": 0.8336851162058745,
+    "9": 0.7203992792259591
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "l/latent/seed=4",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 320984
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 320984
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-02T21:52:44-04:00",
+  "path": "freezes/2026-10-03-l-latent-s4.json",
+  "sha": "318bdb586e2a7e6d89deb6d910e08a2c11609b9c"
+ },
+ "g": 1,
+ "grain": "request",
+ "memory": {
+  "N": 8,
+  "c": 1,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 263676416,
+  "max_seq_len": 21,
+  "probe": "cli-atomic",
+  "shipped_estimate": 79645440
+ },
+ "model_sha256": "c88ff00353906cd34cd5b3314a6c6ed4354f0b529f0c46280fc937d688794269",
+ "n_cells": 220188,
+ "n_pairs": 59777,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 277.969,
+ "rung": "l",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-10-01",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/request",
+    "trace/cli-atomic/fixed-kl/shipped/request",
+    "trace/cli-atomic/shipped/frozen/request",
+    "trace/cli-atomic/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "note": "Job T (test read) under freezes/2026-09-30-m-latent-s4.json; the `l` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-all-c1-N8",
+   "results_sha256": "1fa290fd0d1353f2421fd9ad5206977f88148dc19b0613b3c77477cb943521ac",
+   "run": "m-latent-s4-test-26-09-30",
+   "rung": "m",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "m",
+  "results_sha256": "1fa290fd0d1353f2421fd9ad5206977f88148dc19b0613b3c77477cb943521ac",
+  "rung": "l"
+ },
+ "status": "ok",
+ "tok_pos": 7126027,
+ "tok_pos_per_s": 25636.026976193927
+}
