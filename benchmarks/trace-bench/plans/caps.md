@@ -370,3 +370,24 @@ scoring half of a test read needs no GPU — at `l` it is ≈ 3 h on a 32 GB CPU
 3.1–3.7 h of discover on the GPU host. For `xl` the session universe grows again (≈ 7× by V²):
 the scoring half is sized from a measured `xl` cell before its replica is authored, and running
 it as its own CPU job after discover syncs is the default shape.
+
+**2026-10-04 — `xl` Job V, seed 0: authored as two instances.** From `xl` the validation job is
+split the way the scoring half of the `l` test reads was. A GPU instance runs pull method →
+prepare → pretrain → the two sweeps and syncs; a CPU instance then fetches the synced sweep
+outputs as an input artifact and runs pull score → the two scoresweeps. Commands, grids and
+samples are the `l` chain's (N grid {2, 8, 16} per the table); only where they run changes. The
+GPU is not held through CPU-only scoring, the two halves are sized separately, and no method
+process shares a disk with `graphs/`.
+
+| half | instance class | sized from | projection | cap |
+|---|---|---|---|---|
+| training (pull method, prepare, pretrain, sweeps) | one A10G, 32 GB host — superseding the table's 64 GB host, which was for the session target this box no longer loads | the five `l` Job V records: peak device 4.2–6.2 GiB at N = 32 (0.7× the D-SB-12 estimate), peak resident 3.0 GiB. At the `xl` vocabulary the estimate is ≤ 10.9 GiB at N = 16 and 21.8 GiB at N = 32, over the 20 GiB cap — the table's N grid stands | sweeps ≈ 9–13 h (the N = 16 logits tensor is 1.3× `l`'s at N = 32; probe costs flat in V through `l`) → chain ≈ 10–14 h | 48 h |
+| scoring (pull score, scoresweeps) | CPU, 128 GiB host | the four `l` Job V runs on the pinned scorer, peak resident from the run records: request 5.0–5.3 GiB, session 9.7–10.5 GiB, on targets of 0.52 / 1.16 GB. The `xl` targets are 2.52 / 5.83 GB → ≈ 26 / 53 GiB, one grain at a time; 2.4× headroom (a 64 GiB host would leave 1.2×) | ≈ 4–5 h if the per-file cost follows the truth size (5× `l`); unmeasured | 48 h |
+
+Both caps supersede the table's 36 h upward and stay a hard shutdown without a sync. The scoring
+half is the plan's M11 entry measurement (the session target scored once on one corpus): its
+recorded peak resident memory on the session grain sizes the scoring half of the `xl` test read.
+At `l` annotate peaked at ≈ 1.8× the scoresweep (17.4–18.9 against 9.7–10.5), so a 256 GiB class
+is the expectation there, decided from the record. The landed seed is assembled from two output
+prefixes, as `test-read/` and `test-score/` are at `l`; `freeze` takes the val tables from the
+scoring run and the pretrain record from the training run.
