@@ -23,6 +23,16 @@ difference is a result; the float32 clamp hazard is counted, not assumed;
 each fixed bug runs on both its shipped and its fixed path, paired. The
 results are co-published with the trace-bench dataset paper.
 
+**How to read the two axes** (`plans/per-sequence-rules.md`, addendum 2026-10-04). For a
+root-cause-analysis reading — which events of the trace in hand caused which — the
+**per-sequence axis leads**: it scores each probed trace on its own position pairs. The
+type-level axis answers how much of the system's graph a fixed number of traces recovers; its
+headline is the benchmark scorer's output, and every type-level table also carries precision,
+recall and F1 against the **reachable** truth only (the true edges whose two event types occur
+together in the probed sample), because the benchmark F1 falls with the reachable share as the
+vocabulary grows. The frozen τ is not re-selected on the reachable columns. Cross-rung reading:
+[`findings/rca-reading-latent.md`](findings/rca-reading-latent.md).
+
 ## Status
 
 | milestone | what lands | state |

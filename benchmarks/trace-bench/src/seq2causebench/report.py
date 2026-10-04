@@ -17,6 +17,15 @@ five per-seed differences (`scipy.stats.ttest_rel`; low power at five pairs is s
 whose two sides differ in cut is allowed only between the same arm and path (the shipped-versus-
 frozen row); differencing a core arm against a shipped cut is refused (scenario 39). Per-sequence
 results are written to their own tables, never beside a type-level number (scenario 35).
+
+Reachable-only columns (`plans/per-sequence-rules.md`, addendum 2026-10-04): beside the
+benchmark's directed precision / recall / F1 every type-level cell carries the same three scored
+against the **reachable** truth only — the truth edges whose token pair the cell's own read
+scored at all (`coverage.reachable_recall_ceiling × coverage.truth_directed`). They are derived
+from the landed records, never from a second scorer: true and false positives are the benchmark's,
+only the unreachable false negatives leave the denominator, so precision is unchanged, recall is
+the benchmark recall over the ceiling, and `reachable.predict_all_f1` is the F1 of predicting
+every scored pair of the universe. The frozen τ is the one selected on the benchmark F1.
 """
 
 from __future__ import annotations
@@ -36,7 +45,7 @@ from .record import RunRecord, read_json, write_json
 
 SCORE_JSON = "score.json"
 ANNOTATE_JSON = "annotate.json"
-REPORT_SCHEMA = "seq2causebench/report@1"
+REPORT_SCHEMA = "seq2causebench/report@2"
 PERSEQ_SCHEMA = "seq2causebench/report-perseq@1"
 
 METRICS = (
@@ -58,6 +67,10 @@ METRICS = (
     "causal_validity.parent_aid",
     "causal_validity.ancestor_aid",
     "coverage.reachable_recall_ceiling",
+    "reachable.precision",
+    "reachable.recall",
+    "reachable.f1",
+    "reachable.predict_all_f1",
     "corrupted_cells.total",
 )
 PERSEQ_METRICS = (
@@ -99,11 +112,32 @@ def flatten(score, annotate):
     for k, v in annotate["per_lag_recall"].items():
         flat[f"per_lag_recall.{k}"] = v
     flat["coverage.reachable_recall_ceiling"] = annotate["coverage"]["reachable_recall_ceiling"]
+    flat.update(reachable_only(score["directed"], annotate["coverage"]))
     cc = annotate.get("corrupted_cells") or {}
     flat["corrupted_cells.total"] = int(cc.get("n_cell_collapsed", 0)) + int(
         cc.get("n_cell_saturated", 0)
     )
     return flat
+
+
+def reachable_only(directed, coverage):
+    """Directed precision / recall / F1 against the reachable truth, and the predict-all F1 on it.
+    The benchmark's true and false positives are kept; the truth is cut to the edges whose pair
+    the read scored (an integer: the full ranking's true positives). No reachable edge → absent."""
+    reach = round(coverage["reachable_recall_ceiling"] * coverage["truth_directed"])
+    tp, fp = directed["tp"], directed["fp"]
+    if reach <= 0:
+        return {f"reachable.{k}": None for k in ("precision", "recall", "f1", "predict_all_f1")}
+    precision = tp / (tp + fp) if tp + fp else 0.0
+    recall = tp / reach
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    base = reach / coverage["pairs_in_universe"] if coverage["pairs_in_universe"] else 0.0
+    return {
+        "reachable.precision": precision,
+        "reachable.recall": recall,
+        "reachable.f1": f1,
+        "reachable.predict_all_f1": 2 * base / (1 + base),
+    }
 
 
 def _get(d, dotted):
@@ -444,6 +478,10 @@ SHOW = (
     "causal_validity.sid",
     "causal_validity.parent_aid",
     "coverage.reachable_recall_ceiling",
+    "reachable.precision",
+    "reachable.recall",
+    "reachable.f1",
+    "reachable.predict_all_f1",
     "corrupted_cells.total",
 )
 

@@ -133,3 +133,39 @@ table and a session table are never merged.
   F1 except `trace/cli-atomic` (0.531); at session (0.187) every reference arm, Granger and Shapley
   clear it while saliency does not. One seed, provisional (`findings/s-latent-s0.md`).
 
+
+### 2026-10-04 — reading order, and reachable-only columns on the type-level axis (owner decision)
+
+Not a pre-registered hypothesis and not a change to any landed number: a rule for how the two
+axes are read, and four derived columns.
+
+- **The per-sequence axis leads the root-cause-analysis reading.** The question a root-cause
+  analysis asks — which of the events *in the trace in front of me* caused which — is the one
+  this axis scores: position pairs of one sequence against the truth induced for that sequence
+  (§2). Wherever a result is framed as a root-cause-analysis result, the per-sequence table is
+  given first, with its predict-all value and scoreable fraction (§4). The type-level axis
+  answers a different question — how much of the system's graph a fixed number of traces
+  recovers — and keeps the benchmark's own scorer output as its headline.
+- **Reachable-only precision, recall and F1** are reported beside the benchmark's on every
+  type-level cell (`report`, columns `reachable.precision`, `reachable.recall`, `reachable.f1`,
+  `reachable.predict_all_f1`). The *reachable* truth of a cell is the directed truth edges whose
+  token pair the cell's own read scored at all — `coverage.reachable_recall_ceiling ×
+  coverage.truth_directed`, an integer. The columns are derived from the landed `score.json` and
+  `annotate.json`, never from a second scorer: the benchmark's true and false positives are
+  kept, only the unreachable false negatives leave the denominator. So precision equals the
+  benchmark's, recall equals the benchmark recall over the ceiling, and the predict-all value is
+  the F1 of predicting every scored pair of the universe. The two tables never merge with the
+  per-sequence tables (scenario 35 stands).
+- **τ is not re-selected.** The frozen τ of every cell is the one selected on the benchmark F1
+  (arm plan §4); the reachable columns are read at that τ. Under a low ceiling the benchmark F1
+  favours predicting more, so a reachable F1 read at the frozen τ is a lower bound on what a
+  selection on the reachable metric would reach, and an arm ordering on it is partly an
+  ordering of where each arm's τ landed. No freeze is redone.
+- **Comparability.** Two cells are comparable on the reachable columns only where their reads
+  scored the same sample. The Shapley baseline probes its own smaller sample from `s` on
+  (D-SB-14), so its reachable truth is a smaller, more frequent subset and its reachable columns
+  are not comparable with the other arms'; they are reported and marked.
+- **Backfill.** `report` was run again on `xs`, `s`, `m` and `l` on 2026-10-04 (schema
+  `report@2`); every previously landed value of the four tables is unchanged, the per-sequence
+  documents are byte-equal in content, and the pre-registered pairs now carry the paired test on
+  the reachable columns too. Cross-rung reading: `findings/rca-reading-latent.md`.
