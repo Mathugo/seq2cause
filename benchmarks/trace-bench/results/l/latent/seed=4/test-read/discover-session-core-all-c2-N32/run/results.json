@@ -1,0 +1,122 @@
+{
+ "N": 32,
+ "c": 2,
+ "cells": {
+  "baseline/granger/shipped/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 42640,
+   "n_pairs": 283212,
+   "per_lag_files": 8,
+   "tau": 0.001
+  },
+  "trace/core/fixed-kl/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 38439,
+   "n_pairs": 283212,
+   "per_lag_files": 8,
+   "tau": 0.003
+  },
+  "trace/core/shipped/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 38438,
+   "n_pairs": 283212,
+   "per_lag_files": 8,
+   "tau": 0.003
+  }
+ },
+ "columns": [
+  "baseline-granger__shipped",
+  "trace-core__fixed-kl",
+  "trace-core__shipped"
+ ],
+ "corpus_id": "l/latent/seed=4",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 1358683,
+   "n_particle_collapsed": 0,
+   "n_particle_saturated": 0
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 1358683,
+   "n_particle_collapsed": 0,
+   "n_particle_saturated": 0
+  }
+ },
+ "files": {
+  "matrices": "matrices-core-all-session.npz",
+  "scores": "scores-core-all-session.npz",
+  "sequences": "sequences-session.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-02T21:52:44-04:00",
+  "path": "freezes/2026-10-03-l-latent-s4.json",
+  "sha": "318bdb586e2a7e6d89deb6d910e08a2c11609b9c"
+ },
+ "g": 2,
+ "grain": "session",
+ "memory": {
+  "N": 32,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 9751743488,
+  "max_seq_len": 66,
+  "probe": "core",
+  "shipped_estimate": 3204022272
+ },
+ "model_sha256": "c88ff00353906cd34cd5b3314a6c6ed4354f0b529f0c46280fc937d688794269",
+ "n_cells": 1313239,
+ "n_pairs": 283212,
+ "n_probed": 9378,
+ "n_sequences": 10000,
+ "n_skipped_short": 622,
+ "n_stored": 9378,
+ "noise": "all",
+ "probe": "core",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 283.942,
+ "rung": "l",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-10-01",
+   "cells": [
+    "baseline/granger/shipped/frozen/session",
+    "trace/core/fixed-kl/frozen/session",
+    "trace/core/shipped/frozen/session"
+   ],
+   "grain": "session",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "note": "Job T (test read) under freezes/2026-09-30-m-latent-s4.json; the `l` discover names this sha256 through --prior-rung-record",
+   "read": "discover-session-core-all-c2-N32",
+   "results_sha256": "4df35283f8c03e8aa8db83027bc138d469a378af042a673345959e1ac45ee6bd",
+   "run": "m-latent-s4-test-26-09-30",
+   "rung": "m",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "m",
+  "results_sha256": "4df35283f8c03e8aa8db83027bc138d469a378af042a673345959e1ac45ee6bd",
+  "rung": "l"
+ },
+ "status": "ok",
+ "tok_pos": 109494842,
+ "tok_pos_per_s": 385623.97343852103
+}

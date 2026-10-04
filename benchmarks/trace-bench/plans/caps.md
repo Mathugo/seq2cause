@@ -345,3 +345,28 @@ artifact (`scripts/jobs/seq2cause-bench-26-10-03-l-latent-s{0..4}-annotate.sh`: 
 score, 38 annotate, 38 seqscore). Projection ≈ 2.3 h of laptop wall clock for the 76 commands,
 ≈ 7 h on the box's CPU; no GPU work, so the smallest instance of the image's GPU families with a
 16 GB host; **cap 24 h**.
+
+**2026-10-04 — scoring half of the `l` test reads measured; the 16 GB line above was wrong.**
+Attempt 1 ran on a 16 GB host and was killed for memory (exit 137) on the first session annotate
+cell on all five seeds, after the 19 request cells (44–58 min); the output synced. The 6.3 GB
+figure in the table above was the laptop's maximum resident set size, which leaves out compressed
+memory; the true laptop peak footprint is 15.5–15.6 GB for every session annotate and seqscore
+cell (set by the session universe, not by the scores file) and 7.0 GB at request. Attempt 2, on a
+32 GB CPU host (the default image boots on a CPU instance; the runner only warns that no GPU is
+visible), completed on every seed:
+
+| seed | chain | annotate | seqscore | peak resident memory |
+|---|---|---|---|---|
+| 0 | 2 h 38 min | 82 min | 72 min | 16.0 GB |
+| 1 | 3 h 12 min | 102 min | 86 min | 17.8 GB |
+| 2 | 3 h 15 min | 105 min | 87 min | 17.9 GB |
+| 3 | 3 h 15 min | 100 min | 91 min | 18.9 GB |
+| 4 | 3 h 08 min | 98 min | 86 min | 17.4 GB |
+
+So the box ran the 76 commands in ≈ 1.3× the laptop's wall clock (not 3×) and needed 1.0–1.2×
+the laptop's peak footprint. **Rules from here:** a host is sized from the peak memory footprint
+of the largest grain's command (never the resident set size) with at least 2× headroom, and the
+scoring half of a test read needs no GPU — at `l` it is ≈ 3 h on a 32 GB CPU host against the
+3.1–3.7 h of discover on the GPU host. For `xl` the session universe grows again (≈ 7× by V²):
+the scoring half is sized from a measured `xl` cell before its replica is authored, and running
+it as its own CPU job after discover syncs is the default shape.
