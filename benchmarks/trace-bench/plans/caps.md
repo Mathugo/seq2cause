@@ -391,3 +391,17 @@ At `l` annotate peaked at ≈ 1.8× the scoresweep (17.4–18.9 against 9.7–10
 is the expectation there, decided from the record. The landed seed is assembled from two output
 prefixes, as `test-read/` and `test-score/` are at `l`; `freeze` takes the val tables from the
 scoring run and the pretrain record from the training run.
+
+**2026-10-05 — `xl` Job V measured: five training halves and the seed-0 scoring half.**
+
+| half | measured | note |
+|---|---|---|
+| training, seeds 0 – 4 (g5.2xlarge) | chains 7 h 22 min – 7 h 58 min at the 48 h cap; pretrain 7 – 8 min; sweeps 201 – 212 min (request) + 232 – 263 min (session) | probe costs flat in V through `xl` (on seed 0 each cell cost 0.99 – 1.18× the `l` cell at equal N, and an N = 16 session cell ≈ 1.3× an N = 8 cell). Peak device 6.3 – 8.0 GiB against the 20 GiB cap; peak resident 3.0 GiB; allocator out-of-memory retries on four boxes, recovered with every sequence probed. 0 corrupted cells on every seed (7.4 – 8.4 M request / 32 – 40 M session cells). Model vocabulary 15,263 – 15,731; argmin steps 1500 / 750 / 4000 / 2500 / 750; ε̂ +0.005 … +0.042, all in regime |
+| scoring, seed 0 (128 GiB CPU host) | chain 2 h 00 min; scoresweep request 32.6 min at **18.3 GiB** peak resident, session 85.4 min at **41.2 GiB** | the projection said 26 / 53 GiB and 4 – 5 h. Seeds 1 – 4 targets are 1.05 – 1.16× seed 0's → ≈ 43 – 48 GiB, 2.7 – 3.0× headroom on the same host |
+
+**Re-score on the extended grids** (arm plans' addenda of this date): a second scoring run per
+seed on the same host class, reading the same synced sweep arrays; 20 / 17 / 10 τ values against
+16 / 12 / 5, so ≈ 2.5 – 3 h projected per seed; cap 48 h. **Scoring half of the `xl` test read:**
+annotate peaked at ≈ 1.8× the scoresweep at `l`, which puts an `xl` session annotate cell near
+75 GiB — a 256 GiB host under the 2× rule, to be confirmed on one measured cell before the
+replicas are authored.

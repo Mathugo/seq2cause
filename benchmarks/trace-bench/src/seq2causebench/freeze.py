@@ -13,7 +13,10 @@ no τ. The model is the one the pretrain record names (`model_choice`, the argmi
 checkpoint under the plans' addendum); the val tables must bind that hash. Instrument-soundness
 facts are recorded, never gated (`diagnostics`): the pretrain record's `model_choice` and oracle
 (chosen and last checkpoint), and per frozen cell the reachable-recall coverage ceiling and an
-`at_grid_edge` flag (a grid-sourced τ at either end of its grid). Writes
+`at_grid_edge` flag (a τ at either end of its grid — the absolute grids, and since `freeze@3` the
+quantile family of saliency and Shapley too), with the scorer's F1 of the cut "every scored pair"
+at the cell's `(c, N)` beside it (`every_scored_pair_f1`; absent from val tables written before
+2026-10-05). Writes
 `freezes/<date>-<rung>-<variant>-s<k>.json` with the corpus identity, the benchmark tool version
 and config hash, the model hash, the package commit at freeze time, the val tables' sha256, the
 grids and the chosen values per cell; refuses to overwrite. The record is then committed (one
@@ -39,7 +42,7 @@ from .constants import (
 from .log import log, now_iso
 from .record import RunRecord, git_commit, read_json, sha256_file, write_json
 
-FREEZE_SCHEMA = "seq2causebench/freeze@2"
+FREEZE_SCHEMA = "seq2causebench/freeze@3"
 
 
 class FreezeExists(FileExistsError):
@@ -50,8 +53,14 @@ class FreezeRefusal(RuntimeError):
     pass
 
 
+QUANTILE_SOURCE = "quantile p"
+
+
 def grid_of(arm, tau_source):
-    """The val table's grid list a grid-sourced τ came from; None for quantile-sourced τ."""
+    """The val table's grid list a τ came from: `taus` / `granger_taus` for a grid-sourced τ,
+    `quantiles` for a quantile-sourced one."""
+    if str(tau_source).startswith(QUANTILE_SOURCE):
+        return "quantiles"
     if tau_source != "grid":
         return None
     if arm in REFERENCE_ARMS:
@@ -59,6 +68,17 @@ def grid_of(arm, tau_source):
     if arm == ARM_GRANGER:
         return "granger_taus"
     return None
+
+
+def at_grid_edge(row, grid_name, grid):
+    """Whether the chosen row sits at either end of its grid. An absolute grid is compared by τ;
+    the quantile family by the quantile the row's `tau_source` names (its τ is data-dependent)."""
+    if not grid:
+        return None
+    if grid_name == "quantiles":
+        ends = {f"{QUANTILE_SOURCE}{int(round(q * 100))}" for q in (min(grid), max(grid))}
+        return row.get("tau_source") in ends
+    return bool(row["tau"] in (min(grid), max(grid)))
 
 
 def select_cells(table):
@@ -80,13 +100,15 @@ def select_cells(table):
         best = max(rows, key=lambda r: (r["directed"]["f1"], -r["N"], -r["c"], r["tau"]))
         grid_name = grid_of(best["arm"], best.get("tau_source"))
         grid = table.get(grid_name) if grid_name else None
-        cov = coverage.get(f"{key}/c{best['c']}/N{best['N']}", {}).get("coverage", {})
+        ranked = coverage.get(f"{key}/c{best['c']}/N{best['N']}", {})
+        cov = ranked.get("coverage", {})
         chosen[key] = {
             "tau": float(best["tau"]),
             "tau_source": best.get("tau_source"),
             "grid": grid_name,
-            "at_grid_edge": (None if not grid else bool(best["tau"] in (min(grid), max(grid)))),
+            "at_grid_edge": at_grid_edge(best, grid_name, grid),
             "reachable_recall_ceiling": cov.get("reachable_recall_ceiling"),
+            "every_scored_pair_f1": (ranked.get("every_scored_pair") or {}).get("f1"),
             "c": int(best["c"]),
             "N": int(best["N"]),
             "g": int(best["g"]),

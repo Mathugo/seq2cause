@@ -82,7 +82,8 @@ on them; the arm plans under `plans/` reference these ids.
   direct `score_corpus` call (scenario 28). Since 2026-09-25: `pretrain --model-choice
   argmin-val` selects the argmin-validation checkpoint (`tests/test_pretrain_smoke_cpu.py`),
   the freeze records the soundness diagnostics (model choice, oracle, coverage ceiling,
-  grid-edge flags) and refuses only tables bound to another model, and the replica checker's
+  grid-edge flags — since 2026-10-05, `freeze@3`, for the quantile family too, with the scorer's
+  F1 of the cut "every scored pair" beside each cell) and refuses only tables bound to another model, and the replica checker's
   `--args-diff` compares a repeated module by output folder
   (`tests/test_tfvars_check_parses.py`); a replica may name a tracked job script
   (`bash scripts/jobs/<replica>.sh`, one command per line) when its chain would cross the

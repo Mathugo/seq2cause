@@ -15,8 +15,11 @@ called at the target's default floor for every (column, τ). The τ grid is per 
 label-free quantiles of the pooled validation scores for saliency and Shapley (the absolute value
 is recorded). Per column the full ranking is scored once more for the threshold-free axes and the
 coverage rule (the recall of the full ranking is the fraction of truth edges that co-occur in the
-probed sample). The cli probes' shipped-cut unions are scored as their own rows (`cut = shipped`,
-no τ).
+probed sample). The scorer counts every listed pair of that ranking as present, so the same call
+is also the cut "every pair the probe scored": its directed precision / recall / F1 are recorded
+as `every_scored_pair`, the reference line a swept τ is read against (`plans/reference-arms.md`,
+addendum 2026-10-05). The cli probes' shipped-cut unions are scored as their own rows
+(`cut = shipped`, no τ).
 """
 
 from __future__ import annotations
@@ -110,6 +113,7 @@ def score_ranking(scores, col, vocab, target, alphabet, floor, context):
         "n_pairs": int(len(src)),
         "auroc": r["auroc"],
         "average_precision": r["average_precision"],
+        "every_scored_pair": {k: r["directed"][k] for k in ("precision", "recall", "f1")},
         "coverage": {
             "universe_ordered_pairs": r["universe"]["ordered_pairs"],
             "pairs_cooccurring": inside,

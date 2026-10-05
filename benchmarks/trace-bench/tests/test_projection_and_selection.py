@@ -111,6 +111,10 @@ def test_select_strict_and_rankings(tmp_path):
         scores[f"lag_max_{k}"] = np.array([[0.5, -np.inf], [-np.inf, 1.0], [2.0, 2.0]])
     src, dst, s = select_edges(scores, COLS[0], "max", tau=1.0)
     assert src.tolist() == [7] and s.tolist() == [2.0]  # 1.0 is not > 1.0
+    # τ = 0 is "every positive score": a pair scored exactly zero, or below it, stays out
+    signed = {**scores, f"max_{COLS[2]}": np.array([-0.5, 0.0, 1e-12])}
+    src, dst, s = select_edges(signed, COLS[2], "max", tau=0.0)
+    assert src.tolist() == [7] and s.tolist() == [1e-12]
     assert len(ranking(scores, COLS[1], "max")[0]) == 3
     src, dst, s = per_lag_ranking(scores, COLS[0], lag=2)
     assert src.tolist() == [6, 7] and s.tolist() == [1.0, 2.0]
