@@ -519,6 +519,7 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
         assert cell["reachable_recall_ceiling"] is not None
         ranked = t["coverage"][f"{key}/c{cell['c']}/N{cell['N']}"]
         assert cell["every_scored_pair_f1"] == ranked["every_scored_pair"]["f1"]
+        assert cell["every_scored_pair_source"] == "scorer"
         grid = f[cell["grid"]]
         if cell["grid"] == "quantiles":  # the quantile family is flagged at its ends too
             assert cell["tau_source"].startswith("quantile p")
@@ -527,6 +528,14 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
             assert cell["tau_source"] == "grid"
             assert cell["at_grid_edge"] == (cell["tau"] in (min(grid), max(grid)))
     assert set(d["at_grid_edge"]) == {k for k, c in f["cells"].items() if c.get("at_grid_edge")}
+    # a val table written without the scorer's line: the same number from the scorer's counts
+    for ranked in t["coverage"].values():
+        bare = {k: v for k, v in ranked.items() if k != "every_scored_pair"}
+        f1, source = fz.every_scored_pair(bare)
+        assert source == "coverage" and f1 == pytest.approx(
+            ranked["every_scored_pair"]["f1"], abs=1e-12
+        )
+    assert fz.every_scored_pair({}) == (None, None)
     with pytest.raises(fz.FreezeExists):
         fz.main(
             [

@@ -14,9 +14,11 @@ checkpoint under the plans' addendum); the val tables must bind that hash. Instr
 facts are recorded, never gated (`diagnostics`): the pretrain record's `model_choice` and oracle
 (chosen and last checkpoint), and per frozen cell the reachable-recall coverage ceiling and an
 `at_grid_edge` flag (a τ at either end of its grid — the absolute grids, and since `freeze@3` the
-quantile family of saliency and Shapley too), with the scorer's F1 of the cut "every scored pair"
-at the cell's `(c, N)` beside it (`every_scored_pair_f1`; absent from val tables written before
-2026-10-05). Writes
+quantile family of saliency and Shapley too), with the F1 of the cut "every scored pair" at the
+cell's `(c, N)` beside it (`every_scored_pair_f1`). Its source is named: `scorer` when the val
+table carries the scorer's own line for the full ranking, `coverage` when the table was written
+without it and the same number is taken from the counts the scorer returned for that ranking
+(true positives = ceiling × truth, predictions = the scored pairs inside the universe). Writes
 `freezes/<date>-<rung>-<variant>-s<k>.json` with the corpus identity, the benchmark tool version
 and config hash, the model hash, the package commit at freeze time, the val tables' sha256, the
 grids and the chosen values per cell; refuses to overwrite. The record is then committed (one
@@ -81,6 +83,26 @@ def at_grid_edge(row, grid_name, grid):
     return bool(row["tau"] in (min(grid), max(grid)))
 
 
+def every_scored_pair(ranked):
+    """`(f1, source)` of the cut "every scored pair" for one ranking row of a val table. The
+    scorer's line when the row carries it. Otherwise the scorer's counts for the same call give
+    it exactly: its directed recall on the full ranking is the ceiling, so the true positives are
+    `ceiling × truth` (an integer), its predictions are the scored pairs inside the universe, and
+    F1 = 2·tp / (predictions + truth). `(None, None)` when the row has neither."""
+    line = ranked.get("every_scored_pair")
+    if line:
+        return line.get("f1"), "scorer"
+    cov = ranked.get("coverage") or {}
+    counts = [
+        cov.get(k) for k in ("reachable_recall_ceiling", "truth_directed", "pairs_cooccurring")
+    ]
+    if any(v is None for v in counts):
+        return None, None
+    ceiling, truth, predicted = counts
+    tp = round(ceiling * truth)
+    return (2 * tp / (predicted + truth) if predicted + truth else 0.0), "coverage"
+
+
 def select_cells(table):
     """The argmax rows per frozen cell with the plan's tie-breaks; shipped cuts inherit (c, N, g)."""
     frozen_rows = [r for r in table["cells"] if r["cut"] == CUT_FROZEN]
@@ -102,13 +124,15 @@ def select_cells(table):
         grid = table.get(grid_name) if grid_name else None
         ranked = coverage.get(f"{key}/c{best['c']}/N{best['N']}", {})
         cov = ranked.get("coverage", {})
+        every_f1, every_source = every_scored_pair(ranked)
         chosen[key] = {
             "tau": float(best["tau"]),
             "tau_source": best.get("tau_source"),
             "grid": grid_name,
             "at_grid_edge": at_grid_edge(best, grid_name, grid),
             "reachable_recall_ceiling": cov.get("reachable_recall_ceiling"),
-            "every_scored_pair_f1": (ranked.get("every_scored_pair") or {}).get("f1"),
+            "every_scored_pair_f1": every_f1,
+            "every_scored_pair_source": every_source,
             "c": int(best["c"]),
             "N": int(best["N"]),
             "g": int(best["g"]),

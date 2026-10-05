@@ -179,3 +179,18 @@ are reported without a pass / fail clause.
   their synced score arrays (`scoresweep` with the extended grids, a second scoring run per
   seed). The first scoring runs, on the registered grid, are kept as records; the rows the two
   grids share must be equal in both.
+
+### 2026-10-05, later — the re-score ran one commit early; the reference line is taken from its counts
+
+The five `xl` re-score runs were started while the change that records the scorer's
+`every_scored_pair` line was still under review, so their boxes ran the previous commit: the
+extended grids of the addendum above (those are arguments of the run), every swept row and the
+coverage block as they would be on the merged code, and no `every_scored_pair` key. Nothing a
+freeze selects on is affected, and the runs are not repeated. The reference line for those tables
+is taken from the counts the scorer returned for the same full-ranking call — true positives =
+ceiling × truth, predictions = the scored pairs inside the universe, F1 = 2·tp / (predictions +
+truth) — and the freeze names the source per cell (`every_scored_pair_source`: `scorer` or
+`coverage`). The identity is asserted on the fixture, where both are present, and the scorer's
+conventions it rests on were checked on all 15,960 swept rows of the ten first-pass `xl`
+validation tables (true plus false positives = predictions inside the universe; precision and
+F1 from those counts; true positives plus false negatives = truth) with no exception.
