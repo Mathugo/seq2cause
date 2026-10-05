@@ -72,3 +72,11 @@ scorer supplies its own trivial baselines (`shd_empty_*`,
   CPU-only re-score of the five validation sweeps. At the session grain Granger and saliency
   have interior optima on the registered grid and are not expected to move; Shapley sits at
   `p50` there too and may.
+- **2026-10-05, later — a quantile of a signed score.** On the re-scored `xl` tables Shapley's
+  `p0` is a negative τ on every seed and grain (−0.025 … −0.148): its attributions are signed, so
+  the lowest quantile keeps the zero and negative scores too, and that row is the cut "every
+  scored pair" — the reference line the arm plan's addendum keeps out of the frozen candidates. The
+  freeze therefore sets aside any swept row whose τ is below zero and records the count per cell
+  (`n_rows_negative_tau`); Shapley freezes at `p10`, which is positive on every seed (fewer than
+  one score in ten is at or below zero), 0.0005 – 0.0014 F1 under its `p0`. Saliency's scores are
+  all positive and its `p0` stands. No re-score: the rule is applied at the freeze.

@@ -7,7 +7,11 @@
         --rung xs --variant latent --seed 0 --freezes-dir freezes --output-folder out/<run>
 
 Per frozen cell `<arm>/<path>/frozen/<grain>` the full-grid argmax of the scorer's directed F1 at
-the default floor over `(c, N, τ)`; ties → smaller `N`, then smaller `c`, then larger τ. A cli
+the default floor over `(c, N, τ)`; ties → smaller `N`, then smaller `c`, then larger τ. A row
+whose τ is negative is not a candidate (`plans/reference-arms.md`, addendum 2026-10-05: a cut
+that keeps zero and negative scores is "every scored pair", the reference line, not a threshold
+on the arm's evidence; a quantile of a signed score can land there) — the count of rows set aside
+is recorded per cell (`n_rows_negative_tau`). A cli
 arm's shipped cut `<arm>/<path>/shipped/<grain>` inherits the frozen sibling's `(c, N, g)` and has
 no τ. The model is the one the pretrain record names (`model_choice`, the argmin-validation
 checkpoint under the plans' addendum); the val tables must bind that hash. Instrument-soundness
@@ -118,7 +122,10 @@ def select_cells(table):
         by_cell.setdefault(cell_key(r["arm"], r["path"], CUT_FROZEN, r["grain"]), []).append(r)
     chosen = {}
     coverage = table.get("coverage", {})
-    for key, rows in by_cell.items():
+    for key, all_rows in by_cell.items():
+        rows = [r for r in all_rows if not (r["tau"] is not None and r["tau"] < 0)]
+        if not rows:
+            raise FreezeRefusal(f"{key}: every swept row has a negative τ; nothing to freeze")
         best = max(rows, key=lambda r: (r["directed"]["f1"], -r["N"], -r["c"], r["tau"]))
         grid_name = grid_of(best["arm"], best.get("tau_source"))
         grid = table.get(grid_name) if grid_name else None
@@ -144,6 +151,7 @@ def select_cells(table):
             "n_edges": int(best["n_edges"]),
             "floor": float(best["floor"]),
             "n_rows_considered": len(rows),
+            "n_rows_negative_tau": len(all_rows) - len(rows),
         }
         arm, path, grain = best["arm"], best["path"], best["grain"]
         if CUT_SHIPPED in arm_spec(arm)["cuts"]:
