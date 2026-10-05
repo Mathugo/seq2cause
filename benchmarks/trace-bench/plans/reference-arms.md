@@ -138,3 +138,44 @@ are reported without a pass / fail clause.
 - **H-sat, note.** At xs the request-grain F1 is flat in N to ± 0.005 (saturated at N = 2); the
   session grain prefers N = 32 by ≈ 0.02 on one seed. Scored at the rung's test read as written.
 
+### 2026-10-05 — `xl`: the τ grid reaches zero (owner decision, before any `xl` freeze or test read)
+
+- **What the `xl` seed-0 validation tables showed** (registered grid `1e-7 … 3`; request grain,
+  `c = 1`; 48,578 pairs scored by each probe from the 10,000-sequence sample):
+
+  | arm | positive scores | positive, below the grid floor | exactly zero or negative | F1 at the floor |
+  |---|---|---|---|---|
+  | `trace/core` | 39,460 | 44 – 59 | 9,118 | 0.0578 |
+  | `trace/cli` | 39,220 – 39,460 | 1,102 – 1,475 | 9,118 – 9,358 | 0.0575 |
+  | `trace/cli-atomic` | 48,206 – 48,578 | 1,419 – 1,967 | 0 – 372 | 0.0599 |
+
+  Every reference cell at the request grain froze at the bottom of the grid, and the pairs left
+  below it still carried a marginal precision of 0.036 – 0.059 against the break-even of
+  F1 / 2 ≈ 0.03 — the cells were still rising where the grid stopped. At the session grain every
+  reference cell has an interior argmax (`3e-5` or `1e-4`); nothing changes there.
+- **§3 Grids — τ.** For `xl` the grid is **`0, 1e-9, 1e-8, 3e-8`** followed by the sixteen
+  half-decades `1e-7 … 3` (20 values). Selection is strict (`score > τ`), so `τ = 0` is the cut
+  the 2026-09-25 addendum described in words — "every positive score" — and a bottom-edge
+  argmax now means exactly that. The freeze rule and its tie-break (larger τ) are unchanged.
+- **No negative τ.** A candidate that also kept the zero and negative scores would be the cut
+  "every pair the probe scored", which is co-occurrence in the sample, not a threshold on the
+  arm's evidence; on the seed-0 request tables it scores F1 0.0600, above `trace/core` and
+  `trace/cli` and equal to `trace/cli-atomic`. It is not a frozen candidate. It is recorded as a
+  **reference line**: the scorer's verdict on the full ranking (`scoresweep`:
+  `every_scored_pair`; `freeze`: `every_scored_pair_f1` per cell), reported beside every `xl`
+  validation headline. The zero scores of `trace/core` and `trace/cli` are pairs the probe saw
+  but its construction never tested; `trace/cli-atomic` tests every pair and has none.
+- **What the extension is expected to do, and not to do.** It removes a floor that differed by
+  arm (the baselines' addendum of the same date carries the larger case). It does not make the
+  request grain discriminating: with the 10k sample reaching at most 3.7 % of the truth edges,
+  the F1-optimal cut of every arm is everything it scored positively, so the request-grain
+  ordering at `xl` reads as the count of positively scored pairs. The same reading applies to
+  `l`, where the best swept request cell of seed 0 (0.0932) already equalled the reference line
+  (0.0930); it is carried in the `l` and `xl` findings.
+- **Scope.** `xl` only. The `l` rung is closed on the registered grid — its freezes, test reads
+  and tables stand as landed, with their grid-edge cells recorded. The selection is changed on
+  validation data alone and before any `xl` test read exists.
+- **Mechanics.** No new probe: the five `xl` validation sweeps are re-scored on the CPU from
+  their synced score arrays (`scoresweep` with the extended grids, a second scoring run per
+  seed). The first scoring runs, on the registered grid, are kept as records; the rows the two
+  grids share must be equal in both.

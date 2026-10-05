@@ -129,9 +129,9 @@ PROBE = [
     "--device",
     "cpu",
 ]
-TAUS = ["1e-6", "1e-4", "1e-2", "1e-1"]
-GRANGER_TAUS = ["1e-3", "1e-2", "1e-1"]
-QUANTILES = ["0.5", "0.9"]
+TAUS = ["0", "1e-6", "1e-4", "1e-2", "1e-1"]
+GRANGER_TAUS = ["0", "1e-3", "1e-2", "1e-1"]
+QUANTILES = ["0", "0.5", "0.9"]
 PROBES = ["core", "cli-full", "saliency"]
 CORE_CELLS = (
     "trace/core/shipped/frozen",
@@ -391,6 +391,16 @@ def test_sweep_and_val_table(world):
         0 <= cov["coverage"]["reachable_recall_ceiling"] <= 1
         and cov["coverage"]["universe_ordered_pairs"] > 0
     )
+    # the full ranking's own score is the cut "every scored pair": its recall is the ceiling
+    for cov in t["coverage"].values():
+        every = cov["every_scored_pair"]
+        assert set(every) == {"precision", "recall", "f1"}
+        assert every["recall"] == cov["coverage"]["reachable_recall_ceiling"]
+    # τ = 0 is on both absolute grids and p0 in the quantile family (addendum 2026-10-05)
+    assert 0.0 in t["taus"] and 0.0 in t["granger_taus"] and 0.0 in t["quantiles"]
+    assert {row["tau_source"] for row in sal} == {"quantile p0", "quantile p50", "quantile p90"}
+    zero = [row for row in t["cells"] if row["tau"] == 0.0 and row["tau_source"] == "grid"]
+    assert zero and {row["arm"].split("/")[0] for row in zero} == {"trace", "baseline"}
 
 
 def test_sweep_refuses_test_and_out_of_order_rung(world, tmp_path):
@@ -501,16 +511,20 @@ def test_freeze_rule_and_refuses_overwrite(world, tmp_path):
     assert d["model_choice"] == pre["model_choice"] and d["model_choice"]["choice"] == "argmin-val"
     assert d["model_choice"]["step"] in (4, 8) and d["oracle"]["step"] == d["model_choice"]["step"]
     assert d["oracle_last"]["step"] == 8 and d["val_final_over_min"] >= 1.0
-    assert f["schema"] == "seq2causebench/freeze@2"
+    assert f["schema"] == "seq2causebench/freeze@3"
     for key, cell in f["cells"].items():
         if "inherits" in cell:
             continue
         assert key in d["coverage"] and d["coverage"][key] == cell["reachable_recall_ceiling"]
         assert cell["reachable_recall_ceiling"] is not None
-        if cell["grid"] is None:
-            assert cell["at_grid_edge"] is None and cell["tau_source"] != "grid"
+        ranked = t["coverage"][f"{key}/c{cell['c']}/N{cell['N']}"]
+        assert cell["every_scored_pair_f1"] == ranked["every_scored_pair"]["f1"]
+        grid = f[cell["grid"]]
+        if cell["grid"] == "quantiles":  # the quantile family is flagged at its ends too
+            assert cell["tau_source"].startswith("quantile p")
+            assert cell["at_grid_edge"] == (cell["tau_source"] in ("quantile p0", "quantile p90"))
         else:
-            grid = f[cell["grid"]]
+            assert cell["tau_source"] == "grid"
             assert cell["at_grid_edge"] == (cell["tau"] in (min(grid), max(grid)))
     assert set(d["at_grid_edge"]) == {k for k, c in f["cells"].items() if c.get("at_grid_edge")}
     with pytest.raises(fz.FreezeExists):

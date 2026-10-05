@@ -48,3 +48,27 @@ scorer supplies its own trivial baselines (`shd_empty_*`,
   Shapley; the quantile family already brackets it).
 - **Coverage rule** → reported, per the arm plan's addendum.
 
+### 2026-10-05 — `xl`: the Granger grid and the quantile family reach their floors (owner decision; arm plan addendum of the same date)
+
+- **What the `xl` seed-0 validation tables showed** (request grain, `c = 1`, 48,578 scored
+  pairs): Granger has 31,170 positive scores, 1,908 of them below its grid floor `1e-5`, and
+  17,408 at or below zero; saliency scores every pair positively and its lowest quantile, `p50`,
+  drops half of them. The pairs below each floor carried a marginal precision of 0.074
+  (Granger), 0.079 (saliency) and 0.111 (Shapley, on its own sample) against a break-even of
+  F1 / 2 ≈ 0.03. So the lowest cut kept 64 % (Granger) and 53 % (saliency) of the scored pairs
+  where the reference arms' kept 83 – 100 %: part of the request-grain ordering was the grid.
+- **The quantile family had been at its floor since `xs`.** The 2026-09-25 entry above reads
+  "`p50` won at xs … the quantile family already brackets it"; `p50` is the family's lowest
+  member, so it did not. Saliency froze at `p50` at the request grain, and Shapley at both
+  grains, on all five `l` seeds, unflagged — the freeze marked grid edges for absolute grids
+  only. From `freeze@3` a quantile-sourced τ at either end of the family is flagged
+  (`at_grid_edge`) like any other.
+- **§2 Grids — granger.** For `xl`: **`0, 1e-7, 3e-7, 1e-6, 3e-6`** followed by the twelve
+  half-decades `1e-5 … 3` (17 values).
+- **§2 Grids — quantiles.** For `xl`: **`p0, p10, p20, p30, p40, p50, p80, p90, p95, p99`**
+  (10 values). Selection is strict, so `p0` keeps every pair above the smallest score.
+- **Reference line, scope and mechanics** as in the arm plan's addendum: no negative τ; the cut
+  "every scored pair" is recorded beside each cell, not frozen; `xl` only, `l` stands as landed;
+  CPU-only re-score of the five validation sweeps. At the session grain Granger and saliency
+  have interior optima on the registered grid and are not expected to move; Shapley sits at
+  `p50` there too and may.
