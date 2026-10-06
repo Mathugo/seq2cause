@@ -405,3 +405,15 @@ seed on the same host class, reading the same synced sweep arrays; 20 / 17 / 10 
 annotate peaked at ≈ 1.8× the scoresweep at `l`, which puts an `xl` session annotate cell near
 75 GiB — a 256 GiB host under the 2× rule, to be confirmed on one measured cell before the
 replicas are authored.
+
+**2026-10-05, later — the five `xl` validation sweeps re-scored on the extended grids; `xl` Job T sized.**
+Re-score chains 2 h 17 min – 2 h 34 min on the 128 GiB host (scoresweep request 37 – 41 min at
+18.3 – 21.3 GiB, session 98 – 110 min at 41.2 – 47.5 GiB — the first pass's peaks to the decimal; the
+extra τ values add calls, not memory). **Job T at `xl` runs as two instances.** Discover half: the
+GPU host of the training half, cap **24 h** (l discover took 3.1 – 3.7 h and probe costs are flat in
+V through `xl`; ≈ 3.5 – 4.5 h projected). Scoring half (pull score, 38 annotate, 38 seqscore): at `l`
+annotate peaked at ≈ 1.8× the scoresweep on the same target, so ≈ 75 – 85 GiB is expected at `xl` →
+a **256 GiB CPU host**, cap **48 h** (l's scoring half took 2.6 – 3.3 h on a universe a fifth this
+size; unmeasured at `xl`). The 2026-10-04 rule asked for one measured `xl` cell before authoring:
+none can exist before a discover half has synced, so the replicas are authored on the projection and
+**seed 0's scoring half runs first**; its recorded peak confirms or re-sizes the other four.
