@@ -1,0 +1,89 @@
+{
+ "N": 0,
+ "c": 2,
+ "cells": {
+  "baseline/saliency/none/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 75776,
+   "n_pairs": 379568,
+   "per_lag_files": 8,
+   "tau": 0.1437799006700516
+  }
+ },
+ "columns": [
+  "baseline-saliency__none"
+ ],
+ "corpus_id": "xl/latent/seed=3",
+ "corrupted_cells": {},
+ "files": {
+  "matrices": "matrices-saliency-all-session.npz",
+  "scores": "scores-saliency-all-session.npz",
+  "sequences": "sequences-session.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-05T19:44:03-04:00",
+  "path": "freezes/2026-10-05-xl-latent-s3.json",
+  "sha": "1595ea455e268f4b52eb9ef5c83b6299c56504a8"
+ },
+ "g": 2,
+ "grain": "session",
+ "memory": {
+  "N": 0,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 41643456,
+  "max_seq_len": 66,
+  "probe": "saliency",
+  "shipped_estimate": 4130016
+ },
+ "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+ "n_cells": 1312174,
+ "n_pairs": 379568,
+ "n_probed": 8692,
+ "n_sequences": 10000,
+ "n_skipped_short": 1308,
+ "n_stored": 8692,
+ "noise": "all",
+ "probe": "saliency",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 1947.484,
+ "rung": "xl",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-10-04",
+   "cells": [
+    "baseline/saliency/none/frozen/session"
+   ],
+   "grain": "session",
+   "model_sha256": "dfe82ff05d3cd37eb46c4b9437b32eefee7a858024241fc58c02957bdee5b2be",
+   "note": "Job T (test read) under freezes/2026-10-03-l-latent-s3.json; the `xl` discover names this sha256 through --prior-rung-record",
+   "read": "discover-session-saliency-all-c2-N0",
+   "results_sha256": "c5e055b0d22c500f0fabcfaa807df6cfd9b7aad0f54f47aa616f66141d10b32c",
+   "run": "l-latent-s3-test-26-10-03",
+   "rung": "l",
+   "seed": 3,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "l",
+  "results_sha256": "c5e055b0d22c500f0fabcfaa807df6cfd9b7aad0f54f47aa616f66141d10b32c",
+  "rung": "xl"
+ },
+ "status": "ok",
+ "tok_pos": 3358015,
+ "tok_pos_per_s": 1724.2839790562234
+}

@@ -100,10 +100,6 @@ table and a session table are never merged.
 
 ## Addenda
 
-(none)
-
-## Addenda
-
 ### 2026-09-25 — after the xs test read (`xs/latent/seed=0`)
 
 - **The ancestor-link column equals the parent-link column in every one of the 38 cells.** The
