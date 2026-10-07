@@ -1,0 +1,173 @@
+{
+ "N": 2,
+ "c": 1,
+ "cells": {
+  "trace/cli-atomic/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 86394,
+   "n_pairs": 86394,
+   "per_lag_files": 8,
+   "tau": 0.0
+  },
+  "trace/cli-atomic/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 2818,
+   "n_edges": 181,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 0,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.9807751178741455,
+    "10": 0.6388545413959474,
+    "11": 0.5764495224430372,
+    "12": 0.5302187473407334,
+    "13": 0.49597014678870793,
+    "14": 0.4705981594669176,
+    "15": 0.4518021289640297,
+    "16": 0.43787768709100106,
+    "17": 0.427562206838638,
+    "18": 0.41992031111260497,
+    "19": 0.41425905551820996,
+    "2": 3.052205177569237,
+    "20": 0.4100650942219458,
+    "3": 2.364303646614025,
+    "4": 1.8546936584475562,
+    "5": 1.4771652937724409,
+    "6": 1.197485402396943,
+    "7": 0.9902934429076908,
+    "8": 0.8368018641393045,
+    "9": 0.7230925058664807
+   },
+   "threshold_finite": true
+  },
+  "trace/cli-atomic/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 85305,
+   "n_pairs": 86394,
+   "per_lag_files": 8,
+   "tau": 0.0
+  },
+  "trace/cli-atomic/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 2818,
+   "n_edges": 181,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 0,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 3.9807751178741455,
+    "10": 0.6388545413959474,
+    "11": 0.5764495224430372,
+    "12": 0.5302187473407334,
+    "13": 0.49597014678870793,
+    "14": 0.4705981594669176,
+    "15": 0.4518021289640297,
+    "16": 0.43787768709100106,
+    "17": 0.427562206838638,
+    "18": 0.41992031111260497,
+    "19": 0.41425905551820996,
+    "2": 3.052205177569237,
+    "20": 0.4100650942219458,
+    "3": 2.364303646614025,
+    "4": 1.8546936584475562,
+    "5": 1.4771652937724409,
+    "6": 1.197485402396943,
+    "7": 0.9902934429076908,
+    "8": 0.8368018641393045,
+    "9": 0.7230925058664807
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic__fixed-kl",
+  "trace-cli-atomic__shipped"
+ ],
+ "corpus_id": "xl/latent/seed=4",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 376510
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 376510
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-all-request.npz",
+  "scores": "scores-cli-atomic-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-05T19:44:03-04:00",
+  "path": "freezes/2026-10-05-xl-latent-s4.json",
+  "sha": "1595ea455e268f4b52eb9ef5c83b6299c56504a8"
+ },
+ "g": 1,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 1,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 167871424,
+  "max_seq_len": 22,
+  "probe": "cli-atomic",
+  "shipped_estimate": 56837088
+ },
+ "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+ "n_cells": 268292,
+ "n_pairs": 86394,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "all",
+ "probe": "cli-atomic",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 273.281,
+ "rung": "xl",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-10-04",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/request",
+    "trace/cli-atomic/fixed-kl/shipped/request",
+    "trace/cli-atomic/shipped/frozen/request",
+    "trace/cli-atomic/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "c88ff00353906cd34cd5b3314a6c6ed4354f0b529f0c46280fc937d688794269",
+   "note": "Job T (test read) under freezes/2026-10-03-l-latent-s4.json; the `xl` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-all-c1-N8",
+   "results_sha256": "8c36c74237b3f0c578c1fb903dfaf9ae2c75213b4e07ec74adb18c11acc0bc23",
+   "run": "l-latent-s4-test-26-10-03",
+   "rung": "l",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "l",
+  "results_sha256": "8c36c74237b3f0c578c1fb903dfaf9ae2c75213b4e07ec74adb18c11acc0bc23",
+  "rung": "xl"
+ },
+ "status": "ok",
+ "tok_pos": 2141080,
+ "tok_pos_per_s": 7834.7105981881305
+}

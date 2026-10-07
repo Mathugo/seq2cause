@@ -417,3 +417,20 @@ a **256 GiB CPU host**, cap **48 h** (l's scoring half took 2.6 – 3.3 h on a u
 size; unmeasured at `xl`). The 2026-10-04 rule asked for one measured `xl` cell before authoring:
 none can exist before a discover half has synced, so the replicas are authored on the projection and
 **seed 0's scoring half runs first**; its recorded peak confirms or re-sizes the other four.
+
+**2026-10-07 — `xl` Job T measured, both halves, five seeds.** Discover halves (g5.2xlarge, cap
+24 h): chains 3 h 14 min – 3 h 36 min, of which discover wall clock 1.3 – 1.6 h (request) + 1.7 – 2.0 h
+(session) per seed — the saliency reads 29 – 35 min and the Shapley reads 29 – 62 min each, the
+particle reads 3 – 5 min; peak device 7.7 – 8.0 GiB (A10G), peak resident ≤ 3.7 GiB; 0 corrupted
+cells on 15.1 – 17.4 M cells per seed; the test sample co-observes 85 – 91 k (request, 20k sequences)
+/ 368 – 397 k (session, 10k) ordered pairs. Scoring halves (r7i.8xlarge, 256 GiB, cap 48 h): chains
+14 h 56 min (seed 0) and 17 h 06 min – 20 h 02 min (seeds 1 – 4); per cell, annotate request
+11.0 – 18.5 min at **30.3 – 35.8 GiB** peak resident and session 12.9 – 20.4 min at **69.5 – 81.3 GiB**;
+seqscore request 5.7 – 8.7 min at 26.1 – 30.3 GiB and session 14.8 – 20.3 min at 69.6 – 80.1 GiB.
+The footprint is the same on every arm and on the shipped cuts (a few hundred edges against
+60 – 190 k): it is the universe-and-truth side of the scorer, not the predictions. Seeds 1 – 4 peak
+1.04 – 1.16× seed 0, their targets being 1.05 – 1.16× larger. The session annotate peak is 1.6 – 1.8×
+the same seed's scoresweep peak (seed 0: 70.2 / 41.2 = 1.70×), so the `l` anchor held; under the
+2× rule 81.3 GiB asks for ≥ 163 GiB — the 256 GiB class was the right one (a 128 GiB host would
+have been 1.6×), and the projection of 75 – 85 GiB covered every seed. `--args-diff` clean on every
+record of the ten runs; package `45ccf30` on every box; freezes bound at `1595ea4`.

@@ -1,0 +1,128 @@
+{
+ "N": 8,
+ "c": 1,
+ "cells": {
+  "trace/cli/fixed/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 74763,
+   "n_pairs": 89686,
+   "per_lag_files": 8,
+   "tau": 1e-09
+  },
+  "trace/cli/fixed/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 3405,
+   "n_edges": 286,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 64,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.5191597938537598,
+    "10": 0.4042872624427498,
+    "11": 0.36479540218293005,
+    "12": 0.33553911253383933,
+    "13": 0.313865520092251,
+    "14": 0.29780932790389275,
+    "15": 0.2859146081759895,
+    "16": 0.27710278307165653,
+    "17": 0.27057482247690606,
+    "18": 0.26573879032442266,
+    "19": 0.26215616959006033,
+    "2": 1.9315315078714752,
+    "3": 1.496205766627831,
+    "4": 1.173708525582765,
+    "5": 0.934796693296996,
+    "6": 0.7578064548032435,
+    "7": 0.6266888612442689,
+    "8": 0.5295545588838406,
+    "9": 0.45759569784202825
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed"
+ ],
+ "corpus_id": "xl/latent/seed=0",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 277438
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-real-request.npz",
+  "scores": "scores-cli-full-real-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-05T19:44:03-04:00",
+  "path": "freezes/2026-10-05-xl-latent-s0.json",
+  "sha": "1595ea455e268f4b52eb9ef5c83b6299c56504a8"
+ },
+ "g": 1,
+ "grain": "request",
+ "memory": {
+  "N": 8,
+  "c": 1,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 524216064,
+  "max_seq_len": 21,
+  "probe": "cli-full",
+  "shipped_estimate": 205134720
+ },
+ "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+ "n_cells": 272123,
+ "n_pairs": 89686,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "real",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 150.073,
+ "rung": "xl",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-10-04",
+   "cells": [
+    "trace/cli/fixed-kl/frozen/request",
+    "trace/cli/fixed-kl/shipped/request",
+    "trace/cli/shipped/frozen/request",
+    "trace/cli/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "5a2027cfd0e5abe3dc6992d8f08c1a22d1d7a74ec142aa220e47803732b4aff8",
+   "note": "Job T (test read) under freezes/2026-10-02-l-latent-s0.json; the `xl` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-full-all-c1-N8",
+   "results_sha256": "687880347370981f662c2a1f8b47fb201639070b9041d63f976efe7f3ce39d34",
+   "run": "l-latent-s0-test-26-10-02",
+   "rung": "l",
+   "seed": 0,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "l",
+  "results_sha256": "687880347370981f662c2a1f8b47fb201639070b9041d63f976efe7f3ce39d34",
+  "rung": "xl"
+ },
+ "status": "ok",
+ "tok_pos": 8133888,
+ "tok_pos_per_s": 54199.4277590881
+}
