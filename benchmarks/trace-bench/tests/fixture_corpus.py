@@ -37,6 +37,7 @@ from tracebench.constants import (
 )
 from tracebench.correlate.views import ARROW_SCHEMA
 from tracebench.record import sha256_file, write_json
+from tracebench.topology import endpoint_column
 
 _ROOT = Path(tempfile.mkdtemp(prefix="seq2causebench-tests-"))
 
@@ -93,8 +94,18 @@ def token(op, o):
 
 
 def column(op):
+    """The prior's `<service>:<endpoint>` column, in the benchmark's own convention."""
     svc, name, _ = OPS[op]
-    return f"{svc}:{name.strip('/').replace('/', '_')}"
+    return f"{svc}:{endpoint_column(name)}"
+
+
+def call_edges():
+    """`[(caller, callee, p_call)]` in the order the prior and the instantiation list them."""
+    return [
+        (caller, callee, CALL_P[(caller, callee)])
+        for caller, callees in sorted(CALLS.items())
+        for callee in callees
+    ]
 
 
 # --- sequences ------------------------------------------------------------------------------
@@ -289,10 +300,9 @@ def _prior():
             "to": column(caller),
             "prob": 1.0,
             "why": "deployment call edge; outcomes propagate callee -> caller",
-            "evidence": f"fixture call {caller}->{callee}",
+            "evidence": f"topology.edges[{i}]; p_call={p:.4f}",  # the shipped prior's format
         }
-        for caller, callees in sorted(CALLS.items())
-        for callee in callees
+        for i, (caller, callee, p) in enumerate(call_edges())
     ]
     return {
         "description": "fixture deployment topology as a structural prior (callee -> caller)",
@@ -348,7 +358,20 @@ def write_fixture_corpus(out, variant="latent", seed=0):
     write_json(out / "topology" / "prior.json", _prior())
     write_json(out / "topology" / "callgraph.json", {"fixture": True})
     write_json(out / "labels" / "cases.json", {"fixture": True})
-    write_json(out / "instantiation.json", {"fixture": True, "seed": seed})
+    write_json(
+        out / "instantiation.json",
+        {
+            "fixture": True,
+            "seed": seed,
+            "topology": {  # the numeric p_call the prior's evidence quotes, edge for edge
+                "ops": [{"id": op, "kind": OPS[op][2]} for op in sorted(OPS)],
+                "edges": [
+                    {"index": i, "caller": caller, "callee": callee, "p_call": p}
+                    for i, (caller, callee, p) in enumerate(call_edges())
+                ],
+            },
+        },
+    )
     files = []
     for p in sorted(out.rglob("*")):
         if p.is_file():

@@ -29,6 +29,20 @@ def structural_limitation():
     }
 
 
+class TokenTable:
+    """A score table's own token list as the mapper `edge_list` needs: the floors write their
+    `tokens` array into the npz and index `src` / `dst` into it (plans/floors.md §2)."""
+
+    def __init__(self, tokens):
+        self.tokens = [str(t) for t in tokens]
+
+    def token_string(self, tid):
+        return self.tokens[int(tid)]
+
+    def __len__(self):
+        return len(self.tokens)
+
+
 def edge_list(src, dst, score, vocab):
     return [
         {"src": vocab.token_string(int(u)), "dst": vocab.token_string(int(v)), "score": float(s)}
@@ -52,4 +66,10 @@ def write_prediction(out_path, src, dst, score, vocab, **meta):
     return len(doc["directed"])
 
 
-__all__ = ["structural_limitation", "edge_list", "prediction_document", "write_prediction"]
+__all__ = [
+    "structural_limitation",
+    "TokenTable",
+    "edge_list",
+    "prediction_document",
+    "write_prediction",
+]

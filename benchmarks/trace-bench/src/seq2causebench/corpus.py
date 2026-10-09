@@ -34,6 +34,16 @@ from .constants import (
 SEQUENCE_COLUMNS = ("trace_id", "ops", "outcomes", "n_spans")
 
 
+def corpus_id_of(corpus_dir):
+    """`<rung>/<variant>/seed=<k>` when the directory follows the dataset host's layout
+    (`instances/<rung>/<variant>/seed=<k>`), else the directory name. A path rule only: a
+    score-side reader that never constructs a `Corpus` names its corpus the same way."""
+    parts = Path(corpus_dir).resolve().parts
+    if len(parts) >= 4 and parts[-4] == "instances" and parts[-1].startswith("seed="):
+        return "/".join(parts[-3:])
+    return parts[-1]
+
+
 class Corpus:
     def __init__(self, corpus_dir, ordering, grain):
         if ordering not in ORDERINGS:
@@ -90,10 +100,7 @@ class Corpus:
     def corpus_id(self):
         """`<rung>/<variant>/seed=<k>` when the directory follows the dataset host's layout
         (`instances/<rung>/<variant>/seed=<k>`), else the directory name."""
-        parts = self.dir.resolve().parts
-        if len(parts) >= 4 and parts[-4] == "instances" and parts[-1].startswith("seed="):
-            return "/".join(parts[-3:])
-        return self.dir.name
+        return corpus_id_of(self.dir)
 
     def __repr__(self):
         return f"Corpus({self.dir.name!r}, ordering={self.ordering!r}, grain={self.grain!r})"

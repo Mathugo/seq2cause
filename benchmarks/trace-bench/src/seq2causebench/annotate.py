@@ -17,7 +17,8 @@ path (scenario 10), whether an empty edge set is genuine or induced by a non-fin
 threshold (scenario 11), the confounded-pair diagnostic (directed predictions on bidirected truth
 pairs, scenario 38), the oracle's regime flag (scenario 45), the benchmark tool version and config
 hash, the model hash and the cell's frozen values. `causal_validity` passes through as the scorer
-wrote it (scenario 5).
+wrote it (scenario 5). A model-free floor read (`floors`; model hash `none`) takes
+`--pretrain-results none`: no model check, no oracle, budget or regime fields (D-SB-16).
 """
 
 from __future__ import annotations
@@ -28,10 +29,11 @@ from pathlib import Path
 from tracebench.constants import ALPHABET_JSON, GRAPHS_DIR, SCORING_TARGET_JSON
 from tracebench.score import SCORING_TARGET_SESSION_JSON, load_context, score_corpus, truth_sets
 
-from .arms import arm_slug, arm_spec, parse_cell_key
+from .arms import arm_slug, arm_spec, parse_cell_key, probe_of
 from .constants import (
     CUT_SHIPPED,
     MANIFEST_JSON,
+    MODEL_NONE,
     ORACLE_IN_REGIME,
     PREDICTION_JSON_FMT,
     PREDICTION_LAG_JSON_FMT,
@@ -141,18 +143,36 @@ def run_annotate(args, rec):
                 corpus_dir, read_json(p), grain=grain, context=context
             )["directed"]["recall"]
     inside = len(ranking["directed"]) - score_rank["universe"]["predictions_outside_universe"]
+    probe = disc.get("probe") or probe_of(arm)  # a floor read names no pass; its arm does
     scores = read_scores_npz(
-        run_dir / SCORES_NPZ_FMT.format(probe=disc["probe"], noise=disc["noise"], grain=grain)
+        run_dir / SCORES_NPZ_FMT.format(probe=probe, noise=disc["noise"], grain=grain)
     )
-    pre = read_json(args.pretrain_results)
-    oracle = pre.get("oracle", {})
-    if pre.get("model_sha256") != disc["model_sha256"]:
-        raise ValueError(
-            f"pretrain record binds model {pre.get('model_sha256')} but the read used {disc['model_sha256']}"
-        )
+    model_free = disc["model_sha256"] == MODEL_NONE
+    if model_free:
+        if str(args.pretrain_results) != MODEL_NONE:
+            raise ValueError(
+                "a model-free read (model hash none) takes --pretrain-results none (D-SB-16)"
+            )
+        pre, oracle = {}, {}
+    else:
+        if str(args.pretrain_results) == MODEL_NONE:
+            raise ValueError(
+                f"--pretrain-results none is for model-free reads; this read used model {disc['model_sha256']}"
+            )
+        pre = read_json(args.pretrain_results)
+        oracle = pre.get("oracle", {})
+        if pre.get("model_sha256") != disc["model_sha256"]:
+            raise ValueError(
+                f"pretrain record binds model {pre.get('model_sha256')} but the read used {disc['model_sha256']}"
+            )
     limitation = structural_limitation()
     limitation["truth_bidirected_edges"] = int(score["universe"]["truth_bidirected"])
     counts = disc.get("corrupted_cells", {}).get(path, {})
+    # a floors read carries per-arm facts (the topology arm reads no sequence: 0); a discover read
+    # probes one sample for every arm of its pass
+    arm_facts = (disc.get("facts") or {}).get(arm) or {}
+    n_probed = arm_facts.get("n_sequences", disc["n_probed"])
+    n_short = arm_facts.get("n_skipped_short", disc["n_skipped_short"])
     annotate = {
         "schema": ANNOTATE_SCHEMA,
         "cell": args.cell,
@@ -169,7 +189,7 @@ def run_annotate(args, rec):
         "config_hash": manifest.get("config_hash"),
         "model_sha256": disc["model_sha256"],
         "arm_class": arm_spec(arm)["class"],
-        "probe": disc["probe"],
+        "probe": probe,
         "noise": disc["noise"],
         "probe_amp": disc.get("probe_amp"),
         "frozen": {
@@ -194,8 +214,8 @@ def run_annotate(args, rec):
         "floor": score["floor"],
         "structural_limitation": limitation,
         "coverage": {
-            "n_sequences_probed": disc["n_probed"],
-            "n_skipped_short": disc["n_skipped_short"],
+            "n_sequences_probed": n_probed,
+            "n_skipped_short": n_short,
             "pairs_scored": int(len(ranking["directed"])),
             "pairs_in_universe": int(inside),
             "universe_ordered_pairs": score_rank["universe"]["ordered_pairs"],
@@ -213,7 +233,9 @@ def run_annotate(args, rec):
         "oracle": {
             "eps_hat": oracle.get("eps_hat"),
             "in_regime": (
-                oracle.get("eps_hat") is not None and oracle["eps_hat"] < ORACLE_IN_REGIME
+                None
+                if model_free
+                else (oracle.get("eps_hat") is not None and oracle["eps_hat"] < ORACLE_IN_REGIME)
             ),
             "entropy_order": oracle.get("entropy_order"),
             "val_loss": oracle.get("val_loss"),
@@ -262,7 +284,7 @@ def build_parser():
     p.add_argument(
         "--pretrain-results",
         required=True,
-        help="the pretrain run's results.json (oracle, budget, model hash)",
+        help="the pretrain run's results.json (oracle, budget, model hash); 'none' for a floor read (D-SB-16)",
     )
     p.add_argument(
         "--per-lag-files", required=True, type=int, help="score per-lag predictions for lags 1..K"
