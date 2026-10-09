@@ -61,6 +61,8 @@ Each entry states what it **follows** and what it **deviates from**. Dated
 | D-SB-12 | the shipped memory estimate (`cli.estimate_tensor_bytes`, the logits tensor only) | the harness estimate is twice the shipped one (logits plus the softmax) plus an activation term, refused above the declared cap of `plans/caps.md` (PRD scenario 18); shipped estimate, harness estimate, cap and measured peak are recorded per run. |
 | D-SB-13 | no trainer in the package (the author's research script is toy-scale) | the sibling's clean-room trainer adapted to a Hugging Face `LlamaForCausalLM` built from a `LlamaConfig`, saved per checkpoint in the Hugging Face directory format; the model hash is the sha256 of `model.safetensors`; the oracle score ε̂ is taken against an independent order-2 n-gram entropy floor, never the minimum validation loss (sibling D-CB-7). The frozen model is the checkpoint `--model-choice` names: **`argmin-val`** (the validated step with the smallest validation loss, validated and checkpointed every 250 steps) since the 2026-09-25 addendum of `plans/caps.md`; the 2026-09-24 rule (last checkpoint + a `1.01×` trigger) was withdrawn after the xs calibration run, whose last checkpoint sat at 1.498× the curve minimum with the argmin at the first checkpoint. The oracle is reported at the chosen and at the last checkpoint. |
 | D-SB-14 | the whole split | `--num-sequences` and `--sequence-sample {head, uniform}` per rung, recorded; the Shapley baseline probes its own, smaller sample (`sweep --shapley-sequences` per grain since 2026-09-26 — the same rule on the same split, so a `head` sample is a prefix of the sweep's; `0` = the sweep's sample; `discover` reads name their sample per call); the reachable-recall coverage ceiling is reported per cell (freeze `diagnostics`, `annotate`), not gated — the 2026-09-24 rule (raise the sample below 0.90) was withdrawn on 2026-09-25 after the whole xs validation split gave 0.48 / 0.59. |
+| D-SB-15 | `report` refuses a pair whose `(corpus_id, seed, model_sha256)` differ (PRD scenario 9) | dated 2026-10-09, `plans/floors.md`: a pair with a model-free floor arm (`model_sha256 = "none"`) is compared on `(corpus_id, seed)` only and the pair record says `model_free: true`; a pair of two model-bound cells is unchanged. |
+| D-SB-16 | `scoresweep`, `freeze` and `annotate` bind every cell to one model hash, the pretrain record's | dated 2026-10-09, `plans/floors.md`: floor records carry the literal `model_sha256 = "none"`; `freeze` and `annotate` take `--pretrain-results none` for them and record the oracle, budget and regime fields as absent (`in_regime: null`); a floor freeze is a separate dated file (`…-floors.json`, `family: floor`); any mixture of model-bound and model-free cells in one freeze, one val table or one pretrain binding is refused. `scoresweep` now requires `--floor-taus` (a grid flag may be empty when no arm of its class is in the sweep), so a replica dated before 2026-10-09 is checked with `tfvars_check` at that record's `git_commit`; `report` lists both floor cells in its required set, so a re-run on a rung whose floors have not landed passes a reasons file marking `floor/*/none/frozen/<grain>` "not run". |
 
 Deviations for later stages are numbered here before the run that depends
 on them; the arm plans under `plans/` reference these ids.
@@ -99,6 +101,14 @@ on them; the arm plans under `plans/` reference these ids.
   computed from the landed `score.json` and `annotate.json` with the benchmark's true and false
   positives kept; the frozen τ is not re-selected (`plans/per-sequence-rules.md`, addendum
   2026-10-04).
+- **Floors (`plans/floors.md`, 2026-10-09; `tests/test_floors.py`):** the two model-free arms
+  run on the fixture end to end (`floors --split val` → `scoresweep --floor-taus` → `freeze
+  --pretrain-results none` into a git repository, named `…-floors.json` → `floors --split test`
+  under that freeze → `annotate --pretrain-results none --per-lag-files 0` → `report` with the
+  model-free pair exemption); the topology arm never constructs `Corpus`, the bigram arm opens
+  files under `views/` only, the topology prediction equals the hand-computed callee → caller
+  token pairs of the fixture's call edges, and the freeze refuses a model-free table against a
+  pretrain record (and the reverse) and a mixed table. `pull --tier score` now fetches `topology/`.
 - **Per run:** the executing host's log shows the command exiting with
   status 0 and the output sync completing; `run/*.json` carry every
   scenario-24 field, the replica name and the profile; a registry row lands
