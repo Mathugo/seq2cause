@@ -1,0 +1,104 @@
+{
+ "N": 0,
+ "arms": [
+  "floor/topology",
+  "floor/bigram"
+ ],
+ "c": 0,
+ "cells": {
+  "floor/bigram/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 4004,
+   "n_pairs": 4004,
+   "per_lag_files": 0,
+   "tau": 0.0
+  },
+  "floor/topology/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3725,
+   "n_pairs": 3725,
+   "per_lag_files": 0,
+   "tau": 0.07
+  }
+ },
+ "corpus_id": "s/latent/seed=4",
+ "corrupted_cells": {},
+ "facts": {
+  "floor/bigram": {
+   "n_pairs": 4004,
+   "n_sequences": 20000,
+   "n_skipped_short": 0,
+   "n_tokens": 312
+  },
+  "floor/topology": {
+   "n_alphabet_tokens": 323,
+   "n_op_pairs": 149,
+   "n_pairs": 3725,
+   "n_prior_columns": 59,
+   "n_prior_edges": 149,
+   "n_sequences": 0,
+   "n_skipped_short": 0
+  }
+ },
+ "files": {
+  "floor/bigram": "scores-bigram-none-request.npz",
+  "floor/topology": "scores-topology-none-request.npz"
+ },
+ "freeze": {
+  "committed_at": "2026-10-09T22:11:10-04:00",
+  "path": "freezes/2026-10-10-s-latent-s4-floors.json",
+  "sha": "3ee3fa2b75085625ee9cab86d1f6f35bedf4e573"
+ },
+ "g": 0,
+ "grain": "request",
+ "inputs": {
+  "floor/bigram": [
+   "views/end-request/sequences/split=test"
+  ],
+  "floor/topology": [
+   "topology/prior.json",
+   "graphs/alphabet.json"
+  ]
+ },
+ "max_len": 64,
+ "memory": null,
+ "model_sha256": "none",
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "noise": "none",
+ "ordering": "end",
+ "probe": null,
+ "probe_amp": null,
+ "rung": "s",
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "floors",
+ "staging": {
+  "entry": {
+   "added": "2026-09-26",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/request",
+    "trace/cli-atomic/fixed-kl/shipped/request",
+    "trace/cli-atomic/shipped/frozen/request",
+    "trace/cli-atomic/shipped/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "note": "Job T (test read) under freezes/2026-09-26-xs-latent-s4.json; the `s` discover names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-all-c3-N32",
+   "results_sha256": "0c3146a667455e50a36fd0f224e476fd11b31cc8132827d9dcbabd2c6e5bd2bb",
+   "run": "xs-latent-s4-test-26-09-26",
+   "rung": "xs",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "0c3146a667455e50a36fd0f224e476fd11b31cc8132827d9dcbabd2c6e5bd2bb",
+  "rung": "s",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}

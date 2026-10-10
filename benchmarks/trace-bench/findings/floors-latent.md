@@ -26,10 +26,7 @@ on 2026-10-10; m, l and xl follow (l and xl on CPU hosts, owner-applied).
   request-grain truth, precision the share of its ordered token pairs that are truth edges.
 - **Grid edge (bigram).** A bigram cell frozen at τ = 0 is the cut "every observed adjacent
   pair" (`plans/floors.md` §3; recorded, not refused). xs: seeds 0, 1 and 2 at request.
-- **Sample size (from s).** The bigram floor is sample-bound like the arms: the validation read
-  probes the arms' 10k / 5k head sample and the test read 20k / 10k (`plans/caps.md`, addendum
-  2026-09-27), so from s its test F1 moves against its frozen validation value as a coverage
-  effect, not a generalisation check; xs reads the whole split both times.
+- **Sample size, measured at s.** The bigram floor's test F1 lands above its frozen validation value on every seed and grain: +0.022 … +0.038 at request and +0.037 … +0.052 at session, while its coverage ceiling rises 0.259–0.297 → 0.330–0.387 (request) and 0.302–0.343 → 0.424–0.485 (session) between the 10k / 5k validation sample and the 20k / 10k test sample — the same double-sample coverage effect the arms show (`findings/s-latent.md` … `xl-latent.md`); the arms' test reads probe the same test sample, so the bigram pairs are sample-paired, the topology pairs are not.
 - **Five pairs: low power.** Every paired t-test is on five per-seed differences; a p near 0.05
   is read as a direction, not a verdict (`report`'s own note).
 
@@ -82,3 +79,49 @@ session-grain ranking advantage of 0.02 … 0.04 directed AUROC over it, which t
 alone does not have. The paper's floor sentence for xs therefore reads: the topology floor is
 above every arm by 0.29 … 0.57 F1, the bigram floor is within 0.02 of `trace/core` at both grains
 and above the other reference arms by at most 0.03.
+
+## s (freezes 2026-10-10, local test reads 2026-10-10; validation 10k / 5k, test 20k / 10k head sample)
+
+### Floor cells, five-seed mean ± std (test read, default floor 0.05)
+
+| cell | directed F1 | precision | recall | AUROC (directed) | AP (directed) | reachable F1 | F1 per seed 0–4 |
+|---|---|---|---|---|---|---|---|
+| `floor/topology/none/frozen/request` (sample-free) | 0.839 ± 0.014 | 0.723 | 1.000 | 0.986 | 0.668 | 0.839 | 0.836 / 0.853 / 0.847 / 0.844 / 0.818 |
+| `floor/bigram/none/frozen/request` | 0.306 ± 0.025 | 0.291 | 0.339 | 0.653 | 0.236 | 0.435 | 0.307 / 0.337 / 0.292 / 0.320 / 0.273 |
+| `floor/topology/none/frozen/session` (sample-free) | 0.740 ± 0.015 | 0.723 | 0.757 | 0.872 | 0.530 | 0.839 | 0.735 / 0.753 / 0.746 / 0.750 / 0.716 |
+| `floor/bigram/none/frozen/session` | 0.342 ± 0.014 | 0.328 | 0.363 | 0.702 | 0.247 | 0.462 | 0.347 / 0.356 / 0.324 / 0.351 / 0.329 |
+
+Reference arms and baselines at the frozen cut on the same seeds (directed F1, request / session): `trace/core/shipped/frozen` 0.289 / 0.342; `trace/cli/shipped/frozen` 0.292 / 0.349; `trace/cli-atomic/shipped/frozen` 0.287 / 0.324; `baseline/granger/shipped/frozen` 0.283 / 0.348; `baseline/saliency/none/frozen` 0.268 / 0.277; `baseline/shapley/none/frozen` 0.158 / 0.151.
+
+### Registered pairs (`plans/floors.md` §6; floor − arm, paired per seed, five seeds, paired t-test)
+
+| pair | grain | directed F1 | AUROC (directed) | precision | recall |
+|---|---|---|---|---|---|
+| `floor/topology` − `trace/core/shipped/frozen` | request | +0.550 (p < 0.001) | +0.324 (p < 0.001) | +0.449 (p < 0.001) | +0.692 (p < 0.001) |
+| `floor/topology` − `trace/core/shipped/frozen` | session | +0.398 (p < 0.001) | +0.135 (p < 0.001) | +0.430 (p < 0.001) | +0.346 (p < 0.001) |
+| `floor/topology` − `baseline/granger/shipped/frozen` | request | +0.556 (p < 0.001) | +0.334 (p < 0.001) | +0.476 (p < 0.001) | +0.660 (p < 0.001) |
+| `floor/topology` − `baseline/granger/shipped/frozen` | session | +0.392 (p < 0.001) | +0.141 (p < 0.001) | +0.414 (p < 0.001) | +0.360 (p < 0.001) |
+| `floor/topology` − `baseline/saliency/none/frozen` | request | +0.571 (p < 0.001) | +0.328 (p < 0.001) | +0.504 (p < 0.001) | +0.652 (p < 0.001) |
+| `floor/topology` − `baseline/saliency/none/frozen` | session | +0.463 (p < 0.001) | +0.138 (p < 0.001) | +0.533 (p < 0.001) | +0.246 (p < 0.001) |
+| `floor/bigram` − `trace/core/shipped/frozen` | request | +0.017 (p 0.042) | -0.009 (p 0.017) | +0.017 (p 0.582) | +0.031 (p 0.255) |
+| `floor/bigram` − `trace/core/shipped/frozen` | session | -0.001 (p 0.882) | -0.035 (p 0.002) | +0.034 (p 0.102) | -0.047 (p 0.018) |
+| `floor/bigram` − `baseline/granger/shipped/frozen` | request | +0.023 (p 0.018) | +0.001 (p 0.543) | +0.043 (p 0.093) | -0.001 (p 0.917) |
+| `floor/bigram` − `baseline/granger/shipped/frozen` | session | -0.006 (p 0.205) | -0.030 (p 0.003) | +0.018 (p 0.328) | -0.034 (p 0.054) |
+| `floor/bigram` − `baseline/saliency/none/frozen` | request | +0.038 (p < 0.001) | -0.005 (p 0.177) | +0.072 (p 0.027) | -0.009 (p 0.727) |
+| `floor/bigram` − `baseline/saliency/none/frozen` | session | +0.065 (p < 0.001) | -0.032 (p 0.003) | +0.137 (p < 0.001) | -0.147 (p < 0.001) |
+
+**H-floor-topology — PASS.** `floor/topology` request F1 0.839 ± 0.014 against every learned arm on every seed: the smallest five-seed mean paired difference is +0.547 (vs `trace/cli/shipped/frozen`, min per-seed +0.541, p < 0.001); the range over the 13 learned cells is +0.547 … +0.682, every p < 0.001. Sample-free: the topology arm's validation and test reads coincide except for τ, so this is not a held-out number and the pairs are not sample-paired (`plans/floors.md` §5).
+
+**H-floor-bigram — PASS.** `floor/bigram` − `trace/core/shipped/frozen` directed F1: request +0.017 ± 0.013 (p 0.042, within 0.02 or n.s.); session -0.001 ± 0.010 (p 0.882, within 0.02 or n.s.).
+
+**H-floor-auroc — FAIL.** Session-grain directed AUROC, learned arm − `floor/bigram` (paired): `trace/core/shipped/frozen` +0.035 (p 0.002); `trace/cli/shipped/frozen` +0.035 (p 0.001); `trace/cli-atomic/shipped/frozen` +0.033 (p 0.002); `baseline/granger/shipped/frozen` +0.030 (p 0.003); `baseline/saliency/none/frozen` +0.032 (p 0.003); `baseline/shapley/none/frozen` -0.115 (p < 0.001). Fails by `baseline/shapley/none/frozen` (advantage below 0.02).
+
+
+**Reading.** s repeats xs with tighter seeds: the topology floor sits at 0.84 request / 0.74
+session (the prior's request-grain recall is 1.0 on every seed; its session recall 0.74–0.77 is
+the share of session-target edges that are call edges), 0.55 / 0.40 above `trace/core` and
+0.55 … 0.68 above every learned cell; the bigram floor ties `trace/core` at both grains
+(+0.017 request, −0.001 session) and is above the saliency and Shapley baselines; the learned
+arms' session-AUROC advantage over the bigram floor is 0.030 … 0.035 for every arm but Shapley,
+which at s falls 0.115 below it. The sample-size note above is measured here for the first time:
+the bigram floor gains +0.02 … +0.05 F1 from the validation to the test sample, as the arms do.
