@@ -37,7 +37,11 @@ source of the copied and adapted harness modules (see `NOTICE`).
   the v0.3.0 scorer, every later run through the l seed-0 Job V on the pinned commit; since
   2026-10-01 the pin is `8e91aa2` — the scorer's sparse context, per-call cost independent of the
   universe size, output again byte-identical: the m seed-0 val tables re-scored equal to the
-  landed ones, `plans/caps.md` addendum of that date); `report`
+  landed ones, `plans/caps.md` addendum of that date; since 2026-10-10 the pin is `a3eb104` —
+  tag `v0.3.0-score3` on the benchmark's publication branch `clear-2027`, the `8e91aa2` tree plus
+  the two score-side scorers of the root-cause arms (`score_service`, `score_rca`), `score.py`
+  byte-identical to `8e91aa2` and the output unchanged; every floor cell of `plans/floors.md` and
+  every later landed cell is scored on it); `report`
   refuses a cell that mixes tool versions.
 
 ## Deviations from the paper and from the shipped code (D-SB-n)
