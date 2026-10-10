@@ -1,0 +1,79 @@
+{
+ "N": 0,
+ "arms": [
+  "floor/topology",
+  "floor/bigram"
+ ],
+ "c": 0,
+ "cells": {},
+ "corpus_id": "m/latent/seed=4",
+ "corrupted_cells": {},
+ "facts": {
+  "floor/bigram": {
+   "n_pairs": 10445,
+   "n_sequences": 10000,
+   "n_skipped_short": 228,
+   "n_tokens": 1597
+  },
+  "floor/topology": {
+   "n_alphabet_tokens": 2661,
+   "n_op_pairs": 1425,
+   "n_pairs": 35625,
+   "n_prior_columns": 521,
+   "n_prior_edges": 1425,
+   "n_sequences": 0,
+   "n_skipped_short": 0
+  }
+ },
+ "files": {
+  "floor/bigram": "scores-bigram-none-request.npz",
+  "floor/topology": "scores-topology-none-request.npz"
+ },
+ "freeze": null,
+ "g": 0,
+ "grain": "request",
+ "inputs": {
+  "floor/bigram": [
+   "views/end-request/sequences/split=val"
+  ],
+  "floor/topology": [
+   "topology/prior.json",
+   "graphs/alphabet.json"
+  ]
+ },
+ "max_len": 64,
+ "memory": null,
+ "model_sha256": "none",
+ "n_probed": 10000,
+ "n_sequences": 10000,
+ "n_skipped_short": 228,
+ "noise": "none",
+ "ordering": "end",
+ "probe": null,
+ "probe_amp": null,
+ "rung": "m",
+ "shipped_rule": null,
+ "split": "val",
+ "stage": "floors",
+ "staging": {
+  "entry": {
+   "added": "2026-09-28",
+   "grain": "request",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "n_cells": 60,
+   "note": "Job V (argmin-val backbone, step 8000; 10k / 5k head sample, Shapley 2k / 500); the `m` sweep names this sha256 through --prior-rung-record",
+   "results_sha256": "881155e0438b308ee598eb1a57d7cbfd6d1f450186ab99d018f0d507f0d5fe9c",
+   "run": "s-latent-s4-val-26-09-27",
+   "rung": "s",
+   "seed": 4,
+   "stage": "sweep",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "s",
+  "results_sha256": "881155e0438b308ee598eb1a57d7cbfd6d1f450186ab99d018f0d507f0d5fe9c",
+  "rung": "m",
+  "stage_matched": "sweep"
+ },
+ "status": "ok"
+}
