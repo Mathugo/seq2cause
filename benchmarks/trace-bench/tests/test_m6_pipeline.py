@@ -254,6 +254,7 @@ def world(tmp_path_factory):
                 *GRANGER_TAUS,
                 "--quantiles",
                 *QUANTILES,
+                "--floor-taus",  # no floor table in this sweep: the grid may be empty
                 "--output-folder",
                 str(root / "scoresweep"),
             ]
@@ -822,6 +823,11 @@ def _reasons(tmp_path, results):
     for arm in ("trace/core", "trace/cli", "trace/cli-atomic"):
         for grain in GRAINS:
             key = f"{arm}/shipped/frozen/{grain}"
+            if key not in present:
+                absent[key] = "not read in this test"
+    for arm in ("floor/topology", "floor/bigram"):  # required since plans/floors.md
+        for grain in GRAINS:
+            key = f"{arm}/none/frozen/{grain}"
             if key not in present:
                 absent[key] = "not read in this test"
     for key in present:

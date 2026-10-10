@@ -35,8 +35,6 @@ the memory estimate, throughput and wall clock.
 from __future__ import annotations
 
 import argparse
-import datetime as dt
-import subprocess
 import time
 from pathlib import Path
 
@@ -80,6 +78,7 @@ from .engine import (
     shipped_cut_union,
     triangle,
 )
+from .freezecheck import FreezeRefusal, assert_freeze
 from .log import log
 from .prediction import write_prediction
 from .project import PairAccumulator, sequence_cells, write_scores_npz
@@ -87,10 +86,6 @@ from .record import RunRecord, read_json, write_json
 from .select import per_lag_ranking, ranking, select_edges
 from .staging import require_prior_rung
 from .vocab import Vocab
-
-
-class FreezeRefusal(RuntimeError):
-    pass
 
 
 # --- the shipped rule's knobs (v0.1.9 defaults, passed explicitly) -----------------------------------
@@ -422,76 +417,6 @@ def write_cell_outputs(
     return summary
 
 
-# --- the freeze assertions (scenarios 13, 29) ----------------------------------------------------------------------
-def _git(args, cwd):
-    return subprocess.run(
-        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
-    ).stdout.strip()
-
-
-def freeze_commit(freeze_path):
-    """`(sha, committed_at)` of the commit that added the freeze file; refuses an uncommitted or
-    modified freeze."""
-    path = Path(freeze_path).resolve()
-    if not path.exists():
-        raise FreezeRefusal(f"freeze {path} does not exist")
-    try:
-        top = Path(_git(["rev-parse", "--show-toplevel"], cwd=path.parent))
-    except subprocess.CalledProcessError as e:
-        raise FreezeRefusal(f"freeze {path} is not inside a git repository") from e
-    rel = path.relative_to(top).as_posix()
-    if _git(["status", "--porcelain", "--", rel], cwd=top):
-        raise FreezeRefusal(
-            f"freeze {rel} has uncommitted changes; commit it before the test read (PRD scenario 13)"
-        )
-    lines = _git(["log", "--diff-filter=A", "--format=%H %cI", "--", rel], cwd=top).splitlines()
-    if not lines:
-        raise FreezeRefusal(
-            f"freeze {rel} is not committed; commit it before the test read (PRD scenario 13)"
-        )
-    sha, committed_at = lines[-1].split()  # the commit that first added the file
-    ok = (
-        subprocess.run(["git", "merge-base", "--is-ancestor", sha, "HEAD"], cwd=top).returncode == 0
-    )
-    if not ok:
-        raise FreezeRefusal(f"freeze commit {sha[:8]} is not an ancestor of HEAD (PRD scenario 13)")
-    return sha, committed_at
-
-
-def _iso(s):
-    return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-
-
-def assert_freeze(freeze, freeze_path, cells, c, N, g, model_sha256, corpus_id, started):
-    """The freeze names this run's values exactly and predates it (scenarios 13, 29)."""
-    sha, committed_at = freeze_commit(freeze_path)
-    if not _iso(committed_at) < _iso(started):
-        raise FreezeRefusal(
-            f"the run started at {started} but the freeze was committed at {committed_at} (PRD scenario 13)"
-        )
-    for key, tau in cells.items():
-        cell = freeze.get("cells", {}).get(key)
-        if cell is None:
-            raise FreezeRefusal(f"freeze has no cell {key}")
-        want = {"c": int(c), "N": int(N), "g": int(g)}
-        if tau != "shipped":
-            want["tau"] = float(tau)
-        got = {k: cell.get(k) for k in want}
-        if got != want:
-            raise FreezeRefusal(
-                f"freeze cell {key} = {got} but the command line says {want} (PRD scenario 13)"
-            )
-    if freeze.get("model_sha256") != model_sha256:
-        raise FreezeRefusal(
-            f"freeze binds model {freeze.get('model_sha256')} but the loaded model hashes to {model_sha256}"
-        )
-    if freeze.get("corpus_id") != corpus_id:
-        raise FreezeRefusal(
-            f"freeze is for corpus {freeze.get('corpus_id')!r}, this run reads {corpus_id!r}"
-        )
-    return {"sha": sha, "committed_at": committed_at, "path": str(freeze_path)}
-
-
 # --- the command ------------------------------------------------------------------------------------------------------
 def run_discover(args, rec):
     if args.split == "test" and not args.freeze:
@@ -524,6 +449,7 @@ def run_discover(args, rec):
             model_sha,
             corpus.corpus_id,
             rec.started,
+            args.ordering,
         )
         log({"event": "freeze_ok", **freeze_facts})
     store = SequenceStore.from_corpus(

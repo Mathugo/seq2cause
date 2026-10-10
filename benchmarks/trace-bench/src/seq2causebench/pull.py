@@ -35,6 +35,7 @@ from .constants import (
     MANIFEST_JSON,
     RUNGS,
     SEEDS,
+    TOPOLOGY_DIR,
     VARIANTS,
     VIEWS_DIR,
 )
@@ -43,7 +44,13 @@ from .record import RunRecord, read_json, sha256_file
 
 TIERS = {
     "method": (f"{VIEWS_DIR}/**", MANIFEST_JSON, COMPLETE_MARKER),
-    "score": (f"{VIEWS_DIR}/**", f"{GRAPHS_DIR}/**", MANIFEST_JSON, COMPLETE_MARKER),
+    "score": (
+        f"{VIEWS_DIR}/**",
+        f"{GRAPHS_DIR}/**",
+        f"{TOPOLOGY_DIR}/**",  # the floor/topology arm's prior (plans/floors.md, 2026-10-09)
+        MANIFEST_JSON,
+        COMPLETE_MARKER,
+    ),
 }
 UNFLAGGED = (MANIFEST_JSON, COMPLETE_MARKER)
 

@@ -39,7 +39,18 @@ from scipy import stats as sps
 from tracebench.score import headline
 
 from .arms import cell_key, parse_cell_key
-from .constants import ARM_CORE, GRAINS, REFERENCE_ARMS, RUNGS, SEQSCORE_JSON, VARIANTS
+from .constants import (
+    ARM_CORE,
+    CUT_FROZEN,
+    FLOOR_ARMS,
+    GRAINS,
+    MODEL_NONE,
+    PATH_NONE,
+    REFERENCE_ARMS,
+    RUNGS,
+    SEQSCORE_JSON,
+    VARIANTS,
+)
 from .log import log
 from .record import RunRecord, read_json, write_json
 
@@ -255,7 +266,12 @@ def cell_table(per_seed, key):
             ],
             "note": lim.get("note"),
         }
-    out["in_regime"] = [bool(r["annotate"]["oracle"]["in_regime"]) for r in rows]
+    out["in_regime"] = [  # None for a model-free floor cell (D-SB-16): no oracle, no regime
+        None
+        if r["annotate"]["oracle"].get("in_regime") is None
+        else bool(r["annotate"]["oracle"]["in_regime"])
+        for r in rows
+    ]
     out["empty_prediction"] = [r["annotate"].get("empty_prediction") for r in rows]
     out["confounded_pairs"] = [
         r["annotate"]
@@ -292,6 +308,7 @@ def paired_table(cells, a_triple, b_triple, grain):
             f"pair {ka} vs {kb}: {len(seeds)} shared seed(s); a paired headline needs {MIN_SEEDS} (PRD scenario 3)"
         )
     triples = []
+    model_free = False
     for s in seeds:
         ta = (
             a[s]["annotate"]["corpus_id"],
@@ -303,9 +320,13 @@ def paired_table(cells, a_triple, b_triple, grain):
             int(b[s]["annotate"]["seed"]),
             b[s]["annotate"]["model_sha256"],
         )
-        if ta != tb:
+        # a model-free floor arm (model hash none) shares corpus and seed, never a model (D-SB-15)
+        free = MODEL_NONE in (ta[2], tb[2])
+        model_free = model_free or free
+        if (ta[:2] != tb[:2]) if free else (ta != tb):
             raise ReportRefusal(
-                f"pair {ka} vs {kb} at seed {s}: (corpus_id, seed, model_sha256) differ: {ta} vs {tb} (PRD scenario 9)"
+                f"pair {ka} vs {kb} at seed {s}: (corpus_id, seed, model_sha256) differ: {ta} vs {tb} "
+                f"(PRD scenario 9{'; a model-free pair must share corpus and seed, D-SB-15' if free else ''})"
             )
         triples.append(list(ta))
     diffs = []
@@ -346,6 +367,7 @@ def paired_table(cells, a_triple, b_triple, grain):
         "grain": grain,
         "seeds": seeds,
         "triples": triples,
+        "model_free": model_free,
         "metrics": {m: _headline(diffs, m) for m in METRICS},
         "tests": tests,
         "per_lag_recall": {str(k): _headline(diffs, f"per_lag_recall.{k}") for k in lags},
@@ -394,7 +416,10 @@ def _triple(spec):
 def run_report(args, rec):
     cells = load_cells(args.results_dir, args.rung, args.variant)
     reasons = read_json(args.reasons) if args.reasons else {}
-    required = [(a, "shipped", "frozen") for a in REFERENCE_ARMS]
+    required = [(a, "shipped", "frozen") for a in REFERENCE_ARMS] + [
+        (a, PATH_NONE, CUT_FROZEN)
+        for a in FLOOR_ARMS  # plans/floors.md §6
+    ]
     seen = {parse_cell_key(k)[:3] for k in cells}
     tables, absent = {}, {}
     for key in expected_cells(cells, list(seen | set(required))):
@@ -548,7 +573,7 @@ def render_markdown(report):
         )
     if report["pairs"]:
         lines += [
-            "## paired differences (a − b per seed, five-seed headline and paired t-test; (corpus_id, seed, model_sha256) equal per cell)",
+            "## paired differences (a − b per seed, five-seed headline and paired t-test; (corpus_id, seed, model_sha256) equal per cell — a pair with a model-free floor arm shares corpus and seed only, D-SB-15)",
             "",
         ]
         lines += ["| pair | " + " | ".join(SHOW) + " |", "|---|" + "---|" * len(SHOW)]

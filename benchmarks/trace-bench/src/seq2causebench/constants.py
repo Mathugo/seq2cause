@@ -9,6 +9,7 @@ which a run may report against but never choose.
 """
 
 from tracebench.constants import (  # noqa: F401  (re-exported: one definition across the repositories)
+    ALPHABET_JSON,
     BOS,
     DEFAULT_FLOOR,
     EOS,
@@ -21,7 +22,9 @@ from tracebench.constants import (  # noqa: F401  (re-exported: one definition a
     OUTCOME_NAMES,
     OUTCOME_OK,
     PAD,
+    PRIOR_JSON,
     SPLITS,
+    TOPOLOGY_DIR,
     UNK,
     VARIANT_LATENT,
     VARIANT_TWIN,
@@ -128,13 +131,28 @@ CUT_SHIPPED = (
 )
 CUTS = (CUT_FROZEN, CUT_SHIPPED)
 
-# --- arms (PRD Arm Register, amended 2026-09-24) ------------------------------------------------
+# --- arms (PRD Arm Register, amended 2026-09-24; the floor family of plans/floors.md, 2026-10-09) ---
 ARM_CORE = "trace/core"
 ARM_CLI = "trace/cli"
 ARM_CLI_ATOMIC = "trace/cli-atomic"
 ARM_GRANGER = "baseline/granger"
 ARM_SALIENCY = "baseline/saliency"
 ARM_SHAPLEY = "baseline/shapley"
+ARM_FLOOR_TOPOLOGY = (
+    "floor/topology"  # the shipped deployment topology, callee -> caller, score p_call
+)
+ARM_FLOOR_BIGRAM = (
+    "floor/bigram"  # the views only: share of sequences in which b immediately follows a
+)
+# a floor's score table names its own pass word where a probe would stand (plans/floors.md)
+PROBE_FLOOR_TOPOLOGY = "topology"
+PROBE_FLOOR_BIGRAM = "bigram"
+FLOOR_PROBES = (PROBE_FLOOR_TOPOLOGY, PROBE_FLOOR_BIGRAM)
+NOISE_NONE = "none"  # a floor has no noise draw
+MODEL_NONE = "none"  # the model hash of every model-free record (RUN.md D-SB-16)
+FLOOR_STAGE = "floors"
+FAMILY_MODEL = "model"  # a freeze of model-bound cells (the arms)
+FAMILY_FLOOR = "floor"  # a freeze of floor cells only (`…-floors.json`)
 ARMS = {
     ARM_CORE: {
         "class": "reference",
@@ -178,9 +196,28 @@ ARMS = {
         "paths": (PATH_NONE,),
         "cuts": (CUT_FROZEN,),
     },
+    ARM_FLOOR_TOPOLOGY: {
+        "class": "floor",
+        "probe": PROBE_FLOOR_TOPOLOGY,
+        "statistic": "p_call",
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_FLOOR_BIGRAM: {
+        "class": "floor",
+        "probe": PROBE_FLOOR_BIGRAM,
+        "statistic": "bigram_share",
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
 }
 REFERENCE_ARMS = (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)
 BASELINE_ARMS = (ARM_GRANGER, ARM_SALIENCY, ARM_SHAPLEY)
+FLOOR_ARMS = (ARM_FLOOR_TOPOLOGY, ARM_FLOOR_BIGRAM)  # model-free; no (c, N, g); plans/floors.md
+FLOOR_ARM_OF_PROBE = {
+    PROBE_FLOOR_TOPOLOGY: ARM_FLOOR_TOPOLOGY,
+    PROBE_FLOOR_BIGRAM: ARM_FLOOR_BIGRAM,
+}
 AGGREGATIONS = ("max",)  # the type-level score of a pair is the max over occurrences;
 # mean and count are recorded columns, never sub-arms
 SEQUENCE_SAMPLES = ("head", "uniform")  # --sequence-sample

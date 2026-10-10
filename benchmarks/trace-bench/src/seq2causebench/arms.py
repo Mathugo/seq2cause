@@ -10,7 +10,7 @@ inside a scores table is `<arm slug>__<path>`.
 
 from __future__ import annotations
 
-from .constants import ARMS, CUTS, GRAINS, PATH_SPEC, PATHS
+from .constants import ARMS, CUTS, FLOOR_ARM_OF_PROBE, FLOOR_PROBES, GRAINS, PATH_SPEC, PATHS
 
 
 def arm_spec(name):
@@ -72,6 +72,20 @@ def parse_cell_key(key):
     return arm, path, cut, grain
 
 
+def is_floor(name):
+    """A model-free floor arm (plans/floors.md): no backbone, no probe pass, no (c, N, g)."""
+    return arm_spec(name)["class"] == "floor"
+
+
+def floor_columns(probe):
+    """`{arm: {path: column}}` for the floor arm whose score table this pass word names
+    (the floors' counterpart of `engine.probe_columns`)."""
+    if probe not in FLOOR_ARM_OF_PROBE:
+        raise ValueError(f"a floor probe must be one of {FLOOR_PROBES}, got {probe!r}")
+    arm = FLOOR_ARM_OF_PROBE[probe]
+    return {arm: {p: column_of(arm, p) for p in arm_spec(arm)["paths"]}}
+
+
 def allowed_cells(arm, grains=GRAINS):
     """Every valid cell key of an arm."""
     spec = arm_spec(arm)
@@ -89,4 +103,6 @@ __all__ = [
     "cell_key",
     "parse_cell_key",
     "allowed_cells",
+    "is_floor",
+    "floor_columns",
 ]

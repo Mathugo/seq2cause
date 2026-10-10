@@ -26,7 +26,11 @@ without it and the same number is taken from the counts the scorer returned for 
 `freezes/<date>-<rung>-<variant>-s<k>.json` with the corpus identity, the benchmark tool version
 and config hash, the model hash, the package commit at freeze time, the val tables' sha256, the
 grids and the chosen values per cell; refuses to overwrite. The record is then committed (one
-freeze commit per rung) and `discover --split test` asserts on that commit.
+freeze commit per rung) and `discover --split test` asserts on that commit. Since 2026-10-09
+(`plans/floors.md`, D-SB-16) the document also carries `family` (`model`, or `floor` for a table of
+floor cells only — frozen apart, in `…-s<k>-floors.json`, with `--pretrain-results none` and the
+model hash `none`), `ordering` (the view the tables were swept on; `-start` in the name when it
+is `start`) and `floor_taus`; the schema stays `freeze@3`, the keys are additive.
 """
 
 from __future__ import annotations
@@ -35,11 +39,15 @@ import argparse
 import datetime as dt
 from pathlib import Path
 
-from .arms import arm_spec, cell_key
+from .arms import arm_spec, cell_key, parse_cell_key
 from .constants import (
     ARM_GRANGER,
     CUT_FROZEN,
     CUT_SHIPPED,
+    FAMILY_FLOOR,
+    FAMILY_MODEL,
+    FLOOR_ARMS,
+    MODEL_NONE,
     REFERENCE_ARMS,
     RUNGS,
     SEEDS,
@@ -69,6 +77,8 @@ def grid_of(arm, tau_source):
         return "quantiles"
     if tau_source != "grid":
         return None
+    if arm in FLOOR_ARMS:
+        return "floor_taus"
     if arm in REFERENCE_ARMS:
         return "taus"
     if arm == ARM_GRANGER:
@@ -169,8 +179,26 @@ def select_cells(table):
     return chosen
 
 
-def freeze_name(date, rung, variant, seed):
-    return f"{date}-{rung}-{variant}-s{seed}.json"
+def family_of(cells):
+    """`floor` when every frozen cell is a floor arm's, `model` when none is; a mixture is refused
+    (floor cells are frozen apart from model-bound cells, D-SB-16)."""
+    arms = {parse_cell_key(k)[0] for k in cells}
+    floors = {a for a in arms if a in FLOOR_ARMS}
+    if floors and floors != arms:
+        raise FreezeRefusal(
+            f"floor cells {sorted(floors)} cannot be frozen together with model-bound cells "
+            f"{sorted(arms - floors)} (D-SB-16)"
+        )
+    return FAMILY_FLOOR if floors else FAMILY_MODEL
+
+
+def freeze_name(date, rung, variant, seed, family, ordering):
+    name = f"{date}-{rung}-{variant}-s{seed}"
+    if family == FAMILY_FLOOR:
+        name += "-floors"
+    if ordering == "start":
+        name += "-start"
+    return name + ".json"
 
 
 def merge_tables(tables):
@@ -185,6 +213,8 @@ def merge_tables(tables):
             "taus",
             "granger_taus",
             "quantiles",
+            "floor_taus",
+            "ordering",
         ):
             if t.get(k) != first.get(k):
                 raise FreezeRefusal(f"val tables disagree on {k}: {first.get(k)!r} vs {t.get(k)!r}")
@@ -202,30 +232,53 @@ def merge_tables(tables):
     }
 
 
+PRETRAIN_FACTS = (
+    "model_choice",
+    "oracle",
+    "oracle_last",
+    "val_loss_final",
+    "val_loss_min",
+    "val_final_over_min",
+)
+
+
 def pretrain_facts(pretrain_results, table):
     """The pretrain record's model identity and soundness facts; refuses tables bound to another
-    model (the tables must have been swept on the model the record names)."""
+    model (the tables must have been swept on the model the record names). A model-free table
+    (model hash `none`) takes the literal `none` in place of a record and gets no facts; a real
+    record against such a table, or `none` against a model-bound table, is refused (D-SB-16)."""
+    if str(pretrain_results) == MODEL_NONE:
+        if table["model_sha256"] != MODEL_NONE:
+            raise FreezeRefusal(
+                f"--pretrain-results none is for model-free tables; these bind model "
+                f"{table['model_sha256']} (D-SB-16)"
+            )
+        return dict.fromkeys(PRETRAIN_FACTS)
+    if table["model_sha256"] == MODEL_NONE:
+        raise FreezeRefusal(
+            "a model-free val table (model hash none) takes --pretrain-results none (D-SB-16)"
+        )
     pre = read_json(pretrain_results)
     if table["model_sha256"] != pre.get("model_sha256"):
         raise FreezeRefusal(
             f"the val tables bind model {table['model_sha256']} but the pretrain record's model is "
             f"{pre.get('model_sha256')}"
         )
-    return {
-        "model_choice": pre.get("model_choice"),
-        "oracle": pre.get("oracle"),
-        "oracle_last": pre.get("oracle_last"),
-        "val_loss_final": pre.get("val_loss_final"),
-        "val_loss_min": pre.get("val_loss_min"),
-        "val_final_over_min": pre.get("val_final_over_min"),
-    }
+    return {k: pre.get(k) for k in PRETRAIN_FACTS}
 
 
 def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
     paths = [Path(p) for p in val_table_paths]
     cells = select_cells(table)
+    family = family_of(cells)
+    if (family == FAMILY_FLOOR) != (table.get("model_sha256") == MODEL_NONE):
+        raise FreezeRefusal(
+            f"a {family} table carries model hash {table.get('model_sha256')!r} (D-SB-16)"
+        )
     return {
         "schema": FREEZE_SCHEMA,
+        "family": family,
+        "ordering": table.get("ordering"),
         "rung": rung,
         "variant": variant,
         "seed": int(seed),
@@ -239,6 +292,7 @@ def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
         "taus": table.get("taus"),
         "granger_taus": table.get("granger_taus"),
         "quantiles": table.get("quantiles"),
+        "floor_taus": table.get("floor_taus"),
         "grains": table.get("grains"),
         "cells": cells,
         "diagnostics": {
@@ -258,7 +312,9 @@ def run_freeze(args, rec):
     pretrain = pretrain_facts(args.pretrain_results, table)
     freeze = build_freeze(table, args.val_tables, pretrain, args.rung, args.variant, args.seed)
     date = dt.datetime.now(dt.UTC).date().isoformat()
-    path = Path(args.freezes_dir) / freeze_name(date, args.rung, args.variant, args.seed)
+    path = Path(args.freezes_dir) / freeze_name(
+        date, args.rung, args.variant, args.seed, freeze["family"], freeze.get("ordering")
+    )
     if path.exists():
         raise FreezeExists(
             f"{path} exists; a freeze is never overwritten (a re-freeze is a new dated file with its reason recorded)"
@@ -270,6 +326,7 @@ def run_freeze(args, rec):
             "event": "freeze_written",
             "path": str(path),
             "n_cells": len(freeze["cells"]),
+            "family": freeze["family"],
             "model_step": (pretrain.get("model_choice") or {}).get("step"),
             "at_grid_edge": freeze["diagnostics"]["at_grid_edge"],
         }
@@ -297,7 +354,8 @@ def build_parser():
     p.add_argument(
         "--pretrain-results",
         required=True,
-        help="the pretrain run's results.json (model hash, model_choice, oracle: recorded, never gated)",
+        help="the pretrain run's results.json (model hash, model_choice, oracle: recorded, never gated); "
+        "'none' for a table of floor cells (D-SB-16)",
     )
     p.add_argument("--rung", required=True, choices=RUNGS)
     p.add_argument("--variant", required=True, choices=VARIANTS)

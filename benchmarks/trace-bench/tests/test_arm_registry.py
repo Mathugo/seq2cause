@@ -1,5 +1,5 @@
-"""PRD Arm Register (amended 2026-09-24) and scenario 39: the registry, its
-paths and cuts, and the four-slot cell key."""
+"""PRD Arm Register (amended 2026-09-24; the floor family of plans/floors.md, 2026-10-09) and
+scenario 39: the registry, its paths and cuts, and the four-slot cell key."""
 
 import pytest
 
@@ -16,6 +16,9 @@ from seq2causebench.constants import (
     BASELINE_ARMS,
     CUT_FROZEN,
     CUT_SHIPPED,
+    FLOOR_ARM_OF_PROBE,
+    FLOOR_ARMS,
+    FLOOR_PROBES,
     GRAINS,
     PATH_FIXED,
     PATH_FIXED_KL,
@@ -27,12 +30,30 @@ from seq2causebench.constants import (
 )
 
 
-def test_six_arms_three_reference_three_baseline():
-    assert set(ARMS) == set(REFERENCE_ARMS) | set(BASELINE_ARMS)
-    assert len(ARMS) == 6
+def test_eight_arms_three_reference_three_baseline_two_floor():
+    assert set(ARMS) == set(REFERENCE_ARMS) | set(BASELINE_ARMS) | set(FLOOR_ARMS)
+    assert len(ARMS) == 8 and len(FLOOR_ARMS) == 2
     assert all(ARMS[a]["class"] == "reference" for a in REFERENCE_ARMS)
     assert all(ARMS[a]["class"] == "baseline" for a in BASELINE_ARMS)
+    assert all(ARMS[a]["class"] == "floor" for a in FLOOR_ARMS)
     assert AGGREGATIONS == ("max",)
+
+
+def test_floor_arms_are_model_free_single_cut():
+    for arm in FLOOR_ARMS:
+        assert ARMS[arm]["paths"] == (PATH_NONE,) and ARMS[arm]["cuts"] == (CUT_FROZEN,)
+        assert arms.is_floor(arm) and ARMS[arm]["probe"] in FLOOR_PROBES
+        assert len(arms.allowed_cells(arm)) == len(GRAINS)
+    assert not arms.is_floor(ARM_CORE) and not arms.is_floor(ARM_SALIENCY)
+    assert {FLOOR_ARM_OF_PROBE[p] for p in FLOOR_PROBES} == set(FLOOR_ARMS)
+    assert arms.floor_columns("topology") == {"floor/topology": {"none": "floor-topology__none"}}
+    assert arms.cell_key("floor/bigram", PATH_NONE, CUT_FROZEN, "session") == (
+        "floor/bigram/none/frozen/session"
+    )
+    with pytest.raises(ValueError):
+        arms.floor_columns("core")  # a model probe is not a floor table
+    with pytest.raises(ValueError):
+        arms.cell_key("floor/topology", PATH_SHIPPED, CUT_FROZEN, "request")
 
 
 def test_reference_arms_run_every_path_and_cli_arms_both_cuts():

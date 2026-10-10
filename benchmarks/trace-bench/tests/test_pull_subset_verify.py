@@ -54,7 +54,7 @@ def test_method_tier_pulls_views_and_verifies(tmp_path):
     assert (d / "manifest.json").exists() and (d / "COMPLETE").exists()
     assert (
         not (d / "graphs").exists()
-        and not (d / "topology").exists()
+        and not (d / "topology").exists()  # the prior is score-tier only (plans/floors.md)
         and not (d / "labels").exists()
     )
     assert res["n_files_checked"] > 4 and res["manifest"]["tool_version"] == "0.3.0"
@@ -73,6 +73,9 @@ def test_score_tier_adds_the_graphs(tmp_path):
         download=_fake_download(fixture_corpus("twin", 1)),
     )
     assert res["problems"] == []
+    d = Path(res["corpus_dir"])
+    assert (d / "topology" / "prior.json").exists()  # the floor/topology arm's input (2026-10-09)
+    assert not (d / "labels").exists()
     d = Path(res["corpus_dir"])
     assert (d / "graphs" / "scoring-target.json").exists() and (
         d / "graphs" / "alphabet.json"

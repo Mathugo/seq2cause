@@ -27,6 +27,7 @@ METHOD_MODULES = (
     "prediction",
     "discover",
     "sweep",
+    "floors",  # the bigram floor's read; the topology floor's reader is the score-side floorprior
 )
 FORBIDDEN = re.compile(
     r"graphs/|labels/|oracle/|topology/|manifest\.json|alphabet\.json|scoring-target|instantiation\.json"

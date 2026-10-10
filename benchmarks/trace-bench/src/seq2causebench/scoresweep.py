@@ -19,7 +19,9 @@ probed sample). The scorer counts every listed pair of that ranking as present, 
 is also the cut "every pair the probe scored": its directed precision / recall / F1 are recorded
 as `every_scored_pair`, the reference line a swept τ is read against (`plans/reference-arms.md`,
 addendum 2026-10-05). The cli probes' shipped-cut unions are scored as their own rows
-(`cut = shipped`, no τ).
+(`cut = shipped`, no τ). A floor's table (`floors`; `plans/floors.md`) is swept on `--floor-taus`
+and mapped through its own token list; its model hash is the literal `none` (D-SB-16). A grid flag
+may be empty only when no arm of its class is in the sweep.
 """
 
 from __future__ import annotations
@@ -31,13 +33,15 @@ import numpy as np
 from tracebench.constants import ALPHABET_JSON, GRAPHS_DIR, SCORING_TARGET_JSON
 from tracebench.score import SCORING_TARGET_SESSION_JSON, ScoreContext, score_at_floor
 
-from .arms import cell_key
+from .arms import cell_key, floor_columns
 from .constants import (
     ARM_GRANGER,
     ARM_SALIENCY,
     ARM_SHAPLEY,
     CUT_FROZEN,
     CUT_SHIPPED,
+    FLOOR_ARMS,
+    FLOOR_PROBES,
     GRAINS,
     MANIFEST_JSON,
     REFERENCE_ARMS,
@@ -46,7 +50,7 @@ from .constants import (
 from .corpus import Corpus
 from .engine import probe_columns
 from .log import log
-from .prediction import prediction_document
+from .prediction import TokenTable, prediction_document
 from .project import read_scores_npz
 from .record import RunRecord, read_json, write_json
 from .select import ranking, select_edges
@@ -126,13 +130,23 @@ def score_ranking(scores, col, vocab, target, alphabet, floor, context):
     }
 
 
+def _grid(arm, values, flag):
+    if not values:
+        raise ValueError(f"{arm}: {flag} is empty but the arm is in this sweep")
+    return [(float(t), "grid") for t in values]
+
+
 def taus_for(arm, scores, col, args):
     """`[(tau, source)]`: the absolute grid of the arm's class, or quantiles of the pooled scores."""
     if arm in REFERENCE_ARMS:
-        return [(float(t), "grid") for t in args.taus]
+        return _grid(arm, args.taus, "--taus")
     if arm == ARM_GRANGER:
-        return [(float(t), "grid") for t in args.granger_taus]
+        return _grid(arm, args.granger_taus, "--granger-taus")
+    if arm in FLOOR_ARMS:
+        return _grid(arm, args.floor_taus, "--floor-taus")
     if arm in (ARM_SALIENCY, ARM_SHAPLEY):
+        if not args.quantiles:
+            raise ValueError(f"{arm}: --quantiles is empty but the arm is in this sweep")
         vals = np.asarray(scores[f"max_{col}"], dtype=np.float64)
         vals = vals[np.isfinite(vals)]
         if len(vals) == 0:
@@ -147,7 +161,7 @@ def taus_for(arm, scores, col, args):
 def run_scoresweep(args, rec):
     facts = manifest_facts(args.corpus)
     rows, coverage = [], {}
-    model_sha = corpus_id = None
+    model_sha = corpus_id = sweep_ordering = None
     for grain in args.grains:
         target, alphabet, context = load_target(args.corpus, grain)
         floor = float(target["default_floor"])
@@ -165,12 +179,22 @@ def run_scoresweep(args, rec):
                 raise ValueError(
                     f"{f.name}: mixed models in one sweep ({scores['model_sha256']} vs {model_sha})"
                 )
-            vocab = Vocab.from_model_vocab(Corpus(args.corpus, ordering, grain).vocab_json())
+            sweep_ordering = sweep_ordering or ordering
+            if ordering != sweep_ordering:
+                raise ValueError(
+                    f"{f.name}: mixed view orderings in one sweep ({ordering} vs {sweep_ordering})"
+                )
+            if probe in FLOOR_PROBES:
+                vocab = TokenTable(scores["tokens"])  # the floor's own token list
+                columns = floor_columns(probe)
+            else:
+                vocab = Vocab.from_model_vocab(Corpus(args.corpus, ordering, grain).vocab_json())
+                columns = probe_columns(probe, noise)
             shipped = None
             sc_path = f.with_name(f.name.replace("scores-", "shippedcut-").replace(".npz", ".json"))
             if sc_path.exists():
                 shipped = read_json(sc_path)
-            for arm, paths in probe_columns(probe, noise).items():
+            for arm, paths in columns.items():
                 for path, col in paths.items():
                     key = cell_key(arm, path, CUT_FROZEN, grain)
                     coverage[f"{key}/c{c}/N{N}"] = score_ranking(
@@ -235,10 +259,12 @@ def run_scoresweep(args, rec):
         "model_sha256": model_sha,
         **facts,
         "sweep_dir_name": Path(args.sweep_dir).name,
+        "ordering": sweep_ordering,
         "grains": list(args.grains),
         "taus": [float(t) for t in args.taus],
         "granger_taus": [float(t) for t in args.granger_taus],
         "quantiles": [float(q) for q in args.quantiles],
+        "floor_taus": [float(t) for t in args.floor_taus],
         "n_rows": len(rows),
         "coverage": coverage,
         "cells": rows,
@@ -263,21 +289,32 @@ def build_parser():
     p.add_argument("--sweep-dir", required=True, help="the sweep run's output folder")
     p.add_argument("--grains", required=True, nargs="+", choices=GRAINS)
     p.add_argument(
-        "--taus", required=True, nargs="+", type=float, help="the τ grid of the reference arms"
+        "--taus",
+        required=True,
+        nargs="*",
+        type=float,
+        help="the τ grid of the reference arms (may be empty when none is in the sweep)",
     )
     p.add_argument(
         "--granger-taus",
         required=True,
-        nargs="+",
+        nargs="*",
         type=float,
         help="the τ grid of the Granger baseline",
     )
     p.add_argument(
         "--quantiles",
         required=True,
-        nargs="+",
+        nargs="*",
         type=float,
         help="label-free quantiles for saliency / Shapley",
+    )
+    p.add_argument(
+        "--floor-taus",
+        required=True,
+        nargs="*",
+        type=float,
+        help="the probability grid of the floor arms (plans/floors.md §3)",
     )
     p.add_argument("--output-folder", required=True)
     return p
