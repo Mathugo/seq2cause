@@ -1,0 +1,104 @@
+{
+ "N": 0,
+ "arms": [
+  "floor/topology",
+  "floor/bigram"
+ ],
+ "c": 0,
+ "cells": {
+  "floor/bigram/none/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 20784,
+   "n_pairs": 26813,
+   "per_lag_files": 0,
+   "tau": 0.005
+  },
+  "floor/topology/none/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 33025,
+   "n_pairs": 33025,
+   "per_lag_files": 0,
+   "tau": 0.05
+  }
+ },
+ "corpus_id": "m/latent/seed=3",
+ "corrupted_cells": {},
+ "facts": {
+  "floor/bigram": {
+   "n_pairs": 26813,
+   "n_sequences": 10000,
+   "n_skipped_short": 31,
+   "n_tokens": 2157
+  },
+  "floor/topology": {
+   "n_alphabet_tokens": 2661,
+   "n_op_pairs": 1321,
+   "n_pairs": 33025,
+   "n_prior_columns": 521,
+   "n_prior_edges": 1321,
+   "n_sequences": 0,
+   "n_skipped_short": 0
+  }
+ },
+ "files": {
+  "floor/bigram": "scores-bigram-none-session.npz",
+  "floor/topology": "scores-topology-none-session.npz"
+ },
+ "freeze": {
+  "committed_at": "2026-10-09T22:19:01-04:00",
+  "path": "freezes/2026-10-10-m-latent-s3-floors.json",
+  "sha": "f99264d5502ddcbc29000080317e14c7411cbb0f"
+ },
+ "g": 0,
+ "grain": "session",
+ "inputs": {
+  "floor/bigram": [
+   "views/end-session/sequences/split=test"
+  ],
+  "floor/topology": [
+   "topology/prior.json",
+   "graphs/alphabet.json"
+  ]
+ },
+ "max_len": 64,
+ "memory": null,
+ "model_sha256": "none",
+ "n_probed": 10000,
+ "n_sequences": 10000,
+ "n_skipped_short": 31,
+ "noise": "none",
+ "ordering": "end",
+ "probe": null,
+ "probe_amp": null,
+ "rung": "m",
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "floors",
+ "staging": {
+  "entry": {
+   "added": "2026-09-28",
+   "cells": [
+    "trace/cli-atomic/fixed-kl/frozen/session",
+    "trace/cli-atomic/fixed-kl/shipped/session",
+    "trace/cli-atomic/shipped/frozen/session",
+    "trace/cli-atomic/shipped/shipped/session"
+   ],
+   "grain": "session",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "note": "Job T (test read) under freezes/2026-09-28-s-latent-s3.json; the `m` discover names this sha256 through --prior-rung-record",
+   "read": "discover-session-cli-atomic-all-c4-N32",
+   "results_sha256": "0602d59bdc79c69b1dee50e0379c7ef9936948ff1b82f792d3b8c7fd27123ce9",
+   "run": "s-latent-s3-test-26-09-28",
+   "rung": "s",
+   "seed": 3,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "s",
+  "results_sha256": "0602d59bdc79c69b1dee50e0379c7ef9936948ff1b82f792d3b8c7fd27123ce9",
+  "rung": "m",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}
