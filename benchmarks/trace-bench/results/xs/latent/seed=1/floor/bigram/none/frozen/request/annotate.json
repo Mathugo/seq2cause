@@ -1,0 +1,394 @@
+{
+ "arm": "floor/bigram",
+ "arm_class": "floor",
+ "budget": null,
+ "causal_validity": {
+  "reason": "target is an ADMG with bidirected edges; SID/AID are defined over DAGs; see the observable twin",
+  "value": null
+ },
+ "cell": "floor/bigram/none/frozen/request",
+ "config_hash": "1656f43b4b6e5deb690a31574bd98e55",
+ "confounded_pairs": {
+  "directed_predictions_on_bidirected_truth_pairs": 87,
+  "truth_bidirected_pairs": 107
+ },
+ "corpus_id": "xs/latent/seed=1",
+ "corrupted_cells": {},
+ "coverage": {
+  "n_pairs_in_table": 476,
+  "n_sequences_probed": 1304,
+  "n_skipped_short": 29,
+  "pairs_in_universe": 419,
+  "pairs_scored": 476,
+  "reachable_recall_ceiling": 0.3089770354906054,
+  "truth_directed": 479,
+  "universe_fraction_cooccurring": 0.10475,
+  "universe_ordered_pairs": 4000
+ },
+ "cut": "frozen",
+ "empty_prediction": null,
+ "files": {
+  "discover_run": "test-request",
+  "score": "score.json",
+  "score_ranking": "score-ranking.json"
+ },
+ "floor": 0.05,
+ "frozen": {
+  "N": 0,
+  "c": 0,
+  "freeze": {
+   "committed_at": "2026-10-09T21:59:17-04:00",
+   "path": "freezes/2026-10-10-xs-latent-s1-floors.json",
+   "sha": "541cb077e113350abf79640111a48eb9ca9ad7f2"
+  },
+  "g": 0,
+  "tau": 0.0
+ },
+ "grain": "request",
+ "memory": null,
+ "model_sha256": "none",
+ "noise": "none",
+ "oracle": {
+  "entropy_order": null,
+  "eps_hat": null,
+  "in_regime": null,
+  "val_loss": null
+ },
+ "path": "none",
+ "per_lag_recall": {},
+ "probe": "bigram",
+ "probe_amp": null,
+ "rung": "xs",
+ "schema": "seq2causebench/annotate@1",
+ "score": {
+  "auroc": {
+   "bidirected": 0.5,
+   "directed": 0.6201241699816016,
+   "skeleton": 0.6255342902711324
+  },
+  "average_precision": {
+   "bidirected": 0.03770338663711066,
+   "directed": 0.27134507866461294,
+   "skeleton": 0.454140340176499
+  },
+  "baselines": {
+   "shd_empty_bidirected": 107,
+   "shd_empty_directed": 479,
+   "shd_empty_skeleton": 570,
+   "shd_topk_directed": 602
+  },
+  "bidirected": {
+   "f1": 0.0,
+   "fn": 107,
+   "fp": 0,
+   "precision": 0.0,
+   "recall": 0.0,
+   "shd": 107,
+   "tp": 0
+  },
+  "causal_validity": {
+   "reason": "target is an ADMG with bidirected edges; SID/AID are defined over DAGs; see the observable twin",
+   "value": null
+  },
+  "directed": {
+   "f1": 0.32962138084632514,
+   "fn": 331,
+   "fp": 271,
+   "precision": 0.3532219570405728,
+   "recall": 0.3089770354906054,
+   "shd": 602,
+   "tp": 148
+  },
+  "floor": 0.05,
+  "grain": "request",
+  "orientation": {
+   "accuracy": 0.7956204379562044,
+   "accuracy_compelled": 0.7941176470588235,
+   "n": 137,
+   "n_compelled": 136,
+   "truth_directed_acyclic": true
+  },
+  "shd_mixed": 615,
+  "skeleton": {
+   "f1": 0.42950108459869857,
+   "fn": 372,
+   "fp": 154,
+   "precision": 0.5625,
+   "recall": 0.3473684210526316,
+   "shd": 526,
+   "tp": 198
+  },
+  "sweep": [
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 342,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 342,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.35440414507772017,
+     "fn": 375,
+     "fp": 248,
+     "precision": 0.4081145584725537,
+     "recall": 0.3131868131868132,
+     "shd": 623,
+     "tp": 171
+    },
+    "floor": 0.01,
+    "orientation": {
+     "accuracy": 0.8559322033898306,
+     "accuracy_compelled": 0.8559322033898306,
+     "n": 118,
+     "n_compelled": 118,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 751,
+    "skeleton": {
+     "f1": 0.48802129547471157,
+     "fn": 500,
+     "fp": 77,
+     "precision": 0.78125,
+     "recall": 0.3548387096774194,
+     "shd": 577,
+     "tp": 275
+    }
+   },
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 238,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 238,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.34364994663820697,
+     "fn": 357,
+     "fp": 258,
+     "precision": 0.38424821002386633,
+     "recall": 0.3108108108108108,
+     "shd": 615,
+     "tp": 161
+    },
+    "floor": 0.02,
+    "orientation": {
+     "accuracy": 0.8372093023255814,
+     "accuracy_compelled": 0.8372093023255814,
+     "n": 129,
+     "n_compelled": 129,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 685,
+    "skeleton": {
+     "f1": 0.4764649375600385,
+     "fn": 441,
+     "fp": 104,
+     "precision": 0.7045454545454546,
+     "recall": 0.3599419448476052,
+     "shd": 545,
+     "tp": 248
+    }
+   },
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 107,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 107,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.32962138084632514,
+     "fn": 331,
+     "fp": 271,
+     "precision": 0.3532219570405728,
+     "recall": 0.3089770354906054,
+     "shd": 602,
+     "tp": 148
+    },
+    "floor": 0.05,
+    "orientation": {
+     "accuracy": 0.7956204379562044,
+     "accuracy_compelled": 0.7941176470588235,
+     "n": 137,
+     "n_compelled": 136,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 615,
+    "skeleton": {
+     "f1": 0.42950108459869857,
+     "fn": 372,
+     "fp": 154,
+     "precision": 0.5625,
+     "recall": 0.3473684210526316,
+     "shd": 526,
+     "tp": 198
+    }
+   },
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 87,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 87,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.3121951219512195,
+     "fn": 273,
+     "fp": 291,
+     "precision": 0.3054892601431981,
+     "recall": 0.3192019950124688,
+     "shd": 564,
+     "tp": 128
+    },
+    "floor": 0.1,
+    "orientation": {
+     "accuracy": 0.7890625,
+     "accuracy_compelled": 0.7890625,
+     "n": 128,
+     "n_compelled": 128,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 564,
+    "skeleton": {
+     "f1": 0.40909090909090906,
+     "fn": 313,
+     "fp": 181,
+     "precision": 0.48579545454545453,
+     "recall": 0.35330578512396693,
+     "shd": 494,
+     "tp": 171
+    }
+   },
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 36,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 36,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.26749611197511663,
+     "fn": 138,
+     "fp": 333,
+     "precision": 0.2052505966587112,
+     "recall": 0.38392857142857145,
+     "shd": 471,
+     "tp": 86
+    },
+    "floor": 0.2,
+    "orientation": {
+     "accuracy": 0.7159090909090909,
+     "accuracy_compelled": 0.7142857142857143,
+     "n": 88,
+     "n_compelled": 84,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 438,
+    "skeleton": {
+     "f1": 0.3627450980392157,
+     "fn": 149,
+     "fp": 241,
+     "precision": 0.3153409090909091,
+     "recall": 0.4269230769230769,
+     "shd": 390,
+     "tp": 111
+    }
+   },
+   {
+    "bidirected": {
+     "f1": 0.0,
+     "fn": 36,
+     "fp": 0,
+     "precision": 0.0,
+     "recall": 0.0,
+     "shd": 36,
+     "tp": 0
+    },
+    "directed": {
+     "f1": 0.11740890688259109,
+     "fn": 46,
+     "fp": 390,
+     "precision": 0.06921241050119331,
+     "recall": 0.38666666666666666,
+     "shd": 436,
+     "tp": 29
+    },
+    "floor": 0.5,
+    "orientation": {
+     "accuracy": 0.7241379310344828,
+     "accuracy_compelled": 0.6363636363636364,
+     "n": 29,
+     "n_compelled": 22,
+     "truth_directed_acyclic": true
+    },
+    "shd_mixed": 390,
+    "skeleton": {
+     "f1": 0.224622030237581,
+     "fn": 59,
+     "fp": 300,
+     "precision": 0.14772727272727273,
+     "recall": 0.46846846846846846,
+     "shd": 359,
+     "tp": 52
+    }
+   }
+  ],
+  "universe": {
+   "ordered_pairs": 4000,
+   "predictions_outside_universe": 57,
+   "truth_bidirected": 107,
+   "truth_directed": 479,
+   "unordered_pairs": 2000
+  },
+  "variant": "latent"
+ },
+ "score_ranking": {
+  "auroc": {
+   "bidirected": 0.5,
+   "directed": 0.6201241699816016,
+   "skeleton": 0.6255342902711324
+  },
+  "average_precision": {
+   "bidirected": 0.03770338663711066,
+   "directed": 0.27134507866461294,
+   "skeleton": 0.454140340176499
+  }
+ },
+ "seed": 1,
+ "shipped_cut": null,
+ "split": "test",
+ "structural_limitation": {
+  "assumption": "causal_sufficiency",
+  "note": "no arm here can emit a bidirected edge (temporal precedence and no hidden confounders are assumptions of the method); its bidirected recall on a latent target is zero by construction",
+  "truth_bidirected_edges": 107
+ },
+ "tool_version": "0.3.0",
+ "unreachable_tokens": {
+  "alphabet_tokens": 82,
+  "unreachable": 6,
+  "unreachable_tokens": [
+   "7:4xx",
+   "9:4xx",
+   "10:4xx",
+   "11:4xx",
+   "12:4xx",
+   "19:4xx"
+  ]
+ },
+ "variant": "latent"
+}
