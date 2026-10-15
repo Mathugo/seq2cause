@@ -1,0 +1,188 @@
+# Adapted from alex-chadyuk/trace-cmi-bench@f54776a (MIT) -- see NOTICE
+"""Structural constants: names, the arm registry and the values the plans pin.
+
+Nothing here is a tunable. Every algorithm knob is a required command-line flag whose value
+rides the run record (`run/arguments.json`); the values below are data semantics (file names,
+the export's shape, the arm registry with each arm's declared inputs and code pins) or numbers
+the pre-registered plans fix (`plans/rca-arms.md`, `plans/controls.md`), which a run may report
+against but never choose.
+"""
+
+from tracebench.constants import (  # noqa: F401  (re-exported: one definition across the repositories)
+    CASES_JSON,
+    COMPLETE_MARKER,
+    CONFIG_YAML,
+    GRAPHS_DIR,
+    INSTANTIATION_JSON,
+    KIND_CLIENT,
+    KIND_NAMES,
+    LABELS_DIR,
+    MANIFEST_JSON,
+    RAW_DIR,
+    TOPOLOGY_DIR,
+)
+
+TOOL_NAME = "trace-bench-rca"
+SIBLING = "alex-chadyuk/trace-cmi-bench@f54776a"  # the ultimate source of every copied or adapted module (NOTICE)
+HARNESS = "benchmarks/trace-bench (seq2cause-trace-bench) at trace-bench-harness 14edb93c"  # the directory they were copied from
+
+# --- the benchmark this directory scores --------------------------------------------------
+DATASET_REPO = "chadyuk/trace-bench"  # dataset host id (public)
+BENCHMARK_TAG = "v0.3.0"  # the release tag whose corpora the paper scores
+BENCHMARK_TOOL_VERSION = "0.3.0"  # manifest.tool_version every scored corpus must carry
+RUNGS = ("xs", "s", "m")  # the registered rungs of the root-cause arms (plans/rca-arms.md §1)
+SEEDS = (0, 1, 2, 3, 4)
+VARIANT = "latent"  # the only variant the root-cause arms run on
+
+# --- the export's shape (tracebench.export_rca writes it; mirrored here so the method side never imports the exporter) ---
+CASE_DIR_FMT = "case-{k:02d}"
+CASE_DIR_GLOB = "case-*"
+DATA_CSV = "data.csv"
+WINDOW_JSON = "window.json"
+SERVICES_JSON = "services.json"
+CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the ONLY files a method may open
+WINDOW_KEYS = ("inject_time", "end_time")  # the two label fields a method receives, UNIX seconds
+TIME_COLUMN = "time"
+METRICS = ("count", "error", "latency-50", "latency-95")  # per service, log-derived from the access lines
+METRIC_SEP = (
+    "_"  # `<service>_<metric>`: the standard suite's column shape; the service is the part before the first `_`
+)
+BIN_WIDTH_S = {
+    "xs": 30,
+    "s": 15,
+    "m": 60,
+}  # the registered rule's values (plans/rca-arms.md §3); equal to the exporter's table
+MIN_PRE_BINS = 4  # RobustScorer's minimum pre-fault length
+MIN_POST_BINS = 5  # the rule's fault-resolution bound
+
+# --- run record (one directory per run) --------------------------------------------------
+RUN_DIR = "run"
+ARGUMENTS_JSON = "arguments.json"
+RESULTS_JSON = "results.json"
+RUN_META_JSON = "run_meta.json"
+ARTIFACTS_JSON = "artifacts.json"
+ARTIFACTS_SCHEMA = "tracebenchrca/artifacts@1"
+LOG_JSONL = "log.jsonl"
+
+# --- layout --------------------------------------------------------------------------------
+RESULTS_DIR = "results"
+TABLES_DIR = "tables"
+PLANS_DIR = "plans"
+FINDINGS_DIR = "findings"
+EXPORTS_DIR = "exports"  # local, git-ignored: one export root per corpus
+# the run ledger is SHARED with the reference harness beside this directory (one freeze tag covers both;
+# publication plan question 5 — the owner confirms the sharing; a separate ledger is one constant away)
+STAGING_LEDGER = "../trace-bench/plans/staging-ledger.json"
+STAGING_LEDGER_SCHEMA = "seq2causebench/staging-ledger@1"
+SMALLEST_RUNG_TOKEN = "smallest-rung"  # --prior-rung-record at the smallest rung
+
+# --- arm classes (publication plan §3; plans/rca-arms.md §1) -------------------------------------
+CLASS_DISCOVERY = "discovery"  # reads the exported series only, no fault window: learns a structure
+CLASS_ROOT_CAUSE = "root-cause"  # reads the exported series and the fault window
+CLASS_FLOOR_CONTROL = "floor-control"  # declared inputs, no learning (plans/controls.md)
+CLASSES = (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
+
+# --- declared inputs: what a stage of an arm may read ------------------------------------------
+INPUT_SERIES = "series"  # <case>/data.csv
+INPUT_WINDOW = "window"  # <case>/window.json
+INPUT_SERVICES = "services"  # <case>/services.json
+INPUT_TOPOLOGY = "topology"  # score side only: instantiation.json's call graph coarsened to services (never through a case directory)
+INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
+
+# --- axes a result is scored on (tracebench.score_rca, tracebench.score_service) -----------------
+AXIS_RANKING = "ranking"
+AXIS_GRAPH = "graph"
+AXES = (AXIS_RANKING, AXIS_GRAPH)
+
+# --- code pins (registered in plans/rca-arms.md with the two outreach mails of 2026-10-14) -------
+BARO_REPO = "phamquiluan/baro"
+BARO_COMMIT = "e35f4ec1095e5cac891d52de9ad18a5b32a37ec8"
+RCAEVAL_REPO = "phamquiluan/RCAEval"
+RCAEVAL_COMMIT = "259ea4167160256a74ad30004aa3d96a998c846e"
+CAUSALRCA_REPO = "AXinx/CausalRCA_code"
+CAUSALRCA_COMMIT = "21f4eb0d8139aa5046402f15e66fd56b65fd3844"
+
+# --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
+ARM_BARO = "rca/baro"
+ARM_BARO_BOCPD = "rca/baro-bocpd"
+ARM_CAUSALRCA = "rca/causalrca"
+ARM_CONTROL_RANDOM = "control/random"
+ARM_CONTROL_RULE = "control/rule"
+ARM_FLOOR_TOPOLOGY = "floor/topology"
+ARMS = {
+    ARM_BARO: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": BARO_REPO,
+            "commit": BARO_COMMIT,
+            "runner": RCAEVAL_REPO,
+            "runner_commit": RCAEVAL_COMMIT,
+            "entry": "RCAEval/e2e/baro.py::baro (RobustScorer at the labelled injection time; no BOCPD)",
+        },
+        "licence": "MIT",
+    },
+    ARM_BARO_BOCPD: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_SERVICES),  # the detector locates the change point: no injection time
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": BARO_REPO,
+            "commit": BARO_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "baro.anomaly_detection.bocpd -> baro.root_cause_analysis.robust_scorer(anomalies=...)",
+        },
+        "licence": "MIT",
+    },
+    ARM_CAUSALRCA: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING, AXIS_GRAPH),
+        "code": {
+            "repo": CAUSALRCA_REPO,
+            "commit": CAUSALRCA_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "the coarse-grained (service-level) configuration: DAG-GNN on the post-injection latency window, "
+            "reversed absolute weights, PageRank; 10 runs averaged",
+        },
+        "licence": "author repository, no licence file; authors contacted 2026-10-14",
+    },
+    ARM_CONTROL_RANDOM: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (INPUT_SERVICES,),
+        "axes": (AXIS_RANKING,),
+        "code": None,  # analytic: AC@k = min(k, n) / n over the n deployed services (tracebench.score_rca.random_expectation)
+        "licence": None,
+    },
+    ARM_CONTROL_RULE: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": None,  # the three-rule alert counter of plans/controls.md (registration text proposed; owner confirms)
+        "licence": None,
+    },
+    ARM_FLOOR_TOPOLOGY: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (INPUT_TOPOLOGY,),
+        "axes": (AXIS_GRAPH,),
+        "code": None,  # tracebench.score_service --prediction topology: the deployment topology coarsened to services
+        "licence": None,
+    },
+}
+ROOT_CAUSE_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_ROOT_CAUSE)
+CONTROL_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_FLOOR_CONTROL)
+DISCOVERY_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_DISCOVERY)  # none registered yet
+GRAPH_ARMS = tuple(a for a, s in ARMS.items() if AXIS_GRAPH in s["axes"])
+
+# --- per-arm result files (one directory per arm per corpus) ----------------------------------------
+RANKING_JSON = "ranking.json"  # {"cases": {"<case_id>": ["<service>", ...]}} — tracebench.score_rca's prediction shape
+GRAPH_JSON = "graph.json"  # tracebench.score_service's prediction shape
+SCORE_RCA_JSON = "score-rca.json"
+SCORE_SERVICE_JSON = "score-service.json"
+
+# --- registered scoring values (docs/scorers-service-rca.md in the benchmark; plans/rca-arms.md §5) ----
+BOOTSTRAP_B = 2000
+BOOTSTRAP_SEED = 0
