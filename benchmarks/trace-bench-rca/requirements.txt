@@ -1,0 +1,12 @@
+# Runtime deps of the root-cause harness. The benchmark package is pinned to the publication
+# branch's score-side commit (one tool version per report cell); the methods under test are
+# installed from their pinned commits as extras (`pip install -e ".[baro,rcaeval]"`), never
+# vendored, so every record's `pip freeze` names the exact revision that ran
+# (plans/rca-arms.md §2). CausalRCA is a script repository without a package; its pinned
+# clone is named by the run record, not installed.
+numpy>=2.0,<3
+pyarrow>=25.0,<26
+pandas>=2.2
+scikit-learn>=1.4
+huggingface_hub>=0.30
+trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@a3eb104ed0dc7d5934da2b4c80e136dbedb23018
