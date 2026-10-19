@@ -215,3 +215,14 @@ the paper's appendix.
 ## Addenda
 
 (none)
+
+## Addenda
+
+### 2026-10-19 — D-TBR-1 pin moved (owner merged trace-bench PR #12)
+
+- **§7 D-TBR-1.** The owner merged `export-rca-26-10-15` into `clear-2027` on 2026-10-19 (merge
+  commit `ace384b4`). `pyproject.toml` and `requirements.txt` now pin `ace384b4` in place of
+  `a3eb104`; the pinned tree differs from `a3eb104` only by `tracebench.export_rca` and its
+  tests (`score.py`, `score_rca`, `score_service` unchanged), so no landed cell moves. Whether
+  `ace384b4` receives a score-side tag is the owner's call (publication plan Q10 family); the
+  directory pins the commit either way. Nothing in `benchmarks/trace-bench/` changes.
