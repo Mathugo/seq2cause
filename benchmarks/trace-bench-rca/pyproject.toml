@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trace-bench-rca"
+version = "0.1.0"
+description = "Benchmark harness: published root-cause methods and their controls scored on the trace-bench corpora through the benchmark's own scorers"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0,<3",
+    "pyarrow>=25.0,<26",
+    "pandas>=2.2",
+    "scikit-learn>=1.4",
+    "huggingface_hub>=0.30",
+    # the benchmark: the publication branch's score-side commit. The reference harness beside this
+    # directory pins a3eb104 (tag v0.3.0-score3); this directory needs the commit that carries
+    # `tracebench.export_rca` (RUN.md D-TBR-1) and moves to it when the owner merges it.
+    "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@a3eb104ed0dc7d5934da2b4c80e136dbedb23018",
+]
+
+[project.optional-dependencies]
+# the methods under test, pinned by commit (plans/rca-arms.md §2); installed into the env the run records name
+baro = ["fse-baro @ git+https://github.com/phamquiluan/baro@e35f4ec1095e5cac891d52de9ad18a5b32a37ec8"]
+rcaeval = ["RCAEval @ git+https://github.com/phamquiluan/RCAEval@259ea4167160256a74ad30004aa3d96a998c846e"]
+dev = ["pytest>=8", "ruff"]
+
+[tool.setuptools]
+packages = ["tracebenchrca"]
+package-dir = { "" = "src" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
