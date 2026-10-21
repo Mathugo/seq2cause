@@ -135,6 +135,90 @@ def score_sequence(matrix, truth, edges):
     return out
 
 
+def aggregate_read(stored_seq, stored_ids, truth, matrix_of, edges_of):
+    """The §4 aggregation over the stored sequences of one read: `matrix_of(s, ids)` gives a
+    sequence's window matrix, `edges_of(matrix, candidates)` its edge set. Shared by `seqscore`
+    (an arm's stored matrices) and `floorseq` (a floor broadcast onto the same read)."""
+    per_seq, pooled = (
+        [],
+        {"tp": 0, "fp": 0, "fn": 0, "stp": 0, "sfp": 0, "sfn": 0, "atp": 0, "afp": 0, "afn": 0},
+    )
+    y_all, s_all, y_adj_all = [], [], []
+    n_short = n_unscoreable = n_scoreable = 0
+    n_truth = n_cand = 0
+    lag_hits, lag_tot = {}, {}
+    n_links_lost = 0
+    for s, ids in zip(stored_seq, stored_ids, strict=True):
+        t = truth[s]
+        matrix = matrix_of(s, ids)
+        n_links_lost += t["n_links_lost"]
+        if not t["candidates"]:
+            n_short += 1
+            continue
+        edges = edges_of(matrix, t["candidates"])
+        r = score_sequence(matrix, t, edges)
+        for k in pooled:
+            pooled[k] += r["counts"][k]
+        n_truth += r["n_truth_directed"]
+        n_cand += r["n_candidates"]
+        for _j, _q, sc, yd, ya in r["pairs"]:
+            y_all.append(yd)
+            s_all.append(sc)
+            y_adj_all.append(ya)
+        for lag, hit in r["lags"].items():
+            lag_tot[lag] = lag_tot.get(lag, 0) + 1
+            lag_hits[lag] = lag_hits.get(lag, 0) + int(hit)
+        if r["scoreable"]:
+            n_scoreable += 1
+            per_seq.append(r)
+        else:
+            n_unscoreable += 1
+    n_seq = len(stored_seq)
+    y_all = np.asarray(y_all, dtype=np.int64)
+    s_all = np.asarray(s_all, dtype=np.float64)
+    y_adj_all = np.asarray(y_adj_all, dtype=np.int64)
+    return {
+        "n_sequences": n_seq,
+        "n_skipped_short": n_short,
+        "n_unscoreable": n_unscoreable,
+        "n_scoreable": n_scoreable,
+        "scoreable_fraction": (n_scoreable / n_seq) if n_seq else None,
+        "n_links_lost": n_links_lost,
+        "per_sequence": {
+            "directed": {
+                k: _summary([r["directed"][k] for r in per_seq])
+                for k in ("precision", "recall", "f1")
+            },
+            "skeleton": {
+                k: _summary([r["skeleton"][k] for r in per_seq])
+                for k in ("precision", "recall", "f1")
+            },
+            "ancestor_directed": {
+                k: _summary([r["ancestor_directed"][k] for r in per_seq])
+                for k in ("precision", "recall", "f1")
+            },
+            "auroc": _summary([r["auroc"] for r in per_seq]),
+            "ap": _summary([r["ap"] for r in per_seq]),
+            "auroc_skeleton": _summary([r["auroc_skeleton"] for r in per_seq]),
+            "predict_all_mean": _summary([r["predict_all"] for r in per_seq])["mean"],
+        },
+        "pooled": {
+            "directed": prf(pooled["tp"], pooled["fp"], pooled["fn"]),
+            "skeleton": prf(pooled["stp"], pooled["sfp"], pooled["sfn"]),
+            "ancestor_directed": prf(pooled["atp"], pooled["afp"], pooled["afn"]),
+            "auroc": auroc(y_all, s_all) if len(y_all) and 0 < y_all.sum() < len(y_all) else None,
+            "ap": average_precision(y_all, s_all) if len(y_all) and y_all.sum() > 0 else None,
+            "auroc_skeleton": auroc(y_adj_all, s_all)
+            if len(y_adj_all) and 0 < y_adj_all.sum() < len(y_adj_all)
+            else None,
+            "n_candidates": int(n_cand),
+            "n_truth_directed": int(n_truth),
+        },
+        "predict_all": {"pooled": _predict_all(n_truth, n_cand)},
+        "per_lag_recall": {str(lag): (lag_hits[lag] / lag_tot[lag]) for lag in sorted(lag_tot)},
+    }
+
+
 def run_seqscore(args, rec):
     run_dir = Path(args.run_dir)
     disc = read_json(run_dir / RUN_DIR / RESULTS_JSON)
@@ -185,53 +269,27 @@ def run_seqscore(args, rec):
         c,
         int(args.max_lag),
     )
-    per_seq, pooled = (
-        [],
-        {"tp": 0, "fp": 0, "fn": 0, "stp": 0, "sfp": 0, "sfn": 0, "atp": 0, "afp": 0, "afn": 0},
-    )
-    y_all, s_all, y_adj_all = [], [], []
-    n_short = n_unscoreable = n_scoreable = 0
-    n_truth = n_cand = 0
-    lag_hits, lag_tot = {}, {}
-    n_links_lost = 0
-    for s, ids in zip(stored_seq, stored_ids, strict=True):
+
+    def matrix_of(s, ids):
         m_rows = table["seq"] == s
-        lc = len(ids) - c
-        matrix = from_triangle(lc, table["j"][m_rows], table["q"][m_rows], table[col][m_rows])
-        t = truth[s]
-        n_links_lost += t["n_links_lost"]
-        if not t["candidates"]:
-            n_short += 1
-            continue
-        edges = edge_set(
+        return from_triangle(
+            len(ids) - c, table["j"][m_rows], table["q"][m_rows], table[col][m_rows]
+        )
+
+    agg = aggregate_read(
+        stored_seq,
+        stored_ids,
+        truth,
+        matrix_of,
+        lambda matrix, cands: edge_set(
             matrix,
-            t["candidates"],
+            cands,
             cut,
             summary.get("tau"),
             summary.get("tau_by_lag"),
             disc.get("shipped_rule"),
-        )
-        r = score_sequence(matrix, t, edges)
-        for k in pooled:
-            pooled[k] += r["counts"][k]
-        n_truth += r["n_truth_directed"]
-        n_cand += r["n_candidates"]
-        for _j, _q, sc, yd, ya in r["pairs"]:
-            y_all.append(yd)
-            s_all.append(sc)
-            y_adj_all.append(ya)
-        for lag, hit in r["lags"].items():
-            lag_tot[lag] = lag_tot.get(lag, 0) + 1
-            lag_hits[lag] = lag_hits.get(lag, 0) + int(hit)
-        if r["scoreable"]:
-            n_scoreable += 1
-            per_seq.append(r)
-        else:
-            n_unscoreable += 1
-    n_seq = len(stored_seq)
-    y_all = np.asarray(y_all, dtype=np.int64)
-    s_all = np.asarray(s_all, dtype=np.float64)
-    y_adj_all = np.asarray(y_adj_all, dtype=np.int64)
+        ),
+    )
     result = {
         "schema": SEQSCORE_SCHEMA,
         "axis": "per-sequence",
@@ -250,54 +308,17 @@ def run_seqscore(args, rec):
         "max_lag": int(args.max_lag),
         "tau": summary.get("tau"),
         "tau_by_lag": summary.get("tau_by_lag"),
-        "n_sequences": n_seq,
         "n_sequences_split": disc.get("n_sequences"),
         "n_skipped_short_by_read": disc.get("n_skipped_short"),
         "n_stored_by_read": disc.get("n_stored"),
-        "n_skipped_short": n_short,
-        "n_unscoreable": n_unscoreable,
-        "n_scoreable": n_scoreable,
-        "scoreable_fraction": (n_scoreable / n_seq) if n_seq else None,
-        "n_links_lost": n_links_lost,
-        "per_sequence": {
-            "directed": {
-                k: _summary([r["directed"][k] for r in per_seq])
-                for k in ("precision", "recall", "f1")
-            },
-            "skeleton": {
-                k: _summary([r["skeleton"][k] for r in per_seq])
-                for k in ("precision", "recall", "f1")
-            },
-            "ancestor_directed": {
-                k: _summary([r["ancestor_directed"][k] for r in per_seq])
-                for k in ("precision", "recall", "f1")
-            },
-            "auroc": _summary([r["auroc"] for r in per_seq]),
-            "ap": _summary([r["ap"] for r in per_seq]),
-            "auroc_skeleton": _summary([r["auroc_skeleton"] for r in per_seq]),
-            "predict_all_mean": _summary([r["predict_all"] for r in per_seq])["mean"],
-        },
-        "pooled": {
-            "directed": prf(pooled["tp"], pooled["fp"], pooled["fn"]),
-            "skeleton": prf(pooled["stp"], pooled["sfp"], pooled["sfn"]),
-            "ancestor_directed": prf(pooled["atp"], pooled["afp"], pooled["afn"]),
-            "auroc": auroc(y_all, s_all) if len(y_all) and 0 < y_all.sum() < len(y_all) else None,
-            "ap": average_precision(y_all, s_all) if len(y_all) and y_all.sum() > 0 else None,
-            "auroc_skeleton": auroc(y_adj_all, s_all)
-            if len(y_adj_all) and 0 < y_adj_all.sum() < len(y_adj_all)
-            else None,
-            "n_candidates": int(n_cand),
-            "n_truth_directed": int(n_truth),
-        },
-        "predict_all": {"pooled": _predict_all(n_truth, n_cand)},
-        "per_lag_recall": {str(lag): (lag_hits[lag] / lag_tot[lag]) for lag in sorted(lag_tot)},
+        **agg,
     }
     write_json(rec.out_dir / SEQSCORE_JSON, result)
     log(
         {
             "event": "seqscore_done",
             "cell": args.cell,
-            "n_scoreable": n_scoreable,
+            "n_scoreable": agg["n_scoreable"],
             "scoreable_fraction": result["scoreable_fraction"],
             "pooled_f1": result["pooled"]["directed"]["f1"],
             "predict_all": result["predict_all"]["pooled"],
@@ -306,7 +327,7 @@ def run_seqscore(args, rec):
     return {
         "seqscore": SEQSCORE_JSON,
         "cell": args.cell,
-        "n_scoreable": n_scoreable,
+        "n_scoreable": agg["n_scoreable"],
         "scoreable_fraction": result["scoreable_fraction"],
         "pooled_directed_f1": result["pooled"]["directed"]["f1"],
     }
