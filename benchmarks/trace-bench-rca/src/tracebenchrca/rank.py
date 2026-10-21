@@ -31,6 +31,8 @@ import argparse
 import importlib
 from pathlib import Path
 
+import numpy as np
+
 from .arms import check_input, code_of
 from .cases import collapse_to_services, list_cases, read_services, read_table, read_window
 from .constants import (
@@ -101,7 +103,19 @@ def rank_baro(case_dir):
 
 def rank_baro_bocpd(case_dir):
     df, n_filled, services = _table(ARM_BARO_BOCPD, case_dir)
-    cps = [int(i) for i in _bocpd()(df)]
+    try:
+        cps = [int(i) for i in _bocpd()(df)]
+    except np.linalg.LinAlgError as e:
+        # the detector's multivariate-t predictive calls scipy's eigh (default driver dsyevr), which can fail on
+        # the shape matrix's clusters of repeated eigenvalues (addendum 2026-10-21): a counted miss, no fallback
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "detector raised LinAlgError",
+            "detector_error": f"{type(e).__name__}: {e}",
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
     if not cps:
         return {
             "n_filled": n_filled,

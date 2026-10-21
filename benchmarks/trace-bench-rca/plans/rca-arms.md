@@ -285,3 +285,18 @@ chosen on it") and before any read of any other corpus.
   change point at row 39 of 40); that dry run is discarded and every read is re-run from the
   committed code. This bullet changes no rule — the empty output was already passed through and
   scored as a miss — and adds only the count.
+- **`rca/baro-bocpd`, the detector raises `LinAlgError` (new; the third no-ranking case of the full
+  pipeline).** `MultivariateT.pdf` (`baro/_bocpd.py:101`) calls `scipy.stats.multivariate_t.pdf`,
+  whose `_PSD` runs `scipy.linalg.eigh` with its default driver (`dsyevr`). At m (≈ 156 selected
+  latency / error columns) the predictive's shape matrix is finite and positive definite (smallest
+  eigenvalue exactly 1 / (df − 1)) but carries large clusters of identical eigenvalues, on which
+  `dsyevr` returns its internal-error code and scipy raises `LinAlgError: Internal Error.`. The
+  same matrix passes with the `evd`, `ev` and `evx` drivers and `numpy.linalg.eigh`, and fails
+  identically with the conda-forge OpenBLAS build of scipy 1.18.1 and the pip wheel (Apple
+  Accelerate), so it is not one machine's library. **Registered: a case on which the pinned
+  detector raises `numpy.linalg.LinAlgError` is counted and scored as a miss with its own reason
+  ("detector raised LinAlgError"); no other exception is caught; the pinned code is not patched
+  (choosing another driver would modify it) and nothing falls back to the injection time.**
+  Disclosure: found in the uncommitted dry run at m seed 0 (3 of 5 cases), after the xs and s rungs
+  had been read in that dry run; every read is re-run from the committed code. Whether to tell the
+  method's author is the owner's call.

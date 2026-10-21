@@ -234,3 +234,25 @@ def test_an_empty_ranking_from_the_pinned_scorer_is_passed_through_and_counted(t
     assert read_json(out / rank_mod.POSITIONAL_JSON)["cases"] == {"case-00": [], "case-01": []}
     res = read_json(out / RUN_DIR / RESULTS_JSON)
     assert res["n_empty_rankings"] == 2 and res["misses_by_reason"] == {}
+
+
+def test_a_detector_linalg_failure_is_a_counted_miss_and_nothing_else_is_caught(tmp_path, monkeypatch):
+    import numpy as np
+
+    rec, _ = _export_record(tmp_path)
+
+    def detector(data):
+        raise np.linalg.LinAlgError("Internal Error.")
+
+    monkeypatch.setattr(rank_mod, "_bocpd", lambda: detector)
+    out = tmp_path / "bocpd/rank"
+    assert _rank("rca/baro-bocpd", rec, out) == 0
+    res = read_json(out / RUN_DIR / RESULTS_JSON)
+    assert res["misses_by_reason"] == {"detector raised LinAlgError": 2}
+
+    def other(data):
+        raise ValueError("not a linear-algebra failure")
+
+    monkeypatch.setattr(rank_mod, "_bocpd", lambda: other)
+    with pytest.raises(ValueError):
+        _rank("rca/baro-bocpd", rec, tmp_path / "bocpd2/rank")
