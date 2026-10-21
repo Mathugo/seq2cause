@@ -165,3 +165,30 @@ axes are read, and four derived columns.
   `report@2`); every previously landed value of the four tables is unchanged, the per-sequence
   documents are byte-equal in content, and the pre-registered pairs now carry the paired test on
   the reachable columns too. Cross-rung reading: `findings/rca-reading-latent.md`.
+
+### 2026-10-21 — a model-free input path for the floors (before any per-sequence floor run)
+
+Registered with `plans/floors.md`'s addendum of the same date (the floors' per-sequence read).
+
+- **Input path.** `seq2causebench.floorseq` scores a floor on this axis without a model and
+  without a `discover` run of its own. It takes (a) a **landed arm read** — the `run/` records
+  (`results.json`, `arguments.json`) of a `discover --split test` read and the arm's landed
+  `seqscore.json` for one cell — and (b) the floor's **landed test read** (`test-read/floors-
+  <grain>/run/`). It re-derives the read's stored sequences from the recorded selection exactly as
+  `discover` chose them (the split's sequence store under `--num-sequences`, `--sequence-sample`,
+  `--seed`, `--max-len`; every sequence with fewer than two window positions after `c` skipped;
+  the first `--cells-sequences` kept, all when 0), asserts the recorded `n_sequences`,
+  `n_skipped_short` and `n_stored`, and — where the read's `sequences-<grain>.json` is present —
+  the identical list of trace ids and lengths. The truth is induced by `seqtruth.truth_for_read`
+  unchanged; the candidate set is therefore the arm's (§3); the matrix is the floor's broadcast
+  (`plans/floors.md` addendum 2026-10-21) and the frozen cut its frozen τ. Aggregation (§4) and the
+  output fields (§5) are `seqscore`'s, through one shared function; the record adds `row`
+  (`broadcast` | `adjacent`), `reference_cell`, the reference read's directory name and the floor
+  read's freeze binding, and carries `model_sha256 = "none"`.
+- **Identity with the arm row.** `n_sequences`, `n_scoreable`, `n_skipped_short`,
+  `n_links_lost`, the pooled `n_candidates` and `n_truth_directed`, and `predict_all.pooled`
+  must equal the arm's landed `seqscore.json`; any difference refuses.
+- **The model binding exemption** is RUN.md **D-SB-17**: `seqscore` binds a cell to a `discover`
+  run and its `model_sha256`; a floor row binds to the floor's freeze (through its test read) and
+  to the arm read it is broadcast onto, and carries the literal `none` (as D-SB-16 for
+  `scoresweep`, `freeze` and `annotate`).
