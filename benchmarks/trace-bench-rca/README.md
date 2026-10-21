@@ -36,7 +36,7 @@ was read) and writes one case directory per injected fault in the standard suite
 |---|---|---|
 | B1 | the exporter in the benchmark repository (`tracebench.export_rca`, branch `clear-2027`) | built 2026-10-14; PR open, owner merges; this directory's benchmark pin moves to the merge commit (D-TBR-1) |
 | B3 | this scaffold: packaging, constants and arm registry (three classes, six arms), records, `pull --tier rca`, the case door, the `export` stage, artifacts, staging, hygiene / no-defaults / notice gates, `plans/rca-arms.md`, `plans/controls.md`, fixtures and tests | built 2026-10-14 |
-| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | next; needs the `trace-bench-rca` env with the `baro` extra and the owner's answers to Q5 and Q8 |
+| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | **landed 2026-10-21** for both BARO rows and `control/random` (`findings/rca-latent.md`, `tables/rca-latent/`); `control/rule` waits on Q8 |
 | B5 | `rca/causalrca`: adapter, graph-axis threshold sweep → freeze → test read; ranking and service-graph axes | after B4; Q7, Q16, Q17 open |
 | B6 | the service-level graph table: CausalRCA beside `floor/topology` | after B5 |
 | B8 | `findings/rca-latent.md`: hypotheses scored, deviation notes, the outreach record | at the freeze |

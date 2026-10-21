@@ -84,4 +84,10 @@ under `plans/` reference these ids.
 
 | date | run | rung | seeds | arm(s) | record | notes |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | no run yet (the scaffold predates the first run) |
+| 2026-10-21 | `rca-xs-s{0..4}-26-10-21` pull + export | xs | 0–4 | — | `results/xs/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 30 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-s-s{0..4}-26-10-21` pull + export | s | 0–4 | — | `results/s/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 15 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-m-s{0..4}-26-10-21` pull + export | m | 0–4 | — | `results/m/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 60 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-xs-s{0..4}-26-10-21` rank + score | xs | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/xs/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); both rows seconds per corpus |
+| 2026-10-21 | `rca-s-s{0..4}-26-10-21` rank + score | s | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/s/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); full pipeline ≈ 2 min per case |
+| 2026-10-21 | `rca-m-s{0..4}-26-10-21` rank + score | m | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/m/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); full pipeline: 7 detector LinAlgError misses (addendum 2026-10-21) |
+| 2026-10-21 | report | xs, s, m | 0–4 | `rca/baro`, `rca/baro-bocpd` | `tables/rca-latent/` | pooled per rung and across rungs (B = 2000, seed 0); hypotheses in `findings/rca-latent.md`; a dry run of the same adapters on uncommitted code preceded these reads and was discarded |

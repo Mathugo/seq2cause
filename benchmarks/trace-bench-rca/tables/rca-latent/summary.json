@@ -1,0 +1,475 @@
+{
+ "hypotheses": {
+  "H-graph-topology": {
+   "reason": "the graph axis is CausalRCA's (stream B5)",
+   "verdict": "not run"
+  },
+  "H-rca-bocpd": {
+   "gap_bocpd_minus_baro": {
+    "m": -0.13599999999999998,
+    "s": -0.1333333333333333,
+    "xs": -0.58
+   },
+   "verdict": "fail"
+  },
+  "H-rca-random": {
+   "per_rung": {
+    "m": false,
+    "s": true,
+    "xs": false
+   },
+   "verdict": "fail"
+  },
+  "H-rca-rule": {
+   "reason": "control/rule awaits the owner (plans/controls.md §2, Q8)",
+   "verdict": "not run"
+  },
+  "H-rca-scale": {
+   "rise_m_minus_xs": -0.544,
+   "verdict": "pass",
+   "wider_half_width": 0.17000000000000004
+  }
+ },
+ "rows": [
+  {
+   "arm": "rca/baro",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.6,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 1.0,
+      "low": 0.5
+     },
+     "ac@5": {
+      "high": 1.0,
+      "low": 1.0
+     },
+     "avg@5": {
+      "high": 0.8800000000000001,
+      "low": 0.54
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.6,
+     "ac@5": 1.0,
+     "avg@5": 0.52,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.6,
+     "ac@3": 1.0,
+     "ac@5": 1.0,
+     "avg@5": 0.9199999999999999,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.3,
+    "ac@3": 0.8,
+    "ac@5": 1.0,
+    "avg@5": 0.72,
+    "n_cases": 10
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs"
+  },
+  {
+   "arm": "rca/baro",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.5333333333333333,
+      "low": 0.06666666666666667
+     },
+     "ac@3": {
+      "high": 0.7333333333333333,
+      "low": 0.2
+     },
+     "ac@5": {
+      "high": 0.8666666666666667,
+      "low": 0.4
+     },
+     "avg@5": {
+      "high": 0.68,
+      "low": 0.2533333333333333
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.6,
+     "avg@5": 0.16,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.2,
+     "ac@3": 0.4,
+     "ac@5": 0.4,
+     "avg@5": 0.36,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.6,
+     "ac@3": 1.0,
+     "ac@5": 1.0,
+     "avg@5": 0.8800000000000001,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.26666666666666666,
+    "ac@3": 0.4666666666666667,
+    "ac@5": 0.6666666666666666,
+    "avg@5": 0.4666666666666667,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s"
+  },
+  {
+   "arm": "rca/baro",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.24,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.32,
+      "low": 0.04
+     },
+     "ac@5": {
+      "high": 0.4,
+      "low": 0.08
+     },
+     "avg@5": {
+      "high": 0.32,
+      "low": 0.048
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.2,
+     "avg@5": 0.04,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.6,
+     "ac@3": 0.8,
+     "ac@5": 1.0,
+     "avg@5": 0.8400000000000001,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.12,
+    "ac@3": 0.16,
+    "ac@5": 0.24,
+    "avg@5": 0.176,
+    "n_cases": 25
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 2,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m"
+  },
+  {
+   "arm": "rca/baro-bocpd",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.3,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.3,
+      "low": 0.0
+     },
+     "ac@5": {
+      "high": 0.5,
+      "low": 0.0
+     },
+     "avg@5": {
+      "high": 0.38,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.2,
+     "ac@3": 0.2,
+     "ac@5": 0.4,
+     "avg@5": 0.28,
+     "n_cases": 5
+    }
+   },
+   "change_point_offset_s": {
+    "max": 450,
+    "median": 300,
+    "min": 270,
+    "n": 3,
+    "n_before_injection": 0
+   },
+   "metrics": {
+    "ac@1": 0.1,
+    "ac@3": 0.1,
+    "ac@5": 0.2,
+    "avg@5": 0.14,
+    "n_cases": 10
+   },
+   "misses_by_reason": {
+    "change point at the table's end": 7
+   },
+   "n_empty_rankings": 1,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 7,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs"
+  },
+  {
+   "arm": "rca/baro-bocpd",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.3333333333333333,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.5333333333333333,
+      "low": 0.06666666666666667
+     },
+     "ac@5": {
+      "high": 0.8666666666666667,
+      "low": 0.3333333333333333
+     },
+     "avg@5": {
+      "high": 0.5333333333333333,
+      "low": 0.17333333333333334
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.2,
+     "ac@3": 0.2,
+     "ac@5": 0.6,
+     "avg@5": 0.27999999999999997,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.2,
+     "ac@5": 0.4,
+     "avg@5": 0.24000000000000005,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.2,
+     "ac@3": 0.4,
+     "ac@5": 0.8,
+     "avg@5": 0.4800000000000001,
+     "n_cases": 5
+    }
+   },
+   "change_point_offset_s": {
+    "max": -10155,
+    "median": -14805,
+    "min": -18405,
+    "n": 15,
+    "n_before_injection": 15
+   },
+   "metrics": {
+    "ac@1": 0.13333333333333333,
+    "ac@3": 0.26666666666666666,
+    "ac@5": 0.6,
+    "avg@5": 0.33333333333333337,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s"
+  },
+  {
+   "arm": "rca/baro-bocpd",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.12,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.12,
+      "low": 0.0
+     },
+     "ac@5": {
+      "high": 0.12,
+      "low": 0.0
+     },
+     "avg@5": {
+      "high": 0.12,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.2,
+     "ac@3": 0.2,
+     "ac@5": 0.2,
+     "avg@5": 0.2,
+     "n_cases": 5
+    }
+   },
+   "change_point_offset_s": {
+    "max": -660,
+    "median": -3420,
+    "min": -9900,
+    "n": 17,
+    "n_before_injection": 17
+   },
+   "metrics": {
+    "ac@1": 0.04,
+    "ac@3": 0.04,
+    "ac@5": 0.04,
+    "avg@5": 0.04,
+    "n_cases": 25
+   },
+   "misses_by_reason": {
+    "change point at the table's end": 1,
+    "detector raised LinAlgError": 7
+   },
+   "n_empty_rankings": 0,
+   "n_filled_cells": 2,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 8,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m"
+  }
+ ]
+}
