@@ -66,8 +66,11 @@ nothing has a default** (`tests/test_no_defaults.py` fails the build otherwise),
 | `pull` | fetch one corpus in the `rca` tier — the configuration, the instantiation, `labels/cases.json`, the access-log shards, the service view, the alphabet and the topology, nothing else — from the dataset host and verify every file against the corpus manifest |
 | `export` | run the benchmark's exporter on a pulled corpus (one case directory per fault) and record it with this repository's commit |
 | `artifacts` | object-store push / pull / verify of a run directory; the manifest it writes carries hashes, never a location |
+| `rank` | method side: one ranking arm (`rca/baro`, `rca/baro-bocpd`) over every case of one export, through the case door and only the arm's declared inputs; rankings keyed by case directory |
+| `score` | score side: restores the case ids by position, writes `ranking.json` and the benchmark's `score-rca.json` (AC@k, Avg@5, bootstrap, the random expectation = `control/random`), and the full pipeline's change-point offsets |
+| `report` | pools five seeds per rung and across rungs, writes `tables/rca-latent/` and scores the hypotheses of `plans/rca-arms.md` §6 |
 
-The arm commands (`baro`, `controls`, `causalrca`, `score`) land with B4 and B5. Scoring is the
+The CausalRCA command lands with B5; `control/rule` waits on `plans/controls.md` §2. Scoring is the
 benchmark's: `tracebench.score_rca` on the per-case rankings, `tracebench.score_service` on the
 service graphs, their reports consumed unchanged.
 

@@ -226,3 +226,62 @@ the paper's appendix.
   tests (`score.py`, `score_rca`, `score_service` unchanged), so no landed cell moves. Whether
   `ace384b4` receives a score-side tag is the owner's call (publication plan Q10 family); the
   directory pins the commit either way. Nothing in `benchmarks/trace-bench/` changes.
+
+### 2026-10-21 — B4 adapters, the method environment, and a second no-ranking case of the full pipeline (before any test read is landed)
+
+Written after the xs seed-0 smoke (§4: "the xs seed-0 export is their smoke test; no value is
+chosen on it") and before any read of any other corpus.
+
+- **Method environment (§4).** `trace-bench-rca` is created from `environment.yml` with
+  **Python 3.12** in place of 3.11: at the RCAEval pin, `RCAEval/e2e/__init__.py` imports its
+  method modules leniently (a module whose dependencies are absent is skipped) only on Python
+  3.10, 3.12 and 3.14; on 3.11 it imports `rcd`, `mmrcd` and `torai` unconditionally, whose
+  dependencies are not installed, so `RCAEval.e2e.baro` cannot be imported there. 3.12 is the
+  version RCAEval's README names as its default environment. RCAEval's optional dependency sets
+  (`default`, `rcd`, `eventadl`) are not installed; its base install declares none, and the
+  `baro` path needs only numpy, pandas, scikit-learn, requests and tqdm, which the `baro` extra
+  brings. Versions resolved on 2026-10-21 and named by every record's `pip freeze`: `fse-baro`
+  at `e35f4ec`, `RCAEval` 1.8.0 at `259ea41`, pandas 3.0.6, scikit-learn 1.9.1, numpy 2.5.4,
+  scipy 1.18.1. The package itself runs from its source tree (`PYTHONPATH=src`), not as an
+  editable install, so no local path enters a record's `pip freeze`.
+- **Commands.** `tracebenchrca.rank` (method side; `--arm rca/baro | rca/baro-bocpd`) reads an
+  export through the case door and writes `ranking-positional.json`, keyed by case directory;
+  `tracebenchrca.score` (score side) restores the case ids by `tracebench.export_rca.case_dirs`,
+  writes `ranking.json` and `score-rca.json` (`tracebench.score_rca`, B = 2000, seed 0) and, for
+  the full pipeline, each case's change-point offset; `tracebenchrca.report` pools per rung and
+  across rungs. `control/random` is the `random` block of every `score-rca.json` (analytic, §1);
+  it has no stage. `control/rule` is not run until the owner confirms `plans/controls.md` §2 (Q8).
+- **Staging.** The `rank` stage at s and m names the previous rung's `rank` record of the same
+  arm and seed (record form); landed records enter the shared ledger as stage `rank` with the arm.
+- **`rca/baro`, `time` column.** The rank of the `time` column in the returned metric ranking is
+  recorded per case (on the smoke: 13th and 12th of 21); it is removed before the collapse, as
+  registered.
+- **`rca/baro-bocpd`, change point after the last row (new; the counterpart of §2's empty list).**
+  `online_changepoint_detection` returns a run-length argmax array one entry longer than the
+  table, so `find_cps` can return the index `n_rows`. `robust_scorer(data, anomalies=cps)` then
+  splits off zero fault rows (`data.tail(0)`) and `RobustScaler.transform` raises `ValueError`.
+  **Registered: a case whose first change point is at or after the table's last row is counted
+  and scored as a miss with its own reason ("change point at the table's end"), exactly as a case
+  without a change point; the adapter never moves to a later or earlier change point and never
+  falls back to the injection time.** Any other exception of the pinned code fails the run.
+  Disclosure: the smoke surfaced it — xs seed 0, case 2 of 2 (the crash case), whose only change
+  point is row 40 of 40. Under the registered code no ranking exists for that case under any
+  rule, so no alternative was scored or compared; `rca/baro`'s two smoke ranks (1/5, 4/5) were
+  seen and are the values the 2026-10-14 prototype gave.
+- **Change-point offset (§5).** Score side: the first change point's bin start (UNIX seconds, the
+  export's clock) minus the labelled injection (`tracebench.export_rca.window_epoch` of the
+  corpus configuration plus `inject_time_s`); positive = detected late. On the smoke: +450 s (15
+  bins) on the degrade case.
+- **`rca/baro-bocpd`, the scorer's own preprocessing (code fact read at B4; not a deviation).**
+  The full pipeline's `baro.root_cause_analysis.robust_scorer` runs BARO's own `preprocess`
+  (`root_cause_analysis.py:96-118`), which applies `drop_constant(drop_time(...))` for every
+  `dataset`, unlike RCAEval's `preprocess(dataset=None)` on the `rca/baro` path (§2, identity). So
+  on this row the `time` column is never scored, and a metric constant **within either segment**
+  (before or after the first change point) is dropped from the intersection; a fault segment of one
+  row leaves no metric, and the pinned function returns an empty ranking. The adapter passes that
+  output through unchanged; the benchmark's scorer counts a case whose ranking lacks the root cause
+  as a miss; the record counts these cases (`n_empty_rankings`). Found after the xs rung's five
+  seeds had been read in an uncommitted dry run of these adapters (xs seed 4, the crash case:
+  change point at row 39 of 40); that dry run is discarded and every read is re-run from the
+  committed code. This bullet changes no rule — the empty output was already passed through and
+  scored as a miss — and adds only the count.
