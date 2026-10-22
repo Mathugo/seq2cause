@@ -288,21 +288,23 @@ xs to xl while the best learned cell falls 0.32 → 0.09, and the bigram floor t
 four rungs of five, losing only at m on the session grain; the learned arms' session-AUROC margin
 over the adjacency count shrinks from 0.03–0.04 (xs–m) to 0.02 (l) to under 0.02 (xl).
 
-## The floors on the per-sequence axis — xs, s, m (registered 2026-10-21, read 2026-10-21)
+## The floors on the per-sequence axis — xs … xl (registered 2026-10-21; xs, s, m read 2026-10-21, l and xl 2026-10-22)
 
 Registration: `plans/floors.md` and `plans/per-sequence-rules.md`, addenda of 2026-10-21 (committed
 before any run), RUN.md D-SB-17. Instrument: `seq2causebench.floorseq`, model-free; tables
-`tables/{xs,s,m}-latent-perseq-floors/` (their own documents, never a type-level table). Each floor
+`tables/<rung>-latent-perseq-floors/` (their own documents, never a type-level table). Each floor
 row is the floor's frozen-τ type-level score **broadcast** onto the sequences, window and candidate
 pairs of a landed arm test read — `trace/core/shipped/frozen` (headline) and
 `trace/cli-atomic/shipped/frozen` — so floor row and arm row are paired sequence by sequence: on
-every one of the 180 runs (3 rungs × 5 seeds × 2 grains × 2 reads × 3 rows) the candidate, truth
+every one of the 300 runs (5 rungs × 5 seeds × 2 grains × 2 reads × 3 rows) the candidate, truth
 and scoreable counts and the predict-all value equal the arm's landed `seqscore.json` exactly
 (asserted by the instrument), the floor's recomputed score table equals its landed test read's
 `n_pairs` / `n_edges`, and at m the re-derived sequence lists equal the reads' own sequence records
 (20 of 20). The bigram floor also gets an **adjacent-only** row (`q = j + 1`). τ = each floor's
 frozen type-level τ (`freezes/2026-10-10-<rung>-latent-s<k>-floors.json`); no per-sequence
-selection. l and xl were not run (no CPU hosts offered); they are "not run", not "failed".
+selection. xs, s and m ran locally; l and xl on CPU hosts (one owner-applied replica per rung and
+seed, box at `fede4410`; peak resident equal to the arms' own `seqscore` to 0.1 GiB — 14.9–17.4 GiB
+at l session, 69.6–80.1 GiB at xl session).
 
 Caveats beside every number here: the topology floor is sample-free (its score table is the
 deployment prior; only the sequences it is broadcast onto are sampled); at the request grain the
@@ -318,9 +320,13 @@ low power, so the effect size (mean ± sd of the paired difference) is the prima
 | xs · request | 0.423 ± 0.061 | 0.456 | 0.800 ± 0.079 (+0.377, p < 0.001) | 0.481 ± 0.065 (+0.058, p 0.29) | 0.496 ± 0.080 (+0.073, p 0.28) |
 | s · request | 0.343 ± 0.060 | 0.397 | 0.833 ± 0.051 (+0.490, p < 0.001) | 0.380 ± 0.084 (+0.037, p 0.10) | 0.377 ± 0.074 (+0.033, p 0.010) |
 | m · request | 0.444 ± 0.015 | 0.409 | 0.867 ± 0.019 (+0.423, p < 0.001) | 0.453 ± 0.026 (+0.009, p 0.33) | 0.392 ± 0.020 (−0.053, p < 0.001) |
+| l · request | 0.429 ± 0.018 | 0.401 | 0.850 ± 0.013 (+0.422, p < 0.001) | 0.465 ± 0.028 (+0.036, p 0.014) | 0.392 ± 0.023 (−0.037, p 0.008) |
+| xl · request | 0.380 ± 0.013 | 0.367 | 0.800 ± 0.025 (+0.420, p < 0.001) | 0.417 ± 0.015 (+0.037, p < 0.001) | 0.355 ± 0.005 (−0.025, p 0.028) |
 | xs · session | 0.433 ± 0.049 | 0.303 | 0.406 ± 0.037 (−0.028, p 0.40) | 0.382 ± 0.042 (−0.052, p 0.051) | 0.414 ± 0.066 (−0.020, p 0.35) |
 | s · session | 0.346 ± 0.063 | 0.173 | 0.493 ± 0.062 (+0.146, p 0.003) | 0.271 ± 0.063 (−0.075, p 0.003) | 0.323 ± 0.067 (−0.023, p 0.12) |
 | m · session | 0.412 ± 0.023 | 0.151 | 0.589 ± 0.025 (+0.177, p 0.001) | 0.299 ± 0.029 (−0.113, p < 0.001) | 0.335 ± 0.015 (−0.077, p < 0.001) |
+| l · session | 0.383 ± 0.055 | 0.143 | 0.576 ± 0.012 (+0.193, p 0.001) | 0.320 ± 0.025 (−0.063, p 0.032) | 0.343 ± 0.022 (−0.040, p 0.12) |
+| xl · session | 0.250 ± 0.042 | 0.132 | 0.572 ± 0.015 (+0.322, p < 0.001) | 0.309 ± 0.009 (+0.059, p 0.028) | 0.317 ± 0.004 (+0.067, p 0.024) |
 
 ### The same, beside `trace/cli-atomic` (its own read: same sequences, its own `c`)
 
@@ -329,36 +335,64 @@ low power, so the effect size (mean ± sd of the paired difference) is the prima
 | xs · request | 0.505 ± 0.052 | 0.500 | 0.807 ± 0.083 (+0.302, p < 0.001) | 0.529 ± 0.057 (+0.024, p 0.55) | 0.538 ± 0.067 (+0.033, p 0.54) |
 | s · request | 0.488 ± 0.058 | 0.430 | 0.838 ± 0.043 (+0.350, p < 0.001) | 0.421 ± 0.073 (−0.067, p 0.034) | 0.409 ± 0.090 (−0.079, p 0.042) |
 | m · request | 0.491 ± 0.013 | 0.409 | 0.867 ± 0.019 (+0.376, p < 0.001) | 0.453 ± 0.026 (−0.038, p 0.022) | 0.392 ± 0.020 (−0.099, p 0.001) |
+| l · request | 0.438 ± 0.030 | 0.409 | 0.852 ± 0.014 (+0.413, p < 0.001) | 0.473 ± 0.023 (+0.035, p 0.035) | 0.398 ± 0.016 (−0.041, p 0.021) |
+| xl · request | 0.369 ± 0.014 | 0.367 | 0.800 ± 0.025 (+0.431, p < 0.001) | 0.417 ± 0.015 (+0.048, p 0.001) | 0.355 ± 0.005 (−0.014, p 0.14) |
 | xs · session | 0.443 ± 0.047 | 0.304 | 0.426 ± 0.052 (−0.016, p 0.52) | 0.373 ± 0.019 (−0.070, p 0.016) | 0.414 ± 0.067 (−0.028, p 0.13) |
 | s · session | 0.423 ± 0.057 | 0.174 | 0.494 ± 0.063 (+0.070, p < 0.001) | 0.269 ± 0.063 (−0.154, p < 0.001) | 0.323 ± 0.067 (−0.101, p 0.001) |
 | m · session | 0.470 ± 0.012 | 0.151 | 0.589 ± 0.025 (+0.119, p < 0.001) | 0.299 ± 0.029 (−0.172, p < 0.001) | 0.335 ± 0.015 (−0.136, p < 0.001) |
+| l · session | 0.385 ± 0.061 | 0.143 | 0.576 ± 0.012 (+0.191, p 0.002) | 0.320 ± 0.025 (−0.065, p 0.036) | 0.343 ± 0.022 (−0.041, p 0.14) |
+| xl · session | 0.230 ± 0.060 | 0.132 | 0.572 ± 0.015 (+0.342, p < 0.001) | 0.309 ± 0.009 (+0.079, p 0.034) | 0.317 ± 0.004 (+0.087, p 0.031) |
 
-(At m both reads use `c = 1` at request and `c = 2` at session on the same sequences, so the floor
-rows coincide across the two reads; at xs and s the reads' `c` differ on some seeds.)
+(At m and xl both reads use `c = 1` at request and `c = 2` at session on the same sequences, so the
+floor rows coincide across the two reads; at xs, s and l the reads' `c` differ on some seeds — at l
+only seed 2 at request, where `trace/cli-atomic` reads `c = 2`.)
 
 ### Hypotheses (`plans/floors.md` addendum 2026-10-21 §7)
 
-- **H-perseq-floor-topology — passes on xs, s, m.** At request the broadcast topology floor is above
-  `trace/core` on every rung (+0.377 / +0.490 / +0.423, p < 0.001), recall 1.00 at xs; as stated in
-  advance, this is the call tree recovered by construction.
-- **H-perseq-floor-bigram — fails on s and m, at the session grain, in the arms' favour.** Paired
-  differences of the bigram broadcast row against `trace/core`: request +0.058 (p 0.29) / +0.037
-  (p 0.10) / +0.009 (p 0.33) — within the rule; session −0.052 (p 0.051, xs) / **−0.075 (p 0.003,
-  s)** / **−0.113 (p < 0.001, m)**. On this axis the learned arm separates from the order-count floor
-  at the session grain from s up; `trace/cli-atomic` separates by more (−0.154 / −0.172 at s / m).
+- **H-perseq-floor-topology — passes on every rung.** At request the broadcast topology floor is
+  above `trace/core` on every rung (+0.377 / +0.490 / +0.423 / +0.422 / +0.420 xs → xl, p < 0.001),
+  recall 1.00 at xs, l and xl; as stated in advance, this is the call tree recovered by construction.
+- **H-perseq-floor-bigram — fails on s, m, l and xl; its direction turns over the ladder.** Paired
+  differences of the bigram broadcast row against `trace/core`, xs → xl: request +0.058 (p 0.29) /
+  +0.037 (p 0.10) / +0.009 (p 0.33) — within the rule through m — then **+0.036 (p 0.014)** /
+  **+0.037 (p < 0.001)** at l / xl, in the **floor's** favour on 5/5 seeds each; session −0.052
+  (p 0.051) / **−0.075 (p 0.003)** / **−0.113 (p < 0.001)** / **−0.063 (p 0.032)** — in the arm's
+  favour from s through l, widest at m — then **+0.059 (p 0.028)** at xl, in the **floor's** favour
+  (5/5 seeds positive, seed 2 by +0.000). `trace/cli-atomic` separates by more where it separates
+  (−0.154 / −0.172 / −0.065 at s / m / l session) and trails by more at xl (+0.079, p 0.034). The
+  adjacent-only row turns with it: session −0.023 / −0.077 / −0.040 (p 0.12) at s / m / l,
+  **+0.067 (p 0.024)** at xl.
 - **H-perseq-floor-predict-all — reported per row.** The topology rows are above the predict-all
   value on 5/5 seeds on every rung and grain. The bigram rows clear it on 5/5 seeds at the session
-  grain everywhere, but not reliably at request: broadcast 4/5 (xs), 2/5 (s), 5/5 (m); adjacent 2/5,
-  1/5, 0/5 — at request the order-count floor sits at the collapsed-threshold level, as the arms do
-  (`plans/per-sequence-rules.md` addendum 2026-09-26).
+  grain everywhere, but not reliably at request: broadcast 4/5 (xs), 2/5 (s), 5/5 (m, l, xl);
+  adjacent 2/5, 1/5, 0/5, 1/5, 2/5 — at request the order-count floor sits at the collapsed-threshold
+  level, as the arms do (`plans/per-sequence-rules.md` addendum 2026-09-26).
+
+### Why the session grain turns at xl: the arm's frozen cut, not its ranking
+
+The arm row is cut at the arm's frozen **type-level** τ (no per-sequence selection; the registered
+rule, not re-opened here), and that τ falls up the ladder: `trace/core`'s session τ is 3e-2 on every
+m seed, 3e-4 … 3e-3 at l and 1e-5 … 3e-4 at xl, so its pooled per-sequence directed precision falls
+from 0.31–0.36 (m) to 0.18–0.30 (l) and 0.11–0.19 (xl) while recall rises to 0.85–0.91. Seed by
+seed the floor's margin follows that cut: at xl +0.107 / +0.078 / +0.063 / +0.048 / +0.000 at τ
+1e-5 / 3e-5 / 1e-4 / 1e-4 / 3e-4 (seeds 1, 4, 0, 3, 2); at l the two lowest cuts (seed 2, 3e-4;
+seed 0, 1e-3) are the two seeds where the floor comes within 0.03 (−0.008, −0.027), and at 3e-3 it
+trails by 0.08–0.11. The ranking does not turn: `trace/core`'s pooled directed AUROC stays above the
+bigram broadcast row at session on l and xl (by 0.038, p 0.027; by 0.052, p 0.004) and far above the
+adjacent-only row (by 0.19 / 0.18); the topology floor's session AUROC is 0.025 below the arm's at l
+(p 0.034) and ties it at xl (+0.001, p 0.93).
 
 ### What this adds to the type-level reading
 
 On the type-level axis the bigram floor ties `trace/core` on four rungs of five (H-floor-bigram
-above). On the per-sequence axis, the axis TRACE claims, it ties at request and **loses at session
-from s up**, and the adjacent-only row — immediate succession at the position level — loses too
-(−0.077 at m session). The topology floor remains above every learned arm wherever the truth is
-the call tree (request on every rung; session at s and m, +0.146 / +0.177), but **not at xs session**
-(−0.028, p 0.40: `trace/core` ties it). Where the benchmark discriminates on this axis is therefore
-the session grain, which is where the arms show signal over both the predict-all value and the
-order-count floor.
+above). On the per-sequence axis, the axis TRACE claims, it ties at request through m and **beats**
+`trace/core` at request on l and xl (+0.036 / +0.037), where the arm sits 0.01–0.03 above the
+predict-all value; at session it **loses from s through l** (−0.075 / −0.113 / −0.063) and **wins at
+xl** (+0.059), and the adjacent-only row — immediate succession at the position level — turns the
+same way (−0.077 at m, +0.067 at xl). The topology floor remains above every learned arm wherever the
+truth is the call tree (request on every rung; session from s up, +0.146 / +0.177 / +0.193 /
++0.322), but **not at xs session** (−0.028, p 0.40: `trace/core` ties it). The session grain is
+therefore where this axis discriminates **from s through l** (the reading of 2026-10-21, which had
+xs … m); at xl the arm's frozen-cut F1 falls below the order-count floor's while its ranking stays
+above it, so at xl the per-sequence advantage is carried by the ranking (AUROC), not by the
+registered frozen-cut F1 headline.
