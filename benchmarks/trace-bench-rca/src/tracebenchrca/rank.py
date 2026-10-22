@@ -1,0 +1,254 @@
+"""Rank the deployed services of every case of one export with a root-cause arm (method side).
+
+    python -m tracebenchrca.rank --arm rca/baro --export-record <export stage folder> --rung xs \
+        --prior-rung-record smallest-rung --staging-ledger ../trace-bench/plans/staging-ledger.json \
+        --output-folder <run-dir>
+
+The arm reads each case only through the case door (`tracebenchrca.cases`) and only the inputs it
+declares (`constants.ARMS`): `rca/baro-bocpd` never opens `window.json`. The table goes to the
+pinned function unmodified, as registered in `plans/rca-arms.md` §2:
+
+- `rca/baro` — RCAEval `e2e/baro.py::baro(data, inject_time, dataset=None)` on the whole case
+  table after the suite's fill rule; the `time` column is a scored "metric" of that path and is
+  removed from the returned ranking before the services collapse (D-TBR-2), and its rank is
+  recorded.
+- `rca/baro-bocpd` — `baro.anomaly_detection.bocpd(data)` on the same table, then
+  `baro.root_cause_analysis.robust_scorer(data, anomalies=<change points>)`, which splits at the
+  first detected row; a case without a change point has no ranking (a counted miss), never a
+  fallback to the injection time.
+
+Writes `ranking-positional.json` — `{"cases": {"case-00": [service, …]}}`, keyed by case
+directory and never by case id (D-TBR-3); `tracebenchrca.score` restores the ids on the score
+side. The record carries, per case, the rows, the cells the fill rule changed, the pre-fault rows
+the scorer fitted on and the number of metrics it fitted on fewer than four rows, and for the
+full pipeline the first change point's row and time (its offset from the labelled injection is
+computed on the score side).
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib
+from pathlib import Path
+
+import numpy as np
+
+from .arms import check_input, code_of
+from .cases import collapse_to_services, list_cases, read_services, read_table, read_window
+from .constants import (
+    ARM_BARO,
+    ARM_BARO_BOCPD,
+    INPUT_SERIES,
+    INPUT_SERVICES,
+    INPUT_WINDOW,
+    MIN_PRE_BINS,
+    RESULTS_JSON,
+    RUN_DIR,
+    RUNGS,
+    TIME_COLUMN,
+)
+from .log import log
+from .record import RunRecord, read_json, sha256_file, write_json
+from .staging import StagingRefusal, require_prior_rung
+
+STAGE = "rank"
+RANK_ARMS = (ARM_BARO, ARM_BARO_BOCPD)  # the ranking arms with a method-side stage (control/random is analytic)
+POSITIONAL_JSON = "ranking-positional.json"
+
+
+def _baro():
+    return importlib.import_module("RCAEval.e2e.baro").baro
+
+
+def _bocpd():
+    return importlib.import_module("baro.anomaly_detection").bocpd
+
+
+def _robust_scorer():
+    return importlib.import_module("baro.root_cause_analysis").robust_scorer
+
+
+def _n_metrics(df):
+    return len([c for c in df.columns if c != TIME_COLUMN])
+
+
+def _table(arm, case_dir):
+    check_input(arm, INPUT_SERIES)
+    check_input(arm, INPUT_SERVICES)
+    df, n_filled = read_table(case_dir, fill=True)
+    return df, n_filled, [s for s, _ in read_services(case_dir)]
+
+
+def _ranked(metric_ranks, df, n_pre, services):
+    services_ranked = collapse_to_services(metric_ranks)
+    return {
+        "services": services_ranked,
+        "n_rows": len(df),
+        "n_pre_rows": n_pre,
+        "n_metrics": _n_metrics(df),
+        "n_metrics_lt_min_pre": _n_metrics(df) if n_pre < MIN_PRE_BINS else 0,
+        "time_rank": metric_ranks.index(TIME_COLUMN) + 1 if TIME_COLUMN in metric_ranks else None,
+        "n_services_unranked": len(set(services) - set(services_ranked)),
+    }
+
+
+def rank_baro(case_dir):
+    df, n_filled, services = _table(ARM_BARO, case_dir)
+    check_input(ARM_BARO, INPUT_WINDOW)
+    inject_time = read_window(case_dir)["inject_time"]
+    out = _baro()(df, inject_time=inject_time, dataset=None)
+    n_pre = int((df[TIME_COLUMN] < inject_time).sum())
+    return {"n_filled": n_filled, **_ranked([str(c) for c in out["ranks"]], df, n_pre, services)}
+
+
+def rank_baro_bocpd(case_dir):
+    df, n_filled, services = _table(ARM_BARO_BOCPD, case_dir)
+    try:
+        cps = [int(i) for i in _bocpd()(df)]
+    except np.linalg.LinAlgError as e:
+        # the detector's multivariate-t predictive calls scipy's eigh (default driver dsyevr), which can fail on
+        # the shape matrix's clusters of repeated eigenvalues (addendum 2026-10-21): a counted miss, no fallback
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "detector raised LinAlgError",
+            "detector_error": f"{type(e).__name__}: {e}",
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
+    if not cps:
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "no change point",
+            "n_change_points": 0,
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
+    first = cps[0]
+    if first >= len(df):
+        # the run-length array has one entry more than the table, so the detector can place a change after the
+        # last row; the scorer's split then leaves no fault rows and raises (addendum 2026-10-21): a counted miss
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "change point at the table's end",
+            "n_change_points": len(cps),
+            "change_point_row": first,
+            "change_point_time": None,
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
+    out = _robust_scorer()(df, anomalies=cps)
+    return {
+        "n_filled": n_filled,
+        "n_change_points": len(cps),
+        "change_point_row": first,
+        "change_point_time": int(df[TIME_COLUMN].iloc[first]),
+        **_ranked([str(c) for c in out["ranks"]], df, first, services),
+    }
+
+
+RANKERS = {ARM_BARO: rank_baro, ARM_BARO_BOCPD: rank_baro_bocpd}
+
+
+def read_export_record(export_record, rung):
+    path = Path(export_record) / RUN_DIR / RESULTS_JSON
+    if not path.exists():
+        raise FileNotFoundError(f"{export_record} holds no export record ({RUN_DIR}/{RESULTS_JSON})")
+    res = read_json(path)
+    if res.get("status") != "ok" or res.get("stage") != "export":
+        raise ValueError(f"{path} is not a completed export record")
+    if res.get("rung") != rung:
+        raise ValueError(f"the export is a rung {res.get('rung')!r} export; this read is rung {rung!r}")
+    return res, sha256_file(path)
+
+
+def check_prior_arm(staging, arm):
+    """The staging rule names the same stage at the previous rung; the root-cause stage also needs the same arm."""
+    if staging["form"] == "record":
+        prior_arm = read_json(Path(staging["path"]) / RUN_DIR / RESULTS_JSON).get("arm")
+    elif staging["form"] == "ledger":
+        prior_arm = staging["entry"].get("arm")
+    else:
+        return staging
+    if prior_arm != arm:
+        raise StagingRefusal(f"the prior-rung record is an {prior_arm!r} read; this read is {arm!r}")
+    return staging
+
+
+def rank(arm, export_record, rung, prior, ledger, out):
+    if arm not in RANKERS:
+        raise ValueError(f"arm {arm!r} has no ranking stage; ranking arms: {RANK_ARMS}")
+    export_res, export_sha = read_export_record(export_record, rung)
+    staging = check_prior_arm(require_prior_rung(prior, rung, STAGE, ledger), arm)
+    cases = []
+    positional = {}
+    for d in list_cases(export_res["export_dir"]):
+        row = {"case_dir": d.name, **RANKERS[arm](d)}
+        if row["services"] is not None:
+            positional[d.name] = row["services"]
+        cases.append(row)
+        log({"event": "rank_case", "arm": arm, "case_dir": d.name, "ranked": row["services"] is not None})
+    out = Path(out)
+    write_json(out / POSITIONAL_JSON, {"cases": positional})
+    return {
+        "stage": STAGE,
+        "arm": arm,
+        "code": code_of(arm),
+        "rung": rung,
+        "corpus_id": export_res["corpus_id"],
+        "export_record_sha256": export_sha,
+        "staging": staging,
+        "ranking_file": POSITIONAL_JSON,
+        "ranking_sha256": sha256_file(out / POSITIONAL_JSON),
+        "n_cases": len(cases),
+        "n_unranked_cases": len(cases) - len(positional),
+        "misses_by_reason": {
+            r: sum(1 for c in cases if c.get("miss") == r) for r in sorted({c["miss"] for c in cases if c.get("miss")})
+        },
+        # the pinned scorer returned no metric at all (the full pipeline's per-segment constant-column drop); scored as
+        # a miss by the benchmark's scorer, counted here
+        "n_empty_rankings": sum(1 for c in cases if c["services"] == []),
+        "n_filled_cells": sum(c["n_filled"] for c in cases),
+        "n_metrics_lt_min_pre": sum(c.get("n_metrics_lt_min_pre", 0) for c in cases),
+        "cases": cases,
+    }
+
+
+def build_parser():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--arm", required=True, choices=RANK_ARMS)
+    p.add_argument("--export-record", required=True, help="the export stage's output folder (its run/ record)")
+    p.add_argument("--rung", required=True, choices=RUNGS, help="must equal the export's rung")
+    p.add_argument(
+        "--prior-rung-record",
+        required=True,
+        help="smallest-rung | the previous rung's rank folder of the same arm | its ledger sha256 | an owner-dated exception (.md)",
+    )
+    p.add_argument("--staging-ledger", required=True, help="the shared staging ledger (constants.STAGING_LEDGER)")
+    p.add_argument("--output-folder", required=True, help="where the ranking and this stage's run record are written")
+    return p
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    with RunRecord(args.output_folder, STAGE, vars(args)) as rec:
+        res = rank(
+            args.arm, args.export_record, args.rung, args.prior_rung_record, args.staging_ledger, args.output_folder
+        )
+        log(
+            {
+                "event": "rank",
+                "arm": args.arm,
+                "corpus_id": res["corpus_id"],
+                "n_cases": res["n_cases"],
+                "n_unranked": res["n_unranked_cases"],
+            }
+        )
+        rec.finish(res)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

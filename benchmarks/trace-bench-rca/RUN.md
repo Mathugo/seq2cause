@@ -12,10 +12,14 @@ method-agnostic modules (see `NOTICE`), which in turn adapted them from
 
 ## Environment
 
-- **Local:** one conda env from `environment.yml` (python 3.11; numpy 2, pyarrow 25, pandas,
+- **Local:** one conda env from `environment.yml` (python 3.12 — the RCAEval pin's method package
+  imports leniently only on 3.10 / 3.12 / 3.14, `plans/rca-arms.md` addendum 2026-10-21; numpy 2, pyarrow 25, pandas,
   scikit-learn, huggingface_hub and the benchmark package at its pinned commit via
   `requirements.txt`), with the methods installed from their pinned commits as extras
-  (`pip install -e ".[baro,rcaeval]"`). BARO and the controls run locally (seconds per case);
+  (`pip install -e ".[baro,rcaeval]"`). The B4 runs (2026-10-21) resolved `fse-baro` at `e35f4ec`,
+  `RCAEval` 1.8.0 at `259ea41`, pandas 3.0.6, scikit-learn 1.9.1, numpy 2.5.4, scipy 1.18.1 and ran
+  the package from `src/` (`PYTHONPATH=src`). `rca/baro` and the controls take seconds per case;
+  `rca/baro-bocpd` ≈ 2 minutes per case at s (one core, < 250 MB);
   CausalRCA runs locally at xs and s and on one GPU box at m if a case exceeds ~30 minutes
   (publication plan Q7, owner applies).
 - **Runs:** every run writes `run/{arguments,results,run_meta}.json` (`run_meta` = repository
@@ -63,8 +67,15 @@ under `plans/` reference these ids.
   corpus id and refuses a width mismatch or a pin without the exporter
   (`tests/test_export_stage.py`); records carry every reproducibility field and the method
   packages' versions (`tests/test_record_fields.py`).
-- **Per run (B4 onward):** the host's log shows the command exiting with status 0 and the output
-  sync completing; `run/*.json` carry every field; a registry row lands below.
+- **Ranking stages (2026-10-21):** `rank` reads only the arm's declared inputs (the full pipeline
+  runs with no `window.json` present), keys rankings by case directory, counts a missing change
+  point and a change point after the last row as misses and never calls the scorer for them;
+  `score` restores the case ids by position, refuses another corpus and a ranking that differs
+  from its record's hash, and computes change-point offsets on the export's clock; staging refuses
+  a smallest-rung token above xs and a prior record of another arm; `report` refuses fewer than
+  five seeds (`tests/test_rank_score.py`, including one test on the real pinned `baro()`).
+- **Per run (B4 onward):** the command exits with status 0; `run/*.json` carry every field; a
+  registry row lands below.
 - **Per rung:** every arm's table from five seeds with the bootstrap interval, the random
   expectation beside it and the pooled row; the BOCPD row's no-change-point count; the hypotheses
   of `plans/rca-arms.md` §6 scored pass or fail in `findings/rca-latent.md`.
@@ -73,4 +84,10 @@ under `plans/` reference these ids.
 
 | date | run | rung | seeds | arm(s) | record | notes |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | no run yet (the scaffold predates the first run) |
+| 2026-10-21 | `rca-xs-s{0..4}-26-10-21` pull + export | xs | 0–4 | — | `results/xs/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 30 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-s-s{0..4}-26-10-21` pull + export | s | 0–4 | — | `results/s/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 15 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-m-s{0..4}-26-10-21` pull + export | m | 0–4 | — | `results/m/latent/seed=<k>/{pull-rca,export}/` | rca tier from `chadyuk/trace-bench@v0.3.0`; export at 60 s; raw shards deleted after export; records name `369da246` (dirty = the uncommitted B4 modules, which neither stage imports) |
+| 2026-10-21 | `rca-xs-s{0..4}-26-10-21` rank + score | xs | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/xs/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); both rows seconds per corpus |
+| 2026-10-21 | `rca-s-s{0..4}-26-10-21` rank + score | s | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/s/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); full pipeline ≈ 2 min per case |
+| 2026-10-21 | `rca-m-s{0..4}-26-10-21` rank + score | m | 0–4 | `rca/baro`, `rca/baro-bocpd` | `results/m/latent/seed=<k>/rca-baro{,-bocpd}/` | local CPU, code `c0513701`; ledger stage `rank` (+10); full pipeline: 7 detector LinAlgError misses (addendum 2026-10-21) |
+| 2026-10-21 | report | xs, s, m | 0–4 | `rca/baro`, `rca/baro-bocpd` | `tables/rca-latent/` | pooled per rung and across rungs (B = 2000, seed 0); hypotheses in `findings/rca-latent.md`; a dry run of the same adapters on uncommitted code preceded these reads and was discarded |

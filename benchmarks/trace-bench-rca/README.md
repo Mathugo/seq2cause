@@ -36,7 +36,7 @@ was read) and writes one case directory per injected fault in the standard suite
 |---|---|---|
 | B1 | the exporter in the benchmark repository (`tracebench.export_rca`, branch `clear-2027`) | built 2026-10-14; PR open, owner merges; this directory's benchmark pin moves to the merge commit (D-TBR-1) |
 | B3 | this scaffold: packaging, constants and arm registry (three classes, six arms), records, `pull --tier rca`, the case door, the `export` stage, artifacts, staging, hygiene / no-defaults / notice gates, `plans/rca-arms.md`, `plans/controls.md`, fixtures and tests | built 2026-10-14 |
-| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | next; needs the `trace-bench-rca` env with the `baro` extra and the owner's answers to Q5 and Q8 |
+| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | **landed 2026-10-21** for both BARO rows and `control/random` (`findings/rca-latent.md`, `tables/rca-latent/`); `control/rule` waits on Q8 |
 | B5 | `rca/causalrca`: adapter, graph-axis threshold sweep → freeze → test read; ranking and service-graph axes | after B4; Q7, Q16, Q17 open |
 | B6 | the service-level graph table: CausalRCA beside `floor/topology` | after B5 |
 | B8 | `findings/rca-latent.md`: hypotheses scored, deviation notes, the outreach record | at the freeze |
@@ -66,8 +66,11 @@ nothing has a default** (`tests/test_no_defaults.py` fails the build otherwise),
 | `pull` | fetch one corpus in the `rca` tier — the configuration, the instantiation, `labels/cases.json`, the access-log shards, the service view, the alphabet and the topology, nothing else — from the dataset host and verify every file against the corpus manifest |
 | `export` | run the benchmark's exporter on a pulled corpus (one case directory per fault) and record it with this repository's commit |
 | `artifacts` | object-store push / pull / verify of a run directory; the manifest it writes carries hashes, never a location |
+| `rank` | method side: one ranking arm (`rca/baro`, `rca/baro-bocpd`) over every case of one export, through the case door and only the arm's declared inputs; rankings keyed by case directory |
+| `score` | score side: restores the case ids by position, writes `ranking.json` and the benchmark's `score-rca.json` (AC@k, Avg@5, bootstrap, the random expectation = `control/random`), and the full pipeline's change-point offsets |
+| `report` | pools five seeds per rung and across rungs, writes `tables/rca-latent/` and scores the hypotheses of `plans/rca-arms.md` §6 |
 
-The arm commands (`baro`, `controls`, `causalrca`, `score`) land with B4 and B5. Scoring is the
+The CausalRCA command lands with B5; `control/rule` waits on `plans/controls.md` §2. Scoring is the
 benchmark's: `tracebench.score_rca` on the per-case rankings, `tracebench.score_service` on the
 service graphs, their reports consumed unchanged.
 

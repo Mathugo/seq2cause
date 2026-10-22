@@ -1,0 +1,91 @@
+{
+ "axis": "ranking",
+ "bootstrap": {
+  "b": 2000,
+  "intervals": {
+   "ac@1": {
+    "high": 1.0,
+    "low": 0.0
+   },
+   "ac@3": {
+    "high": 1.0,
+    "low": 0.0
+   },
+   "ac@5": {
+    "high": 1.0,
+    "low": 0.0
+   },
+   "avg@5": {
+    "high": 1.0,
+    "low": 0.0
+   }
+  },
+  "level": 0.95,
+  "seed": 0
+ },
+ "by_fault_kind": {
+  "crash": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "degrade": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "pool_exhaust": {
+   "ac@1": 1.0,
+   "ac@3": 1.0,
+   "ac@5": 1.0,
+   "avg@5": 1.0,
+   "n_cases": 1
+  }
+ },
+ "cases": [
+  {
+   "case_id": "s_tb-migo_degrade_0",
+   "fault_kind": "degrade",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 11,
+   "root_cause_component": "tb-migo"
+  },
+  {
+   "case_id": "s_tb-matitso_crash_1",
+   "fault_kind": "crash",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 9,
+   "root_cause_component": "tb-matitso"
+  },
+  {
+   "case_id": "s_tb-pazi_pool_exhaust_2",
+   "fault_kind": "pool_exhaust",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 1,
+   "root_cause_component": "tb-pazi"
+  }
+ ],
+ "corpus_dir_name": "seed=1",
+ "metrics": {
+  "ac@1": 0.3333333333333333,
+  "ac@3": 0.3333333333333333,
+  "ac@5": 0.3333333333333333,
+  "avg@5": 0.3333333333333333,
+  "n_cases": 3
+ },
+ "n_missing": 0,
+ "random": {
+  "ac@1": 0.08333333333333333,
+  "ac@3": 0.25,
+  "ac@5": 0.4166666666666667,
+  "avg@5": 0.25,
+  "n_candidates": 12
+ }
+}

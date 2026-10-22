@@ -1,0 +1,147 @@
+{
+ "corpus_id": "xs/latent/seed=0",
+ "export_dir": "/private/tmp/claude-501/-Users-chadyuk-Dropbox-Code-agent-causal/dec93bfa-06aa-4189-a3b8-6c4edd854a0f/scratchpad/s2c-b4/benchmarks/trace-bench-rca/exports/xs-s0",
+ "exporter": {
+  "cases": [
+   {
+    "dir": "case-00",
+    "end_time": 1767605400,
+    "inject_time": 1767604800,
+    "n_bins_post": 20,
+    "n_bins_pre": 40,
+    "n_empty_cells": 0,
+    "n_rows": 60,
+    "sha256": {
+     "data.csv": "1525eb24be032fed9236f8c5b15d63fbc85272c3f4673d40d79ee5c2171ad2aa",
+     "services.json": "0506f8a969f58ffff82b55bd70339505ef292d0240069b6d6b3401dd7445f5e4",
+     "window.json": "a52a18ef8235c72f689404070de8d71ea52d9fb969cd3d06916b47c1d389a2c2"
+    },
+    "window_start": 1767603600
+   },
+   {
+    "dir": "case-01",
+    "end_time": 1767606600,
+    "inject_time": 1767606300,
+    "n_bins_post": 10,
+    "n_bins_pre": 30,
+    "n_empty_cells": 0,
+    "n_rows": 40,
+    "sha256": {
+     "data.csv": "1e829ce5166ea745505a1a0dcdabc75cf3e30c81013db555c36b850d23d0dc1f",
+     "services.json": "0506f8a969f58ffff82b55bd70339505ef292d0240069b6d6b3401dd7445f5e4",
+     "window.json": "9ea264a16456812c30f1a5b825d509e95fb921a65612a1732740a11e907074c7"
+    },
+    "window_start": 1767605400
+   }
+  ],
+  "config_hash": "1656f43b4b6e5deb690a31574bd98e55",
+  "corpus_dir_name": "seed=0",
+  "corpus_start_unix": 1767603600,
+  "corpus_tool_version": "0.3.0",
+  "inputs": [
+   {
+    "bytes": 1570,
+    "path": "config.yaml",
+    "sha256": "e87a8b0332c9017b49852913e3328da92289879538f361677e6898c67a132f76"
+   },
+   {
+    "bytes": 13382,
+    "path": "instantiation.json",
+    "sha256": "c847e23714e741783312ff1a814a35719b95bd6acb058905edf3148f70b2f18f"
+   },
+   {
+    "bytes": 790,
+    "path": "labels/cases.json",
+    "sha256": "850f524d2f06ecd90961eb5fb024f12a5516d20e203d475ffad5d9eaf991931c"
+   },
+   {
+    "bytes": 3640153,
+    "path": "raw/shard=0000/vl.jsonl.gz",
+    "sha256": "9bcf300f0bf05b03b5c42c2d37722c1b57488376c8eb50b8ceb74c55c3407476"
+   },
+   {
+    "bytes": 3683142,
+    "path": "raw/shard=0001/vl.jsonl.gz",
+    "sha256": "b267d7894699bcd1d80885906ff17c50b8bf8cbecb615811a6214f6012ac7aa3"
+   },
+   {
+    "bytes": 3594074,
+    "path": "raw/shard=0002/vl.jsonl.gz",
+    "sha256": "fb31b792270f14ef65ffd12c15c6af482241a1818cdeac0df3a08daaae094c14"
+   },
+   {
+    "bytes": 3230015,
+    "path": "raw/shard=0003/vl.jsonl.gz",
+    "sha256": "993daed420e90fa53cb5a66481ff7a48564fb908ca4041e9a93efbdd29c28788"
+   }
+  ],
+  "instance": "xs",
+  "labels_fields_read": [
+   "inject_time_s",
+   "end_time_s"
+  ],
+  "labels_not_read": [
+   "labels/faults.json",
+   "labels/sequence-labels.parquet"
+  ],
+  "metrics": [
+   "count",
+   "error",
+   "latency-50",
+   "latency-95"
+  ],
+  "n_5xx": 9227,
+  "n_access_lines": 60093,
+  "n_bins": 120,
+  "n_healthz_dropped": 1284,
+  "n_lines": 266266,
+  "n_rows_binned": 58599,
+  "n_rows_outside_window": 210,
+  "n_status_0": 3862,
+  "rule": {
+   "N": 10,
+   "decided": "2026-10-14",
+   "grid_widths_s": [
+    5,
+    10,
+    15,
+    30,
+    60,
+    90,
+    180,
+    300
+   ],
+   "min_bins_in_shortest_fault": 5,
+   "statement": "the smallest grid width at which, on every seed, the sparsest candidate service's pre-fault median request count per bin reaches N and its 10th percentile reaches 1, with at least five bins inside the shortest fault",
+   "widths_s": {
+    "m": 60,
+    "s": 15,
+    "xs": 30
+   }
+  },
+  "rung": "xs",
+  "services": {
+   "kinds": [
+    "external",
+    "bff",
+    "service",
+    "service",
+    "service"
+   ],
+   "n": 5,
+   "names": [
+    "ext-tuzelsom",
+    "tb-edge",
+    "tb-kamko",
+    "tb-limle",
+    "tb-razase"
+   ]
+  },
+  "shard_s": 900,
+  "width_s": 30,
+  "window_s": 3600
+ },
+ "rung": "xs",
+ "stage": "export",
+ "status": "ok"
+}
