@@ -240,3 +240,11 @@ Source: the co-author's review of 2026-10-19 (point 4: the paper's N = 128 again
   at `N` ≤ 32 by less than 0.01, and at the session grain the best at `c = 16` exceeds the best
   at `c` ≤ 8 by less than 0.01. A larger gain is reported as it is, with the caution that it
   is one seed of one corpus per rung.
+- **The sample at `c = 16` (measured 2026-10-22, before any such run).** A sequence is probed
+  only when its window holds a position pair (`len(ids) − c ≥ 2`, BOS and EOS included), so
+  `c = 16` reads only the longer sessions. On the seed-0 validation samples the probed counts at
+  `c` = 8 / 16 are 387 / 125 of 437 (xs) and 4,466 / 2,522 of 5,000 (s); over seeds 0–4 the
+  `c = 16` share of the `c = 8` count is 0.32–0.47 (xs) and 0.56–0.81 (s). The `c = 16` rows are
+  therefore printed with their probed count and reachable-recall ceiling beside the F1, and a
+  fall at `c = 16` against `c = 8` is read as the smaller sample first, not as the context
+  hurting; the expectation above is checked on F1 as registered.
