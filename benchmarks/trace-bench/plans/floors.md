@@ -209,3 +209,71 @@ D-SB-17).
   The informative reads are the session grain and the bigram adjacent-only row; at the request
   grain the topology floor recovers the call tree by construction and its row is reported as a
   statement about the benchmark, not as a bar.
+
+### 2026-10-22 — the start-view read: chain, staging, backbone binding, the view-order statistic (before any start-view run)
+
+Source: the 2026-10-09 addendum above and the owner's decision of 2026-10-22 on staging.
+Registered before any start-view run and before the code it names (`seq2causebench.vieworder`;
+the freeze's backbone check).
+
+- **§4 the chain.** Per corpus, the rung's Job V and Job T with `--ordering start`: `pull --tier
+  method` → `prepare` and `pretrain --ordering start --grain session` (the backbone, budget and
+  argmin-validation rule of `plans/caps.md`, trained on `start-session` as the end-view backbone
+  is on `end-session`, `plans/reference-arms.md` §2) → `sweep --ordering start --grains request`
+  (the rung's request grid: `c` {1, 2, 3}, `N` {2, 8, 32}, the five probes, both noises; the
+  sample of `plans/caps.md`) → `pull --tier score` → `scoresweep --grains request` on the rung's
+  registered grids (xs and s: τ `1e-7 … 3`, 16 values; Granger `1e-5 … 3`, 12; quantiles p50,
+  p80, p90, p95, p99 — the `xl` extensions of 2026-10-05 do not apply) → `freeze` (`freeze@3`,
+  the τ < 0 rule) → `discover --split test` on the frozen request cells → `annotate` → `seqscore`
+  (`--max-lag 63`), as in every end-view Job T. A start-view cell therefore shares corpus, seed,
+  grids and sample with its end-view cell and differs in the view and the backbone.
+- **§4 the session grain** is not read on the start view (scope of 2026-10-09). `report` runs on
+  `results-start/` with a `--reasons` file that names every session cell "not run: the
+  start-view read is request-grain only (plans/floors.md, addendum 2026-10-09)".
+- **§4 staging (owner decision 2026-10-22).** An xs start-view read stages as `smallest-rung`.
+  An s start-view read of seed `k` names the **xs seed-`k` start-view** record of the same stage
+  (`sweep` for the validation read, `discover` for the test read) by its ledger entry, so the s
+  chain of a seed starts only after the xs start-view chain of that seed has landed and its
+  ledger entries are on the harness branch. Ledger entries of start-view reads carry
+  `ordering: "start"`; an entry without the key is an end-view read. The staging code matches
+  stage and rung only, so the replica check confirms the named entry is a start-view entry.
+  Not chosen: naming the landed xs end-view sweep, which the staging code would accept, because
+  what the smaller rung has to prove here is the start-view chain itself. The floors keep their
+  own rule (§4: the arms' previous-rung entry of the same grain that every arm run named), so the
+  floors' start-view read on s does not wait on the arms' xs start-view chain.
+- **§4 backbone binding.** `freeze` refuses val tables swept on one view with a backbone trained
+  on another: the pretrain record's `arguments.json` names the ordering the backbone was trained
+  on, and it must equal the tables' `ordering`. This makes the 2026-10-09 rule ("re-reading an
+  end-trained model is a distribution shift, not a read") mechanical. Every landed freeze is an
+  end-view table on an end-view backbone and passes.
+- **§4 floors on the start view.** Locally, xs and s, seeds 0–4, request grain, per §4 with
+  `--ordering start`: `floors --split val` → `scoresweep --floor-taus` → `freeze
+  --pretrain-results none` (`…-s<k>-floors-start.json`) → `floors --split test` → `annotate`.
+  The topology floor reads no view; its start-view cell equals its end-view cell by construction
+  and is labelled so.
+- **§4 the view-order statistic** (`seq2causebench.vieworder`; score side, model-free, no ledger
+  entry). For one corpus, ordering, grain and split:
+  - *Sequences:* sampled as the arms' test read samples them (`--num-sequences`: the whole split
+    at xs, 20,000 request / 10,000 session from s; `head`; `--seed`), each read as its first
+    `--max-len` (64) real tokens (D-SB-7), tokens `<op>:<outcome>` from the view rows (the
+    floors' token space, §2).
+  - *Truth:* the scoring target's directed edges of the grain at its default floor
+    (`tracebench.score.truth_sets`); the bidirected truth is not read.
+  - *Count:* in a sequence, every ordered pair of positions `(i, j)`, `i ≠ j`, with `tok_i = a`
+    and `tok_j = b` for a directed truth edge `a → b` is one co-occurrence of that edge; it is
+    *cause first* when `i < j`. Each truth edge counts its own co-occurrences, so two tokens that
+    are truth in both directions contribute to both edges.
+  - *Statistic:* `share_cause_first` = Σ cause-first / Σ co-occurrences, pooled over every truth
+    edge and every sampled sequence. Recorded beside it: both counts, the number of truth edges
+    with at least one co-occurrence and the unweighted mean of their shares
+    (`edge_mean_share`), the number of sequences read and the number holding at least one
+    co-occurrence.
+  - *Reads:* xs and s, seeds 0–4, both grains, both orderings, on the test split (the split
+    every reported orientation number is read on); m, l and xl by the same command where the
+    score tier is on disk, otherwise named not run. Landing:
+    `results-vieworder/<rung>/latent/seed=<k>/<ordering>-<grain>/` (`vieworder.json` + `run/`) and
+    one table, `tables/vieworder-latent.{json,md}`: per rung, grain and ordering, the five-seed
+    mean, minimum and maximum of `share_cause_first`.
+  - *Use:* reported beside every request-grain orientation number of both views, never gated.
+    The 2026-10-03 probe (0.90–0.92 `end`, 0.05–0.09 `start` at the request grain; ≈ 0.50 at
+    the session grain) is provenance; its counting rule was not written down.
