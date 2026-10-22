@@ -161,7 +161,7 @@ ARMS = {
         "class": CLASS_FLOOR_CONTROL,
         "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
         "axes": (AXIS_RANKING,),
-        "code": None,  # the three-rule alert counter of plans/controls.md (registration text proposed; owner confirms)
+        "code": None,  # the three-rule alert counter of plans/controls.md §2 (confirmed by the owner 2026-10-22)
         "licence": None,
     },
     ARM_FLOOR_TOPOLOGY: {
