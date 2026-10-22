@@ -300,3 +300,32 @@ chosen on it") and before any read of any other corpus.
   Disclosure: found in the uncommitted dry run at m seed 0 (3 of 5 cases), after the xs and s rungs
   had been read in that dry run; every read is re-run from the committed code. Whether to tell the
   method's author is the owner's call.
+
+### 2026-10-22 — owner decisions on CausalRCA (publication plan Q7, Q16, Q17; before any CausalRCA code or run)
+
+- **Q16 — the graph axis's validation split, with a four-seed exception.** The proposal of §4 is
+  registered: on every rung the **seed-0 corpus is the validation split of the graph axis** — the
+  edge threshold τ is chosen on the seed-0 cases' learned service graphs (argmax of directed F1
+  against `graphs/views/service.json` at the view's default floor; ties → the larger τ) and frozen in
+  a dated freeze file per rung before any test read — and **seeds 1–4 are its test read**.
+  **Four-seed exception:** every graph-axis number of `rca/causalrca` (per rung and pooled) is
+  computed on the four test seeds 1–4, an exception to the five-seed rule that governs every other
+  table of this directory and of the reference harness; each such table and sentence says "four
+  test seeds (1–4); seed 0 is the graph axis's validation split". `floor/topology` is set beside it
+  on the same four seeds, so that H-graph-topology compares paired seeds. The ranking axis has no
+  threshold and keeps all five seeds, seed 0 included. The `report` stage's five-seed refusal
+  stays for the ranking axis; the graph axis gets its own four-seed check. The τ grid is registered
+  by addendum before the first validation read.
+- **Q17 — 1000 epochs.** CausalRCA runs with **1000 epochs**, the value of the test plan sent to
+  the authors on 2026-10-14; the repository's `config.py` sets `CONFIG.epochs = 500` and has no
+  command-line flag for it. Recorded as **D-TBR-4** (follows the sent test plan; deviates from the
+  repository default by this one value). How the value is set, preferably without editing the
+  pinned files, is registered with the adapter at B5; every record names it.
+- **Q7 — compute.** A GPU box for CausalRCA at m is approved (the owner applies the replica). The
+  registered rungs of this directory remain xs, s and m (`constants.RUNGS`; the exporter's width
+  table has no l / xl entry and refuses them; the test plans sent to both author teams name the
+  three smallest rungs). The owner asks for a sizing of l and xl from the m timings, as a proposal
+  for approval: nothing runs at l or xl before a dated addendum that registers (a) their bin widths
+  by the N = 10 rule of §3 from a traffic measurement on l and xl, (b) the exporter change on the
+  benchmark's publication branch and the pin move, and (c) the compute, and before the owner
+  approves it.

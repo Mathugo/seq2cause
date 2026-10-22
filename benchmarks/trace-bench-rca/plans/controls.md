@@ -40,3 +40,16 @@ ranking by the largest z-score (that is the n-sigma method of the BARO paper, no
 ## Addenda
 
 (none)
+
+### 2026-10-22 — §2 confirmed by the owner (publication plan Q8; before any `control/rule` run)
+
+- **`control/rule` is registered exactly as §2 states it**, and the **OPEN** mark on §2 is
+  superseded. Per service, three exported series — `latency-95`, `error`, `count`; per series a
+  mean / standard-deviation baseline over the pre-fault rows (after the suite's fill rule); a series
+  alerts at the first post-fault bin more than 3 standard deviations from its baseline mean, in
+  either direction; a zero-standard-deviation series never alerts. Services are ranked by the
+  number of alerting series, ties by the earliest alert time among the service's alerting series,
+  then by service name; every service appears in the ranking. Reported as AC@1 / 3 / 5 and Avg@5
+  with the methods' bootstrap (B = 2000, seed 0), with the number of alerting services per case.
+- The "not chosen" list of §2 stays as written. `plans/rca-arms.md` §6 H-rca-rule is scored once
+  the row has landed on xs, s and m × five seeds.
