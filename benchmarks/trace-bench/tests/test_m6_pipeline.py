@@ -587,14 +587,17 @@ def test_freeze_refuses_tables_of_another_model(world, tmp_path):
     noisy = dict(
         pre, val_final_over_min=1.5, oracle=dict(pre["oracle"], eps_hat=0.62, in_regime=False)
     )
-    write_json(tmp_path / "noisy.json", noisy)
+    noisy_run = tmp_path / "noisy"  # beside its arguments.json: the backbone's training view
+    noisy_run.mkdir()
+    shutil.copy(world["pretrain_results"].parent / "arguments.json", noisy_run / "arguments.json")
+    write_json(noisy_run / RESULTS_JSON, noisy)
     assert (
         fz.main(
             [
                 "--val-tables",
                 str(world["root"] / "scoresweep" / VAL_TABLE_JSON),
                 "--pretrain-results",
-                str(tmp_path / "noisy.json"),
+                str(noisy_run / RESULTS_JSON),
                 "--rung",
                 "s",
                 "--variant",
