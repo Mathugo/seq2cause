@@ -220,3 +220,26 @@ Type-level axis, the benchmark's directed F1 over the whole truth (the headline 
 
 **What does not change.** The benchmark's scorer output stays the type-level headline of every
 per-rung findings file and of the paired hypotheses; no verdict there is rescored.
+
+## Addendum 2026-10-21 — the floors on this axis (xs, s, m)
+
+Registered 2026-10-21 (`plans/floors.md`, `plans/per-sequence-rules.md`; D-SB-17) and read the same
+day; full tables in `tables/{xs,s,m}-latent-perseq-floors/` and `findings/floors-latent.md`. Each
+floor is broadcast onto the landed `trace/core` and `trace/cli-atomic` test reads, so its rows share
+the sequences, candidates, scoreable fraction and predict-all value of the request and session rows
+of the first table above. Pooled per-sequence directed F1 beside `trace/core` (five seeds):
+
+| grain | row | xs | s | m |
+|---|---|---|---|---|
+| request | `trace/core` (above) | 0.423 | 0.343 | 0.444 |
+| request | `floor/topology` broadcast | 0.800 | 0.833 | 0.867 |
+| request | `floor/bigram` broadcast | 0.481 | 0.380 | 0.453 |
+| request | `floor/bigram` adjacent-only | 0.496 | 0.377 | 0.392 |
+| session | `trace/core` | 0.433 | 0.346 | 0.412 |
+| session | `floor/topology` broadcast | 0.406 | 0.493 | 0.589 |
+| session | `floor/bigram` broadcast | 0.382 | 0.271 | 0.299 |
+| session | `floor/bigram` adjacent-only | 0.414 | 0.323 | 0.335 |
+
+At request the topology floor recovers the call tree by construction and the order-count floor ties
+the arm; at session the arm is above the order-count floor from s up (paired −0.075, p 0.003 at s;
+−0.113, p < 0.001 at m) and below the topology floor from s up. l and xl: not run.

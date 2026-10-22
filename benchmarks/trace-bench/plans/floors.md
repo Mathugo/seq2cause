@@ -149,3 +149,63 @@ e.g. xl "not run" under the owner's decision of 2026-10-08). Pairs added to ever
   and ordering (score side; the 2026-10-03 probe gave 0.90–0.92 end / 0.05–0.09 start at request).
 - **Fallback (decided).** If the s chain is not launched by 23 October: arms on xs; on s the
   floors' start-view read and the statistic; logged in the publication PRD Decision Log.
+
+### 2026-10-21 — the per-sequence read of the floors (before any per-sequence floor run)
+
+Source: the co-author's review of 2026-10-19 (point 5: "run the floors on the per-sequence axis,
+where frequency counts have much less to work with") and the lab's reply of 2026-10-21, which
+commits to it. Registered before any per-sequence floor number exists; the instrument is
+`seq2causebench.floorseq` (`plans/per-sequence-rules.md`, addendum of the same date; RUN.md
+D-SB-17).
+
+- **§2 per-sequence read.** A floor has no position-level output, so its per-sequence matrix is
+  its type-level score **broadcast** onto the positions of a sequence:
+  `S[j, q] = score(tok_j → tok_q)` for every candidate pair `(j, q)` of the read, `0` for a
+  token pair the floor does not score. `tok_j` is the token the per-sequence truth is induced on
+  (`seqtruth.induce`: the read's token string at window position `j`). The floor knows nothing
+  about positions; every occurrence of a token pair gets the same score.
+- **§2 the adjacent-only row (bigram only).** Immediate succession is the bigram floor's
+  definition, so it gets a second row: `S_adj[j, q] = score(tok_j → tok_q)` if `q = j + 1`, else
+  `0`. Same candidates, same truth; only the edge set and the ranking change. The topology floor
+  has no adjacency in its definition and gets the broadcast row only.
+- **§2 which reads.** A floor reads no sequence of its own here: it is broadcast onto the
+  sequences, window (`c`) and candidate pairs of a landed arm read, so the floor row and the arm
+  row are paired sequence by sequence. Registered reads, per rung, seed and grain: the test read
+  of **`trace/core/shipped/frozen`** (the headline pairing) and of
+  **`trace/cli-atomic/shipped/frozen`** (the best within-trace arm on the landed record), each with
+  the `--max-lag` of that arm's landed `seqscore` (63). The instrument asserts that its candidate,
+  truth and scoreable counts and its predict-all value equal the arm's landed `seqscore.json`
+  exactly; a mismatch refuses.
+- **§3 which τ.** The floor's **frozen type-level τ** of the same (rung, seed, grain), as fixed in
+  `freezes/2026-10-10-<rung>-latent-s<k>-floors.json` and asserted by the landed floor test read
+  (`test-read/floors-<grain>/run/results.json`); no per-sequence sweep, no new freeze. Edge set
+  `S[j, q] > τ` (strict), as for every frozen cut. The floor's score table is recomputed from the
+  corpus with the landed test read's recorded arguments (topology: `topology/prior.json`; bigram:
+  the test split, `--num-sequences`, `--sequence-sample`, `--seed`, `--max-len` of that read) and
+  must reproduce that read's `n_pairs` and `n_edges` per cell, or the run refuses.
+- **§4 protocol.** xs, s, m × seeds 0–4, request and session, the `end` view, CPU, local; l and
+  xl only if CPU hosts are offered (the per-sequence instrument peaked at 70–80 GiB at xl). Three
+  rows per (read, grain): `floor/topology` broadcast, `floor/bigram` broadcast, `floor/bigram`
+  adjacent. Landing: `results/<rung>/latent/seed=<k>/floor/<arm>/none/frozen/<grain>/
+  seqscore-<row>-on-<reference arm slug>/` (`seqscore.json` + `run/`) — a directory `report`
+  does not read, so the arms' landed per-sequence tables are untouched. No ledger entry (no
+  probe or read stage; the arms' `seqscore` runs carry none either).
+- **§6 report.** Its own per-sequence document per rung and grain (`tables/<rung>-latent-perseq-
+  floors.{json,md}`), never a type-level table: per row the five-seed headline of the pooled
+  directed precision, recall, F1, the pooled AUROC, the predict-all audit value and the
+  scoreable fraction (all equal to the reference arm's), and the paired five-seed difference
+  `floor row − reference arm` on pooled directed F1 with the paired t-test (`report.paired_test`).
+- **§7 expectations, stated in advance (scored pass or fail per rung).**
+  - **H-perseq-floor-topology.** At the request grain the broadcast topology floor's pooled
+    per-sequence directed F1 is **above** `trace/core`'s on every rung (paired, five seeds), because
+    the per-sequence request truth is the call link restricted to target edges and the topology
+    names the call edges. *Fail:* any rung where `trace/core` ties or wins.
+  - **H-perseq-floor-bigram.** The bigram broadcast row's pooled per-sequence directed F1 is
+    within 0.02 of `trace/core`'s at both grains on every rung (the type-level H-floor-bigram,
+    carried to this axis). *Fail:* a paired difference beyond 0.02 either way with p < 0.05.
+  - **H-perseq-floor-predict-all.** Each floor row is read against the predict-all audit value of
+    its read (the H-perseq rule of `plans/per-sequence-rules.md` §6): reported per row, pass when
+    the pooled F1 is above it.
+  The informative reads are the session grain and the bigram adjacent-only row; at the request
+  grain the topology floor recovers the call tree by construction and its row is reported as a
+  statement about the benchmark, not as a bar.

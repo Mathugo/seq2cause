@@ -1,0 +1,189 @@
+{
+ "arm": "floor/bigram",
+ "axis": "per-sequence",
+ "c": 3,
+ "cell": "floor/bigram/none/frozen/request",
+ "corpus_id": "xs/latent/seed=3",
+ "cut": "frozen",
+ "floor": 0.05,
+ "floor_read_freeze": {
+  "committed_at": "2026-10-09T21:59:17-04:00",
+  "path": "freezes/2026-10-10-xs-latent-s3-floors.json",
+  "sha": "541cb077e113350abf79640111a48eb9ca9ad7f2"
+ },
+ "floor_table_edges": 225,
+ "floor_table_pairs": 313,
+ "grain": "request",
+ "max_lag": 63,
+ "model_sha256": "none",
+ "n_links_lost": 0,
+ "n_scoreable": 681,
+ "n_sequences": 1004,
+ "n_sequences_split": 1274,
+ "n_skipped_short": 300,
+ "n_skipped_short_by_read": 270,
+ "n_stored_by_read": 1004,
+ "n_unscoreable": 23,
+ "path": "none",
+ "per_lag_recall": {
+  "1": 0.9873417721518988,
+  "2": 0.0,
+  "3": 0.0,
+  "4": 0.0,
+  "5": 0.0,
+  "6": 0.0
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.5365114327669394,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 0.6666666666666666,
+    "p90": 1.0,
+    "std": 0.4019037226691834
+   },
+   "precision": {
+    "mean": 0.5018355359765051,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.40474753088991305
+   },
+   "recall": {
+    "mean": 0.6243759177679883,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.44866873486060455
+   }
+  },
+  "ap": {
+   "mean": 0.8618195884529147,
+   "n": 493,
+   "p10": 0.5,
+   "p50": 1.0,
+   "p90": 1.0,
+   "std": 0.2172887257726538
+  },
+  "auroc": {
+   "mean": 0.790052010997133,
+   "n": 328,
+   "p10": 0.5,
+   "p50": 0.875,
+   "p90": 1.0,
+   "std": 0.25967657984145665
+  },
+  "auroc_skeleton": {
+   "mean": 0.7529933525488268,
+   "n": 215,
+   "p10": 0.5,
+   "p50": 0.7777777777777778,
+   "p90": 1.0,
+   "std": 0.25013246758054
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.5365114327669394,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 0.6666666666666666,
+    "p90": 1.0,
+    "std": 0.4019037226691834
+   },
+   "precision": {
+    "mean": 0.5018355359765051,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.40474753088991305
+   },
+   "recall": {
+    "mean": 0.6243759177679883,
+    "n": 681,
+    "p10": 0.0,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.44866873486060455
+   }
+  },
+  "predict_all_mean": 0.46705083578373124,
+  "skeleton": {
+   "f1": {
+    "mean": 0.8044490344049815,
+    "n": 681,
+    "p10": 0.5,
+    "p50": 0.8,
+    "p90": 1.0,
+    "std": 0.23674910459935042
+   },
+   "precision": {
+    "mean": 0.9034752814488497,
+    "n": 681,
+    "p10": 0.6666666666666666,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.2232799089250933
+   },
+   "recall": {
+    "mean": 0.7618717780352919,
+    "n": 681,
+    "p10": 0.375,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.2774265638245324
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.6149253731343284,
+   "fn": 135,
+   "fp": 639,
+   "precision": 0.4916467780429594,
+   "recall": 0.8207171314741036,
+   "shd": 774,
+   "tp": 618
+  },
+  "ap": 0.6600222961091323,
+  "auroc": 0.7810588178784269,
+  "auroc_skeleton": 0.7407546357903263,
+  "directed": {
+   "f1": 0.6149253731343284,
+   "fn": 135,
+   "fp": 639,
+   "precision": 0.4916467780429594,
+   "recall": 0.8207171314741036,
+   "shd": 774,
+   "tp": 618
+  },
+  "n_candidates": 2716,
+  "n_truth_directed": 753,
+  "skeleton": {
+   "f1": 0.7251231527093596,
+   "fn": 684,
+   "fp": 153,
+   "precision": 0.8782816229116945,
+   "recall": 0.6174496644295302,
+   "shd": 837,
+   "tp": 1104
+  }
+ },
+ "predict_all": {
+  "pooled": 0.4341308734505621
+ },
+ "reference_cell": "trace/cli-atomic/shipped/frozen/request",
+ "reference_model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+ "reference_read": "discover-request-cli-atomic-all-c3-N8",
+ "row": "adjacent",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "xs",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.6782868525896414,
+ "split": "test",
+ "tau": 0.02,
+ "tau_by_lag": null
+}
