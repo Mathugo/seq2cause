@@ -41,11 +41,12 @@ def test_controls_plan_is_dated_and_marks_the_open_rule():
     assert DATE_RE.search(text)
     assert "`control/random`" in text and "`control/rule`" in text
     assert "min(k, n) / n" in text
-    assert "OPEN" in text  # the rule control awaits the owner (publication plan Q8)
+    assert "OPEN" in text  # the rule control was proposed open (publication plan Q8) ...
+    assert "confirmed by the owner" in text  # ... and confirmed by dated addendum, 2026-10-22
 
 
 def test_run_md_numbers_the_deviations_before_the_first_run():
     text = (BENCH / "RUN.md").read_text(encoding="utf-8")
-    for dev in ("D-TBR-1", "D-TBR-2", "D-TBR-3"):
+    for dev in ("D-TBR-1", "D-TBR-2", "D-TBR-3", "D-TBR-4"):
         assert f"| {dev} |" in text, dev
     assert "## Run registry" in text

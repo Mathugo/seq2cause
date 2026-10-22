@@ -41,6 +41,7 @@ from pathlib import Path
 
 from .arms import arm_spec, cell_key, parse_cell_key
 from .constants import (
+    ARGUMENTS_JSON,
     ARM_GRANGER,
     CUT_FROZEN,
     CUT_SHIPPED,
@@ -264,7 +265,30 @@ def pretrain_facts(pretrain_results, table):
             f"the val tables bind model {table['model_sha256']} but the pretrain record's model is "
             f"{pre.get('model_sha256')}"
         )
+    check_backbone_ordering(pretrain_results, table)
     return {k: pre.get(k) for k in PRETRAIN_FACTS}
+
+
+def check_backbone_ordering(pretrain_results, table):
+    """Tables swept on one view bind a backbone trained on the same view (`plans/floors.md`,
+    addenda of 2026-10-09 and 2026-10-22: re-reading an end-trained model on the start view is a
+    distribution shift, not a read). The training ordering is the pretrain record's own argument."""
+    swept = table.get("ordering")
+    if swept is None:
+        return
+    args_path = Path(pretrain_results).parent / ARGUMENTS_JSON
+    if not args_path.exists():
+        raise FreezeRefusal(
+            f"{args_path} is missing: the backbone's training view cannot be checked against the "
+            f"{swept!r} view the tables were swept on"
+        )
+    trained = read_json(args_path)["arguments"].get("ordering")
+    if trained != swept:
+        raise FreezeRefusal(
+            f"the val tables were swept on the {swept!r} view with a backbone trained on the "
+            f"{trained!r} view; a read of a view trains its own backbone (plans/floors.md, "
+            "addendum 2026-10-22)"
+        )
 
 
 def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):

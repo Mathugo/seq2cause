@@ -194,3 +194,57 @@ truth) — and the freeze names the source per cell (`every_scored_pair_source`:
 conventions it rests on were checked on all 15,960 swept rows of the ten first-pass `xl`
 validation tables (true plus false positives = predictions inside the universe; precision and
 F1 from those counts; true positives plus false negatives = truth) with no exception.
+
+### 2026-10-22 — sensitivity reads: N = 64 / 128 and a session context of 16 (validation only; before any such run)
+
+Source: the co-author's review of 2026-10-19 (point 4: the paper's N = 128 against this grid's
+{2, 8, 32}, and session contexts above 8) and the lab's reply of 2026-10-21, which commits to
+"N = 64 / 128 and a session context of 16 as validation-only sensitivity rows on xs and s".
+
+- **Scope.** xs and s, latent, **seed 0**, the `end` view, the validation split. Validation
+  only: no freeze, no test read, nothing selected on these cells. The landed freezes, test reads,
+  tables and verdicts stand as landed.
+- **Backbone.** The landed seed-0 backbone of each rung, the model of
+  `freezes/2026-09-25-xs-latent-s0.json` and `freezes/2026-09-27-s-latent-s0.json`; its hash is
+  asserted equal to the freeze's at landing. No new pretrain.
+- **Cells: two factors, each against the registered grid.**
+  - (a) *Particles.* The particle probes (`core`, `cli-full`, `cli-atomic`) × both noises × the
+    registered `c` of each grain (request {1, 2, 3}, session {2, 4, 8}) × **`N` ∈ {64, 128}**,
+    `g = min(3, c)`. Saliency and Shapley have no `N` axis and are not re-read.
+  - (b) *Session context.* The five probes (saliency and Shapley at `N = 0`, noise `all`) ×
+    **`c = 16`** × the registered `N` {2, 8, 32}, `g = 3`, session grain only (request
+    sequences are short by construction: median 5 spans, p99 11).
+  - Everything else as registered for the rung: the sample of `plans/caps.md` (xs the whole
+    split; s 10,000 / 5,000 with the Shapley sample 2,000 / 500; `head`), `--max-len 64`,
+    `--max-lag 63`, `--probe-amp none`, the shipped rule, `--memory-cap-gb 20`, and the rung's
+    scoresweep grids (τ `1e-7 … 3`, Granger `1e-5 … 3`, quantiles p50 … p99).
+- **Memory.** The D-SB-12 estimate on the landed s backbone (V = 323) at the largest new cell
+  (session, `N = 128`, `c = 2`) is 12.9 GiB, under the 20 GiB cap; the estimate was 1.7× the
+  measured device peak at `N = 32`. xs (V = 79) is lower at every cell.
+- **Staging.** xs as `smallest-rung`; s names the landed xs seed-0 `sweep` of the same grain
+  by its ledger entry, as the s end-view sweeps did. Nothing stages on these reads, so they get
+  no ledger entries.
+- **Report.** One document, `tables/sensitivity-latent.{json,md}`, labelled "validation only,
+  seed 0, one corpus per rung, not re-selected". Per rung, grain and frozen cell
+  `<arm>/<path>/frozen/<grain>` of the landed seed-0 freeze, two rows:
+  - the landed frozen value, `(c, N, τ)` and validation directed F1 at the default floor;
+  - for each new `(c, N)` of that arm and path, the validation F1 at the argmax over τ of that
+    `(c, N)` on the rung's grids, and its difference from the landed frozen value.
+  The per-`(c, N)` rows of the landed validation table at `N` ∈ {2, 8, 32} (both grains) and
+  `c` ∈ {2, 4, 8} (session) are printed beside them from the landed table, so each factor reads
+  as a curve. The table is written by a tracked script committed before the landing. Records
+  land under `results-sensitivity/<rung>/latent/seed=0/` (stage records and the val tables;
+  score arrays stay off the repository).
+- **Expectation, stated in advance (reported, not scored as a hypothesis).** H-sat's band
+  carried up the grid: at every cell the best validation F1 at `N` ∈ {64, 128} exceeds the best
+  at `N` ≤ 32 by less than 0.01, and at the session grain the best at `c = 16` exceeds the best
+  at `c` ≤ 8 by less than 0.01. A larger gain is reported as it is, with the caution that it
+  is one seed of one corpus per rung.
+- **The sample at `c = 16` (measured 2026-10-22, before any such run).** A sequence is probed
+  only when its window holds a position pair (`len(ids) − c ≥ 2`, BOS and EOS included), so
+  `c = 16` reads only the longer sessions. On the seed-0 validation samples the probed counts at
+  `c` = 8 / 16 are 387 / 125 of 437 (xs) and 4,466 / 2,522 of 5,000 (s); over seeds 0–4 the
+  `c = 16` share of the `c = 8` count is 0.32–0.47 (xs) and 0.56–0.81 (s). The `c = 16` rows are
+  therefore printed with their probed count and reachable-recall ceiling beside the F1, and a
+  fall at `c = 16` against `c = 8` is read as the smaller sample first, not as the context
+  hurting; the expectation above is checked on F1 as registered.
