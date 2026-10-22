@@ -329,3 +329,88 @@ chosen on it") and before any read of any other corpus.
   by the N = 10 rule of §3 from a traffic measurement on l and xl, (b) the exporter change on the
   benchmark's publication branch and the pin move, and (c) the compute, and before the owner
   approves it.
+
+### 2026-10-22, later — CausalRCA's code path: the authors' script through a recorded data shim (publication plan Q28, owner decision; D-TBR-5; before any CausalRCA code or run)
+
+Branch note: registered on top of the 2026-10-22 decisions above while their pull request was
+still open.
+
+- **Decision.** `rca/causalrca` runs the authors' `train_latency.py` at `21f4eb0` with its
+  **data block substituted and every other line unchanged**. The data block is exactly the
+  statements from `names = ['front-end', 'user', 'catalogue', 'orders', 'carts', 'payment',
+  'shipping']` to `data = all_data[name]`: the fixed sock-shop service list, the metric list,
+  `idx` and `atype` from the command line, the pickle open and the `<name>_ctn_latency`
+  selection — the file's only sock-shop-specific lines. The replacement sets `names` to the
+  case's services (`services.json` order), `idx = 0` (read only by the final `print`), `data` to
+  the case's input table (below) and `CONFIG.epochs = 1000` (D-TBR-4). The pinned file is never
+  edited on disk: the adapter reads it, asserts that each end of the block occurs exactly once,
+  substitutes the block in memory, writes the substituted source and the removed block beside the
+  training's record, and executes the substituted source. RUN.md **D-TBR-5**. The sent test plan
+  said "run unmodified"; the paper says "the authors' script with its data-loading block replaced
+  by the benchmark's series, training code unchanged".
+- **Two corrections to §2** (read 2026-10-22 at the pins).
+  - §2 says RCAEval's `e2e/causalrca.py` "is the same procedure". It is not: the script runs
+    PageRank on `|adj.T|` (the learned edges reversed), the port on `|graph|` after a double
+    transpose; called with `dataset = None` the port neither cuts the post-injection window nor
+    drops `time`; and it scales by the column maximum. The port is not run.
+  - §2 says the script "builds the DAG-GNN on `data / data.max()`". That is the port. The script
+    trains on the pickled columns as stored; the authors' collection notebook
+    (`data_collection_all_services.ipynb` at the pin) min-max scales every column with
+    `sklearn.preprocessing.MinMaxScaler`, drops `time`, drops duplicate columns and pickles the
+    result.
+- **Input (the substituted block's `data`).** Per case and series (`latency-50`, `latency-95`):
+  the exported table read through `tracebenchrca.cases.read_table` (the loader's fill rule,
+  D-TBR-2); the rows with `time ≥ inject_time` (the export ends at `end_time`, so these are the
+  labelled fault window: 10–20 rows at xs, 60–120 at s, 15–40 at m); the `<service>_<series>`
+  columns in `services.json` order; each column min-max scaled to [0, 1] as the authors' notebook
+  does (a constant column becomes 0, `MinMaxScaler`'s convention). Not chosen: the notebook's
+  duplicate-column drop, which would remove services from the graph and from the ranking — here
+  every deployed service is a node and is ranked; the port's `data / data.max()`; unscaled series.
+- **Command line.** `--gamma 0.25 --eta 10`: the script's defaults and the sent plan's values.
+  The repository's `test_latency_per.sh` passes `--gamma 0.5`; recorded, not used.
+  PageRank is the script's own `sknetwork.ranking.PageRank()`, whose damping factor at 0.24.0 is
+  0.85 by default, the sent plan's α.
+- **Repetitions and seeds.** Ten trainings per case and series (the shell loop's count, and the
+  sent plan's "averaged over 10 runs"). The script never seeds (its `torch.manual_seed` calls are
+  commented out); before executing the substituted source the adapter seeds `torch` and `numpy`
+  with the run index `r` ∈ {0, …, 9}, so a training is repeatable on the same platform. The seed
+  rides the record.
+- **Working directory.** Each training runs in a directory of its own, because the script writes
+  fixed file names into its working directory. The adapter reads two of the script's outputs and
+  keeps the third as written:
+  - the ranking, the script's last standard-output line: `(index, score)` pairs sorted by the
+    PageRank score, descending, equal scores in index order (a stable sort), mapped to services
+    through `names`; the adapter asserts every service appears exactly once;
+  - the learned graph, `cpu-hog_front-end_adj.pkl` (the script's own file name): the learned
+    adjacency after the script's own cut (`|w| < 0.3` set to 0). `adj[i, j] ≠ 0` reads as the
+    service edge `names[i] → names[j]` (DAG-GNN's linear SEM `X = AᵀX + Z`; `modules.py`'s
+    encoder applies `I − Aᵀ`), so PageRank on `|adj.T|` walks against the learned edges, toward
+    causes;
+  - `metrics_causality.png`, kept.
+- **Aggregation — the authors' own: per-run metrics averaged.** The authors' results notebook
+  (`Res-Plot.ipynb` at the pin) lists one Avg@5 per run for each fault case and reports their
+  mean. So on the ranking axis AC@1, AC@3, AC@5 and Avg@5 are computed on each run's ranking and
+  averaged over the ten runs of the case; the bootstrap over cases (B = 2000, seed 0) resamples
+  these run-averaged per-case values. On the graph axis the sent plan's "one graph per fault case"
+  is the elementwise mean of `|adj|` over the ten runs, scored by `tracebench.score_service` with
+  the mean absolute weight as the edge score.
+- **Graph-axis τ grid** (the Q16 addendum above requires it before the first validation read).
+  Strict cut `score > τ` on the mean absolute weight over
+  `0, 0.03, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2, 3, 5` (15 values). τ = 0 is every
+  edge learned in any run; a single run's surviving weight is at least 0.3, so a mean below 0.03
+  cannot occur. The freeze rule is Q16's (argmax of directed F1 at the service view's default
+  floor on the seed-0 cases, ties → the larger τ, frozen per rung and per series before any test
+  read). A τ at either end is flagged `at_grid_edge` and recorded, not refused.
+- **Environment.** The repository's `requirements.txt` exactly, in a conda environment of its own
+  (`causalrca-21f4eb0`, Python 3.9, the one version all ten pins share), never `trace-bench-rca`;
+  the script calls `networkx.from_numpy_matrix`, which networkx 3 removed. On macOS arm64 the
+  environment is x86_64 under Rosetta 2: scikit-network 0.24.0 publishes macOS wheels for x86_64
+  only, and its source build pins numpy 1.20.0, which does not build on arm64. On the m GPU host
+  it is the Linux x86_64 wheels, torch 1.10.2 with CUDA 11.3. Premise of 2026-10-22, before this
+  addendum (not a read, nothing kept): the pins install and import in the script's own import
+  order (`import torch` alone faults under Rosetta, numpy first does not, and the script imports
+  numpy first), and one substituted training on an xs window of 10 rows × 5 services at 1000
+  epochs ran in 27 s at a 0.19 GB peak footprint and printed a ranking of all five services.
+- **What each record names.** The pin and the sha256 of the pinned `train_latency.py`, of the
+  substituted source and of the removed block; the environment's `pip freeze` and platform; per
+  training the case, series, run index, seed, wall clock and the sha256 of each output read.
