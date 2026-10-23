@@ -1,14 +1,15 @@
 """Pool the landed ranking-axis results per rung and across rungs, and score the hypotheses.
 
     python -m tracebenchrca.report --results-dir results --rungs xs s m --seeds 0 1 2 3 4 \
-        --arms rca/baro rca/baro-bocpd --bootstrap-b 2000 --bootstrap-seed 0 --output-folder tables/rca-latent
+        --arms rca/baro rca/baro-bocpd control/rule --bootstrap-b 2000 --bootstrap-seed 0 --output-folder tables/rca-latent
 
 Reads, per rung, seed and arm, the landed `results/<rung>/latent/seed=<k>/<arm slug>/score-rca.json`
 and the two stage records beside it; refuses a rung with fewer seeds than named (a pooled table
 is five seeds or nothing). Writes per arm one pooled table per rung and one across the named rungs
 (`tracebench.score_rca.pool`: the cases concatenated, the same bootstrap), `summary.json` (every
 row with its interval, the analytic random expectation — `control/random` — the miss counts by
-reason and, for the full pipeline, the change-point offsets) and `rca-latent.md`; the hypotheses
+reason, for the full pipeline the change-point offsets and for `control/rule` the alerting services
+per case) and `rca-latent.md`; the hypotheses
 of `plans/rca-arms.md` §6 are scored mechanically from the pooled rows.
 """
 
@@ -24,6 +25,7 @@ from .arms import arm_slug
 from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
+    ARM_CONTROL_RULE,
     RESULTS_JSON,
     RUN_DIR,
     RUNGS,
@@ -85,6 +87,14 @@ def row_of(rung, arm, pooled, cells):
         for cp in s.get("change_points", [])
         if cp["change_point_offset_s"] is not None
     ]
+    alerting = [c["n_alerting_services"] for _, _, r in cells for c in r["cases"] if "n_alerting_services" in c]
+    if alerting:
+        row["alerting_services_per_case"] = {
+            "mean": statistics.mean(alerting),
+            "min": min(alerting),
+            "max": max(alerting),
+            "n_cases": len(alerting),
+        }
     if any("change_points" in s for _, s, _ in cells):
         row["change_point_offset_s"] = {
             "n": len(offsets),
@@ -119,7 +129,17 @@ def hypotheses(rows, rungs):
             "wider_half_width": bound,
             "verdict": "fail" if rise > bound else "pass",
         }
-    out["H-rca-rule"] = {"verdict": "not run", "reason": "control/rule awaits the owner (plans/controls.md §2, Q8)"}
+    if all((g, a) in by for g in rungs for a in (ARM_BARO, ARM_CONTROL_RULE)):
+        per = {g: by[(g, ARM_BARO)]["metrics"][AVG] >= by[(g, ARM_CONTROL_RULE)]["metrics"][AVG] for g in rungs}
+        out["H-rca-rule"] = {
+            "gap_baro_minus_rule": {
+                g: by[(g, ARM_BARO)]["metrics"][AVG] - by[(g, ARM_CONTROL_RULE)]["metrics"][AVG] for g in rungs
+            },
+            "per_rung": per,
+            "verdict": "pass" if all(per.values()) else "fail",
+        }
+    else:
+        out["H-rca-rule"] = {"verdict": "not run", "reason": "needs rca/baro and control/rule on every named rung"}
     out["H-graph-topology"] = {"verdict": "not run", "reason": "the graph axis is CausalRCA's (stream B5)"}
     return out
 
@@ -140,6 +160,12 @@ def markdown(rows, hyp):
             f"{fmt(m[AVG])} [{fmt(iv.get('low'))}, {fmt(iv.get('high'))}] | {fmt(rnd[AVG] if rnd else None)} | "
             f"{r['n_missing']} |"
         )
+    rule_rows = [r for r in rows if "alerting_services_per_case" in r]
+    if rule_rows:
+        lines += ["", "| rung | arm | alerting services per case, mean [min, max] |", "|---|---|---|"]
+        for r in rule_rows:
+            a = r["alerting_services_per_case"]
+            lines.append(f"| {r['rung']} | `{r['arm']}` | {a['mean']:.2f} [{a['min']}, {a['max']}] |")
     lines += ["", "| hypothesis | verdict |", "|---|---|"]
     lines += [f"| {k} | {v['verdict']} |" for k, v in hyp.items()]
     return "\n".join(lines) + "\n"
@@ -182,7 +208,7 @@ def build_parser():
     p.add_argument("--results-dir", required=True)
     p.add_argument("--rungs", required=True, nargs="+", choices=RUNGS)
     p.add_argument("--seeds", required=True, nargs="+", type=int, choices=SEEDS)
-    p.add_argument("--arms", required=True, nargs="+", choices=(ARM_BARO, ARM_BARO_BOCPD))
+    p.add_argument("--arms", required=True, nargs="+", choices=(ARM_BARO, ARM_BARO_BOCPD, ARM_CONTROL_RULE))
     p.add_argument("--bootstrap-b", required=True, type=int, help="bootstrap resamples of the pooled tables")
     p.add_argument("--bootstrap-seed", required=True, type=int)
     p.add_argument("--output-folder", required=True, help="the tables directory and this stage's run record")
