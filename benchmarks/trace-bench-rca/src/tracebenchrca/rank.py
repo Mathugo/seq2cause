@@ -16,6 +16,10 @@ pinned function unmodified, as registered in `plans/rca-arms.md` §2:
   `baro.root_cause_analysis.robust_scorer(data, anomalies=<change points>)`, which splits at the
   first detected row; a case without a change point has no ranking (a counted miss), never a
   fallback to the injection time.
+- `control/rule` — the three-rule alert counter of `plans/controls.md` §2 (addendum 2026-10-23), no
+  third-party code: per service, `latency-95`, `error` and `count` alert at the first post-fault bin
+  more than 3 population standard deviations from their pre-fault mean; services ranked by the
+  number of alerting series, then the earliest alert time, then the export's order.
 
 Writes `ranking-positional.json` — `{"cases": {"case-00": [service, …]}}`, keyed by case
 directory and never by case id (D-TBR-3); `tracebenchrca.score` restores the ids on the score
@@ -29,18 +33,21 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import math
 from pathlib import Path
 
 import numpy as np
 
 from .arms import check_input, code_of
-from .cases import collapse_to_services, list_cases, read_services, read_table, read_window
+from .cases import collapse_to_services, list_cases, read_services, read_table, read_window, split_at
 from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
+    ARM_CONTROL_RULE,
     INPUT_SERIES,
     INPUT_SERVICES,
     INPUT_WINDOW,
+    METRIC_SEP,
     MIN_PRE_BINS,
     RESULTS_JSON,
     RUN_DIR,
@@ -52,7 +59,11 @@ from .record import RunRecord, read_json, sha256_file, write_json
 from .staging import StagingRefusal, require_prior_rung
 
 STAGE = "rank"
-RANK_ARMS = (ARM_BARO, ARM_BARO_BOCPD)  # the ranking arms with a method-side stage (control/random is analytic)
+RANK_ARMS = (
+    ARM_BARO,
+    ARM_BARO_BOCPD,
+    ARM_CONTROL_RULE,
+)  # the ranking arms with a method-side stage (control/random is analytic)
 POSITIONAL_JSON = "ranking-positional.json"
 
 
@@ -149,7 +160,50 @@ def rank_baro_bocpd(case_dir):
     }
 
 
-RANKERS = {ARM_BARO: rank_baro, ARM_BARO_BOCPD: rank_baro_bocpd}
+RULE_SERIES = ("latency-95", "error", "count")  # plans/controls.md §2: the median latency is not a rule
+RULE_SIGMAS = 3.0
+
+
+def first_alert(pre, post, column):
+    """The time of the first post-fault bin more than `RULE_SIGMAS` population standard deviations from
+    the pre-fault mean, in either direction; `None` if the series never alerts (a zero standard
+    deviation, or no pre-fault row, never alerts)."""
+    base = pre[column].to_numpy(dtype=float)
+    if len(base) == 0:
+        return None
+    sd = float(base.std())  # divisor n (addendum 2026-10-23)
+    if sd == 0.0:
+        return None
+    hit = np.abs(post[column].to_numpy(dtype=float) - base.mean()) > RULE_SIGMAS * sd
+    return int(post[TIME_COLUMN].to_numpy()[hit][0]) if hit.any() else None
+
+
+def rank_rule(case_dir):
+    df, n_filled, services = _table(ARM_CONTROL_RULE, case_dir)
+    check_input(ARM_CONTROL_RULE, INPUT_WINDOW)
+    inject_time = read_window(case_dir)["inject_time"]
+    pre, post = split_at(df, inject_time)
+    alerts = {}
+    for s in services:
+        times = {m: first_alert(pre, post, f"{s}{METRIC_SEP}{m}") for m in RULE_SERIES}
+        alerts[s] = {m: t for m, t in times.items() if t is not None}
+
+    def key(i):
+        a = alerts[services[i]]
+        return (-len(a), min(a.values()) if a else math.inf, i)
+
+    ranked = [services[i] for i in sorted(range(len(services)), key=key)]
+    return {
+        "n_filled": n_filled,
+        "services": ranked,
+        "n_rows": len(df),
+        "n_pre_rows": len(pre),
+        "n_alerting_services": sum(1 for s in services if alerts[s]),
+        "alerts": {s: alerts[s] for s in ranked if alerts[s]},
+    }
+
+
+RANKERS = {ARM_BARO: rank_baro, ARM_BARO_BOCPD: rank_baro_bocpd, ARM_CONTROL_RULE: rank_rule}
 
 
 def read_export_record(export_record, rung):

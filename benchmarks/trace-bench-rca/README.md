@@ -36,7 +36,7 @@ was read) and writes one case directory per injected fault in the standard suite
 |---|---|---|
 | B1 | the exporter in the benchmark repository (`tracebench.export_rca`, branch `clear-2027`) | built 2026-10-14; PR open, owner merges; this directory's benchmark pin moves to the merge commit (D-TBR-1) |
 | B3 | this scaffold: packaging, constants and arm registry (three classes, six arms), records, `pull --tier rca`, the case door, the `export` stage, artifacts, staging, hygiene / no-defaults / notice gates, `plans/rca-arms.md`, `plans/controls.md`, fixtures and tests | built 2026-10-14 |
-| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | **landed 2026-10-21** for both BARO rows and `control/random` (`findings/rca-latent.md`, `tables/rca-latent/`); `control/rule` waits on Q8 |
+| B4 | `rca/baro`, `rca/baro-bocpd`, `control/random`, `control/rule` on xs, s, m × five seeds: adapters, runs, landing (results, ledger, tables with intervals and pooled rows) | **landed 2026-10-21** for both BARO rows and `control/random` (`findings/rca-latent.md`, `tables/rca-latent/`); **`control/rule` landed 2026-10-23** (`rank --arm control/rule`, `plans/controls.md` §2 with addenda 2026-10-22 / 2026-10-23): Avg@5 0.640 / 0.680 / 0.272 against `rca/baro`'s 0.720 / 0.467 / 0.176 — H-rca-rule fails at s and m (every interval overlaps) |
 | B5 | `rca/causalrca`: adapter, graph-axis threshold sweep → freeze → test read; ranking and service-graph axes | after B4; Q7, Q16, Q17 decided 2026-10-22 (`plans/rca-arms.md` addendum: seed 0 = graph-axis validation, four test seeds; 1000 epochs = D-TBR-4; GPU at m) |
 | B6 | the service-level graph table: CausalRCA beside `floor/topology` | after B5 |
 | B8 | `findings/rca-latent.md`: hypotheses scored, deviation notes, the outreach record | at the freeze |
@@ -70,7 +70,7 @@ nothing has a default** (`tests/test_no_defaults.py` fails the build otherwise),
 | `score` | score side: restores the case ids by position, writes `ranking.json` and the benchmark's `score-rca.json` (AC@k, Avg@5, bootstrap, the random expectation = `control/random`), and the full pipeline's change-point offsets |
 | `report` | pools five seeds per rung and across rungs, writes `tables/rca-latent/` and scores the hypotheses of `plans/rca-arms.md` §6 |
 
-The CausalRCA command lands with B5; `control/rule` waits on `plans/controls.md` §2. Scoring is the
+The CausalRCA command lands with B5; `control/rule` is a `rank` arm with no third-party code. Scoring is the
 benchmark's: `tracebench.score_rca` on the per-case rankings, `tracebench.score_service` on the
 service graphs, their reports consumed unchanged.
 
