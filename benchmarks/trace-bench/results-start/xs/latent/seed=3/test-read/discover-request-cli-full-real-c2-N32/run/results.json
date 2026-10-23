@@ -1,0 +1,99 @@
+{
+ "N": 32,
+ "c": 2,
+ "cells": {
+  "trace/cli/fixed/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 172,
+   "n_pairs": 612,
+   "per_lag_files": 8,
+   "tau": 0.01
+  },
+  "trace/cli/fixed/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 22,
+   "n_edges": 38,
+   "n_sequences_pooled": 1274,
+   "n_within_op": 5,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 0.7716798186302185,
+    "10": 0.12384300595678671,
+    "2": 0.5916750050192882,
+    "3": 0.45832415928589443,
+    "4": 0.35953542302327957,
+    "5": 0.2863509272018136,
+    "6": 0.2321345192258666,
+    "7": 0.19197001633737149,
+    "8": 0.16221542077295076,
+    "9": 0.1401726742298125
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed"
+ ],
+ "corpus_id": "xs/latent/seed=3",
+ "corrupted_cells": {
+  "fixed": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 5680
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-real-request.npz",
+  "scores": "scores-cli-full-real-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-22T19:57:37-04:00",
+  "path": "freezes/2026-10-22-xs-latent-s3-start.json",
+  "sha": "a8a5c51f80e21f86224b0e587e44ba2d7c9591b2"
+ },
+ "g": 2,
+ "grain": "request",
+ "memory": {
+  "N": 32,
+  "c": 2,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 131099392,
+  "max_seq_len": 13,
+  "probe": "cli-full",
+  "shipped_estimate": 1409408
+ },
+ "model_sha256": "cb949d32bb84a5dcce134bf9de260ae09b9bb32a794becb62b738fdc79cbf20f",
+ "n_cells": 5445,
+ "n_pairs": 612,
+ "n_probed": 1274,
+ "n_sequences": 1274,
+ "n_skipped_short": 0,
+ "n_stored": 1274,
+ "noise": "real",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 9.249,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 1102144,
+ "tok_pos_per_s": 119157.38127425387
+}

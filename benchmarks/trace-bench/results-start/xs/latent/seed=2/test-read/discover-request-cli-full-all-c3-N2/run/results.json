@@ -1,0 +1,133 @@
+{
+ "N": 2,
+ "c": 3,
+ "cells": {
+  "trace/cli/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 404,
+   "n_pairs": 555,
+   "per_lag_files": 8,
+   "tau": 3e-07
+  },
+  "trace/cli/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 75,
+   "n_edges": 32,
+   "n_sequences_pooled": 1242,
+   "n_within_op": 3,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.1690006256103516,
+    "10": 0.34809198182031875,
+    "2": 1.6630517282710093,
+    "3": 1.2882355663882006,
+    "4": 1.010564924259428,
+    "5": 0.8048614532220402,
+    "6": 0.6524725738200692,
+    "7": 0.5395801153298203,
+    "8": 0.45594732510268937,
+    "9": 0.3939906302559789
+   },
+   "threshold_finite": true
+  },
+  "trace/cli/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 404,
+   "n_pairs": 555,
+   "per_lag_files": 8,
+   "tau": 3e-07
+  },
+  "trace/cli/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 75,
+   "n_edges": 32,
+   "n_sequences_pooled": 1242,
+   "n_within_op": 3,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 2.1690003871917725,
+    "10": 0.3480919435577222,
+    "2": 1.6630515454668067,
+    "3": 1.2882354247841412,
+    "4": 1.0105648131771854,
+    "5": 0.8048613647509157,
+    "6": 0.6524725020996731,
+    "7": 0.539580056018669,
+    "8": 0.4559472749845326,
+    "9": 0.39399058694816
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed-kl",
+  "trace-cli__shipped"
+ ],
+ "corpus_id": "xs/latent/seed=2",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 5235
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 5235
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-all-request.npz",
+  "scores": "scores-cli-full-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-22T19:57:37-04:00",
+  "path": "freezes/2026-10-22-xs-latent-s2-start.json",
+  "sha": "a8a5c51f80e21f86224b0e587e44ba2d7c9591b2"
+ },
+ "g": 3,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 3,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 23576448,
+  "max_seq_len": 14,
+  "probe": "cli-full",
+  "shipped_estimate": 93632
+ },
+ "model_sha256": "0efecf47a56e6a9b1cfb8cd259baad454996d796c4434330d34b35ef8a64e69a",
+ "n_cells": 4912,
+ "n_pairs": 555,
+ "n_probed": 1242,
+ "n_sequences": 1242,
+ "n_skipped_short": 0,
+ "n_stored": 1242,
+ "noise": "all",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 10.472,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 74184,
+ "tok_pos_per_s": 7084.160430876183
+}

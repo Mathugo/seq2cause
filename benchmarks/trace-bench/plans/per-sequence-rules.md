@@ -192,3 +192,30 @@ Registered with `plans/floors.md`'s addendum of the same date (the floors' per-s
   run and its `model_sha256`; a floor row binds to the floor's freeze (through its test read) and
   to the arm read it is broadcast onto, and carries the literal `none` (as D-SB-16 for
   `scoresweep`, `freeze` and `annotate`).
+
+### 2026-10-23 — the read's own view (a defect found at the xs start-view Job T landing; before the fix and before any re-score)
+
+- **Defect.** `seqscore` (and `floorseq`) took the view it re-reads from the `discover` record's
+  `results.json`, which carries no `ordering` key, and fell back to `end`. On an end-view read
+  that is the read's own view, so no per-sequence number landed before this date changes (all
+  441 landed `discover` test reads ran `--ordering end`). On a start-view read the stored score
+  matrices index start-ordered window positions while the tokens and the truth were re-read from
+  the end view. The five xs start-view Job T runs (`plans/floors.md`, addendum 2026-10-22) wrote
+  95 such `seqscore` records; it showed as candidate and truth counts identical to the end-view
+  read at the same `c`. None of the 95 is landed.
+- **Fix (the code after this entry).** Both commands take the view from the `discover` record's
+  `arguments.json` (`--ordering` is a required argument of `discover`); a record without it
+  refuses. `seqscore.json` names the `ordering` it was read on. §1–§5 are unchanged.
+- **Re-score.** The start-view per-sequence reads are re-scored on the score side from the
+  landed `discover` reads (score matrices and sequence records, sha-checked against the box
+  manifests), with the box scripts' `seqscore` arguments, on the commit that carries the fix;
+  no method stage re-runs.
+- **Reading note for the start view (no rule change).** §2's request rule marks `(j, q)`,
+  `j < q`, as directed truth only when the span at `j` is a direct child of the span at `q`. The
+  start view is pre-order (a caller before its callees), so such a pair arises only where a
+  child is placed before its parent (a tie in start time). A diagnostic re-score of one xs
+  seed-0 read with the fix found 1 directed truth pair over 5,734 candidates. The directed
+  per-sequence columns of a start-view read are therefore near-empty by construction: they are
+  reported with their truth count and are not compared with the end view, and the floors'
+  per-sequence read (addendum 2026-10-21) is not run on the start view. A direction-free
+  per-sequence rule for the start view would be a new registration, not this entry.
