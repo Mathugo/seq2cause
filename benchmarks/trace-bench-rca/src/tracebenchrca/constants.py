@@ -102,6 +102,40 @@ RCAEVAL_COMMIT = "259ea4167160256a74ad30004aa3d96a998c846e"
 CAUSALRCA_REPO = "AXinx/CausalRCA_code"
 CAUSALRCA_COMMIT = "21f4eb0d8139aa5046402f15e66fd56b65fd3844"
 
+# --- CausalRCA's code path (plans/rca-arms.md, addenda 2026-10-22, later (D-TBR-5) and 2026-10-23) ---
+CAUSALRCA_SCRIPT = "train_latency.py"
+CAUSALRCA_FILES_SHA256 = {  # read at the pin on 2026-10-23; the adapter refuses any other content
+    "train_latency.py": "6e86acfed2231ca907ae5356aaab0b211c2dd71319ab277389f768628cf58184",
+    "modules.py": "5e1237aa156ca7f1d8dacadee50965c6f8f6d0c41bec5a78657bcec55d88c30e",
+    "utils.py": "c394ed6f45acd7505c7ffdfa2993b7e58be5a30917718a2da9430a035ecd6b6b",
+    "config.py": "451459d9c60cc74fbbf739f9a4cea0fe01df576ab11858b8b5b4269e64bfd746",
+}
+CAUSALRCA_BLOCK_START = "names = ['front-end', 'user', 'catalogue', 'orders', 'carts', 'payment', 'shipping']"
+CAUSALRCA_BLOCK_END = "data = all_data[name]"
+CAUSALRCA_EPOCHS = 1000  # D-TBR-4: the sent test plan's value; the repository's config.py says 500
+CAUSALRCA_ARGV = ("train_latency.py", "--gamma", "0.25", "--eta", "10")  # the script's defaults = the sent plan
+CAUSALRCA_RUNS = 10  # trainings per case and series, seeded with the run index
+CAUSALRCA_SERIES = ("latency-50", "latency-95")  # one row per series
+CAUSALRCA_GRAPH_PKL = "cpu-hog_front-end_adj.pkl"  # the script's own output names
+CAUSALRCA_PNG = "metrics_causality.png"
+CAUSALRCA_GRAPH_TAUS = (
+    0,
+    0.03,
+    0.05,
+    0.1,
+    0.15,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.7,
+    1,
+    1.5,
+    2,
+    3,
+    5,
+)  # strict `> tau` on mean |adj|
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
 ARM_BARO_BOCPD = "rca/baro-bocpd"

@@ -1,4 +1,4 @@
-# Root-cause arms on the latent corpora — BARO and `control/rule` rows (xs, s, m × five seeds)
+# Root-cause arms on the latent corpora — BARO, `control/rule` and CausalRCA rows (xs, s, m × five seeds)
 
 Landed 2026-10-21. Registered by `plans/rca-arms.md` (2026-10-14, with the addenda of 2026-10-19
 and 2026-10-21) and `plans/controls.md`. Every read below ran from commit `c0513701` in the
@@ -64,7 +64,7 @@ pool exhaustion 0.88; m cache flush 0.04 / crash 0.00 / degrade 0.00 (10 cases) 
 | **H-rca-rule** — `rca/baro` at or above `control/rule` | **fail** (s, m) | `rca/baro` − `control/rule` Avg@5: xs +0.080 (pass), s −0.213, m −0.096 |
 | **H-rca-bocpd** — the full pipeline within 0.10 of the injection-time row on every rung | **fail** (every rung) | gaps −0.580 (xs), −0.133 (s), −0.136 (m) |
 | **H-rca-scale** — `rca/baro`'s Avg@5 does not rise from xs to m | **pass** | m − xs = −0.544; wider half-width 0.170 |
-| **H-graph-topology** — CausalRCA's service graph at or below `floor/topology` | **not run** | stream B5 |
+| **H-graph-topology** — CausalRCA's service graph at or below `floor/topology` | **pass** (every rung, both series; four test seeds 1–4) | CausalRCA − topology directed F1: xs −0.73 / −0.86, s −0.82 / −0.77, m −0.74 / −0.77 (`latency-50` / `latency-95`) |
 
 H-rca-random fails on intervals, not on point estimates: every `rca/baro` point estimate is above
 random (0.72 vs 0.60, 0.47 vs 0.25, 0.18 vs 0.06), but xs has 10 cases over 5 services and m's
@@ -99,7 +99,7 @@ at or above `rca/baro` on every s and m kind but the m cache flush (0.00 vs 0.04
 - BARO: test plan sent to Luan Pham 2026-10-14; reply the same day confirming both rows and the
   naming of the injection-time configuration as "BARO", assistance offered, no objection to the
   adapter.
-- CausalRCA: test plan sent to Peng Chen and Zhiming Zhao 2026-10-14; no reply as of 2026-10-21
+- CausalRCA: test plan sent to Peng Chen and Zhiming Zhao 2026-10-14; no reply as of 2026-10-23
   (its row is stream B5).
 
 ## Deviations in force
@@ -107,3 +107,60 @@ at or above `rca/baro` on every s and m kind but the m cache flush (0.00 vs 0.04
 D-TBR-1 (benchmark pin `ace384b4`), D-TBR-2 (the suite's `main.py` loader not run; its fill rule
 applied), D-TBR-3 (positional case directories) — `RUN.md`. Addendum 2026-10-21: Python 3.12; the
 end-of-table and LinAlgError misses; the scorer's own preprocessing on the full-pipeline row.
+
+## CausalRCA (`rca/causalrca`, both series; landed 2026-10-23)
+
+Registered by `plans/rca-arms.md` (the 2026-10-22 decisions Q7 / Q16 / Q17, D-TBR-5 and the adapter
+addendum of 2026-10-23). The authors' `train_latency.py` at `21f4eb0` with its data block substituted
+(the case's fault-window `latency-50` or `latency-95` columns in `services.json` order, min-max scaled
+per column; every other line unchanged; `CONFIG.epochs = 1000`, D-TBR-4), in the pinned environment
+`causalrca-21f4eb0` (the repository's requirements exactly, Python 3.9, x86_64 under Rosetta 2), ten
+trainings per case and series seeded with the run index, from commit `88b3b325`, locally on CPU (eight
+single-threaded workers): 1,000 trainings, 18.2 CPU-hours (xs 1.6, s 3.7, m 12.9; the longest m training
+311 s). Every rung ran locally: the plan's GPU box for m (Q7) was not needed — no case approached the
+~30-minute threshold of §4.
+
+**Failed runs: 6 of 1,000** (xs 2, m 4), all one cause: the learned graph was empty after the script's
+own `|w| < 0.3` cut, and `sknetwork`'s PageRank raised "The input matrix is empty". Each is a run without
+a hit on the ranking axis and is left out of its case's mean graph, as registered; none was refilled.
+
+### Ranking axis (pooled over five seeds; per case, the share of the ten runs placing the root cause in the first k)
+
+| rung | series | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 |
+|---|---|---|---|---|---|---|---|
+| xs | `latency-50` | 10 | 0.220 | 0.620 | 0.990 | 0.596 [0.470, 0.734] | 0.600 |
+| s | `latency-50` | 15 | 0.080 | 0.227 | 0.487 | 0.248 [0.113, 0.400] | 0.250 |
+| m | `latency-50` | 25 | 0.016 | 0.036 | 0.068 | 0.040 [0.007, 0.084] | 0.058 |
+| xs | `latency-95` | 10 | 0.280 | 0.630 | 0.990 | 0.622 [0.474, 0.780] | 0.600 |
+| s | `latency-95` | 15 | 0.107 | 0.193 | 0.333 | 0.204 [0.083, 0.356] | 0.250 |
+| m | `latency-95` | 25 | 0.012 | 0.036 | 0.060 | 0.034 [0.003, 0.080] | 0.058 |
+
+Across rungs (50 cases): `latency-50` 0.214 [0.138, 0.296], `latency-95` 0.203 [0.128, 0.281]. Every
+point estimate is at or below the analytic random expectation of its rung, and every interval contains
+it. Per fault kind (Avg@5, `latency-50` / `latency-95`): xs crash 0.62 / 0.49, degrade 0.58 / 0.75; s
+crash 0.32 / 0.37, degrade 0.19 / 0.21, pool exhaustion 0.23 / 0.04; m cache flush 0.14 / 0.01, crash
+0.02 / 0.02, degrade 0.02 / 0.07, pool exhaustion 0.01 / 0.00 — pool exhaustion, which `rca/baro` and
+`control/rule` find at 0.84–1.00, is near zero here at m.
+
+### Graph axis (four test seeds 1–4; seed 0 is the graph axis's validation split)
+
+τ frozen per rung and series on the seed-0 cases (`freezes/2026-10-22-<rung>-rca-causalrca-<series>-graph.json`):
+xs 0.1 / 0.15, s and m 0.03 / 0.03 — at s and m every edge learned in any run (F1 at 0.03 equals F1 at 0).
+Mean over the test cases of the per-case scores against the service view at its default floor, with
+`floor/topology` on the same cases:
+
+| rung | series | τ | cases | precision | recall | F1 | AUROC | `floor/topology` F1 / AUROC |
+|---|---|---|---|---|---|---|---|---|
+| xs | `latency-50` | 0.1 | 8 | 0.249 | 0.304 | 0.266 | 0.516 | 1.000 / 1.000 |
+| s | `latency-50` | 0.03 | 12 | 0.258 | 0.153 | 0.181 | 0.500 | 1.000 / 1.000 |
+| m | `latency-50` | 0.03 | 20 | 0.185 | 0.431 | 0.257 | 0.507 | 0.997 / 0.999 |
+| xs | `latency-95` | 0.15 | 8 | 0.132 | 0.148 | 0.136 | 0.433 | 1.000 / 1.000 |
+| s | `latency-95` | 0.03 | 12 | 0.319 | 0.198 | 0.233 | 0.517 | 1.000 / 1.000 |
+| m | `latency-95` | 0.03 | 20 | 0.163 | 0.380 | 0.226 | 0.479 | 0.997 / 0.999 |
+
+**H-graph-topology passes** on every rung and series: the learned service graph is 0.73–0.86 F1 below
+the deployment topology, whose service-level coarsening is the service view's truth almost exactly
+(F1 ≥ 0.997). The learned graphs' directed AUROC sits at 0.43–0.52: the mean absolute weight does not
+order true service edges above the rest. Licence line: author repository, no licence file; authors
+contacted 2026-10-14, no reply as of 2026-10-23.
+

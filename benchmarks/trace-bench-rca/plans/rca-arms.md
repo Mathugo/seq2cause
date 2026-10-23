@@ -414,3 +414,47 @@ still open.
 - **What each record names.** The pin and the sha256 of the pinned `train_latency.py`, of the
   substituted source and of the removed block; the environment's `pip freeze` and platform; per
   training the case, series, run index, seed, wall clock and the sha256 of each output read.
+
+### 2026-10-23 — CausalRCA's adapter: what D-TBR-5 leaves to the code (before any CausalRCA code or read)
+
+Fixed before the adapter is written and before any training of a registered read:
+
+- **Two rows.** `rca/causalrca` is read once per series, `latency-50` and `latency-95`, and each is
+  its own row on both axes (a table row and a graph-axis freeze per rung and series). Records land
+  under `results/<rung>/latent/seed=<k>/rca-causalrca/<series>/` (`rank/` the method side, the score
+  files beside it).
+- **The pinned source.** `rank --arm rca/causalrca --causalrca-src <dir>` refuses a directory whose
+  git commit is not `21f4eb0` or whose tree is not clean, and refuses unless the sha256 of
+  `train_latency.py`, `modules.py`, `utils.py` and `config.py` equal the values read at the pin on
+  2026-10-23 (`6e86acfe…`, `5e1237aa…`, `c394ed6f…`, `451459d9…`; full values in
+  `constants.CAUSALRCA_FILES_SHA256`).
+- **The hand-off.** Per training, the method side (the `trace-bench-rca` environment) writes into the
+  training's own directory the input array `input.npy` (float64, rows × services, the D-TBR-5 input)
+  and the substituted source, whose data block reads `data = pd.DataFrame(np.load('input.npy'),
+  columns=[...])`. A standalone runner, `tracebenchrca/causalrca_runner.py`, executes it in the
+  pinned environment: it imports numpy before torch, seeds `torch` and `numpy` with the run index,
+  executes the source with the registered command line, and, after the script has exited, converts
+  the script's pickled graph to `adj.npy` in the same environment (numpy 1.20 wrote it). It writes
+  nothing to standard output of its own, so the last line is the script's.
+- **Threads and parallelism.** On CPU each training runs single-threaded (`OMP_NUM_THREADS` and
+  `MKL_NUM_THREADS` = 1, recorded), and a stage runs its trainings in parallel processes
+  (`--workers`). On a GPU host the script's own `CONFIG.cuda = torch.cuda.is_available()` holds.
+- **A failed run.** A training that exits non-zero, or whose last standard-output line is not a list
+  of `(index, score)` pairs covering every service exactly once (a NaN score, a crash), is a failed
+  run: on the ranking axis it is a run with no hit (counted per case, never refilled from another
+  run); on the graph axis it is left out of the case's mean and counted.
+- **The ranking axis's numbers.** Per case, AC@k for k = 1 … 5 is the share of the ten runs whose
+  ranking places the root cause in the first k (the root cause found through the benchmark's
+  `case_ranks`); AC@1 / 3 / 5 and Avg@5 are the means over cases; the 95 % interval resamples the
+  cases with the benchmark's own draws (`numpy.random.default_rng(0).integers(0, n, (2000, n))`) and
+  averages the resampled per-case values, so it equals `tracebench.score_rca.bootstrap` when every
+  run of a case agrees. Pooling over seeds and rungs concatenates the per-case values.
+- **The graph axis's numbers.** A case's graph is the elementwise mean of `|adj|` over its
+  successful runs, nodes mapped by service name to the benchmark's `svc:<index>` keys
+  (`tracebench.score_service.deployed_services`); every pair with a positive mean is listed with the
+  mean as its score (the full ranking), and the prediction at τ keeps the pairs whose mean exceeds τ.
+  Each case is scored by `tracebench.score_service` at the view's default floor; a rung's number is
+  the mean over its cases of the per-case directed precision, recall, F1 and AUROC (each case is
+  one learned graph), the per-case values recorded. `floor/topology`'s number is the same mean over
+  the same cases (its prediction is the corpus's deployment topology, one per corpus). The freeze
+  is the argmax over the τ grid of the mean directed F1 over the seed-0 cases, ties → the larger τ.

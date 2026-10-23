@@ -1,0 +1,149 @@
+{
+ "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+ "axis": "ranking",
+ "bootstrap": {
+  "b": 2000,
+  "intervals": {
+   "ac@1": {
+    "high": 0.0,
+    "low": 0.0
+   },
+   "ac@3": {
+    "high": 0.0,
+    "low": 0.0
+   },
+   "ac@5": {
+    "high": 0.9,
+    "low": 0.0
+   },
+   "avg@5": {
+    "high": 0.18,
+    "low": 0.0
+   }
+  },
+  "level": 0.95,
+  "seed": 0
+ },
+ "by_fault_kind": {
+  "crash": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.1,
+   "avg@5": 0.02,
+   "n_cases": 1
+  },
+  "degrade": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "pool_exhaust": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.9,
+   "avg@5": 0.18,
+   "n_cases": 1
+  }
+ },
+ "cases": [
+  {
+   "case_id": "s_tb-migo_degrade_0",
+   "fault_kind": "degrade",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    11,
+    11,
+    11,
+    11,
+    11,
+    11,
+    11,
+    11,
+    11,
+    11
+   ],
+   "root_cause_component": "tb-migo"
+  },
+  {
+   "case_id": "s_tb-matitso_crash_1",
+   "fault_kind": "crash",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.1
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    6,
+    5,
+    8,
+    10,
+    8,
+    11,
+    12,
+    12,
+    9,
+    11
+   ],
+   "root_cause_component": "tb-matitso"
+  },
+  {
+   "case_id": "s_tb-pazi_pool_exhaust_2",
+   "fault_kind": "pool_exhaust",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.9
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    6,
+    5,
+    5
+   ],
+   "root_cause_component": "tb-pazi"
+  }
+ ],
+ "corpus_dir_name": "seed=1",
+ "metrics": {
+  "ac@1": 0.0,
+  "ac@3": 0.0,
+  "ac@5": 0.3333333333333333,
+  "avg@5": 0.06666666666666667,
+  "n_cases": 3
+ },
+ "n_missing": 0,
+ "random": {
+  "ac@1": 0.08333333333333333,
+  "ac@3": 0.25,
+  "ac@5": 0.4166666666666667,
+  "avg@5": 0.25,
+  "n_candidates": 12
+ }
+}

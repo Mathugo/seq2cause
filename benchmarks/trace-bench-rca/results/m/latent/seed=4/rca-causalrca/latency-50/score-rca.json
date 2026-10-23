@@ -1,0 +1,210 @@
+{
+ "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+ "axis": "ranking",
+ "bootstrap": {
+  "b": 2000,
+  "intervals": {
+   "ac@1": {
+    "high": 0.12000000000000002,
+    "low": 0.0
+   },
+   "ac@3": {
+    "high": 0.12000000000000002,
+    "low": 0.0
+   },
+   "ac@5": {
+    "high": 0.18,
+    "low": 0.0
+   },
+   "avg@5": {
+    "high": 0.144,
+    "low": 0.0
+   }
+  },
+  "level": 0.95,
+  "seed": 0
+ },
+ "by_fault_kind": {
+  "cache_flush": {
+   "ac@1": 0.2,
+   "ac@3": 0.2,
+   "ac@5": 0.3,
+   "avg@5": 0.24000000000000005,
+   "n_cases": 1
+  },
+  "crash": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "degrade": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.05,
+   "avg@5": 0.01,
+   "n_cases": 2
+  },
+  "pool_exhaust": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  }
+ },
+ "cases": [
+  {
+   "case_id": "m_tb-bola_degrade_0",
+   "fault_kind": "degrade",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.1
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    23,
+    6,
+    15,
+    22,
+    24,
+    5,
+    19,
+    26,
+    21,
+    24
+   ],
+   "root_cause_component": "tb-bola"
+  },
+  {
+   "case_id": "m_tb-fapabet_crash_1",
+   "fault_kind": "crash",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    17,
+    18,
+    8,
+    26,
+    10,
+    6,
+    13,
+    11,
+    25,
+    17
+   ],
+   "root_cause_component": "tb-fapabet"
+  },
+  {
+   "case_id": "m_tb-vesufer_pool_exhaust_2",
+   "fault_kind": "pool_exhaust",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    52,
+    35,
+    44,
+    35,
+    41,
+    41,
+    43,
+    41,
+    41,
+    52
+   ],
+   "root_cause_component": "tb-vesufer"
+  },
+  {
+   "case_id": "m_tb-tuleven_cache_flush_3",
+   "fault_kind": "cache_flush",
+   "hit_rate": {
+    "ac@1": 0.2,
+    "ac@2": 0.2,
+    "ac@3": 0.2,
+    "ac@4": 0.3,
+    "ac@5": 0.3
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    10,
+    7,
+    4,
+    1,
+    11,
+    14,
+    1,
+    8,
+    6,
+    6
+   ],
+   "root_cause_component": "tb-tuleven"
+  },
+  {
+   "case_id": "m_tb-edge_degrade_4",
+   "fault_kind": "degrade",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    40,
+    12,
+    13,
+    16,
+    11,
+    17,
+    11,
+    7,
+    39,
+    19
+   ],
+   "root_cause_component": "tb-edge"
+  }
+ ],
+ "corpus_dir_name": "seed=4",
+ "metrics": {
+  "ac@1": 0.04,
+  "ac@3": 0.04,
+  "ac@5": 0.08,
+  "avg@5": 0.052000000000000005,
+  "n_cases": 5
+ },
+ "n_missing": 0,
+ "random": {
+  "ac@1": 0.019230769230769232,
+  "ac@3": 0.057692307692307696,
+  "ac@5": 0.09615384615384616,
+  "avg@5": 0.057692307692307696,
+  "n_candidates": 52
+ }
+}
