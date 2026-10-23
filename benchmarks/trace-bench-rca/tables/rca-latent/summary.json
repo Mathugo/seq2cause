@@ -1,8 +1,181 @@
 {
+ "graph_rows": [
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.5155059523809524,
+    "f1": 0.2656926406926407,
+    "precision": 0.24861111111111112,
+    "recall": 0.3041666666666667
+   },
+   "n_cases": 8,
+   "rung": "xs",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-50",
+   "tau": 0.1
+  },
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.5003738833405774,
+    "f1": 0.18125651084475844,
+    "precision": 0.2577948644122446,
+    "recall": 0.15253534784784786
+   },
+   "n_cases": 12,
+   "rung": "s",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-50",
+   "tau": 0.03
+  },
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 0.9993143506575244,
+    "f1": 0.996807790558812,
+    "precision": 0.9936418613078593,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.507290437442302,
+    "f1": 0.2568250561763908,
+    "precision": 0.18469450027735218,
+    "recall": 0.4310045405893585
+   },
+   "n_cases": 20,
+   "rung": "m",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-50",
+   "tau": 0.03
+  },
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.4331622023809524,
+    "f1": 0.136005661005661,
+    "precision": 0.13229166666666667,
+    "recall": 0.14791666666666667
+   },
+   "n_cases": 8,
+   "rung": "xs",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-95",
+   "tau": 0.15
+  },
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.5171303560962278,
+    "f1": 0.2330239378275554,
+    "precision": 0.3190635416579352,
+    "recall": 0.1983467842842843
+   },
+   "n_cases": 12,
+   "rung": "s",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-95",
+   "tau": 0.03
+  },
+  {
+   "arm": "rca/causalrca",
+   "floor_topology": {
+    "auroc": 0.9993143506575244,
+    "f1": 0.996807790558812,
+    "precision": 0.9936418613078593,
+    "recall": 1.0
+   },
+   "mean": {
+    "auroc": 0.47908563559187056,
+    "f1": 0.22638859440964265,
+    "precision": 0.16310526802314046,
+    "recall": 0.37971338846279173
+   },
+   "n_cases": 20,
+   "rung": "m",
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "series": "latency-95",
+   "tau": 0.03
+  }
+ ],
  "hypotheses": {
   "H-graph-topology": {
-   "reason": "the graph axis is CausalRCA's (stream B5)",
-   "verdict": "not run"
+   "gap_causalrca_minus_topology_f1": {
+    "m latency-50": -0.7399827343824212,
+    "m latency-95": -0.7704191961491693,
+    "s latency-50": -0.8187434891552415,
+    "s latency-95": -0.7669760621724446,
+    "xs latency-50": -0.7343073593073592,
+    "xs latency-95": -0.863994338994339
+   },
+   "per_rung_and_series": {
+    "m latency-50": true,
+    "m latency-95": true,
+    "s latency-50": true,
+    "s latency-95": true,
+    "xs latency-50": true,
+    "xs latency-95": true
+   },
+   "seeds": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "verdict": "pass"
   },
   "H-rca-bocpd": {
    "gap_bocpd_minus_baro": {
@@ -704,6 +877,438 @@
     "n_candidates": 52
    },
    "rung": "m"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.41000000000000003,
+      "low": 0.07999999999999999
+     },
+     "ac@3": {
+      "high": 0.8099999999999999,
+      "low": 0.42000000000000004
+     },
+     "ac@5": {
+      "high": 1.0,
+      "low": 0.97
+     },
+     "avg@5": {
+      "high": 0.7340000000000001,
+      "low": 0.47000000000000003
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.21999999999999997,
+     "ac@3": 0.64,
+     "ac@5": 1.0,
+     "avg@5": 0.616,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.22000000000000003,
+     "ac@3": 0.6,
+     "ac@5": 0.9800000000000001,
+     "avg@5": 0.5760000000000001,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.22000000000000003,
+    "ac@3": 0.62,
+    "ac@5": 0.99,
+    "avg@5": 0.596,
+    "n_cases": 10
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 1,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs",
+   "series": "latency-50"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.18000000000000002,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.39333333333333337,
+      "low": 0.08000000000000002
+     },
+     "ac@5": {
+      "high": 0.7066666666666667,
+      "low": 0.2733333333333333
+     },
+     "avg@5": {
+      "high": 0.4000333333333332,
+      "low": 0.11330000000000005
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.13999999999999999,
+     "ac@3": 0.32,
+     "ac@5": 0.52,
+     "avg@5": 0.324,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.02,
+     "ac@3": 0.15999999999999998,
+     "ac@5": 0.44000000000000006,
+     "avg@5": 0.192,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.08,
+     "ac@3": 0.2,
+     "ac@5": 0.5,
+     "avg@5": 0.22800000000000004,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.08,
+    "ac@3": 0.22666666666666668,
+    "ac@5": 0.48666666666666664,
+    "avg@5": 0.248,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s",
+   "series": "latency-50"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.036000000000000004,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.07600000000000001,
+      "low": 0.004
+     },
+     "ac@5": {
+      "high": 0.14809999999999948,
+      "low": 0.012000000000000002
+     },
+     "avg@5": {
+      "high": 0.084,
+      "low": 0.007200000000000001
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.04,
+     "ac@3": 0.12000000000000002,
+     "ac@5": 0.24,
+     "avg@5": 0.136,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.02,
+     "ac@3": 0.02,
+     "ac@5": 0.02,
+     "avg@5": 0.02,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.01,
+     "ac@3": 0.02,
+     "ac@5": 0.030000000000000006,
+     "avg@5": 0.018,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.02,
+     "avg@5": 0.008,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.016,
+    "ac@3": 0.036,
+    "ac@5": 0.068,
+    "avg@5": 0.04,
+    "n_cases": 25
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 1,
+   "n_filled_cells": 2,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m",
+   "series": "latency-50"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.47000000000000003,
+      "low": 0.11000000000000001
+     },
+     "ac@3": {
+      "high": 0.85,
+      "low": 0.4
+     },
+     "ac@5": {
+      "high": 1.0,
+      "low": 0.97
+     },
+     "avg@5": {
+      "high": 0.78,
+      "low": 0.47400000000000003
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.16,
+     "ac@3": 0.44000000000000006,
+     "ac@5": 1.0,
+     "avg@5": 0.492,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.4,
+     "ac@3": 0.82,
+     "ac@5": 0.9800000000000001,
+     "avg@5": 0.752,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.27999999999999997,
+    "ac@3": 0.63,
+    "ac@5": 0.99,
+    "avg@5": 0.6220000000000001,
+    "n_cases": 10
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 1,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs",
+   "series": "latency-95"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.2533333333333333,
+      "low": 0.013166666666666962
+     },
+     "ac@3": {
+      "high": 0.3466666666666667,
+      "low": 0.060000000000000005
+     },
+     "ac@5": {
+      "high": 0.5066666666666666,
+      "low": 0.16666666666666669
+     },
+     "avg@5": {
+      "high": 0.356,
+      "low": 0.08266666666666667
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.28,
+     "ac@3": 0.36,
+     "ac@5": 0.44000000000000006,
+     "avg@5": 0.36800000000000005,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.04,
+     "ac@3": 0.18,
+     "ac@5": 0.4800000000000001,
+     "avg@5": 0.20800000000000002,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.0,
+     "ac@3": 0.04,
+     "ac@5": 0.08,
+     "avg@5": 0.036,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.10666666666666667,
+    "ac@3": 0.19333333333333336,
+    "ac@5": 0.3333333333333333,
+    "avg@5": 0.20400000000000001,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s",
+   "series": "latency-95"
+  },
+  {
+   "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+   "arm": "rca/causalrca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.036,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.084,
+      "low": 0.0
+     },
+     "ac@5": {
+      "high": 0.12399999999999999,
+      "low": 0.012000000000000002
+     },
+     "avg@5": {
+      "high": 0.0800199999999999,
+      "low": 0.0032
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.04,
+     "avg@5": 0.008,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.02,
+     "ac@5": 0.02,
+     "avg@5": 0.016,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.03,
+     "ac@3": 0.08,
+     "ac@5": 0.12000000000000002,
+     "avg@5": 0.074,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.012,
+    "ac@3": 0.036,
+    "ac@5": 0.06,
+    "avg@5": 0.0344,
+    "n_cases": 25
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_failed_runs": 3,
+   "n_filled_cells": 2,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m",
+   "series": "latency-95"
   }
  ]
 }
