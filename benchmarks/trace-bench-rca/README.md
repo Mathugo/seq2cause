@@ -66,11 +66,15 @@ nothing has a default** (`tests/test_no_defaults.py` fails the build otherwise),
 | `pull` | fetch one corpus in the `rca` tier — the configuration, the instantiation, `labels/cases.json`, the access-log shards, the service view, the alphabet and the topology, nothing else — from the dataset host and verify every file against the corpus manifest |
 | `export` | run the benchmark's exporter on a pulled corpus (one case directory per fault) and record it with this repository's commit |
 | `artifacts` | object-store push / pull / verify of a run directory; the manifest it writes carries hashes, never a location |
-| `rank` | method side: one ranking arm (`rca/baro`, `rca/baro-bocpd`) over every case of one export, through the case door and only the arm's declared inputs; rankings keyed by case directory |
+| `rank` | method side: one ranking arm (`rca/baro`, `rca/baro-bocpd`, `control/rule`) over every case of one export, through the case door and only the arm's declared inputs; rankings keyed by case directory |
 | `score` | score side: restores the case ids by position, writes `ranking.json` and the benchmark's `score-rca.json` (AC@k, Avg@5, bootstrap, the random expectation = `control/random`), and the full pipeline's change-point offsets |
-| `report` | pools five seeds per rung and across rungs, writes `tables/rca-latent/` and scores the hypotheses of `plans/rca-arms.md` §6 |
+| `rankcausalrca` | method side: `rca/causalrca`, one series, every case of one export — the authors' `train_latency.py` at the pin with its data block substituted (D-TBR-5), ten seeded trainings per case through `causalrca_runner.py` in the pinned environment (`environment-causalrca.yml`); per case every run's ranking and the mean `|adj|` |
+| `scorecausalrca` | score side: per-run ranks by the benchmark's `case_ranks`, hits averaged over runs per case, the bootstrap on the benchmark's draws; `ranking.json`, `score-rca.json`, `graph.json` (`svc:<index>` predictions) |
+| `graphaxis` | score side: each case's learned service graph scored by `tracebench.score_service` beside `floor/topology` — the τ grid on seed 0 (validation) or the frozen τ on seeds 1–4 (test) |
+| `graphfreeze` | the graph axis's τ per rung and series from the seed-0 validation read (argmax of the mean F1, ties → the larger τ), `freezes/<date>-<rung>-rca-causalrca-<series>-graph.json` |
+| `report` | pools five seeds per rung and across rungs (`rca/causalrca`'s graph axis: the four test seeds), writes `tables/rca-latent/` and scores the hypotheses of `plans/rca-arms.md` §6 |
 
-The CausalRCA command lands with B5; `control/rule` is a `rank` arm with no third-party code. Scoring is the
+CausalRCA runs through `rankcausalrca` (its own stage: the pinned environment, ten trainings per case and series); `control/rule` is a `rank` arm with no third-party code. Scoring is the
 benchmark's: `tracebench.score_rca` on the per-case rankings, `tracebench.score_service` on the
 service graphs, their reports consumed unchanged.
 

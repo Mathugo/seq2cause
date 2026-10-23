@@ -1,7 +1,7 @@
 """Pool the landed ranking-axis results per rung and across rungs, and score the hypotheses.
 
     python -m tracebenchrca.report --results-dir results --rungs xs s m --seeds 0 1 2 3 4 \
-        --arms rca/baro rca/baro-bocpd control/rule --bootstrap-b 2000 --bootstrap-seed 0 --output-folder tables/rca-latent
+        --arms rca/baro rca/baro-bocpd control/rule rca/causalrca --bootstrap-b 2000 --bootstrap-seed 0 --output-folder tables/rca-latent
 
 Reads, per rung, seed and arm, the landed `results/<rung>/latent/seed=<k>/<arm slug>/score-rca.json`
 and the two stage records beside it; refuses a rung with fewer seeds than named (a pooled table
@@ -11,6 +11,13 @@ row with its interval, the analytic random expectation — `control/random` — 
 reason, for the full pipeline the change-point offsets and for `control/rule` the alerting services
 per case) and `rca-latent.md`; the hypotheses
 of `plans/rca-arms.md` §6 are scored mechanically from the pooled rows.
+
+`rca/causalrca` is read per series (`results/<rung>/latent/seed=<k>/rca-causalrca/<series>/`), one row
+each, pooled from the run-averaged per-case hit rates (`scorecausalrca.pool_run_averaged`). Its graph
+axis is reported on the **four test seeds 1–4** (seed 0 is the axis's validation split; the
+four-seed exception of `plans/rca-arms.md`, addendum 2026-10-22): per rung and series the mean over
+the test cases of the per-case directed precision, recall, F1 and AUROC at the frozen τ, with
+`floor/topology` over the same cases, and H-graph-topology scored on them.
 """
 
 from __future__ import annotations
@@ -25,7 +32,9 @@ from .arms import arm_slug
 from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
+    ARM_CAUSALRCA,
     ARM_CONTROL_RULE,
+    CAUSALRCA_SERIES,
     RESULTS_JSON,
     RUN_DIR,
     RUNGS,
@@ -33,20 +42,23 @@ from .constants import (
     SEEDS,
     VARIANT,
 )
+from .graphaxis import SCORE_SERVICE_JSON, TEST_SEEDS
 from .log import log
 from .record import RunRecord, read_json, sha256_file, write_json
+from .scorecausalrca import pool_run_averaged
 
 STAGE = "report"
 AVG = "avg@5"
 BOCPD_GAP = 0.10  # H-rca-bocpd's registered tolerance (plans/rca-arms.md §6)
 
 
-def cell_dir(results_dir, rung, seed, arm):
-    return Path(results_dir) / rung / VARIANT / f"seed={seed}" / arm_slug(arm)
+def cell_dir(results_dir, rung, seed, arm, series=None):
+    d = Path(results_dir) / rung / VARIANT / f"seed={seed}" / arm_slug(arm)
+    return d if series is None else d / series
 
 
-def load_cell(results_dir, rung, seed, arm):
-    d = cell_dir(results_dir, rung, seed, arm)
+def load_cell(results_dir, rung, seed, arm, series=None):
+    d = cell_dir(results_dir, rung, seed, arm, series)
     score_res = read_json(d / RUN_DIR / RESULTS_JSON)
     rank_res = read_json(d / "rank" / RUN_DIR / RESULTS_JSON)
     if score_res.get("status") != "ok" or rank_res.get("status") != "ok":
@@ -81,6 +93,10 @@ def row_of(rung, arm, pooled, cells):
         "n_metrics_lt_min_pre": sum(r["n_metrics_lt_min_pre"] for _, _, r in cells),
         "by_fault_kind": pooled["by_fault_kind"],
     }
+    if arm == ARM_CAUSALRCA:
+        row["series"] = cells[0][1]["series"]
+        row["n_failed_runs"] = sum(r["n_failed_runs"] for _, _, r in cells)
+        row["aggregation"] = pooled["aggregation"]
     offsets = [
         cp["change_point_offset_s"]
         for _, s, _ in cells
@@ -106,7 +122,7 @@ def row_of(rung, arm, pooled, cells):
     return row
 
 
-def hypotheses(rows, rungs):
+def hypotheses(rows, rungs, graph_rows=()):
     by = {(r["rung"], r["arm"]): r for r in rows}
     out = {}
     if all((g, ARM_BARO) in by for g in rungs):
@@ -140,7 +156,21 @@ def hypotheses(rows, rungs):
         }
     else:
         out["H-rca-rule"] = {"verdict": "not run", "reason": "needs rca/baro and control/rule on every named rung"}
-    out["H-graph-topology"] = {"verdict": "not run", "reason": "the graph axis is CausalRCA's (stream B5)"}
+    if graph_rows and all(any(g["rung"] == r for g in graph_rows) for r in rungs):
+        per = {f"{g['rung']} {g['series']}": g["mean"]["f1"] <= g["floor_topology"]["f1"] for g in graph_rows}
+        out["H-graph-topology"] = {
+            "gap_causalrca_minus_topology_f1": {
+                f"{g['rung']} {g['series']}": g["mean"]["f1"] - g["floor_topology"]["f1"] for g in graph_rows
+            },
+            "per_rung_and_series": per,
+            "seeds": list(TEST_SEEDS),
+            "verdict": "pass" if all(per.values()) else "fail",
+        }
+    else:
+        out["H-graph-topology"] = {
+            "verdict": "not run",
+            "reason": "needs rca/causalrca's graph test reads on every named rung",
+        }
     return out
 
 
@@ -148,15 +178,46 @@ def fmt(x):
     return "—" if x is None else f"{x:.3f}"
 
 
-def markdown(rows, hyp):
+def graph_row(results_dir, rung, series):
+    """The graph axis of one rung and series over the four test seeds: the mean over every test case."""
+    cases, freezes, topo = [], set(), []
+    for k in TEST_SEEDS:
+        d = cell_dir(results_dir, rung, k, ARM_CAUSALRCA, series) / "graph-test"
+        rec = read_json(d / RUN_DIR / RESULTS_JSON)
+        doc = read_json(d / SCORE_SERVICE_JSON)
+        if rec.get("status") != "ok" or sha256_file(d / SCORE_SERVICE_JSON) != rec["score_service_sha256"]:
+            raise ValueError(f"{d} holds a failed or changed graph test read")
+        (tau,) = doc["taus"]
+        freezes.add((doc["freeze"]["sha256"], tau))
+        for c in doc["cases"]:
+            cases.append({**c["by_tau"][repr(float(tau))], "auroc": c["auroc"]})
+            topo.append(doc["floor_topology"])
+    if len(freezes) != 1:
+        raise ValueError(f"{rung} {series}: the test seeds were read under different freezes {freezes}")
+    mean = lambda rows, m: sum(r[m] for r in rows) / len(rows)  # noqa: E731
+    metrics = ("precision", "recall", "f1", "auroc")
+    return {
+        "rung": rung,
+        "arm": ARM_CAUSALRCA,
+        "series": series,
+        "seeds": list(TEST_SEEDS),
+        "tau": tau,
+        "n_cases": len(cases),
+        "mean": {m: mean(cases, m) for m in metrics},
+        "floor_topology": {m: mean(topo, m) for m in metrics},
+    }
+
+
+def markdown(rows, hyp, graph_rows=()):
     lines = [
         "| rung | arm | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 | misses |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         m, iv, rnd = r["metrics"], r["bootstrap"]["intervals"].get(AVG, {}), r["random"]
+        label = f"`{r['arm']}` ({r['series']})" if "series" in r else f"`{r['arm']}`"
         lines.append(
-            f"| {r['rung']} | `{r['arm']}` | {m['n_cases']} | {fmt(m['ac@1'])} | {fmt(m['ac@3'])} | {fmt(m['ac@5'])} | "
+            f"| {r['rung']} | {label} | {m['n_cases']} | {fmt(m['ac@1'])} | {fmt(m['ac@3'])} | {fmt(m['ac@5'])} | "
             f"{fmt(m[AVG])} [{fmt(iv.get('low'))}, {fmt(iv.get('high'))}] | {fmt(rnd[AVG] if rnd else None)} | "
             f"{r['n_missing']} |"
         )
@@ -166,6 +227,20 @@ def markdown(rows, hyp):
         for r in rule_rows:
             a = r["alerting_services_per_case"]
             lines.append(f"| {r['rung']} | `{r['arm']}` | {a['mean']:.2f} [{a['min']}, {a['max']}] |")
+    if graph_rows:
+        lines += [
+            "",
+            "Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation split. Mean over the test cases.",
+            "",
+            "| rung | series | τ | cases | precision | recall | F1 | AUROC | `floor/topology` F1 | AUROC |",
+            "|---|---|---|---|---|---|---|---|---|---|",
+        ]
+        for g in graph_rows:
+            m, f = g["mean"], g["floor_topology"]
+            lines.append(
+                f"| {g['rung']} | {g['series']} | {g['tau']} | {g['n_cases']} | {fmt(m['precision'])} | {fmt(m['recall'])} | "
+                f"{fmt(m['f1'])} | {fmt(m['auroc'])} | {fmt(f['f1'])} | {fmt(f['auroc'])} |"
+            )
     lines += ["", "| hypothesis | verdict |", "|---|---|"]
     lines += [f"| {k} | {v['verdict']} |" for k, v in hyp.items()]
     return "\n".join(lines) + "\n"
@@ -174,23 +249,29 @@ def markdown(rows, hyp):
 def report(results_dir, rungs, seeds, arms, b, seed, out):
     out = Path(out)
     rows, files = [], {}
+    graph_rows = []
     for arm in arms:
-        all_results = []
-        for rung in rungs:
-            cells = [load_cell(results_dir, rung, k, arm) for k in seeds]
-            pooled = pool([c[0] for c in cells], b, seed)
-            name = f"pooled-{rung}-{arm_slug(arm)}.json"
-            write_json(out / name, pooled)
-            files[name] = sha256_file(out / name)
-            rows.append(row_of(rung, arm, pooled, cells))
-            all_results += [c[0] for c in cells]
-        if len(rungs) > 1:
-            name = f"pooled-{'-'.join(rungs)}-{arm_slug(arm)}.json"
-            write_json(out / name, pool(all_results, b, seed))
-            files[name] = sha256_file(out / name)
-    hyp = hypotheses(rows, rungs)
-    write_json(out / "summary.json", {"rows": rows, "hypotheses": hyp})
-    (out / "rca-latent.md").write_text(markdown(rows, hyp), encoding="utf-8")
+        for series in CAUSALRCA_SERIES if arm == ARM_CAUSALRCA else (None,):
+            pooler = pool_run_averaged if arm == ARM_CAUSALRCA else pool
+            stem = arm_slug(arm) if series is None else f"{arm_slug(arm)}-{series}"
+            all_results = []
+            for rung in rungs:
+                cells = [load_cell(results_dir, rung, k, arm, series) for k in seeds]
+                pooled = pooler([c[0] for c in cells], b, seed)
+                name = f"pooled-{rung}-{stem}.json"
+                write_json(out / name, pooled)
+                files[name] = sha256_file(out / name)
+                rows.append(row_of(rung, arm, pooled, cells))
+                all_results += [c[0] for c in cells]
+                if arm == ARM_CAUSALRCA:
+                    graph_rows.append(graph_row(results_dir, rung, series))
+            if len(rungs) > 1:
+                name = f"pooled-{'-'.join(rungs)}-{stem}.json"
+                write_json(out / name, pooler(all_results, b, seed))
+                files[name] = sha256_file(out / name)
+    hyp = hypotheses(rows, rungs, graph_rows)
+    write_json(out / "summary.json", {"rows": rows, "graph_rows": graph_rows, "hypotheses": hyp})
+    (out / "rca-latent.md").write_text(markdown(rows, hyp, graph_rows), encoding="utf-8")
     files["summary.json"] = sha256_file(out / "summary.json")
     files["rca-latent.md"] = sha256_file(out / "rca-latent.md")
     return {
@@ -208,7 +289,9 @@ def build_parser():
     p.add_argument("--results-dir", required=True)
     p.add_argument("--rungs", required=True, nargs="+", choices=RUNGS)
     p.add_argument("--seeds", required=True, nargs="+", type=int, choices=SEEDS)
-    p.add_argument("--arms", required=True, nargs="+", choices=(ARM_BARO, ARM_BARO_BOCPD, ARM_CONTROL_RULE))
+    p.add_argument(
+        "--arms", required=True, nargs="+", choices=(ARM_BARO, ARM_BARO_BOCPD, ARM_CONTROL_RULE, ARM_CAUSALRCA)
+    )
     p.add_argument("--bootstrap-b", required=True, type=int, help="bootstrap resamples of the pooled tables")
     p.add_argument("--bootstrap-seed", required=True, type=int)
     p.add_argument("--output-folder", required=True, help="the tables directory and this stage's run record")
