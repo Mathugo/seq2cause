@@ -1,4 +1,4 @@
-# Root-cause arms on the latent corpora — BARO rows (xs, s, m × five seeds)
+# Root-cause arms on the latent corpora — BARO and `control/rule` rows (xs, s, m × five seeds)
 
 Landed 2026-10-21. Registered by `plans/rca-arms.md` (2026-10-14, with the addenda of 2026-10-19
 and 2026-10-21) and `plans/controls.md`. Every read below ran from commit `c0513701` in the
@@ -8,6 +8,12 @@ the export at the registered widths (xs 30 s, s 15 s, m 60 s); scoring by the be
 `tracebench.score_rca` (B = 2000, bootstrap seed 0). Tables: `tables/rca-latent/`
 (`summary.json`, `rca-latent.md`, one pooled file per rung and arm, one across rungs). No value
 was chosen on any read: both rows run at the methods' published defaults.
+
+The `control/rule` row landed 2026-10-23 from commit `c8c4551c`, on the same exports (every case
+file re-verified against its export record), registered by `plans/controls.md` §2 with its
+addenda of 2026-10-22 (owner confirmation) and 2026-10-23 (the details §2 leaves open, fixed
+before the code). The `rca/baro` and `rca/baro-bocpd` pooled files of the regenerated table are
+byte-identical to the 2026-10-21 ones.
 
 ## Ranking axis (pooled over five seeds; cases = injected faults)
 
@@ -19,15 +25,20 @@ was chosen on any read: both rows run at the methods' published defaults.
 | xs | `rca/baro-bocpd` | 10 | 0.100 | 0.100 | 0.200 | 0.140 [0.000, 0.380] | 0.600 (5) | 7 |
 | s | `rca/baro-bocpd` | 15 | 0.133 | 0.267 | 0.600 | 0.333 [0.173, 0.533] | 0.250 (12) | 0 |
 | m | `rca/baro-bocpd` | 25 | 0.040 | 0.040 | 0.040 | 0.040 [0.000, 0.120] | 0.058 (52) | 8 |
+| xs | `control/rule` | 10 | 0.300 | 0.600 | 1.000 | 0.640 [0.440, 0.820] | 0.600 (5) | 0 |
+| s | `control/rule` | 15 | 0.467 | 0.667 | 0.800 | 0.680 [0.480, 0.867] | 0.250 (12) | 0 |
+| m | `control/rule` | 25 | 0.160 | 0.280 | 0.320 | 0.272 [0.120, 0.440] | 0.058 (52) | 0 |
 
-Across rungs (50 cases): `rca/baro` Avg@5 0.372 [0.260, 0.488]; `rca/baro-bocpd` 0.148 [0.072, 0.232].
-`control/random` is the analytic column (AC@k = min(k, n) / n); `control/rule` is not run
-(`plans/controls.md` §2 awaits the owner, publication plan Q8).
+Across rungs (50 cases): `rca/baro` Avg@5 0.372 [0.260, 0.488]; `rca/baro-bocpd` 0.148 [0.072, 0.232];
+`control/rule` 0.468 [0.344, 0.588]. `control/random` is the analytic column (AC@k = min(k, n) / n);
+`control/rule` is the three-rule alert counter (`plans/controls.md` §2). Alerting services per
+case, mean [min, max]: xs 2.5 [0, 5] of 5, s 8.8 [3, 12] of 12, m 29.0 [3, 51] of 52.
 
 Per fault kind, `rca/baro` Avg@5: xs crash 0.52 / degrade 0.92; s crash 0.16 / degrade 0.36 /
 pool exhaustion 0.88; m cache flush 0.04 / crash 0.00 / degrade 0.00 (10 cases) / pool exhaustion
 0.84. The full pipeline: xs crash 0.00 / degrade 0.28; s 0.28 / 0.24 / 0.48; m 0.00 / 0.00 / 0.00 /
-0.20.
+0.20. `control/rule`: xs crash 0.52 / degrade 0.76; s crash 0.32 / degrade 0.72 / pool exhaustion
+1.00; m cache flush 0.00 / crash 0.08 / degrade 0.18 / pool exhaustion 0.92.
 
 ## The full pipeline's no-ranking cases and change points
 
@@ -50,7 +61,7 @@ pool exhaustion 0.88; m cache flush 0.04 / crash 0.00 / degrade 0.00 (10 cases) 
 | hypothesis | verdict | the numbers |
 |---|---|---|
 | **H-rca-random** — `rca/baro`'s Avg@5 interval above the random expectation on every rung | **fail** (xs, m) | xs low 0.540 vs 0.600; s low 0.253 vs 0.250 (pass); m low 0.048 vs 0.058 |
-| **H-rca-rule** — `rca/baro` at or above `control/rule` | **not run** | `control/rule` awaits Q8 |
+| **H-rca-rule** — `rca/baro` at or above `control/rule` | **fail** (s, m) | `rca/baro` − `control/rule` Avg@5: xs +0.080 (pass), s −0.213, m −0.096 |
 | **H-rca-bocpd** — the full pipeline within 0.10 of the injection-time row on every rung | **fail** (every rung) | gaps −0.580 (xs), −0.133 (s), −0.136 (m) |
 | **H-rca-scale** — `rca/baro`'s Avg@5 does not rise from xs to m | **pass** | m − xs = −0.544; wider half-width 0.170 |
 | **H-graph-topology** — CausalRCA's service graph at or below `floor/topology` | **not run** | stream B5 |
@@ -59,6 +70,12 @@ H-rca-random fails on intervals, not on point estimates: every `rca/baro` point 
 random (0.72 vs 0.60, 0.47 vs 0.25, 0.18 vs 0.06), but xs has 10 cases over 5 services and m's
 interval reaches the expectation. At m the row finds pool exhaustion (0.84) and almost nothing
 else (crash 0.00, degrade 0.00, cache flush 0.04 over 20 cases).
+
+H-rca-rule fails on the registered point estimates: the three-rule alert counter is above
+`rca/baro` at s (0.680 vs 0.467) and m (0.272 vs 0.176) and below it at xs (0.640 vs 0.720).
+Every pair of intervals overlaps, so no rung separates the two rows; across rungs the rule control
+is at 0.468 [0.344, 0.588] against BARO's 0.372 [0.260, 0.488]. By fault kind the rule control is
+at or above `rca/baro` on every s and m kind but the m cache flush (0.00 vs 0.04).
 
 ## Reading notes (descriptive, not re-tuned)
 
@@ -70,6 +87,10 @@ else (crash 0.00, degrade 0.00, cache flush 0.04 over 20 cases).
   corpora its detector fires either after the fault's last bin (xs) or hours before the fault (s,
   m), which the offsets above make visible. The injection-time row is the suite's "BARO" (the
   author's confirmation of 2026-10-14).
+- The rule control alerts in either direction (a crash's falling request count alerts), where
+  `rca/baro`'s registered score is signed (the first note above). The m crash and degrade cases
+  are where BARO scores zero and the rule control does not (0.08, 0.18). Neither difference is
+  analysed further here.
 - One series per service and metric is all either row reads: request count, 5xx share, p50, p95
   from the raw access-log lines; no CPU, memory or trace features exist in this export.
 

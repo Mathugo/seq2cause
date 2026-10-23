@@ -53,3 +53,27 @@ ranking by the largest z-score (that is the n-sigma method of the BARO paper, no
   with the methods' bootstrap (B = 2000, seed 0), with the number of alerting services per case.
 - The "not chosen" list of §2 stays as written. `plans/rca-arms.md` §6 H-rca-rule is scored once
   the row has landed on xs, s and m × five seeds.
+
+### 2026-10-23 — `control/rule`: the details §2 leaves open (before any `control/rule` code or run)
+
+Fixed from the registration's wording and the alerting practice it names, before the code and
+before any ranking is read:
+
+- **Standard deviation.** The population standard deviation of the pre-fault rows (divisor n, as an
+  alerting system's `stddev_over_time` computes it), beside their mean. A series with fewer than two
+  pre-fault rows has standard deviation 0 and, by §2, never alerts; a case with no pre-fault row has
+  no alerting series at all.
+- **Threshold.** "More than 3 standard deviations": `|x − mean| > 3 · sd`, strict; a bin exactly at
+  3 sd does not alert.
+- **Rows.** Pre-fault = `time < inject_time`, post-fault = `time ≥ inject_time` (the suite's split,
+  `tracebenchrca.cases.split_at`), both after the suite's fill rule (`read_table`), so an empty bin's
+  latency is the forward-filled value and its count is 0.
+- **Ranking ties.** A service with no alerting series has no alert time; it ranks after every
+  alerting service, among the non-alerting ones by the export's service order (`services.json`,
+  name order). Among alerting services with the same count and the same earliest alert time, the
+  export's order decides.
+- **Record.** Per case: the rows, the pre-fault rows, the alerting services, and per service the
+  alerting series with their first alert time. Reported beside the table: the mean number of
+  alerting services per case.
+- **Code path.** A stage of `tracebenchrca.rank` (`--arm control/rule`), on the same export, staging
+  and score path as `rca/baro`; no third-party code (`code: None`).
