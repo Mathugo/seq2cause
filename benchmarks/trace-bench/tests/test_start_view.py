@@ -299,6 +299,39 @@ def test_start_view_test_read_annotate_and_seqscore(sworld, tmp_path):
         s = read_json(res / "seq" / "seqscore.json")
         assert s["grain"] == "request" and s["predict_all"]["pooled"] is not None
         assert s["n_sequences"] + s["n_skipped_short_by_read"] == 24 == s["n_sequences_split"]
+        assert s["ordering"] == "start"
+
+
+def test_seqscore_reads_the_view_the_read_was_made_on(sworld, tmp_path):
+    """`plans/per-sequence-rules.md`, addendum 2026-10-23: the view comes from the read's
+    `--ordering` (its results.json has no ordering key). The same start-view read, its arguments
+    rewritten to `end`, induces another truth; the pre-order start view puts every caller before
+    its callees, so it holds fewer child-before-parent pairs; no `--ordering` refuses."""
+    w, out = sworld, tmp_path / "read"
+    assert _discover(w, CORE_CELLS, out, "start") == 0
+    key = f"{CORE_CELLS[0]}/request"
+    as_end = tmp_path / "read-as-end"
+    shutil.copytree(out, as_end)
+    args = read_json(as_end / RUN_DIR / ARGUMENTS_JSON)
+    args["arguments"]["ordering"] = "end"
+    write_json(as_end / RUN_DIR / ARGUMENTS_JSON, args)
+    docs = {}
+    for name, run_dir in (("start", out), ("end", as_end)):
+        seq = ["--corpus", str(w["corpus"]), "--run-dir", str(run_dir), "--cell", key]
+        dest = tmp_path / f"seq-{name}"
+        assert sq.main([*seq, "--max-lag", "6", "--output-folder", str(dest)]) == 0
+        docs[name] = read_json(dest / "seqscore.json")
+        assert docs[name]["ordering"] == name
+    start, end = docs["start"]["pooled"], docs["end"]["pooled"]
+    assert start["n_truth_directed"] < end["n_truth_directed"]
+    del args["arguments"]["ordering"]
+    write_json(as_end / RUN_DIR / ARGUMENTS_JSON, args)
+    seq = ["--corpus", str(w["corpus"]), "--run-dir", str(as_end), "--cell", key]
+    with pytest.raises(ValueError, match="records no --ordering"):
+        sq.run_seqscore(
+            sq.build_parser().parse_args([*seq, "--max-lag", "6", "--output-folder", "unused"]),
+            None,
+        )
 
 
 # --- the view-order statistic --------------------------------------------------------------------

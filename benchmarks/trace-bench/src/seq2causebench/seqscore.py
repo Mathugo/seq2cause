@@ -219,6 +219,14 @@ def aggregate_read(stored_seq, stored_ids, truth, matrix_of, edges_of):
     }
 
 
+def read_view(args_rec, run_dir):
+    """The view a `discover` read was made on: its required `--ordering` argument. The read's
+    `results.json` carries no ordering key (`plans/per-sequence-rules.md`, addendum 2026-10-23)."""
+    if "ordering" not in args_rec:
+        raise ValueError(f"{run_dir} records no --ordering; the view it read is unknown")
+    return str(args_rec["ordering"])
+
+
 def run_seqscore(args, rec):
     run_dir = Path(args.run_dir)
     disc = read_json(run_dir / RUN_DIR / RESULTS_JSON)
@@ -239,10 +247,11 @@ def run_seqscore(args, rec):
         table = {k: z[k] for k in z.files}
     if col not in table:
         raise ValueError(f"the stored matrices carry no column {col!r}")
-    # the stored token sequences, re-read exactly as the method read them (ops + outcomes only)
-    corpus = Corpus(args.corpus, str(disc.get("ordering", "end")), grain)
-    vocab = Vocab.from_model_vocab(corpus.vocab_json())
     args_rec = read_json(run_dir / RUN_DIR / "arguments.json")["arguments"]
+    ordering = read_view(args_rec, run_dir)
+    # the stored token sequences, re-read exactly as the method read them (ops + outcomes only)
+    corpus = Corpus(args.corpus, ordering, grain)
+    vocab = Vocab.from_model_vocab(corpus.vocab_json())
     store = SequenceStore.from_corpus(
         corpus,
         disc["split"],
@@ -261,7 +270,7 @@ def run_seqscore(args, rec):
             )
     truth, targets, _ = truth_for_read(
         args.corpus,
-        str(disc.get("ordering", "end")),
+        ordering,
         grain,
         disc["split"],
         seqrec,
@@ -299,6 +308,7 @@ def run_seqscore(args, rec):
         "path": path,
         "cut": cut,
         "grain": grain,
+        "ordering": ordering,
         "split": disc["split"],
         "corpus_id": disc["corpus_id"],
         "rung": disc.get("rung"),

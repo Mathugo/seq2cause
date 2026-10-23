@@ -47,7 +47,7 @@ from .floorprior import topology_read
 from .floors import bigram_read
 from .log import log
 from .record import RunRecord, read_json, write_json
-from .seqscore import SEQSCORE_SCHEMA, aggregate_read
+from .seqscore import SEQSCORE_SCHEMA, aggregate_read, read_view
 from .seqtruth import RULES_VERSION, truth_for_read
 from .vocab import Vocab
 
@@ -141,17 +141,21 @@ def _assert_read(disc, args_rec, reference_cell, grain):
         raise FloorSeqRefusal("the arm read's arguments carry no --max-len / --cells-sequences")
 
 
-def _assert_floor_read(fres, floor_cell, grain, disc):
+def _assert_floor_read(fres, floor_cell, grain, disc, ordering):
     if fres.get("status") != "ok" or fres.get("stage") != FLOOR_STAGE:
         raise FloorSeqRefusal("the floor read is not a completed floors read")
     if fres.get("grain") != grain or floor_cell not in fres.get("cells", {}):
         raise FloorSeqRefusal(f"the floor read holds no cell {floor_cell}")
     if not fres.get("freeze") or not fres["freeze"].get("sha"):
         raise FloorSeqRefusal("the floor read carries no freeze binding (a test read is required)")
-    for k in ("split", "corpus_id", "ordering"):
-        if fres.get(k) != disc.get(k, "end" if k == "ordering" else None):
+    for k, arm_value in (
+        ("split", disc.get("split")),
+        ("corpus_id", disc.get("corpus_id")),
+        ("ordering", ordering),
+    ):
+        if fres.get(k) != arm_value:
             raise FloorSeqRefusal(
-                f"floor read and arm read differ in {k}: {fres.get(k)!r} vs {disc.get(k)!r}"
+                f"floor read and arm read differ in {k}: {fres.get(k)!r} vs {arm_value!r}"
             )
 
 
@@ -168,9 +172,10 @@ def run_floorseq(args, rec):
     disc = read_json(read_dir / RUN_DIR / RESULTS_JSON)
     args_rec = read_json(read_dir / RUN_DIR / ARGUMENTS_JSON)["arguments"]
     _assert_read(disc, args_rec, args.reference_cell, grain)
+    ordering = read_view(args_rec, read_dir)
     fres = read_json(floor_dir / RUN_DIR / RESULTS_JSON)
     fargs = read_json(floor_dir / RUN_DIR / ARGUMENTS_JSON)["arguments"]
-    _assert_floor_read(fres, args.floor_cell, grain, disc)
+    _assert_floor_read(fres, args.floor_cell, grain, disc, ordering)
     ref = read_json(args.reference_seqscore)
     if ref.get("cell") != args.reference_cell or ref.get("corpus_id") != disc["corpus_id"]:
         raise FloorSeqRefusal("the reference seqscore is not the reference cell's on this corpus")
@@ -178,7 +183,6 @@ def run_floorseq(args, rec):
         raise FloorSeqRefusal(
             f"--max-lag {args.max_lag} / c {disc['c']} differ from the reference seqscore's"
         )
-    ordering = str(disc.get("ordering", "end"))
     c = int(disc["c"])
     tau = float(fres["cells"][args.floor_cell]["tau"])
 
