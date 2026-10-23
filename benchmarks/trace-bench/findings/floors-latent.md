@@ -396,3 +396,53 @@ therefore where this axis discriminates **from s through l** (the reading of 202
 xs … m); at xl the arm's frozen-cut F1 falls below the order-count floor's while its ranking stays
 above it, so at xl the per-sequence advantage is carried by the ranking (AUROC), not by the
 registered frozen-cut F1 headline.
+
+## The start-ordered view — the floors on xs and s, and the view-order statistic (registered 2026-10-09 / 2026-10-22; read 2026-10-23)
+
+Request grain only (`plans/floors.md`, addendum 2026-10-09: the session grain carries no clock
+artefact). The floors' chain of §4 with `--ordering start`, locally: validation reads at `5b627901`
+(xs the whole split, s 10,000 sequences), frozen in `freezes/2026-10-23-<rung>-latent-s<k>-floors-start.json`
+(`freeze@3`, `family: floor`, `ordering: start`), committed (`6c9fe9c0`), then the test reads (xs the
+whole split, s 20,000 sequences) and `annotate` at that commit. Staging: xs the smallest rung; s the
+arms' xs seed-k **end-view** request entries, the floors' own rule (addendum 2026-10-22), so these
+reads do not wait on the arms' start-view chain. Records: `results-start/<rung>/latent/seed=<k>/`
+(`floors-val-sweep/`, `floors-freeze/`, `test-read/floors-request/`,
+`floor/<arm>/none/frozen/request/`); ledger stage `floors`, `ordering: "start"`.
+
+### Floor cells, five-seed mean ± std (test read, request grain, default floor 0.05), start view beside the end view
+
+| rung | cell | directed F1 | precision | recall | directed AUROC | orientation accuracy | end-view F1 / AUROC / orientation |
+|---|---|---|---|---|---|---|---|
+| xs | `floor/topology` (sample-free) | 0.820 ± 0.072 | 0.699 ± 0.098 | 1.000 | 0.972 ± 0.007 | 1.000 | 0.820 / 0.972 / 1.000 |
+| xs | `floor/bigram` | 0.114 ± 0.037 | 0.110 ± 0.033 | 0.120 ± 0.043 | 0.504 ± 0.017 | 0.051 ± 0.024 | 0.340 / 0.632 / 0.796 |
+| s | `floor/topology` (sample-free) | 0.839 ± 0.014 | 0.723 ± 0.020 | 1.000 | 0.986 ± 0.002 | 1.000 | 0.839 / 0.986 / 1.000 |
+| s | `floor/bigram` | 0.084 ± 0.010 | 0.072 ± 0.009 | 0.101 ± 0.014 | 0.507 ± 0.008 | 0.038 ± 0.010 | 0.306 / 0.645 / 0.830 |
+
+- **Topology** reads no view: its start-view cell equals its end-view cell on every seed (τ, F1 and
+  AUROC identical), as registered; it is run and recorded for uniformity and labelled so.
+- **Bigram** loses two thirds of its F1 (xs 0.340 → 0.114, s 0.306 → 0.084), its directed AUROC
+  falls to chance (0.50–0.51) and its orientation accuracy to 0.04–0.05: on the start view the token
+  that follows `a` is, for most truth co-occurrences, its cause, so "b immediately follows a" points
+  the wrong way. Its reachable-recall ceiling falls with it (xs 0.339 → 0.123, s 0.366 → 0.101); the
+  frozen τ stays at the grid's bottom (0 or 0.005).
+- **Pairs and hypotheses** (`plans/floors.md` §6, §7) on the start view need the arms' start-view test
+  reads (xs Job T authored 2026-10-22; s Job V authored the same day); they are scored when those land.
+
+### The view-order statistic (`tables/vieworder-latent/`; test split, the arms' test-read sample)
+
+Share of co-occurrences of a directed truth edge in which the cause token comes first in the view's
+row order, five-seed mean [min, max], pooled over truth edges and sequences:
+
+| rung | request, end | request, start | session, end | session, start |
+|---|---|---|---|---|
+| xs | 0.891 [0.842, 0.927] | 0.102 [0.029, 0.164] | 0.513 [0.500, 0.528] | 0.507 [0.490, 0.544] |
+| s | 0.858 [0.753, 0.922] | 0.049 [0.032, 0.071] | 0.505 [0.484, 0.518] | 0.491 [0.483, 0.498] |
+| m | 0.947 [0.924, 0.979] | 0.038 [0.032, 0.040] | 0.560 [0.557, 0.563] | 0.455 [0.444, 0.467] |
+
+l and xl are named "not run" in the table: their score tiers were not on disk for these reads. The
+statistic describes the view, not an arm; it is reported beside every request-grain orientation
+number of both views and gates nothing. At the request grain the end view puts the cause first in
+86–95 % of truth co-occurrences and the start view in 4–10 %; the session grain sits near one half on
+both views (0.46–0.56), the clock-free grain the 2026-10-09 addendum names. The 2026-10-03 probe
+(0.90–0.92 end, 0.05–0.09 start at the request grain; ≈ 0.50 at the session grain) is provenance only;
+its counting rule was not written down, and this table supersedes it.
