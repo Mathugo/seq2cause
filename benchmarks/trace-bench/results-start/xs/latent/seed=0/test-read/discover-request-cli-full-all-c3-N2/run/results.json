@@ -1,0 +1,139 @@
+{
+ "N": 2,
+ "c": 3,
+ "cells": {
+  "trace/cli/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 577,
+   "n_pairs": 739,
+   "per_lag_files": 8,
+   "tau": 1e-07
+  },
+  "trace/cli/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 11,
+   "n_edges": 59,
+   "n_sequences_pooled": 1043,
+   "n_within_op": 21,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 0.5092790722846985,
+    "10": 0.08173163229093539,
+    "11": 0.07374786801961439,
+    "12": 0.06783334997779213,
+    "13": 0.06345176724585942,
+    "2": 0.3904828017728175,
+    "3": 0.3024763600285818,
+    "4": 0.23727958444708794,
+    "5": 0.18898062516662031,
+    "6": 0.15319987609168553,
+    "7": 0.12669284522733337,
+    "8": 0.10705595378684857,
+    "9": 0.0925085868101886
+   },
+   "threshold_finite": true
+  },
+  "trace/cli/shipped/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 577,
+   "n_pairs": 739,
+   "per_lag_files": 8,
+   "tau": 1e-07
+  },
+  "trace/cli/shipped/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 11,
+   "n_edges": 59,
+   "n_sequences_pooled": 1043,
+   "n_within_op": 21,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 0.5092790126800537,
+    "10": 0.08173162272528625,
+    "11": 0.07374785938836345,
+    "12": 0.06783334203876036,
+    "13": 0.06345175981963626,
+    "2": 0.39048275607176686,
+    "3": 0.302476324627567,
+    "4": 0.2372795566765273,
+    "5": 0.1889806030488392,
+    "6": 0.15319985816158652,
+    "7": 0.12669283039954551,
+    "8": 0.10705594125730938,
+    "9": 0.09250857598323388
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli__fixed-kl",
+  "trace-cli__shipped"
+ ],
+ "corpus_id": "xs/latent/seed=0",
+ "corrupted_cells": {
+  "fixed-kl": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 6099
+  },
+  "shipped": {
+   "n_cell_collapsed": 0,
+   "n_cell_saturated": 0,
+   "n_cells": 6099
+  }
+ },
+ "files": {
+  "matrices": "matrices-cli-full-all-request.npz",
+  "scores": "scores-cli-full-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-10-22T19:57:37-04:00",
+  "path": "freezes/2026-10-22-xs-latent-s0-start.json",
+  "sha": "a8a5c51f80e21f86224b0e587e44ba2d7c9591b2"
+ },
+ "g": 3,
+ "grain": "request",
+ "memory": {
+  "N": 2,
+  "c": 3,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 27821856,
+  "max_seq_len": 17,
+  "probe": "cli-full",
+  "shipped_estimate": 150416
+ },
+ "model_sha256": "b411cbbc377e36d37e85691422221c20064540b8fffa2e766d278db23f5fc93e",
+ "n_cells": 5734,
+ "n_pairs": 739,
+ "n_probed": 1043,
+ "n_sequences": 1223,
+ "n_skipped_short": 180,
+ "n_stored": 1043,
+ "noise": "all",
+ "probe": "cli-full",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 8.705,
+ "rung": "xs",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "tok_pos": 74812,
+ "tok_pos_per_s": 8594.099926966375
+}
