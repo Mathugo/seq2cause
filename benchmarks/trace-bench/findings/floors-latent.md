@@ -425,8 +425,8 @@ reads do not wait on the arms' start-view chain. Records: `results-start/<rung>/
   that follows `a` is, for most truth co-occurrences, its cause, so "b immediately follows a" points
   the wrong way. Its reachable-recall ceiling falls with it (xs 0.339 → 0.123, s 0.366 → 0.101); the
   frozen τ stays at the grid's bottom (0 or 0.005).
-- **Pairs and hypotheses** (`plans/floors.md` §6, §7) on the start view: xs below, beside the arms'
-  start-view test reads (landed 2026-10-23); s when its start-view Job T lands.
+- **Pairs and hypotheses** (`plans/floors.md` §6, §7) on the start view: xs and s below, beside
+  the arms' start-view test reads (both landed 2026-10-23).
 
 ### The view-order statistic (`tables/vieworder-latent/`; test split, the arms' test-read sample)
 
@@ -536,3 +536,83 @@ compared with the end view; `tables/xs-latent-start/xs-latent-perseq.md` carries
 truth counts. The skeleton columns score the bidirected (confounded) adjacencies almost alone:
 skeleton F1 0.04–0.49, skeleton AUROC 0.43–0.55. The floors' per-sequence read is not run on the
 start view.
+
+### The arms on the start view — s (test reads 2026-10-23, five seeds, request grain)
+
+The five s start-view Job T runs (`freezes/2026-10-23-s-latent-s<k>-start.json`; one backbone per
+seed trained on `start-session`; owner-applied, box at `1927b7b4`, the code of #60 and #61), landed
+in `results-start/s/latent/seed=<k>/`; tables `tables/s-latent-start/` (`report` on
+`results-start/`, the twelve pairs, every session cell named "not run" through
+`tables/reasons-start-view.json`). Test sample 20,000 request sequences (Shapley 2,000), the same
+head sample the end-view test reads probe, so start − end is paired per seed on the corpus and the
+sample, not on a model; the registered sample-size note (validation 10k, test 20k) travels with
+every number. Five-seed mean ± sd; paired t-test on five differences. The view-order statistic
+beside the orientation columns: cause first in 0.049 [0.032, 0.071] of request-grain truth
+co-occurrences on the start view, 0.858 [0.753, 0.922] on the end view.
+
+| cell (frozen cut) | directed F1, start | end | start − end (paired) | directed AUROC, start / end | orientation accuracy, start / end | reachable-recall ceiling, start / end |
+|---|---|---|---|---|---|---|
+| `trace/core`, shipped path | 0.092 ± 0.006 | 0.289 ± 0.013 | -0.197 (p < 0.001; per seed -0.186 … -0.209) | 0.500 / 0.662 | 0.115 / 0.843 | 0.147 / 0.481 |
+| `trace/core`, fixed-kl | 0.092 ± 0.006 | 0.289 ± 0.013 | -0.197 (p < 0.001; per seed -0.186 … -0.209) | 0.500 / 0.662 | 0.115 / 0.843 | 0.147 / 0.481 |
+| `trace/core`, fixed | 0.092 ± 0.007 | 0.289 ± 0.013 | -0.197 (p < 0.001; per seed -0.185 … -0.207) | 0.498 / 0.662 | 0.105 / 0.842 | 0.148 / 0.481 |
+| `trace/cli`, shipped path | 0.089 ± 0.008 | 0.292 ± 0.014 | -0.203 (p < 0.001; per seed -0.194 … -0.213) | 0.502 / 0.663 | 0.114 / 0.847 | 0.147 / 0.481 |
+| `trace/cli`, fixed-kl | 0.090 ± 0.008 | 0.292 ± 0.014 | -0.202 (p < 0.001; per seed -0.194 … -0.213) | 0.502 / 0.663 | 0.114 / 0.847 | 0.147 / 0.481 |
+| `trace/cli`, fixed | 0.089 ± 0.008 | 0.292 ± 0.014 | -0.203 (p < 0.001; per seed -0.192 … -0.214) | 0.502 / 0.663 | 0.111 / 0.838 | 0.147 / 0.481 |
+| `trace/cli-atomic`, shipped path | 0.084 ± 0.007 | 0.287 ± 0.016 | -0.202 (p < 0.001; per seed -0.185 … -0.223) | 0.493 / 0.663 | 0.090 / 0.870 | 0.146 / 0.460 |
+| `trace/cli-atomic`, fixed-kl | 0.084 ± 0.007 | 0.287 ± 0.016 | -0.202 (p < 0.001; per seed -0.185 … -0.223) | 0.493 / 0.663 | 0.090 / 0.870 | 0.146 / 0.460 |
+| `trace/cli-atomic`, fixed | 0.085 ± 0.009 | 0.287 ± 0.018 | -0.202 (p < 0.001; per seed -0.187 … -0.227) | 0.493 / 0.665 | 0.095 / 0.868 | 0.146 / 0.470 |
+| `baseline/granger`, shipped | 0.091 ± 0.008 | 0.283 ± 0.014 | -0.193 (p < 0.001; per seed -0.177 … -0.207) | 0.511 / 0.652 | 0.129 / 0.843 | 0.147 / 0.476 |
+| `baseline/granger`, fixed | 0.091 ± 0.007 | 0.282 ± 0.015 | -0.191 (p < 0.001; per seed -0.175 … -0.212) | 0.507 / 0.649 | 0.119 / 0.844 | 0.148 / 0.477 |
+| `baseline/saliency` | 0.084 ± 0.007 | 0.268 ± 0.025 | -0.185 (p < 0.001; per seed -0.159 … -0.211) | 0.492 / 0.658 | 0.117 / 0.832 | 0.146 / 0.452 |
+| `baseline/shapley` | 0.029 ± 0.004 | 0.158 ± 0.014 | -0.129 (p < 0.001; per seed -0.113 … -0.150) | 0.491 / 0.574 | 0.123 / 0.854 | 0.041 / 0.224 |
+
+- **Every frozen cell loses 0.13–0.20 directed F1 on every seed** (per-seed differences −0.113 …
+  −0.227, p < 0.001 on each of the 13 cells) and lands at 0.08–0.09 (Shapley 0.03). The
+  five-seed spread is small at s (sd ≤ 0.009), so the loss is sharper than at xs.
+- **Directed AUROC is at chance** (0.49–0.51, from 0.57–0.66).
+- **Orientation accuracy follows the view.** 0.09–0.13 on the start view against 0.83–0.87 on the
+  end view, beside a view-order share of 0.05 and 0.86.
+- **The reachable-recall ceiling falls to 0.146–0.148** for every arm but Shapley (0.041 on its
+  2,000-sequence sample), against 0.45–0.48 on the end view. Restricted to the reachable edges,
+  each arm stays above "predict every reachable pair" (reachable F1 0.125–0.150 against 0.098–0.103;
+  Shapley 0.082 against 0.081).
+- **Shipped cut.** Already near zero on the end view, it loses what it had: `trace/cli` 0.011 /
+  0.012 against 0.051 / 0.050 (p 0.03); `trace/cli-atomic` 0.023 / 0.020 against 0.093 / 0.092
+  (p < 0.001).
+
+### Registered pairs on the start view — s (`plans/floors.md` §6; floor − arm, paired per seed, five seeds, paired t-test; request grain)
+
+| pair | directed F1 | AUROC (directed) | precision | recall | orientation accuracy |
+|---|---|---|---|---|---|
+| `floor/topology` − `trace/core/shipped/frozen` | +0.748 (p < 0.001) | +0.485 (p < 0.001) | +0.644 (p < 0.001) | +0.884 (p < 0.001) | +0.885 (p < 0.001) |
+| `floor/topology` − `baseline/granger/shipped/frozen` | +0.749 (p < 0.001) | +0.475 (p < 0.001) | +0.645 (p < 0.001) | +0.886 (p < 0.001) | +0.871 (p < 0.001) |
+| `floor/topology` − `baseline/saliency/none/frozen` | +0.756 (p < 0.001) | +0.494 (p < 0.001) | +0.653 (p < 0.001) | +0.896 (p < 0.001) | +0.883 (p < 0.001) |
+| `floor/bigram` − `trace/core/shipped/frozen` | -0.008 (p 0.043) | +0.007 (p 0.221) | -0.007 (p 0.299) | -0.015 (p 0.235) | -0.077 (p 0.003) |
+| `floor/bigram` − `baseline/granger/shipped/frozen` | -0.007 (p 0.123) | -0.003 (p 0.386) | -0.006 (p 0.489) | -0.013 (p 0.164) | -0.091 (p < 0.001) |
+| `floor/bigram` − `baseline/saliency/none/frozen` | +0.000 (p 0.962) | +0.016 (p 0.004) | +0.002 (p 0.584) | -0.003 (p 0.390) | -0.080 (p < 0.001) |
+
+**H-floor-topology (start view, s) — PASS.** `floor/topology` (sample-free, the same cell as on the
+end view) is above every frozen learned cell on every seed: the smallest five-seed mean difference
+is +0.747 (vs `trace/core`, fixed path; min per seed +0.733, p < 0.001), the largest +0.810 (vs
+Shapley). On the end view the margin was +0.54 … +0.68.
+
+**H-floor-bigram (start view, s, request half) — PASS.** `floor/bigram` − `trace/core/shipped/frozen`
+directed F1 −0.008 ± 0.006 (p 0.043; per seed −0.003 … −0.017): within 0.02. The session half is not
+read on the start view.
+
+**H-floor-auroc** is a session-grain hypothesis and is not read on the start view.
+
+**Reading.** The xs picture holds at s with less seed noise: with the view's clock reversed, the
+learned arms and the bigram floor land together at request-grain F1 0.08–0.09 (bigram 0.084),
+AUROC at chance, orientation at the view's share. `trace/core` keeps a margin of 0.008 over the
+bigram floor (p 0.043), Granger and saliency tie it, and the bigram floor keeps a higher skeleton
+F1 (+0.089, p 0.001). The topology floor is unaffected.
+
+**Per-sequence axis.** The box `seqscore` records ran the fixed code (#60) and name
+`ordering: start`; they are landed as the box wrote them. The request rule's directed truth holds
+0–17 pairs per read over 8,000–15,000 scoreable sequences (seeds 0–4: at most 5, 17, 3, 3, 16; 0
+on the Shapley reads), as the 2026-10-23 addendum predicts for a pre-order view, so the directed
+per-sequence columns are empty by construction (pooled directed F1 0.000 on every cell) and are
+not compared with the end view; `tables/s-latent-start/s-latent-perseq.md` carries them with
+their truth counts. Skeleton F1 0.02–0.37 scores the confounded adjacencies almost alone. The
+floors' per-sequence read is not run on the start view.

@@ -1,0 +1,50 @@
+{
+ "arguments": {
+  "output_folder": "tables/s-latent-start",
+  "pairs": [
+   "trace/core/shipped/frozen:trace/cli/shipped/frozen",
+   "trace/cli/shipped/frozen:trace/cli-atomic/shipped/frozen",
+   "trace/core/shipped/frozen:baseline/granger/shipped/frozen",
+   "trace/core/fixed/frozen:trace/core/fixed-kl/frozen",
+   "trace/cli/shipped/shipped:trace/cli/shipped/frozen",
+   "trace/cli-atomic/shipped/shipped:trace/cli-atomic/shipped/frozen",
+   "floor/topology/none/frozen:trace/core/shipped/frozen",
+   "floor/topology/none/frozen:baseline/granger/shipped/frozen",
+   "floor/topology/none/frozen:baseline/saliency/none/frozen",
+   "floor/bigram/none/frozen:trace/core/shipped/frozen",
+   "floor/bigram/none/frozen:baseline/granger/shipped/frozen",
+   "floor/bigram/none/frozen:baseline/saliency/none/frozen"
+  ],
+  "reasons": "tables/reasons-start-view.json",
+  "results_dir": "results-start",
+  "rung": "s",
+  "variant": "latent"
+ },
+ "argv": [
+  "/private/tmp/claude-501/-Users-chadyuk-Dropbox-Code-agent-causal/297608c0-d5a0-4ea4-9324-05a70741de46/scratchpad/s2c-st/benchmarks/trace-bench/src/seq2causebench/report.py",
+  "--results-dir",
+  "results-start",
+  "--rung",
+  "s",
+  "--variant",
+  "latent",
+  "--pairs",
+  "trace/core/shipped/frozen:trace/cli/shipped/frozen",
+  "trace/cli/shipped/frozen:trace/cli-atomic/shipped/frozen",
+  "trace/core/shipped/frozen:baseline/granger/shipped/frozen",
+  "trace/core/fixed/frozen:trace/core/fixed-kl/frozen",
+  "trace/cli/shipped/shipped:trace/cli/shipped/frozen",
+  "trace/cli-atomic/shipped/shipped:trace/cli-atomic/shipped/frozen",
+  "floor/topology/none/frozen:trace/core/shipped/frozen",
+  "floor/topology/none/frozen:baseline/granger/shipped/frozen",
+  "floor/topology/none/frozen:baseline/saliency/none/frozen",
+  "floor/bigram/none/frozen:trace/core/shipped/frozen",
+  "floor/bigram/none/frozen:baseline/granger/shipped/frozen",
+  "floor/bigram/none/frozen:baseline/saliency/none/frozen",
+  "--reasons",
+  "tables/reasons-start-view.json",
+  "--output-folder",
+  "tables/s-latent-start"
+ ],
+ "command": "report"
+}
