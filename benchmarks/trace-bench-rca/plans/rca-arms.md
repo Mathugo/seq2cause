@@ -458,3 +458,76 @@ Fixed before the adapter is written and before any training of a registered read
   one learned graph), the per-case values recorded. `floor/topology`'s number is the same mean over
   the same cases (its prediction is the corpus's deployment topology, one per corpus). The freeze
   is the argmax over the τ grid of the mean directed F1 over the seed-0 cases, ties → the larger τ.
+
+### 2026-10-25 — stretch arms `rca/circa` and `rca/circa-topology` (publication plan B7; owner decisions 2026-10-25; before any CIRCA code or read)
+
+Owner decisions of 2026-10-25 (stretch plans §2 and the follow-up questions): CIRCA runs as the
+standard suite's port, **verbatim and disclosed**; a second cell builds CIRCA's own structural graph
+from the shipped deployment topology, **now**, beside the port. Both are stretch arms of the paper
+(appendix A5); the required set is unchanged.
+
+- **Arms.** `rca/circa` — class `root-cause`, inputs `series, window, services`, axis ranking:
+  **CIRCA (PC graph, suite port)**, `RCAEval/e2e/circa.py::circa(data, inject_time, dataset=None)` at
+  `259ea41` (MIT), a port of `NetManAIOps/CIRCA` (BSD-3-Clause; the repository itself is not run).
+  `rca/circa-topology` — class `root-cause`, inputs `series, window, services, topology`, axis
+  ranking: **CIRCA (structural graph)**, the same hypothesis-testing head
+  (`RCAEval/graph_heads/rht.py::rht`) on the structural graph of the paper's Algorithm 1 built from the
+  deployment call topology. The topology reaches the method through a fourth case file,
+  `topology.json`, written by the exporter (`tracebench.export_rca --extras topology`, D-TBR-9 below);
+  `tracebenchrca.cases.open_case_file` stays the one door. It is a declared **topology-informed** arm
+  and is reported beside the floors as a topology-reading discovery arm would be.
+- **Facts read at the pin (2026-10-25).** `circa()`: `preprocess(dataset=None)` is the identity; the
+  `time` column is dropped for graph construction and re-added for the head (so, unlike `rca/baro`, the
+  clock is never a scored variable); `pc_default(pc_input, dataset="ob")` calls causal-learn's `pc()`
+  with its defaults (Fisher-z, α 0.05, `stable=True`, `uc_rule 0`, `uc_priority 2`) and no background
+  knowledge; `rht(adj, inject_time, data)` builds `Node(service, metric)` from each column split at
+  its first `_`, adds the PC edges, `reverse()`s the graph, and scores every node with `RHTScorer()`
+  (`tau_max 0`, linear regression on the node's parents; `ANMRegressor`) — the descendant adjustment
+  is not applied. Its data window is **hard-coded for 1 s metrics**: `CaseData(interval = 1 s,
+  lookup_window = 120, detect_window = 10)` and `current = inject_time + 300`: the loader keeps the
+  table's points in `[inject − 120 s, inject + 300 s]`, resamples them to 1 s (`resample().mean()`,
+  time interpolation in both directions, back-fill) → 421 points, of which the first 111 are the
+  reference (training) window and the last 10 the test window. On this directory's bins that is
+  **4 / 8 / 2 pre-fault bins (xs 30 s / s 15 s / m 60 s), interpolated**, tested on the 10 s ending
+  five minutes after the injection. `sli = np.random.choice(nodes)` is drawn but unused by the head
+  (every node is scored), so the row is deterministic given PC (stable PC is deterministic). The
+  port's `@rca` wrapper catches any exception, prints one line to standard error and returns the
+  **unranked column order** as the ranking with `adj = []`.
+- **D-TBR-8 — the port's fallback is a miss.** A case on which `circa()` returns its exception
+  fallback (`adj` is an empty list) is counted and scored as a miss, reason "port fallback", with the
+  wrapper's standard-error line kept in the record; the column order is never scored. Any other
+  exception fails the run.
+- **Registered reading.** The arm is labelled "CIRCA (PC graph, suite port)"; the paper states the
+  head's window facts above beside the result (it is what the suite runs on every dataset; on 1 s
+  metrics the reference window holds 111 samples, here 2–8 bins). No value is chosen on any read;
+  defaults as the port's; the xs seed-0 export is the smoke test.
+- **D-TBR-9 — the structural graph from the shipped topology (`rca/circa-topology`).** Nodes = every
+  metric column. Meta metrics (Algorithm 1, four golden signals): Traffic = `count`; Latency =
+  `latency-50` and `latency-95`; Errors = `error`; Saturation empty (the benchmark ships no resource
+  metrics; an empty meta metric passes its parents' metrics through). Within a service: Traffic →
+  each Latency, Traffic → Errors. Across each call edge of `topology.json` (caller → callee, the
+  deployed-service coarsening of `instantiation.json`'s `topology.edges`, the client excluded,
+  within-service calls dropped, one edge per ordered pair): caller Traffic → callee Traffic; callee
+  Latency (both quantiles) → caller Latency (both); callee Errors → caller Errors. The adjacency is
+  handed to the port's own `rht()` in the encoding **the port reads**: for a cause column `c` and an
+  effect column `e`, `adj[c, e] = 1` and `adj[e, c] = −1`, which after the port's edge construction
+  and `reverse()` makes `MemoryGraph.parents(e) ∋ c` (asserted by a test that observes
+  `graph.parents` inside the port's own scoring). No PC runs on this cell; nothing else differs from
+  `rca/circa`. The record carries the structural graph's edge count per case.
+- **Hypotheses (scored mechanically in `report`).** H-rca-circa-random and H-rca-circa-rule: the
+  H-rca-random / H-rca-rule rules of §6 applied to `rca/circa`. **H-circa-topology-gain:**
+  `rca/circa-topology`'s pooled Avg@5 is at or above `rca/circa`'s on every rung (the paper's claim
+  that the structural graph carries the method). *Fail:* any rung where the PC cell is above.
+- **Environment.** The port needs causal-learn and networkx, absent from `trace-bench-rca` until
+  now: `pyproject.toml` gains the extra `circa = ["causal-learn>=0.1.4", "networkx>=3"]`; resolved
+  2026-10-25 as causal-learn 0.1.4.8, networkx 3.7 (pure-Python, numpy 2.5.4 / pandas 3.0.6
+  unchanged); every record's `pip freeze` names them. RCAEval's `default` extra is not installed.
+- **Premise checks (2026-10-25, xs seed-0 and m seed-0 exports of 2026-10-21; nothing kept).** PC
+  on the 20-column xs table: 0.1 s; on the 208-column, 246-row m case 0: 90 s (376 undirected
+  edges); the head 0.2 s; every service ranked on every case tried; no fallback; the head saw 421
+  points, 111 training, 10 test, as read from the code. Expected cost: ≈ 40 min for the 25 m cases,
+  local.
+- **Staging, protocol, reporting.** As §4 and §5: `rank` per arm, xs → s → m by
+  `--prior-rung-record`, `tracebench.score_rca` (B = 2000, seed 0), five seeds or nothing, the
+  random expectation and `control/rule` beside every row; per case the record keeps `n_edges`
+  (PC or structural), `n_services_unranked`, the fallback flag and the loader's filled cells.
