@@ -148,10 +148,34 @@ CIRCA_META = {"count": "T", "latency-50": "L", "latency-95": "L", "error": "E"}
 CIRCA_WITHIN = (("T", "L"), ("T", "E"))  # cause meta -> effect meta inside one service
 CIRCA_ACROSS = (("T", "T", "caller->callee"), ("L", "L", "callee->caller"), ("E", "E", "callee->caller"))
 
+# --- RCD (plans/rca-arms.md, addendum 2026-10-25, later; D-TBR-6, D-TBR-7) ---------------------------
+RCD_RUNS = 10  # seeded runs per case, seed = run index (the paper averages over runs)
+RCD_DATASET = "trace-bench"  # any name but "sock-shop" selects the suite's named-dataset preprocessing (D-TBR-6)
+RCD_KWARGS = {
+    "gamma": 5,
+    "localized": True,
+    "bins": 5,
+    "dk_select_useful": False,
+}  # the port's defaults, passed explicitly
+RCD_ENV = "rcaeval-rcd-259ea41"  # the pinned environment (environment-rcd.yml; Python 3.10, the lock's versions)
+RCD_OVERLAY_FILES = (  # the suite's lib/causallearn files copied over the installed causal-learn (script/link.sh)
+    "utils/PCUtils/SkeletonDiscovery.py",
+    "utils/Fas.py",
+    "search/ConstraintBased/FCI.py",
+    "graph/GraphClass.py",
+)
+RCD_OVERLAY_SHA256 = {  # read from the suite's lib/causallearn at the pin on 2026-10-25 (full values asserted by the runner)
+    "utils/PCUtils/SkeletonDiscovery.py": "96b65269d34c89f1",
+    "utils/Fas.py": "4f7e07434dc09e83",
+    "search/ConstraintBased/FCI.py": "8b4acd094cdc1d83",
+    "graph/GraphClass.py": "1d75e73450d635a8",
+}  # 16-hex prefixes; the runner records the full digests and refuses an environment whose files differ
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
 ARM_CIRCA = "rca/circa"
 ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
+ARM_RCD = "rca/rcd"
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -225,6 +249,20 @@ ARMS = {
             "deployment call topology (D-TBR-9); no PC",
         },
         "licence": "MIT (the suite's port); the ported repository BSD-3-Clause",
+    },
+    ARM_RCD: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/rcd.py::rcd (the authors' azamikram/rcd, MIT, as carried by the suite, on its patched "
+            "causal-learn; named-dataset preprocessing, D-TBR-6; ten seeded runs in the suite's RCD environment, D-TBR-7)",
+        },
+        "licence": "MIT",
     },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,

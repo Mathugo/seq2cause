@@ -16,6 +16,7 @@ from tracebenchrca.constants import (
     ARM_CONTROL_RANDOM,
     ARM_CONTROL_RULE,
     ARM_FLOOR_TOPOLOGY,
+    ARM_RCD,
     ARMS,
     AXES,
     AXIS_GRAPH,
@@ -40,10 +41,10 @@ from tracebenchrca.constants import (
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def test_three_classes_eight_arms():
+def test_three_classes_nine_arms():
     assert CLASSES == (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
-    assert len(ARMS) == 8
-    assert set(ROOT_CAUSE_ARMS) == {ARM_BARO, ARM_BARO_BOCPD, ARM_CAUSALRCA, ARM_CIRCA, ARM_CIRCA_TOPOLOGY}
+    assert len(ARMS) == 9
+    assert set(ROOT_CAUSE_ARMS) == {ARM_BARO, ARM_BARO_BOCPD, ARM_CAUSALRCA, ARM_CIRCA, ARM_CIRCA_TOPOLOGY, ARM_RCD}
     assert set(CONTROL_ARMS) == {ARM_CONTROL_RANDOM, ARM_CONTROL_RULE, ARM_FLOOR_TOPOLOGY}
     assert DISCOVERY_ARMS == ()  # declared, no member yet
     for arm in ARMS:

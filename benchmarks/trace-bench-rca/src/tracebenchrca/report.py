@@ -36,6 +36,7 @@ from .constants import (
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_RCD,
     CAUSALRCA_SERIES,
     RESULTS_JSON,
     ROOT_CAUSE_ARMS,
@@ -53,10 +54,13 @@ from .scorecausalrca import pool_run_averaged
 STAGE = "report"
 AVG = "avg@5"
 BOCPD_GAP = 0.10  # H-rca-bocpd's registered tolerance (plans/rca-arms.md §6)
-RUN_AVERAGED_ARMS = (ARM_CAUSALRCA,)  # arms scored by per-run averaging (plans/rca-arms.md, addendum 2026-10-23)
+RUN_AVERAGED_ARMS = (
+    ARM_CAUSALRCA,
+    ARM_RCD,
+)  # arms scored by per-run averaging (plans/rca-arms.md, addenda 2026-10-23 / 2026-10-25)
 REPORT_ARMS = tuple(a for a in ROOT_CAUSE_ARMS) + (ARM_CONTROL_RULE,)
 # the stretch arms' hypotheses: the §6 random / rule rules applied per arm (addenda 2026-10-25)
-PER_ARM_HYPOTHESES = {ARM_CIRCA: "circa", ARM_CIRCA_TOPOLOGY: "circa-topology"}
+PER_ARM_HYPOTHESES = {ARM_CIRCA: "circa", ARM_CIRCA_TOPOLOGY: "circa-topology", ARM_RCD: "rcd"}
 
 
 def cell_dir(results_dir, rung, seed, arm, series=None):
@@ -102,8 +106,16 @@ def row_of(rung, arm, pooled, cells):
     }
     if arm == ARM_CAUSALRCA:
         row["series"] = cells[0][1]["series"]
+    if arm in RUN_AVERAGED_ARMS:
         row["n_failed_runs"] = sum(r["n_failed_runs"] for _, _, r in cells)
         row["aggregation"] = pooled["aggregation"]
+    unranked = [u for _, _, r in cells for c in r["cases"] for u in c.get("n_services_unranked_per_run", [])]
+    if unranked:
+        row["unranked_services_per_run"] = {
+            "mean": statistics.mean(unranked),
+            "max": max(unranked),
+            "n_runs": len(unranked),
+        }
     edges = [c["n_edges"] for _, _, r in cells for c in r["cases"] if "n_edges" in c]
     if edges:
         row["edges_per_case"] = {

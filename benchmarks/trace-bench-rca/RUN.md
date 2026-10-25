@@ -25,7 +25,9 @@ method-agnostic modules (see `NOTICE`), which in turn adapted them from
   **Stretch arms (2026-10-25):** the CIRCA port needs causal-learn and networkx — the `circa` extra
   (`pip install -e ".[circa]"`; resolved causal-learn 0.1.4.8, networkx 3.7 on 2026-10-25, pure
   Python, numpy / pandas unchanged); RCD runs only in the suite's RCD environment, here
-  `rcaeval-rcd-259ea41` from `environment-rcd.yml` (D-TBR-7), never in `trace-bench-rca`.
+  `rcaeval-rcd-259ea41` from `environment-rcd.yml` (D-TBR-7; created 2026-10-25 — Python 3.10.22, the
+  lock's versions, RCAEval at the pin without extras, the four overlaid causal-learn files), never in
+  `trace-bench-rca`; `rankrcd` drives it through `rcd_runner.py` (≈ 0.1 / 3 / 3 s per run at xs / s / m).
 - **Runs:** every run writes `run/{arguments,results,run_meta}.json` (`run_meta` = repository
   commit, the installed method packages' versions, torch / CUDA when present, host RAM, CPU count,
   wall clock, peak memory, `pip freeze`, and the replica name and profile a stage is told);
