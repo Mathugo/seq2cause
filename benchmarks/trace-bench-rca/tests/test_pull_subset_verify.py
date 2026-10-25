@@ -1,7 +1,8 @@
 # Adapted from alex-chadyuk/trace-cmi-bench@f54776a (MIT) -- see NOTICE
 """`pull --tier rca`: exactly the files this directory reads land as real files under the host
-layout, each verified against the corpus manifest; the views, the client-side shards, the
-oracle, the token-level target and the two unread label files never land; a corpus that does
+layout, each verified against the corpus manifest; the other three views, the client-side shards, the
+oracle, the token-level target and the two unread label files never land (the end-ordered request view
+lands for the exporter's spans extra, 2026-10-25); a corpus that does
 not verify, carries the wrong tool version or arrives as symlinks is refused. The dataset host
 is stood in for by a local copy."""
 
@@ -52,8 +53,9 @@ def test_rca_tier_pulls_exactly_what_the_directory_reads(tmp_path):
         "raw/shard=0001/vl.jsonl.gz",
         "topology/callgraph.json",
         "topology/prior.json",
+        "views/end-request/model-vocab.json",
     ]
-    assert res["n_files_checked"] == 9 and res["manifest"]["tool_version"] == "0.3.0"
+    assert res["n_files_checked"] == 10 and res["manifest"]["tool_version"] == "0.3.0"
     assert all(not p.is_symlink() for p in d.rglob("*"))
 
 

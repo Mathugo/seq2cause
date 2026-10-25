@@ -20,6 +20,7 @@ from tracebench.constants import (  # noqa: F401  (re-exported: one definition a
     MANIFEST_JSON,
     RAW_DIR,
     TOPOLOGY_DIR,
+    VIEWS_DIR,
 )
 
 TOOL_NAME = "trace-bench-rca"
@@ -171,11 +172,30 @@ RCD_OVERLAY_SHA256 = {  # read from the suite's lib/causallearn at the pin on 20
     "graph/GraphClass.py": "1d75e73450d635a8",
 }  # 16-hex prefixes; the runner records the full digests and refuses an environment whose files differ
 
+# --- TraceRCA (plans/rca-arms.md, addendum 2026-10-25, later (2); D-TBR-10) ---------------------------------
+SPANS_COLUMNS = (
+    "trace_id",
+    "service",
+    "operation",
+    "start_us",
+    "duration_us",
+    "parent_pos",
+)  # the exporter's spans.csv
+TRACERCA_PORT_COLUMNS = {  # the exporter's columns -> the port's names (RCAEval/e2e/tracerca.py); microseconds throughout
+    "service": "serviceName",
+    "operation": "methodName",
+    "start_us": "startTime",
+    "duration_us": "duration",
+}
+TRACERCA_SIGMAS = 3.0  # the port's threshold: mean + 3 SD of the pre-fault durations per operation (count only)
+US_PER_S = 1_000_000
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
 ARM_CIRCA = "rca/circa"
 ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
 ARM_RCD = "rca/rcd"
+ARM_TRACERCA = "rca/tracerca"
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -263,6 +283,21 @@ ARMS = {
             "causal-learn; named-dataset preprocessing, D-TBR-6; ten seeded runs in the suite's RCD environment, D-TBR-7)",
         },
         "licence": "MIT",
+    },
+    ARM_TRACERCA: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SPANS, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/tracerca.py::tracerca — the suite's reimplementation of TraceRCA (per-operation SLO from the "
+            "pre-fault spans, support / confidence over flagged spans) on the view's spans (D-TBR-10); the authors' "
+            "NetManAIOps/TraceRCA (no licence file) is cited, not run",
+        },
+        "licence": "MIT (the suite's reimplementation); the authors' repository has no licence file; authors contacted",
     },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,

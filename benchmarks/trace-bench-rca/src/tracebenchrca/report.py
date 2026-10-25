@@ -37,6 +37,7 @@ from .constants import (
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
     ARM_RCD,
+    ARM_TRACERCA,
     CAUSALRCA_SERIES,
     RESULTS_JSON,
     ROOT_CAUSE_ARMS,
@@ -60,7 +61,12 @@ RUN_AVERAGED_ARMS = (
 )  # arms scored by per-run averaging (plans/rca-arms.md, addenda 2026-10-23 / 2026-10-25)
 REPORT_ARMS = tuple(a for a in ROOT_CAUSE_ARMS) + (ARM_CONTROL_RULE,)
 # the stretch arms' hypotheses: the §6 random / rule rules applied per arm (addenda 2026-10-25)
-PER_ARM_HYPOTHESES = {ARM_CIRCA: "circa", ARM_CIRCA_TOPOLOGY: "circa-topology", ARM_RCD: "rcd"}
+PER_ARM_HYPOTHESES = {
+    ARM_CIRCA: "circa",
+    ARM_CIRCA_TOPOLOGY: "circa-topology",
+    ARM_RCD: "rcd",
+    ARM_TRACERCA: "tracerca",
+}
 
 
 def cell_dir(results_dir, rung, seed, arm, series=None):

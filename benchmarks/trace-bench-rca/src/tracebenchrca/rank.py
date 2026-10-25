@@ -24,6 +24,11 @@ pinned function unmodified, as registered in `plans/rca-arms.md` §2:
   Algorithm 1 built from the case's `topology.json` (D-TBR-9): Traffic → Latency, Traffic → Errors inside
   a service; caller Traffic → callee Traffic, callee Latency → caller Latency, callee Errors → caller
   Errors across each call edge; no PC.
+- `rca/tracerca` — RCAEval `e2e/tracerca.py::tracerca` (the suite's reimplementation, D-TBR-10) on the
+  case's `spans.csv` (the exporter's extra: the end-ordered request view's spans of every trace ending
+  in the case window), columns renamed to the port's, the injection time in microseconds; a `KeyError`
+  (an operation first seen after the injection) and an empty ranking (no abnormal span) are counted
+  misses; operations collapse to services through the spans' own (service, operation) pairs.
 - `control/rule` — the three-rule alert counter of `plans/controls.md` §2 (addendum 2026-10-23), no
   third-party code: per service, `latency-95`, `error` and `count` alert at the first post-fault bin
   more than 3 population standard deviations from their pre-fault mean; services ranked by the
@@ -49,18 +54,29 @@ from pathlib import Path
 import numpy as np
 
 from .arms import check_input, code_of
-from .cases import collapse_to_services, list_cases, read_services, read_table, read_topology, read_window, split_at
+from .cases import (
+    collapse_to_services,
+    list_cases,
+    read_services,
+    read_spans,
+    read_table,
+    read_topology,
+    read_window,
+    split_at,
+)
 from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_TRACERCA,
     CIRCA_ACROSS,
     CIRCA_META,
     CIRCA_WITHIN,
     INPUT_SERIES,
     INPUT_SERVICES,
+    INPUT_SPANS,
     INPUT_TOPOLOGY,
     INPUT_WINDOW,
     METRIC_SEP,
@@ -69,6 +85,9 @@ from .constants import (
     RUN_DIR,
     RUNGS,
     TIME_COLUMN,
+    TRACERCA_PORT_COLUMNS,
+    TRACERCA_SIGMAS,
+    US_PER_S,
 )
 from .log import log
 from .record import RunRecord, read_json, sha256_file, write_json
@@ -80,6 +99,7 @@ RANK_ARMS = (
     ARM_BARO_BOCPD,
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
+    ARM_TRACERCA,
     ARM_CONTROL_RULE,
 )  # the ranking arms with a method-side stage (control/random is analytic)
 POSITIONAL_JSON = "ranking-positional.json"
@@ -103,6 +123,10 @@ def _circa():
 
 def _rht():
     return importlib.import_module("RCAEval.graph_heads.rht").rht
+
+
+def _tracerca():
+    return importlib.import_module("RCAEval.e2e.tracerca").tracerca
 
 
 def _n_metrics(df):
@@ -273,6 +297,72 @@ def rank_circa_topology(case_dir):
     }
 
 
+def tracerca_frame(spans):
+    """The port's span table from the exporter's columns: `serviceName`, `methodName`, `operationName`, `startTime`,
+    `duration` (microseconds), plus the (service, operation) pairs that map the port's `serviceName_methodName`
+    keys back to services."""
+    df = spans.rename(columns=TRACERCA_PORT_COLUMNS)[list(TRACERCA_PORT_COLUMNS.values())].copy()
+    df["operationName"] = df["methodName"]
+    service_of = {f"{s}_{o}": s for s, o in spans[["service", "operation"]].drop_duplicates().itertuples(index=False)}
+    return df, service_of
+
+
+def abnormal_span_count(df, inject_us):
+    """The number of post-fault spans the port flags (its rule: duration/1000 >= mean + 3 SD of the operation's
+    pre-fault durations/1000; an operation with an undefined SD never flags) — for the record only."""
+    op = df["serviceName"] + "_" + df["methodName"]
+    pre = df["startTime"] + df["duration"] < inject_us
+    ms = df["duration"] / 1000.0
+    stats = ms[pre].groupby(op[pre]).agg(["mean", "std"])
+    post = ~pre
+    thr = op[post].map(stats["mean"]) + TRACERCA_SIGMAS * op[post].map(stats["std"])
+    return int((ms[post] >= thr).sum()), int(post.sum()), int(pre.sum())
+
+
+def rank_tracerca(case_dir):
+    check_input(ARM_TRACERCA, INPUT_SPANS)
+    check_input(ARM_TRACERCA, INPUT_SERVICES)
+    check_input(ARM_TRACERCA, INPUT_WINDOW)
+    spans = read_spans(case_dir)
+    services = [s for s, _ in read_services(case_dir)]
+    inject_us = read_window(case_dir)["inject_time"] * US_PER_S
+    df, service_of = tracerca_frame(spans)
+    n_abnormal, n_post, n_pre = abnormal_span_count(df, inject_us)
+    base = {
+        "n_spans": int(len(spans)),
+        "n_traces": int(spans["trace_id"].nunique()),
+        "n_spans_pre": n_pre,
+        "n_spans_post": n_post,
+        "n_abnormal_spans": n_abnormal,
+        "n_operations": len(service_of),
+        "n_filled": 0,
+    }
+    try:
+        out = _tracerca()(df.copy(), inject_time=inject_us, dataset=None)
+    except KeyError as e:
+        # the port's SLO table lacks an operation first seen after the injection (addendum 2026-10-25, later (2))
+        return {**base, "services": None, "miss": "operation unseen before the injection", "detail": str(e)[:200]}
+    ranked_ops = [str(o) for o in out["ranks"]]
+    unknown = [o for o in ranked_ops if o not in service_of]
+    if unknown:
+        raise ValueError(f"the port ranked operations outside the spans' pairs: {unknown[:5]}")
+    seen = []
+    for o in ranked_ops:
+        if service_of[o] not in seen:
+            seen.append(service_of[o])
+    return {
+        **base,
+        "services": seen,
+        "n_operations_ranked": len(ranked_ops),
+        "n_rows": int(len(spans)),
+        "n_pre_rows": n_pre,
+        "n_metrics": len(service_of),
+        "n_metrics_lt_min_pre": 0,
+        "time_rank": None,
+        "n_services_unranked": len(set(services) - set(seen)),
+    }
+
+
 RULE_SERIES = ("latency-95", "error", "count")  # plans/controls.md §2: the median latency is not a rule
 RULE_SIGMAS = 3.0
 
@@ -321,6 +411,7 @@ RANKERS = {
     ARM_BARO_BOCPD: rank_baro_bocpd,
     ARM_CIRCA: rank_circa,
     ARM_CIRCA_TOPOLOGY: rank_circa_topology,
+    ARM_TRACERCA: rank_tracerca,
     ARM_CONTROL_RULE: rank_rule,
 }
 

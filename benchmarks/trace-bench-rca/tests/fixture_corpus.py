@@ -222,3 +222,34 @@ def fixture_topology(export_root, edges=TOPOLOGY_EDGES):
     for d in sorted(Path(export_root).glob("case-*")):
         (d / "topology.json").write_text(json.dumps(doc, indent=1), encoding="utf-8")
     return doc
+
+
+def fixture_spans(export_root, pre_ms=10.0, post_ms=10.0, slow_service="tb-beta", slow_ms=400.0, n_pre=30, n_post=12):
+    """The exporter's `spans.csv` extra (2026-10-26) for every case directory of a fixture export: `n_pre` traces
+    before and `n_post` traces after the case's injection, three spans each (tb-edge -> tb-beta -> ext-gamma),
+    microseconds; pre-fault durations alternate +-0.5 ms (so the port's per-operation SD is not zero); after the
+    injection `slow_service`'s span lasts `slow_ms`. Returns the rows per case."""
+    import json as _json
+
+    out = {}
+    for d in sorted(Path(export_root).glob("case-*")):
+        inject = _json.loads((d / "window.json").read_text())["inject_time"] * 1_000_000
+        rows = []
+        for i in range(n_pre + n_post):
+            post = i >= n_pre
+            t0 = inject + (i - n_pre) * 1_000_000 + (0 if post else -2_000_000)
+            tid = f"{d.name}-t{i:03d}"
+            jitter = 0.0 if post else (0.5 if i % 2 else -0.5)
+            dur = {}
+            for s_, _ in SERVICES:
+                ms = slow_ms if (post and s_ == slow_service) else (post_ms if post else pre_ms + jitter)
+                dur[s_] = int(ms * 1000)
+            rows.append((tid, "tb-edge", "GET /v1/a", t0, dur["tb-edge"] + dur["tb-beta"] + dur["ext-gamma"], -1))
+            rows.append((tid, "tb-beta", "GET /v1/b_c", t0 + 100, dur["tb-beta"] + dur["ext-gamma"], 0))
+            rows.append((tid, "ext-gamma", "POST /v1/g", t0 + 200, dur["ext-gamma"], 1))
+        with open(d / "spans.csv", "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f, lineterminator="\n")
+            w.writerow(["trace_id", "service", "operation", "start_us", "duration_us", "parent_pos"])
+            w.writerows(rows)
+        out[d.name] = rows
+    return out

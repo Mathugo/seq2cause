@@ -25,8 +25,10 @@ class _Stub:
     def __init__(self):
         self.calls = []
 
-    def export(self, corpus_dir, rung, out, workers):
-        self.calls.append((str(corpus_dir), rung, str(out), workers))
+    EXTRAS = ("topology", "spans")
+
+    def export(self, corpus_dir, rung, out, workers, extras=()):
+        self.calls.append((str(corpus_dir), rung, str(out), workers, tuple(extras)))
         dirs = fixture_export(out)
         return {"rung": rung, "width_s": self.BIN_WIDTH_S[rung], "cases": [{"dir": d.name} for d in dirs], "inputs": []}
 
@@ -48,15 +50,35 @@ def test_stage_records_the_exporters_results(tmp_path, monkeypatch):
             str(out),
             "--workers",
             "1",
+            "--extras",
             "--output-folder",
             str(rec_dir),
         ]
     )
-    assert rc == 0 and stub.calls == [(str(corpus), "xs", str(out), 1)]
+    assert rc == 0 and stub.calls == [(str(corpus), "xs", str(out), 1, ())]
     res = read_json(rec_dir / RUN_DIR / RESULTS_JSON)
     assert res["status"] == "ok" and res["corpus_id"] == "xs/latent/seed=0" and res["stage"] == "export"
     assert [c["dir"] for c in res["exporter"]["cases"]] == ["case-00", "case-01"]
-    assert (out / "case-00" / "data.csv").exists()
+    assert (out / "case-00" / "data.csv").exists() and res["extras"] == []
+
+
+def test_extras_are_passed_through_and_refused_on_a_pin_without_them(tmp_path, monkeypatch):
+    stub = _Stub()
+    monkeypatch.setattr(export_mod, "_exporter", lambda: stub)
+    corpus = tmp_path / "instances/xs/latent/seed=0"
+    corpus.mkdir(parents=True)
+    res = export_mod.export(corpus, "xs", tmp_path / "e1", 1, ("topology", "spans"))
+    assert stub.calls[-1][-1] == ("topology", "spans") and res["extras"] == ["topology", "spans"]
+
+    class Old:  # a pin whose exporter predates the extras
+        BIN_WIDTH_S = _Stub.BIN_WIDTH_S
+
+        def export(self, corpus_dir, rung, out, workers):
+            raise AssertionError("must not be called")
+
+    monkeypatch.setattr(export_mod, "_exporter", lambda: Old())
+    with pytest.raises(RuntimeError, match="D-TBR-11"):
+        export_mod.export(corpus, "xs", tmp_path / "e2", 1, ("spans",))
 
 
 def test_width_mismatch_and_missing_exporter_are_refused(monkeypatch):

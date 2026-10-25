@@ -32,6 +32,8 @@ from .constants import (
     METRIC_SEP,
     METRICS,
     SERVICES_JSON,
+    SPANS_COLUMNS,
+    SPANS_CSV,
     TIME_COLUMN,
     TOPOLOGY_JSON,
     WINDOW_JSON,
@@ -95,6 +97,21 @@ def read_topology(case_dir):
     return edges
 
 
+def read_spans(case_dir):
+    """The exporter's `spans.csv` (one row per span of the view's traces ending in the case window) as a
+    DataFrame with exactly the registered columns; only an arm that declares the `spans` input may call
+    this. Refuses a span whose service is outside `services.json`."""
+    names = {s for s, _ in read_services(case_dir)}
+    with open_case_file(case_dir, SPANS_CSV) as f:
+        df = pd.read_csv(f, dtype={"trace_id": str, "service": str, "operation": str})
+    if list(df.columns) != list(SPANS_COLUMNS):
+        raise ValueError(f"{SPANS_CSV} columns {list(df.columns)} are not {list(SPANS_COLUMNS)}")
+    bad = sorted(set(df["service"]) - names)
+    if bad:
+        raise ValueError(f"{SPANS_CSV} names services outside {SERVICES_JSON}: {bad}")
+    return df
+
+
 def suite_fill(df):
     """RCAEval `main.py`'s loading rule at the pinned commit: `±inf → NaN`, forward fill, then 0.
     Returns the filled frame and the number of cells the rule changed."""
@@ -153,6 +170,7 @@ __all__ = [
     "read_window",
     "read_services",
     "read_topology",
+    "read_spans",
     "suite_fill",
     "read_table",
     "split_at",
