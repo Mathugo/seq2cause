@@ -531,3 +531,79 @@ from the shipped deployment topology, **now**, beside the port. Both are stretch
   `--prior-rung-record`, `tracebench.score_rca` (B = 2000, seed 0), five seeds or nothing, the
   random expectation and `control/rule` beside every row; per case the record keeps `n_edges`
   (PC or structural), `n_services_unranked`, the fallback flag and the loader's filled cells.
+
+### 2026-10-25, later — stretch arm `rca/rcd` (publication plan B7; owner decisions 2026-10-25; before any RCD code or read)
+
+Owner decisions of 2026-10-25: RCD goes, in the suite's own RCD environment, with **ten seeded runs
+per case averaged**. A stretch arm (appendix A5).
+
+- **Arm.** `rca/rcd` — class `root-cause`, inputs `series, window, services`, axis ranking: **RCD**,
+  `RCAEval/e2e/rcd.py::rcd` at `259ea41` (MIT), which carries the authors' code (`azamikram/rcd`,
+  MIT) and runs on the suite's patched causal-learn. The failure as a soft intervention on an unknown
+  target: an F-node (0 = the rows before the labelled injection, 1 = the rows from it to the labelled
+  end) is appended, every metric is discretised (`KBinsDiscretizer`, 5 bins, ordinal, k-means, fitted
+  on the concatenated table), and the hierarchical, localised Ψ-PC (χ² tests involving the F-node
+  only; random chunks of γ = 5 variables; α from 0.001 in steps of 0.1 until a neighbour survives;
+  two phases) returns the F-node's neighbours in order — a **partial ranking of metrics**.
+- **Facts read at the pin (2026-10-25).** `rcd(data, inject_time, dk_select_useful=False, gamma=5,
+  localized=True, bins=5, dataset=None, seed=None)` splits on `time < inject_time`; with
+  `dataset=None` it hands the table — `time` included — straight to Ψ-PC (the `rca/baro` trap); with
+  any other dataset name but `"sock-shop"` it runs the suite's named-dataset preprocessing on each
+  segment: `drop_time` → `convert_mem_mb` (a no-op here: no `_mem` column) → `drop_constant`, then
+  `_match_columns` (the columns present in both segments). `create_chunks` permutes the columns with
+  `np.random.permutation`, so the output is stochastic; `seed` seeds numpy once. Phase 2 can return
+  fewer metrics than services. The method module imports causal-learn, networkx, scikit-learn,
+  matplotlib, pandas, numpy and `RCAEval.io.time_series`; the suite's `SETUP.md` runs RCD only in its
+  *RCD mode*: Python 3.8, `requirements_rcd.lock` (causal-learn 0.1.2.3, numpy 1.23.5, pandas
+  2.0.1, networkx 2.5, scikit-learn 1.2.2, scipy 1.10.1), then `script/link.sh` overlays four patched
+  causal-learn files from the suite's `lib/causallearn/` (`utils/PCUtils/SkeletonDiscovery.py`, which
+  adds `local_skeleton_discovery` and the per-test `p_values`; `utils/Fas.py`;
+  `search/ConstraintBased/FCI.py`; `graph/GraphClass.py`). Upstream causal-learn has no
+  `local_skeleton_discovery`, so RCD cannot run in `trace-bench-rca`.
+- **D-TBR-6 — the suite's named-dataset preprocessing.** The adapter calls `rcd(table, inject_time,
+  dataset="trace-bench", seed=r)` with the port's defaults for everything else: the dataset name
+  selects the suite's own named-dataset branch (time dropped, constant columns dropped per segment,
+  columns matched between segments), the code the suite runs on every dataset it publishes RCD
+  numbers for; nothing is re-implemented. Follows: the suite's named-dataset path. Deviates from: the
+  unnamed path, which would make `time` a PC variable. The record counts the columns the branch
+  removed per case (table columns minus the ranked universe is not observable from the output; the
+  adapter recomputes the branch's column set with the suite's own functions for the count only).
+- **D-TBR-7 — the RCD environment and runner.** A second pinned conda environment,
+  `rcaeval-rcd-259ea41` (`environment-rcd.yml`): **Python 3.10** (not the suite's 3.8: on 3.8 the
+  suite's `e2e/__init__.py` imports every method module unconditionally and therefore every
+  method's stack; on 3.10 it imports leniently, as on 3.12), the lock's versions of exactly the
+  packages RCD imports — causal-learn 0.1.2.3, numpy 1.23.5, pandas 2.0.1, networkx 2.5,
+  scikit-learn 1.2.2, scipy 1.10.1, matplotlib 3.7.1, tqdm 4.65.0, requests 2.30.0 — RCAEval at the
+  pin installed without extras, and the four patched files copied over the installed causal-learn
+  exactly as `script/link.sh` links them (the sha256 of each overlaid file, and of the file it
+  replaced, ride the record). The method side (`tracebenchrca.rankrcd`, in `trace-bench-rca`) writes
+  each case's filled table (`read_table`, D-TBR-2) as `input.csv` with the window's `inject_time`
+  into a run directory and executes `tracebenchrca/rcd_runner.py` in the pinned environment once
+  per run (`--seed r`); the runner imports nothing from this package, calls the pinned `rcd()` as in
+  D-TBR-6 and writes the returned metric ranking to `ranking.json`. Created 2026-10-25; the
+  environment's `pip freeze` rides every record.
+- **Repetitions, partial rankings, failures.** Ten runs per case, `seed = r ∈ {0, …, 9}` (the paper
+  reports averages over runs; the CausalRCA aggregation of the 2026-10-23 addendum applies: per
+  case, AC@k is the share of the ten runs whose service ranking places the root cause in the first
+  k, the rung's numbers are means over cases, the interval resamples cases with the benchmark's
+  draws). A run's metric ranking is collapsed to services by first occurrence (the suite's coarse
+  collapse); **services absent from a run's ranking are misses at every k for that run**
+  (`n_services_unranked` per run recorded) — the BOCPD precedent, never refilled. A run that raises
+  is a failed run with no hit (counted per case with its reason; never re-run with another seed).
+  Defaults: `gamma 5, localized True, bins 5, dk_select_useful False`; no sweep (ranking-only arm;
+  the xs seed-0 export is the smoke test, no value chosen on it).
+- **Hypotheses (mechanical in `report`).** H-rca-rcd-random and H-rca-rcd-rule: the H-rca-random /
+  H-rca-rule rules of §6 applied to `rca/rcd`.
+- **Premise checks (2026-10-25, the 2026-10-21 exports; nothing kept).** The environment above
+  imports `RCAEval.e2e.rcd` with `local_skeleton_discovery` present. xs seed 0 through the
+  named-dataset path: no constant column in either segment on either case; the same seed gives the
+  same ranking twice (seeds 0 and 1, both cases); different seeds give different orders; the port
+  ranked 1 of 5 services on case 0 and 3 of 5 on case 1 (partial rankings are the norm); 0.1 s per
+  run. s seed 0 case 0 (1,080 rows × 48 columns): 3.0 s, 8 of 12 services ranked. m seed 0 case 0
+  (246 rows × 208 columns): 3.0 s, 4 of 52 services ranked. Expected cost: ≈ 25 cases × 10 runs ×
+  3 s ≈ 13 min per rung at m, local, single process.
+- **Staging, protocol, reporting.** As §4, §5 and the 2026-10-23 addendum's run-averaged scoring
+  (the score side generalises `scorecausalrca`'s per-run averaging to any rank record that carries
+  runs; CausalRCA's landed numbers must stay byte-identical); the random expectation and
+  `control/rule` beside every row; per case the record keeps every run's ranked-service count, the
+  columns the preprocessing removed, the loader's filled cells, and the runner's wall clock.
