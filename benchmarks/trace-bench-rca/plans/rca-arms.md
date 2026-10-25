@@ -621,3 +621,63 @@ per case averaged**. A stretch arm (appendix A5).
   runs; CausalRCA's landed numbers must stay byte-identical); the random expectation and
   `control/rule` beside every row; per case the record keeps every run's ranked-service count, the
   columns the preprocessing removed, the loader's filled cells, and the runner's wall clock.
+
+### 2026-10-25, later (2) — stretch arm `rca/tracerca` (publication plan B7; owner decisions 2026-10-25; before any TraceRCA code or read)
+
+Owner decisions of 2026-10-25: TraceRCA's spans come from the **views** (the only shipped source that
+carries trace membership); the code is the standard suite's **port**, not the authors' unlicensed
+repository. A stretch arm (appendix A5), declared **call-tree-informed**: it reads the reconstructed
+traces, so the correlator's measured loss (paper §3) is part of its input.
+
+- **Arm.** `rca/tracerca` — class `root-cause`, inputs `spans, window, services`, axis ranking:
+  **TraceRCA (suite implementation)**, `RCAEval/e2e/tracerca.py::tracerca(data, inject_time)` at
+  `259ea41` (MIT; the file states it was refactored from the MicroRank repository), a
+  reimplementation of `tracerca-li-2021` — the authors' repository `NetManAIOps/TraceRCA` carries no
+  licence file and is cited, not run (**D-TBR-10**; "author repository, no licence file; authors
+  contacted <date>" in the paper, with the port named as what ran).
+- **Facts read at the pin (2026-10-25).** The port takes a span table with `serviceName`,
+  `methodName` (filled from `operationName` where absent), `startTime` and `duration`; it forms
+  `operation = serviceName_methodName`; splits spans at `startTime + duration < inject_time` (the
+  same unit as the table — microseconds: the SLO divides `duration` by 1,000); per operation the
+  pre-fault mean and standard deviation of `duration / 1000` define its threshold; a post-fault span
+  is abnormal if its duration reaches mean + 3 SD (an operation with one pre-fault span has an
+  undefined SD and is never abnormal); per operation support = its abnormal spans over all abnormal
+  spans and confidence = its abnormal spans over its post-fault spans; score `2sc / (s + c)`;
+  operations ranked by score, undefined scores (no abnormal span) dropped. It has no trace-level
+  anomaly-detection stage and counts spans, not traces. **It raises `KeyError`** when a post-fault
+  span names an operation absent from the pre-fault spans (`normal_slo[op]`). It mutates its input
+  (the adapter passes a copy) and ignores `dataset`.
+- **Input (the exporter's `spans.csv`, `tracebench.export_rca --extras spans`, a fifth case file
+  through the one door).** One row per span of every request trace of the **end-ordered request
+  view** whose last span ends inside the case window `[window start, end_time)` — every split's rows
+  (the root-cause read is not a test-split read on the discovery axis) — `trace_id, service,
+  operation, start_us, duration_us, parent_pos` (microseconds from the view's `start_ns + offsets`
+  and `durations`; service and operation from the view's `model-vocab.json` base ops). The adapter
+  renames the columns to the port's (`serviceName`, `methodName`, `operationName`, `startTime`,
+  `duration`), passes `inject_time × 10⁶`, and collapses the returned `serviceName_methodName`
+  strings to services by first occurrence **through the spans' own (service, operation) pairs**, not
+  by splitting at an underscore (operation names carry underscores). `parent_pos` and `trace_id` are
+  in the file (the port reads neither); labels are not read.
+- **Miss rules (registered).** A case on which the port raises `KeyError` (an operation first seen
+  after the injection) is counted and scored as a miss with its own reason, never patched; a case
+  whose post-fault spans contain no abnormal span yields an empty ranking (every score undefined) —
+  passed through, scored as a miss by the benchmark's scorer and counted (`n_empty_rankings`);
+  services absent from the ranking are misses at every k (`n_services_unranked`). Any other
+  exception fails the run. No value is chosen on any read (ranking-only; defaults as the port's; the
+  xs seed-0 export is the smoke test).
+- **Hypotheses (mechanical in `report`).** H-rca-tracerca-random and H-rca-tracerca-rule: the §6
+  rules applied to `rca/tracerca`.
+- **Pull tier.** `pull --tier rca` gains `views/end-request/**` (the sequence files and
+  `model-vocab.json`) for the exporter's spans extra; the method side never opens a view. The
+  benchmark pin moves to the merge commit of the exporter's extras (D-TBR-11, the D-TBR-1 pattern).
+- **Premise checks (2026-10-25, xs seed 0 end-request view pulled from the release; nothing kept).**
+  12,578 request traces, 20 base ops; case 1 window (0–1,800 s): 6,243 traces, 20,595 pre- and
+  10,309 post-injection spans; case 2 (1,800–3,000 s): 4,307 traces, 15,976 / 5,093 spans; **every
+  operation seen after the injection was seen before it** on both cases, so the `KeyError` rule is not
+  expected to fire at xs (it stays registered for any case where it does). The port's own import
+  needs nothing beyond `trace-bench-rca`'s pandas and numpy.
+- **Staging, protocol, reporting.** As §4 and §5 (`rank` per arm, xs → s → m, `score`, five seeds
+  or nothing, random expectation and `control/rule` beside every row); per case the record keeps the
+  spans and traces read, the abnormal-span count the port implies (recomputed for the count only
+  from the port's own threshold rule on the same table), `n_services_unranked`, the miss reason and
+  the loader's filled cells of `data.csv` (read for the record's row count only, not by the method).
