@@ -164,3 +164,69 @@ the deployment topology, whose service-level coarsening is the service view's tr
 order true service edges above the rest. Licence line: author repository, no licence file; authors
 contacted 2026-10-14, no reply as of 2026-10-23.
 
+
+## Stretch arms, landed 2026-10-25: `rca/circa` and `rca/rcd` (xs, s, m × five seeds)
+
+Registered by `plans/rca-arms.md`, addenda 2026-10-25 (`rca/circa`, D-TBR-8, with its correction) and
+2026-10-25, later (`rca/rcd`, D-TBR-6, D-TBR-7). Reads on the 2026-10-21 exports (every case file as
+its export record hashed it): `rca/circa` from commit `8c753630` in `trace-bench-rca` (the `circa`
+extra: causal-learn 0.1.4.8, networkx 3.7), `rca/rcd` from commit `761f0949` through `rcd_runner.py` in
+the pinned environment `rcaeval-rcd-259ea41` (Python 3.10.22, causal-learn 0.1.2.3 with the suite's four
+patched files, numpy 1.23.5, pandas 2.0.1). The records' `git_commit.dirty` is true on every read: the
+tracked tree was clean at both commits and the flag reflects the reads' own untracked outputs
+appearing under `results/` as the chains ran. No value was chosen on any read. The earlier pooled
+files of the regenerated table are byte-identical (20 of 20).
+
+| rung | arm | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 (n services) | misses (no ranking) |
+|---|---|---|---|---|---|---|---|---|
+| xs | `rca/circa` | 10 | 0.100 | 0.500 | 1.000 | 0.620 [0.480, 0.760] | 0.600 (5) | 0 |
+| s | `rca/circa` | 15 | 0.133 | 0.467 | 0.733 | 0.427 [0.267, 0.613] | 0.250 (12) | 0 |
+| m | `rca/circa` | 25 | 0.000 | 0.000 | 0.000 | 0.000 [0.000, 0.000] | 0.058 (52) | 0 |
+| xs | `rca/rcd` | 10 | 0.630 | 0.880 | 0.880 | 0.818 [0.638, 0.960] | 0.600 (5) | 0 |
+| s | `rca/rcd` | 15 | 0.800 | 0.933 | 0.940 | 0.900 [0.758, 1.000] | 0.250 (12) | 0 |
+| m | `rca/rcd` | 25 | 0.404 | 0.552 | 0.584 | 0.518 [0.340, 0.687] | 0.058 (52) | 0 |
+
+Across rungs (50 cases): `rca/circa` Avg@5 0.252 [0.168, 0.348]; `rca/rcd` 0.692 [0.576, 0.799]
+(against `rca/baro` 0.372 [0.260, 0.488] and `control/rule` 0.468 [0.344, 0.588]). `rca/rcd`'s
+AC@k and Avg@5 are run-averaged: per case the share of its ten seeded runs that place the root
+cause in the first k (the 2026-10-23 aggregation); 0 of 500 runs failed.
+
+Per fault kind, Avg@5 — `rca/circa`: xs crash 0.48 / degrade 0.76; s crash 0.32 / degrade 0.32 /
+pool exhaustion 0.64; m every kind 0.00. `rca/rcd`: xs crash 0.65 / degrade 0.99; s crash 0.70 /
+degrade 1.00 / pool exhaustion 1.00; m cache flush 0.15 / crash 0.27 / degrade 0.58 / pool
+exhaustion 1.00.
+
+### Hypotheses (`plans/rca-arms.md`, addenda 2026-10-25)
+
+| hypothesis | verdict | the numbers |
+|---|---|---|
+| **H-rca-circa-random** — `rca/circa`'s Avg@5 interval above the random expectation on every rung | **fail** (xs, m) | xs low 0.480 vs 0.600; s low 0.267 vs 0.250 (pass); m 0.000 vs 0.058 |
+| **H-rca-circa-rule** — `rca/circa` at or above `control/rule` | **fail** (every rung) | `rca/circa` − `control/rule` Avg@5: xs −0.020, s −0.253, m −0.272 |
+| **H-rca-rcd-random** — `rca/rcd`'s Avg@5 interval above the random expectation on every rung | **pass** | lows 0.638 / 0.758 / 0.340 vs 0.600 / 0.250 / 0.058 |
+| **H-rca-rcd-rule** — `rca/rcd` at or above `control/rule` | **pass** (every rung) | `rca/rcd` − `control/rule` Avg@5: xs +0.178, s +0.220, m +0.246 |
+| H-circa-topology-gain | not run | `rca/circa-topology` needs the exporter's `topology.json` (trace-bench PR #14; the pin moves after the merge) |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **`rca/rcd` is the first root-cause arm above the rule control on every rung**, and the only
+  one whose interval clears the random expectation at m. It does so while ranking few services: a
+  run ranks 2.3 / 6.9 / 6.1 services of 5 / 12 / 52 on average (xs / s / m; 1–13 at m), and every
+  service it does not rank is a miss for that run (`n_services_unranked_per_run`, mean 2.7 / 5.1 /
+  45.9). The F-node's Ψ-PC neighbours are a short list that contains the root cause in most runs
+  (m AC@1 0.404 over ten runs per case). The suite's named-dataset preprocessing removed 0.5 / 0.2 /
+  0.9 columns per case on average (20 / 48 / 208 in); no constant column in either segment on most
+  cases. Wall clock: ≈ 0.1 s per run at xs, 11 s at s (max 52 s), 4.5 s at m (max 20 s); the runs of
+  a rung sum to 0.2 / 27 / 19 CPU-min; peak resident 0.12 GB.
+- **`rca/circa` finds nothing at m** (0 of 25 cases in the top five of 52, every fault kind) and
+  sits at the random expectation at xs. The head ranked every service on every case (no fallback,
+  no pruned service: the 2026-10-25 correction's rules did not bite on these exports), on PC graphs
+  of 16 / 104 / 362 undirected edges per case (20 / 48 / 208 columns). The registered reading
+  stands: the port's hypothesis-testing head resamples the table to 1 s and fits on
+  `[inject − 120 s, inject)`, which holds 4 / 8 / 2 bins at xs / s / m, interpolated, and tests the
+  10 s ending at injection + 300 s; at m that reference window is two 60 s bins. PC took 0.1 s per
+  case at xs, ≈ 3 s at s and ≈ 70–90 s at m (412 s for the slowest five-case corpus); peak resident
+  0.70 GB. Whether a head parameterised for the bin width would do better is not a question this
+  read answers (the port is run verbatim, D-TBR-8); the paper states the window facts beside the
+  row.
+- Both arms' records carry the per-case counts the addenda name (`n_edges`, `n_services_unranked`,
+  the fallback flag; `n_services_unranked_per_run`, the kept-column counts, every run's wall clock).
