@@ -531,6 +531,20 @@ from the shipped deployment topology, **now**, beside the port. Both are stretch
   `--prior-rung-record`, `tracebench.score_rca` (B = 2000, seed 0), five seeds or nothing, the
   random expectation and `control/rule` beside every row; per case the record keeps `n_edges`
   (PC or structural), `n_services_unranked`, the fallback flag and the loader's filled cells.
+- **Correction (2026-10-25, found by the adapter's test before any read).** "Every service is ranked
+  (the head scores every node)" above is wrong for the PC cell: the port builds its graph by adding
+  edges, so a metric with no PC edge is not a node and is never scored; such metrics are absent from
+  the ranking and their services, if none of their metrics is ranked, are **misses at every k**,
+  counted per case as `n_services_unranked` (the BOCPD precedent; nothing is appended). A second
+  source of unranked metrics applies to **both** cells: the head's `CaseData(prune=True)` drops every
+  node whose resampled series inside its window (`[inject − 120 s, inject + 300 s]`) takes a single
+  value, so a service all of whose metrics are constant there (a quiet service: count 0, error 0,
+  empty latency cells filled to 0) is unranked — a miss, counted the same way. On the 2026-10-21
+  exports no case has a constant column over its whole table, and every service was ranked on the
+  cases tried (premise above); inside the head's window the constant columns number 0.4 / 0.6 / 6.1
+  of 20 / 48 / 208 per case on average (xs / s / m), so a few m services may be unranked. The rule
+  stands for any case where it bites; the structural-graph cell gives every metric at least one
+  edge, so only the pruning can leave a service unranked there.
 
 ### 2026-10-25, later — stretch arm `rca/rcd` (publication plan B7; owner decisions 2026-10-25; before any RCD code or read)
 
