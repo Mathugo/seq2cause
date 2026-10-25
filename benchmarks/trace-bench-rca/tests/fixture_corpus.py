@@ -208,3 +208,17 @@ def fixture_export(root, n_rows=(60, 40), inject_row=(40, 30)):
         dirs.append(d)
         prev_end += n
     return dirs
+
+
+TOPOLOGY_EDGES = [
+    ("tb-edge", "tb-beta", 1.0),
+    ("tb-beta", "ext-gamma", 0.5),
+]  # caller -> callee, as the exporter stores them
+
+
+def fixture_topology(export_root, edges=TOPOLOGY_EDGES):
+    """The exporter's `topology.json` extra (2026-10-26) written into every case directory of a fixture export."""
+    doc = {"edges": [{"caller": a, "callee": b, "p_call": p} for a, b, p in edges], "source": "fixture"}
+    for d in sorted(Path(export_root).glob("case-*")):
+        (d / "topology.json").write_text(json.dumps(doc, indent=1), encoding="utf-8")
+    return doc

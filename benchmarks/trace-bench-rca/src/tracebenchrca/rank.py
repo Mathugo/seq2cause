@@ -16,6 +16,14 @@ pinned function unmodified, as registered in `plans/rca-arms.md` §2:
   `baro.root_cause_analysis.robust_scorer(data, anomalies=<change points>)`, which splits at the
   first detected row; a case without a change point has no ranking (a counted miss), never a
   fallback to the injection time.
+- `rca/circa` — RCAEval `e2e/circa.py::circa(data, inject_time, dataset=None)`: the port builds a PC
+  graph over every metric column and ranks the metrics with its regression-based hypothesis-testing
+  head (D-TBR-8: the port's exception fallback, the unranked column order with `adj = []`, is a
+  counted miss, never a ranking).
+- `rca/circa-topology` — the same head (`graph_heads/rht.py::rht`) on the structural graph of CIRCA's
+  Algorithm 1 built from the case's `topology.json` (D-TBR-9): Traffic → Latency, Traffic → Errors inside
+  a service; caller Traffic → callee Traffic, callee Latency → caller Latency, callee Errors → caller
+  Errors across each call edge; no PC.
 - `control/rule` — the three-rule alert counter of `plans/controls.md` §2 (addendum 2026-10-23), no
   third-party code: per service, `latency-95`, `error` and `count` alert at the first post-fault bin
   more than 3 population standard deviations from their pre-fault mean; services ranked by the
@@ -32,20 +40,28 @@ computed on the score side).
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib
+import io
 import math
 from pathlib import Path
 
 import numpy as np
 
 from .arms import check_input, code_of
-from .cases import collapse_to_services, list_cases, read_services, read_table, read_window, split_at
+from .cases import collapse_to_services, list_cases, read_services, read_table, read_topology, read_window, split_at
 from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
+    ARM_CIRCA,
+    ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    CIRCA_ACROSS,
+    CIRCA_META,
+    CIRCA_WITHIN,
     INPUT_SERIES,
     INPUT_SERVICES,
+    INPUT_TOPOLOGY,
     INPUT_WINDOW,
     METRIC_SEP,
     MIN_PRE_BINS,
@@ -62,6 +78,8 @@ STAGE = "rank"
 RANK_ARMS = (
     ARM_BARO,
     ARM_BARO_BOCPD,
+    ARM_CIRCA,
+    ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
 )  # the ranking arms with a method-side stage (control/random is analytic)
 POSITIONAL_JSON = "ranking-positional.json"
@@ -77,6 +95,14 @@ def _bocpd():
 
 def _robust_scorer():
     return importlib.import_module("baro.root_cause_analysis").robust_scorer
+
+
+def _circa():
+    return importlib.import_module("RCAEval.e2e.circa").circa
+
+
+def _rht():
+    return importlib.import_module("RCAEval.graph_heads.rht").rht
 
 
 def _n_metrics(df):
@@ -160,6 +186,93 @@ def rank_baro_bocpd(case_dir):
     }
 
 
+def _n_undirected_edges(adj):
+    a = np.asarray(adj)
+    n = a.shape[0]
+    iu = np.triu_indices(n, 1)
+    return int(((a[iu] != 0) | (a.T[iu] != 0)).sum())
+
+
+def rank_circa(case_dir):
+    df, n_filled, services = _table(ARM_CIRCA, case_dir)
+    check_input(ARM_CIRCA, INPUT_WINDOW)
+    inject_time = read_window(case_dir)["inject_time"]
+    err = io.StringIO()
+    with contextlib.redirect_stderr(err):  # the port's wrapper prints its fallback notice to standard error
+        out = _circa()(df.copy(), inject_time=inject_time, dataset=None)
+    if isinstance(out["adj"], list) and len(out["adj"]) == 0:
+        # D-TBR-8: the port caught an exception and returned the unranked column order — a counted miss
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "port fallback",
+            "port_stderr": err.getvalue().strip()[:500],
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
+    n_pre = int((df[TIME_COLUMN] < inject_time).sum())
+    return {
+        "n_filled": n_filled,
+        "n_edges": _n_undirected_edges(out["adj"]),
+        **_ranked([str(c) for c in out["ranks"]], df, n_pre, services),
+    }
+
+
+def structural_graph(columns, edges):
+    """CIRCA's Algorithm 1 on this directory's four series (D-TBR-9): the adjacency over `columns` (metric
+    names, `time` excluded, in table order) in the encoding the port's `rht()` reads — for a cause column c and
+    an effect column e, `adj[c, e] = 1` and `adj[e, c] = -1`, which after the port's edge construction and
+    `reverse()` makes c a parent of e. Returns `(adj, n_edges)`; refuses a pair set in both directions."""
+    idx = {c: i for i, c in enumerate(columns)}
+    by_meta = {}
+    for c in columns:
+        svc, metric = c.split(METRIC_SEP, 1)
+        by_meta.setdefault(svc, {}).setdefault(CIRCA_META[metric], []).append(c)
+    adj = np.zeros((len(columns), len(columns)), dtype=int)
+    pairs = set()
+
+    def add(cause, effect):
+        if (effect, cause) in pairs:
+            raise ValueError(f"structural graph: {cause} and {effect} would be causes of each other")
+        if (cause, effect) in pairs:
+            return
+        pairs.add((cause, effect))
+        adj[idx[cause], idx[effect]] = 1
+        adj[idx[effect], idx[cause]] = -1
+
+    for _svc, metas in by_meta.items():
+        for cm, em in CIRCA_WITHIN:
+            for cause in metas.get(cm, []):
+                for effect in metas.get(em, []):
+                    add(cause, effect)
+    for caller, callee, _ in edges:
+        for cm, em, direction in CIRCA_ACROSS:
+            src, dst = (caller, callee) if direction == "caller->callee" else (callee, caller)
+            for cause in by_meta.get(src, {}).get(cm, []):
+                for effect in by_meta.get(dst, {}).get(em, []):
+                    add(cause, effect)
+    return adj, len(pairs)
+
+
+def rank_circa_topology(case_dir):
+    df, n_filled, services = _table(ARM_CIRCA_TOPOLOGY, case_dir)
+    check_input(ARM_CIRCA_TOPOLOGY, INPUT_WINDOW)
+    check_input(ARM_CIRCA_TOPOLOGY, INPUT_TOPOLOGY)
+    inject_time = read_window(case_dir)["inject_time"]
+    edges = read_topology(case_dir)
+    columns = [c for c in df.columns if c != TIME_COLUMN]
+    adj, n_edges = structural_graph(columns, edges)
+    scored = _rht()(adj, inject_time, df)  # the port's head, as circa() calls it; any exception fails the run
+    ranks = [name for name, _ in sorted(scored, key=lambda x: x[1], reverse=True)]  # the port's own re-sort
+    n_pre = int((df[TIME_COLUMN] < inject_time).sum())
+    return {
+        "n_filled": n_filled,
+        "n_edges": n_edges,
+        "n_call_edges": len(edges),
+        **_ranked(ranks, df, n_pre, services),
+    }
+
+
 RULE_SERIES = ("latency-95", "error", "count")  # plans/controls.md §2: the median latency is not a rule
 RULE_SIGMAS = 3.0
 
@@ -203,7 +316,13 @@ def rank_rule(case_dir):
     }
 
 
-RANKERS = {ARM_BARO: rank_baro, ARM_BARO_BOCPD: rank_baro_bocpd, ARM_CONTROL_RULE: rank_rule}
+RANKERS = {
+    ARM_BARO: rank_baro,
+    ARM_BARO_BOCPD: rank_baro_bocpd,
+    ARM_CIRCA: rank_circa,
+    ARM_CIRCA_TOPOLOGY: rank_circa_topology,
+    ARM_CONTROL_RULE: rank_rule,
+}
 
 
 def read_export_record(export_record, rung):

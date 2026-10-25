@@ -40,7 +40,10 @@ CASE_DIR_GLOB = "case-*"
 DATA_CSV = "data.csv"
 WINDOW_JSON = "window.json"
 SERVICES_JSON = "services.json"
-CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the ONLY files a method may open
+TOPOLOGY_JSON = "topology.json"  # exporter extra (2026-10-26): deployed-service call edges, caller -> callee as stored
+SPANS_CSV = "spans.csv"  # exporter extra (2026-10-26): the end-ordered request view's spans per case
+CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON, TOPOLOGY_JSON, SPANS_CSV)  # the ONLY files a method may open
+BASE_CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the three every export carries
 WINDOW_KEYS = ("inject_time", "end_time")  # the two label fields a method receives, UNIX seconds
 TIME_COLUMN = "time"
 METRICS = ("count", "error", "latency-50", "latency-95")  # per service, log-derived from the access lines
@@ -86,8 +89,11 @@ CLASSES = (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
 INPUT_SERIES = "series"  # <case>/data.csv
 INPUT_WINDOW = "window"  # <case>/window.json
 INPUT_SERVICES = "services"  # <case>/services.json
-INPUT_TOPOLOGY = "topology"  # score side only: instantiation.json's call graph coarsened to services (never through a case directory)
-INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
+INPUT_TOPOLOGY = "topology"  # `floor/topology`: score side (instantiation.json); `rca/circa-topology`: <case>/topology.json (D-TBR-9)
+INPUT_SPANS = (
+    "spans"  # <case>/spans.csv — the correlated request view's spans (a trace-reading, call-tree-informed arm)
+)
+INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY, INPUT_SPANS)
 
 # --- axes a result is scored on (tracebench.score_rca, tracebench.score_service) -----------------
 AXIS_RANKING = "ranking"
@@ -136,8 +142,16 @@ CAUSALRCA_GRAPH_TAUS = (
     5,
 )  # strict `> tau` on mean |adj|
 
+# --- CIRCA's structural graph (plans/rca-arms.md, addendum 2026-10-25; D-TBR-9) --------------------------
+# meta metric of each exported series: Traffic / Latency / Errors; Saturation is empty (no resource metrics)
+CIRCA_META = {"count": "T", "latency-50": "L", "latency-95": "L", "error": "E"}
+CIRCA_WITHIN = (("T", "L"), ("T", "E"))  # cause meta -> effect meta inside one service
+CIRCA_ACROSS = (("T", "T", "caller->callee"), ("L", "L", "callee->caller"), ("E", "E", "callee->caller"))
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
+ARM_CIRCA = "rca/circa"
+ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -183,6 +197,34 @@ ARMS = {
             "reversed absolute weights, PageRank; 10 runs averaged",
         },
         "licence": "author repository, no licence file; authors contacted 2026-10-14",
+    },
+    ARM_CIRCA: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/circa.py::circa (PC graph over every metric column, then the port's regression-based "
+            "hypothesis testing; the port of NetManAIOps/CIRCA, BSD-3-Clause, which is not run)",
+        },
+        "licence": "MIT (the suite's port); the ported repository BSD-3-Clause",
+    },
+    ARM_CIRCA_TOPOLOGY: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/graph_heads/rht.py::rht on the structural graph of CIRCA's Algorithm 1 built from the "
+            "deployment call topology (D-TBR-9); no PC",
+        },
+        "licence": "MIT (the suite's port); the ported repository BSD-3-Clause",
     },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,

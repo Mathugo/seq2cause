@@ -33,6 +33,7 @@ from .constants import (
     METRICS,
     SERVICES_JSON,
     TIME_COLUMN,
+    TOPOLOGY_JSON,
     WINDOW_JSON,
     WINDOW_KEYS,
 )
@@ -75,6 +76,23 @@ def read_services(case_dir):
     with open_case_file(case_dir, SERVICES_JSON) as f:
         doc = json.load(f)
     return [(str(s["name"]), str(s["kind"])) for s in doc["services"]]
+
+
+def read_topology(case_dir):
+    """`[(caller, callee, p_call)]` of the exporter's `topology.json` (the deployed-service call edges, caller →
+    callee as stored); only an arm that declares the `topology` input may call this. Refuses an edge that names a
+    service outside `services.json`, a within-service edge, or a repeated pair."""
+    names = {s for s, _ in read_services(case_dir)}
+    with open_case_file(case_dir, TOPOLOGY_JSON) as f:
+        doc = json.load(f)
+    edges, seen = [], set()
+    for e in doc["edges"]:
+        a, b = str(e["caller"]), str(e["callee"])
+        if a not in names or b not in names or a == b or (a, b) in seen:
+            raise ValueError(f"{TOPOLOGY_JSON}: bad edge {a!r} -> {b!r}")
+        seen.add((a, b))
+        edges.append((a, b, float(e["p_call"])))
+    return edges
 
 
 def suite_fill(df):
@@ -134,6 +152,7 @@ __all__ = [
     "open_case_file",
     "read_window",
     "read_services",
+    "read_topology",
     "suite_fill",
     "read_table",
     "split_at",
