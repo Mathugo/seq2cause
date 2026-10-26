@@ -28,6 +28,7 @@ import pandas as pd
 from .constants import (
     CASE_DIR_GLOB,
     CASE_FILES,
+    CLIENT_SERVICE,
     DATA_CSV,
     METRIC_SEP,
     METRICS,
@@ -100,8 +101,10 @@ def read_topology(case_dir):
 def read_spans(case_dir):
     """The exporter's `spans.csv` (one row per span of the view's traces ending in the case window) as a
     DataFrame with exactly the registered columns; only an arm that declares the `spans` input may call
-    this. Refuses a span whose service is outside `services.json`."""
-    names = {s for s, _ in read_services(case_dir)}
+    this. Refuses a span whose service is outside `services.json`, except the synthetic client's (`CLIENT_SERVICE`;
+    the view reconstructs the client's root spans and the exporter writes every span of a trace) — those rows are
+    returned for the arm to drop and count (correction 2026-10-26)."""
+    names = {s for s, _ in read_services(case_dir)} | {CLIENT_SERVICE}
     with open_case_file(case_dir, SPANS_CSV) as f:
         df = pd.read_csv(f, dtype={"trace_id": str, "service": str, "operation": str})
     if list(df.columns) != list(SPANS_COLUMNS):

@@ -28,7 +28,10 @@ pinned function unmodified, as registered in `plans/rca-arms.md` §2:
   case's `spans.csv` (the exporter's extra: the end-ordered request view's spans of every trace ending
   in the case window), columns renamed to the port's, the injection time in microseconds; a `KeyError`
   (an operation first seen after the injection) and an empty ranking (no abnormal span) are counted
-  misses; operations collapse to services through the spans' own (service, operation) pairs.
+  misses; operations collapse to services through the spans' own (service, operation) pairs. The
+  synthetic client's root spans (service `client`: not a candidate, absent from `services.json` and
+  `topology.json`; its span is the whole request) are dropped before the port and counted per case
+  (`n_spans_client`; correction 2026-10-26).
 - `control/rule` — the three-rule alert counter of `plans/controls.md` §2 (addendum 2026-10-23), no
   third-party code: per service, `latency-95`, `error` and `count` alert at the first post-fault bin
   more than 3 population standard deviations from their pre-fault mean; services ranked by the
@@ -74,6 +77,7 @@ from .constants import (
     CIRCA_ACROSS,
     CIRCA_META,
     CIRCA_WITHIN,
+    CLIENT_SERVICE,
     INPUT_SERIES,
     INPUT_SERVICES,
     INPUT_SPANS,
@@ -323,12 +327,17 @@ def rank_tracerca(case_dir):
     check_input(ARM_TRACERCA, INPUT_SPANS)
     check_input(ARM_TRACERCA, INPUT_SERVICES)
     check_input(ARM_TRACERCA, INPUT_WINDOW)
-    spans = read_spans(case_dir)
+    spans_read = read_spans(case_dir)
+    is_client = spans_read["service"] == CLIENT_SERVICE  # correction 2026-10-26: the client is not a candidate
+    spans = spans_read[~is_client].reset_index(drop=True)
     services = [s for s, _ in read_services(case_dir)]
     inject_us = read_window(case_dir)["inject_time"] * US_PER_S
     df, service_of = tracerca_frame(spans)
     n_abnormal, n_post, n_pre = abnormal_span_count(df, inject_us)
     base = {
+        "n_spans_read": int(len(spans_read)),
+        "n_spans_client": int(is_client.sum()),
+        "n_traces_read": int(spans_read["trace_id"].nunique()),
         "n_spans": int(len(spans)),
         "n_traces": int(spans["trace_id"].nunique()),
         "n_spans_pre": n_pre,
