@@ -16,9 +16,10 @@ dependencies = [
     "scikit-learn>=1.4",
     "huggingface_hub>=0.30",
     # the benchmark: the publication branch's score-side commit. The reference harness beside this
-    # directory pins a3eb104 (tag v0.3.0-score3); this directory pins ace384b4, the `clear-2027`
-    # merge of PR #12 that carries `tracebench.export_rca` (RUN.md D-TBR-1; moved 2026-10-19).
-    "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@ace384b4802a822cfb7e6d97d82cabafe4e03676",
+    # directory pins a3eb104 (tag v0.3.0-score3); this directory pins fcb7ddb3, the `clear-2027`
+    # merge of PR #14 that carries `tracebench.export_rca` with its extras `topology` and `spans`
+    # (RUN.md D-TBR-1, moved 2026-10-19 to ace384b4; D-TBR-11, moved 2026-10-26 to fcb7ddb3).
+    "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@fcb7ddb303f7e70a2270b6d73e21eda40ae9cd52",
 ]
 
 [project.optional-dependencies]

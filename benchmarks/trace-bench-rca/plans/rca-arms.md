@@ -681,3 +681,14 @@ traces, so the correlator's measured loss (paper §3) is part of its input.
   spans and traces read, the abnormal-span count the port implies (recomputed for the count only
   from the port's own threshold rule on the same table), `n_services_unranked`, the miss reason and
   the loader's filled cells of `data.csv` (read for the record's row count only, not by the method).
+
+### 2026-10-26 — D-TBR-11 pin moved (owner merged trace-bench PR #14)
+
+- **§7 D-TBR-11.** The owner merged `export-rca-extras-26-10-26` into `clear-2027` on 2026-10-26
+  (merge commit `fcb7ddb3`). `pyproject.toml` and `requirements.txt` now pin `fcb7ddb3` in place of
+  `ace384b4`; the pinned tree differs from `ace384b4` only by `tracebench.export_rca` (the extras
+  `topology` and `spans`, `EXTRAS`), its tests, README and RUN.md (`score.py`, `score_rca`,
+  `score_service` byte-identical), so no landed cell moves. The three registered case files
+  (`data.csv`, `window.json`, `services.json`) are written by the same code with or without the
+  extras; the fresh exports made for the stretch arms assert their sha256 against the 2026-10-21
+  export records before any read. Nothing in `benchmarks/trace-bench/` changes.
