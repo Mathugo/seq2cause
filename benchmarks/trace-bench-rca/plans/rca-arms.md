@@ -715,3 +715,38 @@ traces, so the correlator's measured loss (paper §3) is part of its input.
 - **Scope.** `rca/tracerca` only; `rca/circa-topology` reads `topology.json`, which already excludes
   the client. Registered 2026-10-26 before the first TraceRCA ranking; `tests/test_tracerca.py`
   gains the case.
+
+### 2026-10-26, later (2) — l under the registered rule (stretch plans §4a; the bin-traffic job of 2026-10-26; no root-cause arm runs at l)
+
+- **Measurement.** The 2026-10-14 bin-traffic script (sha256 `830176b3…`, unchanged) re-run on rung l ×
+  seeds 0–4 only (c7i.4xlarge, 839 s of compute, 2026-10-26 18:01–18:15 UTC; HF
+  `chadyuk/trace-bench@v0.3.0`, raw access lines with `/healthz` dropped; 152 candidate services + 1
+  external per seed; widths 5 / 10 / 15 / 30 / 60 / 90 / 180 / 300 s). As on 2026-10-14: per service and
+  width, the median, p10 and empty-bin share of the request count over the pre-fault stretches. No
+  method ran; no ranking was produced; labels were read for the fault windows and root-cause flags only.
+  Not a harness run: no ledger entry, no freeze.
+- **The sparsest candidate (non-external) service, pre-fault, minimum over the five seeds.**
+
+  | width | median count / bin | p10 | max empty-bin share | divides every l fault boundary (49 020 / 62 220 / 76 020 s) | bins in the 900 s crash |
+  |---|---|---|---|---|---|
+  | 5 s | 0 | 0 | 0.86 | yes | 180 |
+  | 10 s | 0 | 0 | 0.75 | yes | 90 |
+  | 15 s | 0 | 0 | 0.65 | yes | 60 |
+  | 30 s | 1 | 0 | 0.42 | yes | 30 |
+  | 60 s | 2 | 0 | 0.19 | yes | 15 |
+  | 90 s | 3 | 1 | 0.10 | no | 10 |
+  | 180 s | 5 | 2 | 0.02 | no | 5 |
+  | 300 s | 9 | 4 | 0.002 | no | 3 |
+
+  Per-seed sparsest medians at 60 s: 2 / 3 / 3 / 2 / 2; at 300 s: 9 / 17 / 16 / 13 / 11. The binding
+  service is never a root cause on any seed. The whole-window scope gives the same table to within
+  rounding.
+- **Outcome under the §3 rule (N = 10: median ≥ 10 and p10 ≥ 1 on every seed, ≥ 5 bins in the shortest
+  fault, a width that divides every fault boundary).** **No width passes.** The floor is not reached at
+  any width on the grid — the widest, 300 s, reaches a minimum median of 9 and is excluded by both
+  arithmetic constraints anyway; the widest aligned width, 60 s, has a sparsest median of 2 with empty
+  bins at p10. Registered outcome, as the tfvars header of 2026-10-25 stated it either way: **the
+  registered rule has no solution at l** — no root-cause arm runs at l at this submission (the paper's
+  appendix A5.3, one sentence); the §3 widths for xs / s / m (30 / 15 / 60 s) and every landed cell are
+  untouched. Nothing is chosen on this read: the rule was fixed on 2026-10-14, the l measurement was
+  authorised on 2026-10-25 before any l number existed, and this addendum records the number.
