@@ -41,6 +41,31 @@ def test_spans_door_and_the_ports_table(tmp_path):
         cases.read_spans(case)
 
 
+def test_the_clients_spans_pass_the_door_and_never_reach_the_port(tmp_path, monkeypatch):
+    """Correction 2026-10-26: the synthetic client's root spans are dropped before the port and counted."""
+    rec, exp = _export_record(tmp_path)
+    rows = fixture_spans(exp)
+    for d in sorted(exp.glob("case-*")):
+        inject = json.loads((d / "window.json").read_text())["inject_time"] * 1_000_000
+        with open(d / "spans.csv", "a", newline="", encoding="utf-8") as f:
+            for i in range(7):
+                f.write(f"{d.name}-c{i},client,/page/x,{inject + (i - 3) * 1_000_000},{500_000},-1\n")
+    case = sorted(exp.glob("case-*"))[0]
+    spans = cases.read_spans(case)
+    assert len(spans) == len(rows[case.name]) + 7 and (spans["service"] == "client").sum() == 7
+
+    def port(data, inject_time=None, dataset=None):
+        assert "client" not in set(data["serviceName"]) and len(data) == len(rows[case.name])
+        return {"ranks": ["tb-beta_GET /v1/b_c"]}
+
+    monkeypatch.setattr(rank_mod, "_tracerca", lambda: port)
+    out = tmp_path / "tracerca/rank"
+    assert _rank(ARM_TRACERCA, rec, out) == 0
+    c0 = read_json(out / RUN_DIR / RESULTS_JSON)["cases"][0]
+    assert (c0["n_spans_read"], c0["n_spans_client"], c0["n_spans"]) == (126 + 7, 7, 126)
+    assert c0["n_traces_read"] == 42 + 7 and c0["n_traces"] == 42 and c0["n_abnormal_spans"] == 24
+
+
 def test_rank_collapses_through_the_pairs_and_counts_the_misses(tmp_path, monkeypatch):
     rec, exp = _export_record(tmp_path)
     fixture_spans(exp)

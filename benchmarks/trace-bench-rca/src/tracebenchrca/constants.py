@@ -45,6 +45,10 @@ TOPOLOGY_JSON = "topology.json"  # exporter extra (2026-10-26): deployed-service
 SPANS_CSV = "spans.csv"  # exporter extra (2026-10-26): the end-ordered request view's spans per case
 CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON, TOPOLOGY_JSON, SPANS_CSV)  # the ONLY files a method may open
 BASE_CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the three every export carries
+# the synthetic client's service name in the benchmark's views (`tracebench.topology` at the pin: `Service(name="client",
+# kind=KIND_CLIENT)`); it is not a deployed service (absent from services.json and topology.json) and the only service
+# `spans.csv` may name outside services.json — `rca/tracerca` drops its spans before the port (correction 2026-10-26)
+CLIENT_SERVICE = "client"
 WINDOW_KEYS = ("inject_time", "end_time")  # the two label fields a method receives, UNIX seconds
 TIME_COLUMN = "time"
 METRICS = ("count", "error", "latency-50", "latency-95")  # per service, log-derived from the access lines

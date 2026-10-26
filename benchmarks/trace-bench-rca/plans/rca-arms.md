@@ -692,3 +692,26 @@ traces, so the correlator's measured loss (paper §3) is part of its input.
   (`data.csv`, `window.json`, `services.json`) are written by the same code with or without the
   extras; the fresh exports made for the stretch arms assert their sha256 against the 2026-10-21
   export records before any read. Nothing in `benchmarks/trace-bench/` changes.
+
+### 2026-10-26, later — correction to `rca/tracerca`: the synthetic client's spans (before any TraceRCA ranking)
+
+- **What the door found.** The first xs read (seed 0, the registered smoke test) stopped at
+  `tracebenchrca.cases.read_spans`, which refused `spans.csv` for naming a service outside
+  `services.json`: `client`. The view reconstructs the synthetic client's root spans (its page loads,
+  operations `/page/…`) and the exporter writes every span of a trace, so the file carries them —
+  xs seed 0 case 1: 915 of 30,904 spans in 700 of 6,243 traces, every one a root (`parent_pos` −1).
+  The 2026-10-25 premise counts (20,595 / 10,309 spans) include them. No ranking was recorded; the
+  failed record was removed.
+- **Rule.** The client is not a deployed service — `services.json` and `topology.json` exclude it,
+  the scorer's candidate set never contains it — and its span is the whole request, so handed to the
+  port it would be an "operation" whose spans are abnormal whenever anything downstream is slow,
+  entering every operation's support denominator. The adapter therefore **drops the client's rows
+  before the port** (the door admits exactly that one extra service name, `constants.CLIENT_SERVICE`,
+  the benchmark's `Service(name="client", kind=KIND_CLIENT)`; any other unknown service still
+  refuses the file) and records per case `n_spans_read`, `n_spans_client`, `n_traces_read` beside
+  `n_spans` / `n_traces` (the rows handed to the port). Nothing else in the port's input changes;
+  the miss rules stand. An alternative — passing the client's rows and deleting `client` from the
+  returned ranking — was not taken for the denominator reason above.
+- **Scope.** `rca/tracerca` only; `rca/circa-topology` reads `topology.json`, which already excludes
+  the client. Registered 2026-10-26 before the first TraceRCA ranking; `tests/test_tracerca.py`
+  gains the case.
