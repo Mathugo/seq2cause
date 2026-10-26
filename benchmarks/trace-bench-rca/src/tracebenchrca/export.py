@@ -1,7 +1,11 @@
 """Export one pulled corpus's fault cases through the benchmark's own exporter and record it.
 
     python -m tracebenchrca.export --corpus-dir <pulled corpus> --rung xs --out <export root> \
-        --workers 1 --output-folder <run-dir>
+        --workers 1 --extras topology spans --output-folder <run-dir>
+
+`--extras` (2026-10-26; may be empty) asks the exporter for its optional case files — `topology.json`
+(`rca/circa-topology`) and `spans.csv` (`rca/tracerca`); a pin whose exporter has no extras refuses a
+non-empty request. The three registered files are the same with or without them.
 
 A thin stage around `tracebench.export_rca.export` (score side; it reads the configuration, the
 instantiation, `labels/cases.json` — the two window fields only — and the access-log shards):
@@ -46,14 +50,23 @@ def _exporter():
     return export_rca
 
 
-def export(corpus_dir, rung, out, workers):
+def export(corpus_dir, rung, out, workers, extras=()):
     exporter = _exporter()
-    results = exporter.export(corpus_dir, rung, out, workers=workers)
+    extras = tuple(extras)
+    if extras:
+        if not hasattr(exporter, "EXTRAS"):
+            raise RuntimeError(
+                "the pinned exporter has no extras; the pin must move to the commit that carries them (D-TBR-11)"
+            )
+        results = exporter.export(corpus_dir, rung, out, workers=workers, extras=extras)
+    else:
+        results = exporter.export(corpus_dir, rung, out, workers=workers)
     return {
         "corpus_id": corpus_id_of(corpus_dir),
         "export_dir": str(Path(out).resolve()),
         "stage": "export",
         "rung": rung,
+        "extras": list(extras),
         "exporter": results,
     }
 
@@ -66,6 +79,13 @@ def build_parser():
     )
     p.add_argument("--out", required=True, help="the export root for this corpus (one case-<k>/ per fault)")
     p.add_argument("--workers", required=True, type=int, help="shard parsers in parallel (rows pooled before binning)")
+    p.add_argument(
+        "--extras",
+        required=True,
+        nargs="*",
+        choices=("topology", "spans"),
+        help="the exporter's optional case files; may be empty",
+    )
     p.add_argument("--output-folder", required=True, help="where this stage's run record is written")
     return p
 
@@ -73,7 +93,7 @@ def build_parser():
 def main(argv=None):
     args = build_parser().parse_args(argv)
     with RunRecord(args.output_folder, "export", vars(args)) as rec:
-        res = export(args.corpus_dir, args.rung, args.out, args.workers)
+        res = export(args.corpus_dir, args.rung, args.out, args.workers, tuple(args.extras))
         log({"event": "export", "corpus_id": res["corpus_id"], "n_cases": len(res["exporter"]["cases"])})
         rec.finish(res)
     return 0

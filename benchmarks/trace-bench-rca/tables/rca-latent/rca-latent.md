@@ -15,6 +15,18 @@
 | xs | `rca/causalrca` (latency-95) | 10 | 0.280 | 0.630 | 0.990 | 0.622 [0.474, 0.780] | 0.600 | 0 |
 | s | `rca/causalrca` (latency-95) | 15 | 0.107 | 0.193 | 0.333 | 0.204 [0.083, 0.356] | 0.250 | 0 |
 | m | `rca/causalrca` (latency-95) | 25 | 0.012 | 0.036 | 0.060 | 0.034 [0.003, 0.080] | 0.058 | 0 |
+| xs | `rca/circa` | 10 | 0.100 | 0.500 | 1.000 | 0.620 [0.480, 0.760] | 0.600 | 0 |
+| s | `rca/circa` | 15 | 0.133 | 0.467 | 0.733 | 0.427 [0.267, 0.613] | 0.250 | 0 |
+| m | `rca/circa` | 25 | 0.000 | 0.000 | 0.000 | 0.000 [0.000, 0.000] | 0.058 | 0 |
+| xs | `rca/rcd` | 10 | 0.630 | 0.880 | 0.880 | 0.818 [0.638, 0.960] | 0.600 | 0 |
+| s | `rca/rcd` | 15 | 0.800 | 0.933 | 0.940 | 0.900 [0.758, 1.000] | 0.250 | 0 |
+| m | `rca/rcd` | 25 | 0.404 | 0.552 | 0.584 | 0.518 [0.340, 0.687] | 0.058 | 0 |
+
+| rung | arm | graph edges per case, mean [min, max] |
+|---|---|---|
+| xs | `rca/circa` | 16.4 [13, 19] |
+| s | `rca/circa` | 103.7 [96, 112] |
+| m | `rca/circa` | 362.1 [336, 385] |
 
 | rung | arm | alerting services per case, mean [min, max] |
 |---|---|---|
@@ -39,4 +51,8 @@ Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation sp
 | H-rca-bocpd | fail |
 | H-rca-scale | pass |
 | H-rca-rule | fail |
+| H-rca-circa-random | fail |
+| H-rca-circa-rule | fail |
+| H-rca-rcd-random | pass |
+| H-rca-rcd-rule | pass |
 | H-graph-topology | pass |

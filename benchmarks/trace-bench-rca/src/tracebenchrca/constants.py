@@ -20,6 +20,7 @@ from tracebench.constants import (  # noqa: F401  (re-exported: one definition a
     MANIFEST_JSON,
     RAW_DIR,
     TOPOLOGY_DIR,
+    VIEWS_DIR,
 )
 
 TOOL_NAME = "trace-bench-rca"
@@ -40,7 +41,10 @@ CASE_DIR_GLOB = "case-*"
 DATA_CSV = "data.csv"
 WINDOW_JSON = "window.json"
 SERVICES_JSON = "services.json"
-CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the ONLY files a method may open
+TOPOLOGY_JSON = "topology.json"  # exporter extra (2026-10-26): deployed-service call edges, caller -> callee as stored
+SPANS_CSV = "spans.csv"  # exporter extra (2026-10-26): the end-ordered request view's spans per case
+CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON, TOPOLOGY_JSON, SPANS_CSV)  # the ONLY files a method may open
+BASE_CASE_FILES = (DATA_CSV, WINDOW_JSON, SERVICES_JSON)  # the three every export carries
 WINDOW_KEYS = ("inject_time", "end_time")  # the two label fields a method receives, UNIX seconds
 TIME_COLUMN = "time"
 METRICS = ("count", "error", "latency-50", "latency-95")  # per service, log-derived from the access lines
@@ -86,8 +90,11 @@ CLASSES = (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
 INPUT_SERIES = "series"  # <case>/data.csv
 INPUT_WINDOW = "window"  # <case>/window.json
 INPUT_SERVICES = "services"  # <case>/services.json
-INPUT_TOPOLOGY = "topology"  # score side only: instantiation.json's call graph coarsened to services (never through a case directory)
-INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
+INPUT_TOPOLOGY = "topology"  # `floor/topology`: score side (instantiation.json); `rca/circa-topology`: <case>/topology.json (D-TBR-9)
+INPUT_SPANS = (
+    "spans"  # <case>/spans.csv — the correlated request view's spans (a trace-reading, call-tree-informed arm)
+)
+INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY, INPUT_SPANS)
 
 # --- axes a result is scored on (tracebench.score_rca, tracebench.score_service) -----------------
 AXIS_RANKING = "ranking"
@@ -136,8 +143,59 @@ CAUSALRCA_GRAPH_TAUS = (
     5,
 )  # strict `> tau` on mean |adj|
 
+# --- CIRCA's structural graph (plans/rca-arms.md, addendum 2026-10-25; D-TBR-9) --------------------------
+# meta metric of each exported series: Traffic / Latency / Errors; Saturation is empty (no resource metrics)
+CIRCA_META = {"count": "T", "latency-50": "L", "latency-95": "L", "error": "E"}
+CIRCA_WITHIN = (("T", "L"), ("T", "E"))  # cause meta -> effect meta inside one service
+CIRCA_ACROSS = (("T", "T", "caller->callee"), ("L", "L", "callee->caller"), ("E", "E", "callee->caller"))
+
+# --- RCD (plans/rca-arms.md, addendum 2026-10-25, later; D-TBR-6, D-TBR-7) ---------------------------
+RCD_RUNS = 10  # seeded runs per case, seed = run index (the paper averages over runs)
+RCD_DATASET = "trace-bench"  # any name but "sock-shop" selects the suite's named-dataset preprocessing (D-TBR-6)
+RCD_KWARGS = {
+    "gamma": 5,
+    "localized": True,
+    "bins": 5,
+    "dk_select_useful": False,
+}  # the port's defaults, passed explicitly
+RCD_ENV = "rcaeval-rcd-259ea41"  # the pinned environment (environment-rcd.yml; Python 3.10, the lock's versions)
+RCD_OVERLAY_FILES = (  # the suite's lib/causallearn files copied over the installed causal-learn (script/link.sh)
+    "utils/PCUtils/SkeletonDiscovery.py",
+    "utils/Fas.py",
+    "search/ConstraintBased/FCI.py",
+    "graph/GraphClass.py",
+)
+RCD_OVERLAY_SHA256 = {  # read from the suite's lib/causallearn at the pin on 2026-10-25 (full values asserted by the runner)
+    "utils/PCUtils/SkeletonDiscovery.py": "96b65269d34c89f1",
+    "utils/Fas.py": "4f7e07434dc09e83",
+    "search/ConstraintBased/FCI.py": "8b4acd094cdc1d83",
+    "graph/GraphClass.py": "1d75e73450d635a8",
+}  # 16-hex prefixes; the runner records the full digests and refuses an environment whose files differ
+
+# --- TraceRCA (plans/rca-arms.md, addendum 2026-10-25, later (2); D-TBR-10) ---------------------------------
+SPANS_COLUMNS = (
+    "trace_id",
+    "service",
+    "operation",
+    "start_us",
+    "duration_us",
+    "parent_pos",
+)  # the exporter's spans.csv
+TRACERCA_PORT_COLUMNS = {  # the exporter's columns -> the port's names (RCAEval/e2e/tracerca.py); microseconds throughout
+    "service": "serviceName",
+    "operation": "methodName",
+    "start_us": "startTime",
+    "duration_us": "duration",
+}
+TRACERCA_SIGMAS = 3.0  # the port's threshold: mean + 3 SD of the pre-fault durations per operation (count only)
+US_PER_S = 1_000_000
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
+ARM_CIRCA = "rca/circa"
+ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
+ARM_RCD = "rca/rcd"
+ARM_TRACERCA = "rca/tracerca"
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -183,6 +241,63 @@ ARMS = {
             "reversed absolute weights, PageRank; 10 runs averaged",
         },
         "licence": "author repository, no licence file; authors contacted 2026-10-14",
+    },
+    ARM_CIRCA: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/circa.py::circa (PC graph over every metric column, then the port's regression-based "
+            "hypothesis testing; the port of NetManAIOps/CIRCA, BSD-3-Clause, which is not run)",
+        },
+        "licence": "MIT (the suite's port); the ported repository BSD-3-Clause",
+    },
+    ARM_CIRCA_TOPOLOGY: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/graph_heads/rht.py::rht on the structural graph of CIRCA's Algorithm 1 built from the "
+            "deployment call topology (D-TBR-9); no PC",
+        },
+        "licence": "MIT (the suite's port); the ported repository BSD-3-Clause",
+    },
+    ARM_RCD: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/rcd.py::rcd (the authors' azamikram/rcd, MIT, as carried by the suite, on its patched "
+            "causal-learn; named-dataset preprocessing, D-TBR-6; ten seeded runs in the suite's RCD environment, D-TBR-7)",
+        },
+        "licence": "MIT",
+    },
+    ARM_TRACERCA: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SPANS, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/tracerca.py::tracerca — the suite's reimplementation of TraceRCA (per-operation SLO from the "
+            "pre-fault spans, support / confidence over flagged spans) on the view's spans (D-TBR-10); the authors' "
+            "NetManAIOps/TraceRCA (no licence file) is cited, not run",
+        },
+        "licence": "MIT (the suite's reimplementation); the authors' repository has no licence file; authors contacted",
     },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,

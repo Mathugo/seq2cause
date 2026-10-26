@@ -1,0 +1,210 @@
+{
+ "aggregation": "per-run metrics averaged over the case's runs (the authors' Res-Plot.ipynb), bootstrap over cases",
+ "axis": "ranking",
+ "bootstrap": {
+  "b": 2000,
+  "intervals": {
+   "ac@1": {
+    "high": 0.8,
+    "low": 0.0
+   },
+   "ac@3": {
+    "high": 0.8,
+    "low": 0.0
+   },
+   "ac@5": {
+    "high": 0.8400000000000001,
+    "low": 0.04
+   },
+   "avg@5": {
+    "high": 0.8160000000000001,
+    "low": 0.016
+   }
+  },
+  "level": 0.95,
+  "seed": 0
+ },
+ "by_fault_kind": {
+  "cache_flush": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.2,
+   "avg@5": 0.08,
+   "n_cases": 1
+  },
+  "crash": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "degrade": {
+   "ac@1": 0.5,
+   "ac@3": 0.5,
+   "ac@5": 0.5,
+   "avg@5": 0.5,
+   "n_cases": 2
+  },
+  "pool_exhaust": {
+   "ac@1": 1.0,
+   "ac@3": 1.0,
+   "ac@5": 1.0,
+   "avg@5": 1.0,
+   "n_cases": 1
+  }
+ },
+ "cases": [
+  {
+   "case_id": "m_tb-sugubum_degrade_0",
+   "fault_kind": "degrade",
+   "hit_rate": {
+    "ac@1": 1.0,
+    "ac@2": 1.0,
+    "ac@3": 1.0,
+    "ac@4": 1.0,
+    "ac@5": 1.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "root_cause_component": "tb-sugubum"
+  },
+  {
+   "case_id": "m_tb-vezut_crash_1",
+   "fault_kind": "crash",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "root_cause_component": "tb-vezut"
+  },
+  {
+   "case_id": "m_tb-niti_pool_exhaust_2",
+   "fault_kind": "pool_exhaust",
+   "hit_rate": {
+    "ac@1": 1.0,
+    "ac@2": 1.0,
+    "ac@3": 1.0,
+    "ac@4": 1.0,
+    "ac@5": 1.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "root_cause_component": "tb-niti"
+  },
+  {
+   "case_id": "m_tb-bunu_cache_flush_3",
+   "fault_kind": "cache_flush",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.2,
+    "ac@5": 0.2
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    null,
+    4,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    4
+   ],
+   "root_cause_component": "tb-bunu"
+  },
+  {
+   "case_id": "m_tb-edge_degrade_4",
+   "fault_kind": "degrade",
+   "hit_rate": {
+    "ac@1": 0.0,
+    "ac@2": 0.0,
+    "ac@3": 0.0,
+    "ac@4": 0.0,
+    "ac@5": 0.0
+   },
+   "missing": false,
+   "n_failed_runs": 0,
+   "n_runs": 10,
+   "ranks_per_run": [
+    null,
+    6,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "root_cause_component": "tb-edge"
+  }
+ ],
+ "corpus_dir_name": "seed=3",
+ "metrics": {
+  "ac@1": 0.4,
+  "ac@3": 0.4,
+  "ac@5": 0.44000000000000006,
+  "avg@5": 0.41600000000000004,
+  "n_cases": 5
+ },
+ "n_missing": 0,
+ "random": {
+  "ac@1": 0.019230769230769232,
+  "ac@3": 0.057692307692307696,
+  "ac@5": 0.09615384615384616,
+  "avg@5": 0.057692307692307696,
+  "n_candidates": 52
+ }
+}

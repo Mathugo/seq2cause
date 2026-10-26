@@ -25,6 +25,9 @@ dependencies = [
 # the methods under test, pinned by commit (plans/rca-arms.md §2); installed into the env the run records name
 baro = ["fse-baro @ git+https://github.com/phamquiluan/baro@e35f4ec1095e5cac891d52de9ad18a5b32a37ec8"]
 rcaeval = ["RCAEval @ git+https://github.com/phamquiluan/RCAEval@259ea4167160256a74ad30004aa3d96a998c846e"]
+# the CIRCA port's graph construction and head need causal-learn and networkx (plans/rca-arms.md, addendum 2026-10-25);
+# RCAEval's own `default` extra (torch, tigramite, dvc, …) is not installed
+circa = ["causal-learn>=0.1.4", "networkx>=3"]
 dev = ["pytest>=8", "ruff"]
 
 [tool.setuptools]

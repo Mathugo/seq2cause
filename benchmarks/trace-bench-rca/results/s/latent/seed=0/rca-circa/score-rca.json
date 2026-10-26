@@ -1,0 +1,91 @@
+{
+ "axis": "ranking",
+ "bootstrap": {
+  "b": 2000,
+  "intervals": {
+   "ac@1": {
+    "high": 0.0,
+    "low": 0.0
+   },
+   "ac@3": {
+    "high": 1.0,
+    "low": 0.0
+   },
+   "ac@5": {
+    "high": 1.0,
+    "low": 0.0
+   },
+   "avg@5": {
+    "high": 0.6,
+    "low": 0.0
+   }
+  },
+  "level": 0.95,
+  "seed": 0
+ },
+ "by_fault_kind": {
+  "crash": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 0.0,
+   "avg@5": 0.0,
+   "n_cases": 1
+  },
+  "degrade": {
+   "ac@1": 0.0,
+   "ac@3": 0.0,
+   "ac@5": 1.0,
+   "avg@5": 0.4,
+   "n_cases": 1
+  },
+  "pool_exhaust": {
+   "ac@1": 0.0,
+   "ac@3": 1.0,
+   "ac@5": 1.0,
+   "avg@5": 0.6,
+   "n_cases": 1
+  }
+ },
+ "cases": [
+  {
+   "case_id": "s_tb-razase_degrade_0",
+   "fault_kind": "degrade",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 4,
+   "root_cause_component": "tb-razase"
+  },
+  {
+   "case_id": "s_tb-visliput_crash_1",
+   "fault_kind": "crash",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 7,
+   "root_cause_component": "tb-visliput"
+  },
+  {
+   "case_id": "s_tb-tagan_pool_exhaust_2",
+   "fault_kind": "pool_exhaust",
+   "missing": false,
+   "n_ranked": 12,
+   "rank": 3,
+   "root_cause_component": "tb-tagan"
+  }
+ ],
+ "corpus_dir_name": "seed=0",
+ "metrics": {
+  "ac@1": 0.0,
+  "ac@3": 0.3333333333333333,
+  "ac@5": 0.6666666666666666,
+  "avg@5": 0.3333333333333333,
+  "n_cases": 3
+ },
+ "n_missing": 0,
+ "random": {
+  "ac@1": 0.08333333333333333,
+  "ac@3": 0.25,
+  "ac@5": 0.4166666666666667,
+  "avg@5": 0.25,
+  "n_candidates": 12
+ }
+}

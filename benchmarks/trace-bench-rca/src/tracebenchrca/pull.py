@@ -10,9 +10,12 @@ One tier, `rca`: exactly the files this directory reads and nothing more —
   `raw/shard=*/vl.jsonl.gz` for the exporter (`tracebench.export_rca`, score side);
 - `graphs/views/**` (the service-level truth view), `graphs/alphabet.json` and `topology/**`
   for the graph axis (`tracebench.score_service`);
+- `views/end-request/**` (the end-ordered request view's sequence files and `model-vocab.json`)
+  for the exporter's `spans.csv` extra (`rca/tracerca`, addendum 2026-10-25, later (2)); the
+  method side never opens a view — it reads the export through the case door;
 - `manifest.json` and `COMPLETE` for verification and provenance.
 
-Not fetched: the views (no root-cause arm reads them), the client-side `sentry.jsonl.gz`
+Not fetched: the other three views, the client-side `sentry.jsonl.gz`
 shards, the oracle, `labels/faults.json` and `labels/sequence-labels.parquet` (never read),
 and the token-level scoring targets. Files land as real files under
 `<dest>/instances/<rung>/<variant>/seed=<k>/` (never symlinks). Every fetched file's size and
@@ -43,6 +46,7 @@ from .constants import (
     SEEDS,
     TOPOLOGY_DIR,
     VARIANT,
+    VIEWS_DIR,
 )
 from .log import log
 from .record import RunRecord, read_json, sha256_file
@@ -56,6 +60,7 @@ TIERS = {
         f"{GRAPHS_DIR}/views/**",
         f"{GRAPHS_DIR}/alphabet.json",
         f"{TOPOLOGY_DIR}/**",
+        f"{VIEWS_DIR}/end-request/**",
         MANIFEST_JSON,
         COMPLETE_MARKER,
     ),

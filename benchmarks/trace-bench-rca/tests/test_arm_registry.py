@@ -11,9 +11,13 @@ from tracebenchrca.constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
     ARM_CAUSALRCA,
+    ARM_CIRCA,
+    ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RANDOM,
     ARM_CONTROL_RULE,
     ARM_FLOOR_TOPOLOGY,
+    ARM_RCD,
+    ARM_TRACERCA,
     ARMS,
     AXES,
     AXIS_GRAPH,
@@ -28,6 +32,7 @@ from tracebenchrca.constants import (
     GRAPH_ARMS,
     INPUT_SERIES,
     INPUT_SERVICES,
+    INPUT_SPANS,
     INPUT_TOPOLOGY,
     INPUT_WINDOW,
     INPUTS,
@@ -38,10 +43,18 @@ from tracebenchrca.constants import (
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def test_three_classes_six_arms():
+def test_three_classes_ten_arms():
     assert CLASSES == (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
-    assert len(ARMS) == 6
-    assert set(ROOT_CAUSE_ARMS) == {ARM_BARO, ARM_BARO_BOCPD, ARM_CAUSALRCA}
+    assert len(ARMS) == 10
+    assert set(ROOT_CAUSE_ARMS) == {
+        ARM_BARO,
+        ARM_BARO_BOCPD,
+        ARM_CAUSALRCA,
+        ARM_CIRCA,
+        ARM_CIRCA_TOPOLOGY,
+        ARM_RCD,
+        ARM_TRACERCA,
+    }
     assert set(CONTROL_ARMS) == {ARM_CONTROL_RANDOM, ARM_CONTROL_RULE, ARM_FLOOR_TOPOLOGY}
     assert DISCOVERY_ARMS == ()  # declared, no member yet
     for arm in ARMS:
@@ -54,6 +67,9 @@ def test_declared_inputs_match_the_plans():
     assert INPUT_WINDOW not in arms.inputs_of(ARM_BARO_BOCPD)  # the detector locates the change point
     assert arms.inputs_of(ARM_CONTROL_RANDOM) == (INPUT_SERVICES,)
     assert arms.inputs_of(ARM_FLOOR_TOPOLOGY) == (INPUT_TOPOLOGY,)
+    assert arms.inputs_of(ARM_CIRCA_TOPOLOGY) == (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
+    assert INPUT_TOPOLOGY not in arms.inputs_of(ARM_CIRCA)  # the PC cell reads no topology
+    assert arms.inputs_of(ARM_TRACERCA) == (INPUT_SPANS, INPUT_WINDOW, INPUT_SERVICES)  # the series are not its input
     assert arms.check_input(ARM_BARO, INPUT_WINDOW) == INPUT_WINDOW
     with pytest.raises(PermissionError):
         arms.check_input(ARM_BARO_BOCPD, INPUT_WINDOW)
@@ -84,6 +100,11 @@ def test_code_pins_are_full_shas_and_controls_have_none():
     assert arms.code_of(ARM_BARO)["commit"] == arms.code_of(ARM_BARO_BOCPD)["commit"]
     assert arms.code_of(ARM_BARO)["runner"] == "phamquiluan/RCAEval"
     assert arms.code_of(ARM_BARO_BOCPD)["runner"] is None  # the full pipeline is the method package's own functions
+    assert (
+        arms.code_of(ARM_CIRCA)["commit"]
+        == arms.code_of(ARM_CIRCA_TOPOLOGY)["commit"]
+        == arms.code_of(ARM_BARO)["runner_commit"]
+    )
     assert "no licence file" in ARMS[ARM_CAUSALRCA]["licence"]
     for arm in CONTROL_ARMS:
         assert arms.code_of(arm) is None

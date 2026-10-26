@@ -458,3 +458,226 @@ Fixed before the adapter is written and before any training of a registered read
   one learned graph), the per-case values recorded. `floor/topology`'s number is the same mean over
   the same cases (its prediction is the corpus's deployment topology, one per corpus). The freeze
   is the argmax over the τ grid of the mean directed F1 over the seed-0 cases, ties → the larger τ.
+
+### 2026-10-25 — stretch arms `rca/circa` and `rca/circa-topology` (publication plan B7; owner decisions 2026-10-25; before any CIRCA code or read)
+
+Owner decisions of 2026-10-25 (stretch plans §2 and the follow-up questions): CIRCA runs as the
+standard suite's port, **verbatim and disclosed**; a second cell builds CIRCA's own structural graph
+from the shipped deployment topology, **now**, beside the port. Both are stretch arms of the paper
+(appendix A5); the required set is unchanged.
+
+- **Arms.** `rca/circa` — class `root-cause`, inputs `series, window, services`, axis ranking:
+  **CIRCA (PC graph, suite port)**, `RCAEval/e2e/circa.py::circa(data, inject_time, dataset=None)` at
+  `259ea41` (MIT), a port of `NetManAIOps/CIRCA` (BSD-3-Clause; the repository itself is not run).
+  `rca/circa-topology` — class `root-cause`, inputs `series, window, services, topology`, axis
+  ranking: **CIRCA (structural graph)**, the same hypothesis-testing head
+  (`RCAEval/graph_heads/rht.py::rht`) on the structural graph of the paper's Algorithm 1 built from the
+  deployment call topology. The topology reaches the method through a fourth case file,
+  `topology.json`, written by the exporter (`tracebench.export_rca --extras topology`, D-TBR-9 below);
+  `tracebenchrca.cases.open_case_file` stays the one door. It is a declared **topology-informed** arm
+  and is reported beside the floors as a topology-reading discovery arm would be.
+- **Facts read at the pin (2026-10-25).** `circa()`: `preprocess(dataset=None)` is the identity; the
+  `time` column is dropped for graph construction and re-added for the head (so, unlike `rca/baro`, the
+  clock is never a scored variable); `pc_default(pc_input, dataset="ob")` calls causal-learn's `pc()`
+  with its defaults (Fisher-z, α 0.05, `stable=True`, `uc_rule 0`, `uc_priority 2`) and no background
+  knowledge; `rht(adj, inject_time, data)` builds `Node(service, metric)` from each column split at
+  its first `_`, adds the PC edges, `reverse()`s the graph, and scores every node with `RHTScorer()`
+  (`tau_max 0`, linear regression on the node's parents; `ANMRegressor`) — the descendant adjustment
+  is not applied. Its data window is **hard-coded for 1 s metrics**: `CaseData(interval = 1 s,
+  lookup_window = 120, detect_window = 10)` and `current = inject_time + 300`: the loader keeps the
+  table's points in `[inject − 120 s, inject + 300 s]`, resamples them to 1 s (`resample().mean()`,
+  time interpolation in both directions, back-fill) → 421 points, of which the first 111 are the
+  reference (training) window and the last 10 the test window. On this directory's bins that is
+  **4 / 8 / 2 pre-fault bins (xs 30 s / s 15 s / m 60 s), interpolated**, tested on the 10 s ending
+  five minutes after the injection. `sli = np.random.choice(nodes)` is drawn but unused by the head
+  (every node is scored), so the row is deterministic given PC (stable PC is deterministic). The
+  port's `@rca` wrapper catches any exception, prints one line to standard error and returns the
+  **unranked column order** as the ranking with `adj = []`.
+- **D-TBR-8 — the port's fallback is a miss.** A case on which `circa()` returns its exception
+  fallback (`adj` is an empty list) is counted and scored as a miss, reason "port fallback", with the
+  wrapper's standard-error line kept in the record; the column order is never scored. Any other
+  exception fails the run.
+- **Registered reading.** The arm is labelled "CIRCA (PC graph, suite port)"; the paper states the
+  head's window facts above beside the result (it is what the suite runs on every dataset; on 1 s
+  metrics the reference window holds 111 samples, here 2–8 bins). No value is chosen on any read;
+  defaults as the port's; the xs seed-0 export is the smoke test.
+- **D-TBR-9 — the structural graph from the shipped topology (`rca/circa-topology`).** Nodes = every
+  metric column. Meta metrics (Algorithm 1, four golden signals): Traffic = `count`; Latency =
+  `latency-50` and `latency-95`; Errors = `error`; Saturation empty (the benchmark ships no resource
+  metrics; an empty meta metric passes its parents' metrics through). Within a service: Traffic →
+  each Latency, Traffic → Errors. Across each call edge of `topology.json` (caller → callee, the
+  deployed-service coarsening of `instantiation.json`'s `topology.edges`, the client excluded,
+  within-service calls dropped, one edge per ordered pair): caller Traffic → callee Traffic; callee
+  Latency (both quantiles) → caller Latency (both); callee Errors → caller Errors. The adjacency is
+  handed to the port's own `rht()` in the encoding **the port reads**: for a cause column `c` and an
+  effect column `e`, `adj[c, e] = 1` and `adj[e, c] = −1`, which after the port's edge construction
+  and `reverse()` makes `MemoryGraph.parents(e) ∋ c` (asserted by a test that observes
+  `graph.parents` inside the port's own scoring). No PC runs on this cell; nothing else differs from
+  `rca/circa`. The record carries the structural graph's edge count per case.
+- **Hypotheses (scored mechanically in `report`).** H-rca-circa-random and H-rca-circa-rule: the
+  H-rca-random / H-rca-rule rules of §6 applied to `rca/circa`. **H-circa-topology-gain:**
+  `rca/circa-topology`'s pooled Avg@5 is at or above `rca/circa`'s on every rung (the paper's claim
+  that the structural graph carries the method). *Fail:* any rung where the PC cell is above.
+- **Environment.** The port needs causal-learn and networkx, absent from `trace-bench-rca` until
+  now: `pyproject.toml` gains the extra `circa = ["causal-learn>=0.1.4", "networkx>=3"]`; resolved
+  2026-10-25 as causal-learn 0.1.4.8, networkx 3.7 (pure-Python, numpy 2.5.4 / pandas 3.0.6
+  unchanged); every record's `pip freeze` names them. RCAEval's `default` extra is not installed.
+- **Premise checks (2026-10-25, xs seed-0 and m seed-0 exports of 2026-10-21; nothing kept).** PC
+  on the 20-column xs table: 0.1 s; on the 208-column, 246-row m case 0: 90 s (376 undirected
+  edges); the head 0.2 s; every service ranked on every case tried; no fallback; the head saw 421
+  points, 111 training, 10 test, as read from the code. Expected cost: ≈ 40 min for the 25 m cases,
+  local.
+- **Staging, protocol, reporting.** As §4 and §5: `rank` per arm, xs → s → m by
+  `--prior-rung-record`, `tracebench.score_rca` (B = 2000, seed 0), five seeds or nothing, the
+  random expectation and `control/rule` beside every row; per case the record keeps `n_edges`
+  (PC or structural), `n_services_unranked`, the fallback flag and the loader's filled cells.
+- **Correction (2026-10-25, found by the adapter's test before any read).** "Every service is ranked
+  (the head scores every node)" above is wrong for the PC cell: the port builds its graph by adding
+  edges, so a metric with no PC edge is not a node and is never scored; such metrics are absent from
+  the ranking and their services, if none of their metrics is ranked, are **misses at every k**,
+  counted per case as `n_services_unranked` (the BOCPD precedent; nothing is appended). A second
+  source of unranked metrics applies to **both** cells: the head's `CaseData(prune=True)` drops every
+  node whose resampled series inside its window (`[inject − 120 s, inject + 300 s]`) takes a single
+  value, so a service all of whose metrics are constant there (a quiet service: count 0, error 0,
+  empty latency cells filled to 0) is unranked — a miss, counted the same way. On the 2026-10-21
+  exports no case has a constant column over its whole table, and every service was ranked on the
+  cases tried (premise above); inside the head's window the constant columns number 0.4 / 0.6 / 6.1
+  of 20 / 48 / 208 per case on average (xs / s / m), so a few m services may be unranked. The rule
+  stands for any case where it bites; the structural-graph cell gives every metric at least one
+  edge, so only the pruning can leave a service unranked there.
+
+### 2026-10-25, later — stretch arm `rca/rcd` (publication plan B7; owner decisions 2026-10-25; before any RCD code or read)
+
+Owner decisions of 2026-10-25: RCD goes, in the suite's own RCD environment, with **ten seeded runs
+per case averaged**. A stretch arm (appendix A5).
+
+- **Arm.** `rca/rcd` — class `root-cause`, inputs `series, window, services`, axis ranking: **RCD**,
+  `RCAEval/e2e/rcd.py::rcd` at `259ea41` (MIT), which carries the authors' code (`azamikram/rcd`,
+  MIT) and runs on the suite's patched causal-learn. The failure as a soft intervention on an unknown
+  target: an F-node (0 = the rows before the labelled injection, 1 = the rows from it to the labelled
+  end) is appended, every metric is discretised (`KBinsDiscretizer`, 5 bins, ordinal, k-means, fitted
+  on the concatenated table), and the hierarchical, localised Ψ-PC (χ² tests involving the F-node
+  only; random chunks of γ = 5 variables; α from 0.001 in steps of 0.1 until a neighbour survives;
+  two phases) returns the F-node's neighbours in order — a **partial ranking of metrics**.
+- **Facts read at the pin (2026-10-25).** `rcd(data, inject_time, dk_select_useful=False, gamma=5,
+  localized=True, bins=5, dataset=None, seed=None)` splits on `time < inject_time`; with
+  `dataset=None` it hands the table — `time` included — straight to Ψ-PC (the `rca/baro` trap); with
+  any other dataset name but `"sock-shop"` it runs the suite's named-dataset preprocessing on each
+  segment: `drop_time` → `convert_mem_mb` (a no-op here: no `_mem` column) → `drop_constant`, then
+  `_match_columns` (the columns present in both segments). `create_chunks` permutes the columns with
+  `np.random.permutation`, so the output is stochastic; `seed` seeds numpy once. Phase 2 can return
+  fewer metrics than services. The method module imports causal-learn, networkx, scikit-learn,
+  matplotlib, pandas, numpy and `RCAEval.io.time_series`; the suite's `SETUP.md` runs RCD only in its
+  *RCD mode*: Python 3.8, `requirements_rcd.lock` (causal-learn 0.1.2.3, numpy 1.23.5, pandas
+  2.0.1, networkx 2.5, scikit-learn 1.2.2, scipy 1.10.1), then `script/link.sh` overlays four patched
+  causal-learn files from the suite's `lib/causallearn/` (`utils/PCUtils/SkeletonDiscovery.py`, which
+  adds `local_skeleton_discovery` and the per-test `p_values`; `utils/Fas.py`;
+  `search/ConstraintBased/FCI.py`; `graph/GraphClass.py`). Upstream causal-learn has no
+  `local_skeleton_discovery`, so RCD cannot run in `trace-bench-rca`.
+- **D-TBR-6 — the suite's named-dataset preprocessing.** The adapter calls `rcd(table, inject_time,
+  dataset="trace-bench", seed=r)` with the port's defaults for everything else: the dataset name
+  selects the suite's own named-dataset branch (time dropped, constant columns dropped per segment,
+  columns matched between segments), the code the suite runs on every dataset it publishes RCD
+  numbers for; nothing is re-implemented. Follows: the suite's named-dataset path. Deviates from: the
+  unnamed path, which would make `time` a PC variable. The record counts the columns the branch
+  removed per case (table columns minus the ranked universe is not observable from the output; the
+  adapter recomputes the branch's column set with the suite's own functions for the count only).
+- **D-TBR-7 — the RCD environment and runner.** A second pinned conda environment,
+  `rcaeval-rcd-259ea41` (`environment-rcd.yml`): **Python 3.10** (not the suite's 3.8: on 3.8 the
+  suite's `e2e/__init__.py` imports every method module unconditionally and therefore every
+  method's stack; on 3.10 it imports leniently, as on 3.12), the lock's versions of exactly the
+  packages RCD imports — causal-learn 0.1.2.3, numpy 1.23.5, pandas 2.0.1, networkx 2.5,
+  scikit-learn 1.2.2, scipy 1.10.1, matplotlib 3.7.1, tqdm 4.65.0, requests 2.30.0 — RCAEval at the
+  pin installed without extras, and the four patched files copied over the installed causal-learn
+  exactly as `script/link.sh` links them (the sha256 of each overlaid file, and of the file it
+  replaced, ride the record). The method side (`tracebenchrca.rankrcd`, in `trace-bench-rca`) writes
+  each case's filled table (`read_table`, D-TBR-2) as `input.csv` with the window's `inject_time`
+  into a run directory and executes `tracebenchrca/rcd_runner.py` in the pinned environment once
+  per run (`--seed r`); the runner imports nothing from this package, calls the pinned `rcd()` as in
+  D-TBR-6 and writes the returned metric ranking to `ranking.json`. Created 2026-10-25; the
+  environment's `pip freeze` rides every record.
+- **Repetitions, partial rankings, failures.** Ten runs per case, `seed = r ∈ {0, …, 9}` (the paper
+  reports averages over runs; the CausalRCA aggregation of the 2026-10-23 addendum applies: per
+  case, AC@k is the share of the ten runs whose service ranking places the root cause in the first
+  k, the rung's numbers are means over cases, the interval resamples cases with the benchmark's
+  draws). A run's metric ranking is collapsed to services by first occurrence (the suite's coarse
+  collapse); **services absent from a run's ranking are misses at every k for that run**
+  (`n_services_unranked` per run recorded) — the BOCPD precedent, never refilled. A run that raises
+  is a failed run with no hit (counted per case with its reason; never re-run with another seed).
+  Defaults: `gamma 5, localized True, bins 5, dk_select_useful False`; no sweep (ranking-only arm;
+  the xs seed-0 export is the smoke test, no value chosen on it).
+- **Hypotheses (mechanical in `report`).** H-rca-rcd-random and H-rca-rcd-rule: the H-rca-random /
+  H-rca-rule rules of §6 applied to `rca/rcd`.
+- **Premise checks (2026-10-25, the 2026-10-21 exports; nothing kept).** The environment above
+  imports `RCAEval.e2e.rcd` with `local_skeleton_discovery` present. xs seed 0 through the
+  named-dataset path: no constant column in either segment on either case; the same seed gives the
+  same ranking twice (seeds 0 and 1, both cases); different seeds give different orders; the port
+  ranked 1 of 5 services on case 0 and 3 of 5 on case 1 (partial rankings are the norm); 0.1 s per
+  run. s seed 0 case 0 (1,080 rows × 48 columns): 3.0 s, 8 of 12 services ranked. m seed 0 case 0
+  (246 rows × 208 columns): 3.0 s, 4 of 52 services ranked. Expected cost: ≈ 25 cases × 10 runs ×
+  3 s ≈ 13 min per rung at m, local, single process.
+- **Staging, protocol, reporting.** As §4, §5 and the 2026-10-23 addendum's run-averaged scoring
+  (the score side generalises `scorecausalrca`'s per-run averaging to any rank record that carries
+  runs; CausalRCA's landed numbers must stay byte-identical); the random expectation and
+  `control/rule` beside every row; per case the record keeps every run's ranked-service count, the
+  columns the preprocessing removed, the loader's filled cells, and the runner's wall clock.
+
+### 2026-10-25, later (2) — stretch arm `rca/tracerca` (publication plan B7; owner decisions 2026-10-25; before any TraceRCA code or read)
+
+Owner decisions of 2026-10-25: TraceRCA's spans come from the **views** (the only shipped source that
+carries trace membership); the code is the standard suite's **port**, not the authors' unlicensed
+repository. A stretch arm (appendix A5), declared **call-tree-informed**: it reads the reconstructed
+traces, so the correlator's measured loss (paper §3) is part of its input.
+
+- **Arm.** `rca/tracerca` — class `root-cause`, inputs `spans, window, services`, axis ranking:
+  **TraceRCA (suite implementation)**, `RCAEval/e2e/tracerca.py::tracerca(data, inject_time)` at
+  `259ea41` (MIT; the file states it was refactored from the MicroRank repository), a
+  reimplementation of `tracerca-li-2021` — the authors' repository `NetManAIOps/TraceRCA` carries no
+  licence file and is cited, not run (**D-TBR-10**; "author repository, no licence file; authors
+  contacted <date>" in the paper, with the port named as what ran).
+- **Facts read at the pin (2026-10-25).** The port takes a span table with `serviceName`,
+  `methodName` (filled from `operationName` where absent), `startTime` and `duration`; it forms
+  `operation = serviceName_methodName`; splits spans at `startTime + duration < inject_time` (the
+  same unit as the table — microseconds: the SLO divides `duration` by 1,000); per operation the
+  pre-fault mean and standard deviation of `duration / 1000` define its threshold; a post-fault span
+  is abnormal if its duration reaches mean + 3 SD (an operation with one pre-fault span has an
+  undefined SD and is never abnormal); per operation support = its abnormal spans over all abnormal
+  spans and confidence = its abnormal spans over its post-fault spans; score `2sc / (s + c)`;
+  operations ranked by score, undefined scores (no abnormal span) dropped. It has no trace-level
+  anomaly-detection stage and counts spans, not traces. **It raises `KeyError`** when a post-fault
+  span names an operation absent from the pre-fault spans (`normal_slo[op]`). It mutates its input
+  (the adapter passes a copy) and ignores `dataset`.
+- **Input (the exporter's `spans.csv`, `tracebench.export_rca --extras spans`, a fifth case file
+  through the one door).** One row per span of every request trace of the **end-ordered request
+  view** whose last span ends inside the case window `[window start, end_time)` — every split's rows
+  (the root-cause read is not a test-split read on the discovery axis) — `trace_id, service,
+  operation, start_us, duration_us, parent_pos` (microseconds from the view's `start_ns + offsets`
+  and `durations`; service and operation from the view's `model-vocab.json` base ops). The adapter
+  renames the columns to the port's (`serviceName`, `methodName`, `operationName`, `startTime`,
+  `duration`), passes `inject_time × 10⁶`, and collapses the returned `serviceName_methodName`
+  strings to services by first occurrence **through the spans' own (service, operation) pairs**, not
+  by splitting at an underscore (operation names carry underscores). `parent_pos` and `trace_id` are
+  in the file (the port reads neither); labels are not read.
+- **Miss rules (registered).** A case on which the port raises `KeyError` (an operation first seen
+  after the injection) is counted and scored as a miss with its own reason, never patched; a case
+  whose post-fault spans contain no abnormal span yields an empty ranking (every score undefined) —
+  passed through, scored as a miss by the benchmark's scorer and counted (`n_empty_rankings`);
+  services absent from the ranking are misses at every k (`n_services_unranked`). Any other
+  exception fails the run. No value is chosen on any read (ranking-only; defaults as the port's; the
+  xs seed-0 export is the smoke test).
+- **Hypotheses (mechanical in `report`).** H-rca-tracerca-random and H-rca-tracerca-rule: the §6
+  rules applied to `rca/tracerca`.
+- **Pull tier.** `pull --tier rca` gains `views/end-request/**` (the sequence files and
+  `model-vocab.json`) for the exporter's spans extra; the method side never opens a view. The
+  benchmark pin moves to the merge commit of the exporter's extras (D-TBR-11, the D-TBR-1 pattern).
+- **Premise checks (2026-10-25, xs seed 0 end-request view pulled from the release; nothing kept).**
+  12,578 request traces, 20 base ops; case 1 window (0–1,800 s): 6,243 traces, 20,595 pre- and
+  10,309 post-injection spans; case 2 (1,800–3,000 s): 4,307 traces, 15,976 / 5,093 spans; **every
+  operation seen after the injection was seen before it** on both cases, so the `KeyError` rule is not
+  expected to fire at xs (it stays registered for any case where it does). The port's own import
+  needs nothing beyond `trace-bench-rca`'s pandas and numpy.
+- **Staging, protocol, reporting.** As §4 and §5 (`rank` per arm, xs → s → m, `score`, five seeds
+  or nothing, random expectation and `control/rule` beside every row); per case the record keeps the
+  spans and traces read, the abnormal-span count the port implies (recomputed for the count only
+  from the port's own threshold rule on the same table), `n_services_unranked`, the miss reason and
+  the loader's filled cells of `data.csv` (read for the record's row count only, not by the method).

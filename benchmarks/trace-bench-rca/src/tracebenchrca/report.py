@@ -33,9 +33,14 @@ from .constants import (
     ARM_BARO,
     ARM_BARO_BOCPD,
     ARM_CAUSALRCA,
+    ARM_CIRCA,
+    ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_RCD,
+    ARM_TRACERCA,
     CAUSALRCA_SERIES,
     RESULTS_JSON,
+    ROOT_CAUSE_ARMS,
     RUN_DIR,
     RUNGS,
     SCORE_RCA_JSON,
@@ -50,6 +55,18 @@ from .scorecausalrca import pool_run_averaged
 STAGE = "report"
 AVG = "avg@5"
 BOCPD_GAP = 0.10  # H-rca-bocpd's registered tolerance (plans/rca-arms.md §6)
+RUN_AVERAGED_ARMS = (
+    ARM_CAUSALRCA,
+    ARM_RCD,
+)  # arms scored by per-run averaging (plans/rca-arms.md, addenda 2026-10-23 / 2026-10-25)
+REPORT_ARMS = tuple(a for a in ROOT_CAUSE_ARMS) + (ARM_CONTROL_RULE,)
+# the stretch arms' hypotheses: the §6 random / rule rules applied per arm (addenda 2026-10-25)
+PER_ARM_HYPOTHESES = {
+    ARM_CIRCA: "circa",
+    ARM_CIRCA_TOPOLOGY: "circa-topology",
+    ARM_RCD: "rcd",
+    ARM_TRACERCA: "tracerca",
+}
 
 
 def cell_dir(results_dir, rung, seed, arm, series=None):
@@ -95,8 +112,24 @@ def row_of(rung, arm, pooled, cells):
     }
     if arm == ARM_CAUSALRCA:
         row["series"] = cells[0][1]["series"]
+    if arm in RUN_AVERAGED_ARMS:
         row["n_failed_runs"] = sum(r["n_failed_runs"] for _, _, r in cells)
         row["aggregation"] = pooled["aggregation"]
+    unranked = [u for _, _, r in cells for c in r["cases"] for u in c.get("n_services_unranked_per_run", [])]
+    if unranked:
+        row["unranked_services_per_run"] = {
+            "mean": statistics.mean(unranked),
+            "max": max(unranked),
+            "n_runs": len(unranked),
+        }
+    edges = [c["n_edges"] for _, _, r in cells for c in r["cases"] if "n_edges" in c]
+    if edges:
+        row["edges_per_case"] = {
+            "mean": statistics.mean(edges),
+            "min": min(edges),
+            "max": max(edges),
+            "n_cases": len(edges),
+        }
     offsets = [
         cp["change_point_offset_s"]
         for _, s, _ in cells
@@ -156,6 +189,28 @@ def hypotheses(rows, rungs, graph_rows=()):
         }
     else:
         out["H-rca-rule"] = {"verdict": "not run", "reason": "needs rca/baro and control/rule on every named rung"}
+    for arm, slug in PER_ARM_HYPOTHESES.items():
+        if all((g, arm) in by for g in rungs):
+            per = {g: by[(g, arm)]["bootstrap"]["intervals"][AVG]["low"] > by[(g, arm)]["random"][AVG] for g in rungs}
+            out[f"H-rca-{slug}-random"] = {"per_rung": per, "verdict": "pass" if all(per.values()) else "fail"}
+            if all((g, ARM_CONTROL_RULE) in by for g in rungs):
+                per = {g: by[(g, arm)]["metrics"][AVG] >= by[(g, ARM_CONTROL_RULE)]["metrics"][AVG] for g in rungs}
+                out[f"H-rca-{slug}-rule"] = {
+                    "gap_arm_minus_rule": {
+                        g: by[(g, arm)]["metrics"][AVG] - by[(g, ARM_CONTROL_RULE)]["metrics"][AVG] for g in rungs
+                    },
+                    "per_rung": per,
+                    "verdict": "pass" if all(per.values()) else "fail",
+                }
+    if all((g, a) in by for g in rungs for a in (ARM_CIRCA, ARM_CIRCA_TOPOLOGY)):
+        per = {g: by[(g, ARM_CIRCA_TOPOLOGY)]["metrics"][AVG] >= by[(g, ARM_CIRCA)]["metrics"][AVG] for g in rungs}
+        out["H-circa-topology-gain"] = {
+            "gap_topology_minus_pc": {
+                g: by[(g, ARM_CIRCA_TOPOLOGY)]["metrics"][AVG] - by[(g, ARM_CIRCA)]["metrics"][AVG] for g in rungs
+            },
+            "per_rung": per,
+            "verdict": "pass" if all(per.values()) else "fail",
+        }
     if graph_rows and all(any(g["rung"] == r for g in graph_rows) for r in rungs):
         per = {f"{g['rung']} {g['series']}": g["mean"]["f1"] <= g["floor_topology"]["f1"] for g in graph_rows}
         out["H-graph-topology"] = {
@@ -221,6 +276,12 @@ def markdown(rows, hyp, graph_rows=()):
             f"{fmt(m[AVG])} [{fmt(iv.get('low'))}, {fmt(iv.get('high'))}] | {fmt(rnd[AVG] if rnd else None)} | "
             f"{r['n_missing']} |"
         )
+    edge_rows = [r for r in rows if "edges_per_case" in r]
+    if edge_rows:
+        lines += ["", "| rung | arm | graph edges per case, mean [min, max] |", "|---|---|---|"]
+        for r in edge_rows:
+            e = r["edges_per_case"]
+            lines.append(f"| {r['rung']} | `{r['arm']}` | {e['mean']:.1f} [{e['min']}, {e['max']}] |")
     rule_rows = [r for r in rows if "alerting_services_per_case" in r]
     if rule_rows:
         lines += ["", "| rung | arm | alerting services per case, mean [min, max] |", "|---|---|---|"]
@@ -252,7 +313,7 @@ def report(results_dir, rungs, seeds, arms, b, seed, out):
     graph_rows = []
     for arm in arms:
         for series in CAUSALRCA_SERIES if arm == ARM_CAUSALRCA else (None,):
-            pooler = pool_run_averaged if arm == ARM_CAUSALRCA else pool
+            pooler = pool_run_averaged if arm in RUN_AVERAGED_ARMS else pool
             stem = arm_slug(arm) if series is None else f"{arm_slug(arm)}-{series}"
             all_results = []
             for rung in rungs:
@@ -289,9 +350,7 @@ def build_parser():
     p.add_argument("--results-dir", required=True)
     p.add_argument("--rungs", required=True, nargs="+", choices=RUNGS)
     p.add_argument("--seeds", required=True, nargs="+", type=int, choices=SEEDS)
-    p.add_argument(
-        "--arms", required=True, nargs="+", choices=(ARM_BARO, ARM_BARO_BOCPD, ARM_CONTROL_RULE, ARM_CAUSALRCA)
-    )
+    p.add_argument("--arms", required=True, nargs="+", choices=REPORT_ARMS)
     p.add_argument("--bootstrap-b", required=True, type=int, help="bootstrap resamples of the pooled tables")
     p.add_argument("--bootstrap-seed", required=True, type=int)
     p.add_argument("--output-folder", required=True, help="the tables directory and this stage's run record")
