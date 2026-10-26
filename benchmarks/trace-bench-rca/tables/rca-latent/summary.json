@@ -152,6 +152,19 @@
   }
  ],
  "hypotheses": {
+  "H-circa-topology-gain": {
+   "gap_topology_minus_pc": {
+    "m": 0.024,
+    "s": -0.17333333333333334,
+    "xs": -0.12
+   },
+   "per_rung": {
+    "m": true,
+    "s": false,
+    "xs": false
+   },
+   "verdict": "fail"
+  },
   "H-graph-topology": {
    "gap_causalrca_minus_topology_f1": {
     "m latency-50": -0.7399827343824212,
@@ -206,6 +219,27 @@
    },
    "verdict": "fail"
   },
+  "H-rca-circa-topology-random": {
+   "per_rung": {
+    "m": false,
+    "s": false,
+    "xs": false
+   },
+   "verdict": "fail"
+  },
+  "H-rca-circa-topology-rule": {
+   "gap_arm_minus_rule": {
+    "m": -0.24800000000000003,
+    "s": -0.42666666666666664,
+    "xs": -0.14
+   },
+   "per_rung": {
+    "m": false,
+    "s": false,
+    "xs": false
+   },
+   "verdict": "fail"
+  },
   "H-rca-random": {
    "per_rung": {
     "m": false,
@@ -252,6 +286,27 @@
    "rise_m_minus_xs": -0.544,
    "verdict": "pass",
    "wider_half_width": 0.17000000000000004
+  },
+  "H-rca-tracerca-random": {
+   "per_rung": {
+    "m": false,
+    "s": true,
+    "xs": false
+   },
+   "verdict": "fail"
+  },
+  "H-rca-tracerca-rule": {
+   "gap_arm_minus_rule": {
+    "m": -0.18400000000000002,
+    "s": -0.15999999999999992,
+    "xs": 0.0
+   },
+   "per_rung": {
+    "m": false,
+    "s": false,
+    "xs": true
+   },
+   "verdict": "fail"
   }
  },
  "rows": [
@@ -1804,6 +1859,438 @@
     "mean": 45.88,
     "n_runs": 250
    }
+  },
+  {
+   "arm": "rca/circa-topology",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.3,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.8,
+      "low": 0.2
+     },
+     "ac@5": {
+      "high": 1.0,
+      "low": 1.0
+     },
+     "avg@5": {
+      "high": 0.6799999999999999,
+      "low": 0.36
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 1.0,
+     "avg@5": 0.27999999999999997,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.2,
+     "ac@3": 1.0,
+     "ac@5": 1.0,
+     "avg@5": 0.72,
+     "n_cases": 5
+    }
+   },
+   "edges_per_case": {
+    "max": 51,
+    "mean": 43.8,
+    "min": 39,
+    "n_cases": 10
+   },
+   "metrics": {
+    "ac@1": 0.1,
+    "ac@3": 0.5,
+    "ac@5": 1.0,
+    "avg@5": 0.5,
+    "n_cases": 10
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs"
+  },
+  {
+   "arm": "rca/circa-topology",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.3333333333333333,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.4666666666666667,
+      "low": 0.06666666666666667
+     },
+     "ac@5": {
+      "high": 0.6,
+      "low": 0.13333333333333333
+     },
+     "avg@5": {
+      "high": 0.4533333333333334,
+      "low": 0.06666666666666668
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.2,
+     "ac@3": 0.4,
+     "ac@5": 0.6,
+     "avg@5": 0.4,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.2,
+     "ac@3": 0.4,
+     "ac@5": 0.4,
+     "avg@5": 0.36,
+     "n_cases": 5
+    }
+   },
+   "edges_per_case": {
+    "max": 258,
+    "mean": 248.4,
+    "min": 228,
+    "n_cases": 15
+   },
+   "metrics": {
+    "ac@1": 0.13333333333333333,
+    "ac@3": 0.26666666666666666,
+    "ac@5": 0.3333333333333333,
+    "avg@5": 0.2533333333333333,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s"
+  },
+  {
+   "arm": "rca/circa-topology",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "ac@5": {
+      "high": 0.2,
+      "low": 0.0
+     },
+     "avg@5": {
+      "high": 0.05600000000000001,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.2,
+     "avg@5": 0.06000000000000001,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    }
+   },
+   "edges_per_case": {
+    "max": 3228,
+    "mean": 3061.2,
+    "min": 2718,
+    "n_cases": 25
+   },
+   "metrics": {
+    "ac@1": 0.0,
+    "ac@3": 0.0,
+    "ac@5": 0.08,
+    "avg@5": 0.024,
+    "n_cases": 25
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 2,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m"
+  },
+  {
+   "arm": "rca/tracerca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.5,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 1.0,
+      "low": 0.4
+     },
+     "ac@5": {
+      "high": 1.0,
+      "low": 0.7
+     },
+     "avg@5": {
+      "high": 0.82,
+      "low": 0.44000000000000006
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.4,
+     "ac@5": 0.8,
+     "avg@5": 0.4,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.4,
+     "ac@3": 1.0,
+     "ac@5": 1.0,
+     "avg@5": 0.8800000000000001,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.2,
+    "ac@3": 0.7,
+    "ac@5": 0.9,
+    "avg@5": 0.64,
+    "n_cases": 10
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.2,
+    "ac@3": 0.6,
+    "ac@5": 1.0,
+    "avg@5": 0.6,
+    "n_candidates": 5
+   },
+   "rung": "xs"
+  },
+  {
+   "arm": "rca/tracerca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.6666666666666666,
+      "low": 0.13333333333333333
+     },
+     "ac@3": {
+      "high": 0.8666666666666667,
+      "low": 0.3333333333333333
+     },
+     "ac@5": {
+      "high": 0.8666666666666667,
+      "low": 0.3333333333333333
+     },
+     "avg@5": {
+      "high": 0.7466666666666667,
+      "low": 0.27999999999999997
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.4,
+     "ac@5": 0.4,
+     "avg@5": 0.24000000000000005,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.4,
+     "ac@3": 0.4,
+     "ac@5": 0.4,
+     "avg@5": 0.4,
+     "n_cases": 5
+    },
+    "pool_exhaust": {
+     "ac@1": 0.8,
+     "ac@3": 1.0,
+     "ac@5": 1.0,
+     "avg@5": 0.9199999999999999,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.4,
+    "ac@3": 0.6,
+    "ac@5": 0.6,
+    "avg@5": 0.52,
+    "n_cases": 15
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.08333333333333333,
+    "ac@3": 0.25,
+    "ac@5": 0.4166666666666667,
+    "avg@5": 0.25,
+    "n_candidates": 12
+   },
+   "rung": "s"
+  },
+  {
+   "arm": "rca/tracerca",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "ac@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "ac@3": {
+      "high": 0.2,
+      "low": 0.0
+     },
+     "ac@5": {
+      "high": 0.36,
+      "low": 0.04
+     },
+     "avg@5": {
+      "high": 0.168,
+      "low": 0.024
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.2,
+     "avg@5": 0.08,
+     "n_cases": 5
+    },
+    "crash": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    },
+    "degrade": {
+     "ac@1": 0.0,
+     "ac@3": 0.2,
+     "ac@5": 0.4,
+     "avg@5": 0.18,
+     "n_cases": 10
+    },
+    "pool_exhaust": {
+     "ac@1": 0.0,
+     "ac@3": 0.0,
+     "ac@5": 0.0,
+     "avg@5": 0.0,
+     "n_cases": 5
+    }
+   },
+   "metrics": {
+    "ac@1": 0.0,
+    "ac@3": 0.08,
+    "ac@5": 0.2,
+    "avg@5": 0.088,
+    "n_cases": 25
+   },
+   "misses_by_reason": {},
+   "n_empty_rankings": 0,
+   "n_filled_cells": 0,
+   "n_metrics_lt_min_pre": 0,
+   "n_missing": 0,
+   "random": {
+    "ac@1": 0.019230769230769232,
+    "ac@3": 0.057692307692307696,
+    "ac@5": 0.09615384615384616,
+    "avg@5": 0.057692307692307696,
+    "n_candidates": 52
+   },
+   "rung": "m"
   }
  ]
 }

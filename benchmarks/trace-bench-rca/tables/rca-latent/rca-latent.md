@@ -21,12 +21,21 @@
 | xs | `rca/rcd` | 10 | 0.630 | 0.880 | 0.880 | 0.818 [0.638, 0.960] | 0.600 | 0 |
 | s | `rca/rcd` | 15 | 0.800 | 0.933 | 0.940 | 0.900 [0.758, 1.000] | 0.250 | 0 |
 | m | `rca/rcd` | 25 | 0.404 | 0.552 | 0.584 | 0.518 [0.340, 0.687] | 0.058 | 0 |
+| xs | `rca/circa-topology` | 10 | 0.100 | 0.500 | 1.000 | 0.500 [0.360, 0.680] | 0.600 | 0 |
+| s | `rca/circa-topology` | 15 | 0.133 | 0.267 | 0.333 | 0.253 [0.067, 0.453] | 0.250 | 0 |
+| m | `rca/circa-topology` | 25 | 0.000 | 0.000 | 0.080 | 0.024 [0.000, 0.056] | 0.058 | 0 |
+| xs | `rca/tracerca` | 10 | 0.200 | 0.700 | 0.900 | 0.640 [0.440, 0.820] | 0.600 | 0 |
+| s | `rca/tracerca` | 15 | 0.400 | 0.600 | 0.600 | 0.520 [0.280, 0.747] | 0.250 | 0 |
+| m | `rca/tracerca` | 25 | 0.000 | 0.080 | 0.200 | 0.088 [0.024, 0.168] | 0.058 | 0 |
 
 | rung | arm | graph edges per case, mean [min, max] |
 |---|---|---|
 | xs | `rca/circa` | 16.4 [13, 19] |
 | s | `rca/circa` | 103.7 [96, 112] |
 | m | `rca/circa` | 362.1 [336, 385] |
+| xs | `rca/circa-topology` | 43.8 [39, 51] |
+| s | `rca/circa-topology` | 248.4 [228, 258] |
+| m | `rca/circa-topology` | 3061.2 [2718, 3228] |
 
 | rung | arm | alerting services per case, mean [min, max] |
 |---|---|---|
@@ -53,6 +62,11 @@ Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation sp
 | H-rca-rule | fail |
 | H-rca-circa-random | fail |
 | H-rca-circa-rule | fail |
+| H-rca-circa-topology-random | fail |
+| H-rca-circa-topology-rule | fail |
 | H-rca-rcd-random | pass |
 | H-rca-rcd-rule | pass |
+| H-rca-tracerca-random | fail |
+| H-rca-tracerca-rule | fail |
+| H-circa-topology-gain | fail |
 | H-graph-topology | pass |

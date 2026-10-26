@@ -204,7 +204,7 @@ exhaustion 1.00.
 | **H-rca-circa-rule** — `rca/circa` at or above `control/rule` | **fail** (every rung) | `rca/circa` − `control/rule` Avg@5: xs −0.020, s −0.253, m −0.272 |
 | **H-rca-rcd-random** — `rca/rcd`'s Avg@5 interval above the random expectation on every rung | **pass** | lows 0.638 / 0.758 / 0.340 vs 0.600 / 0.250 / 0.058 |
 | **H-rca-rcd-rule** — `rca/rcd` at or above `control/rule` | **pass** (every rung) | `rca/rcd` − `control/rule` Avg@5: xs +0.178, s +0.220, m +0.246 |
-| H-circa-topology-gain | not run | `rca/circa-topology` needs the exporter's `topology.json` (trace-bench PR #14; the pin moves after the merge) |
+| H-circa-topology-gain | **fail** (xs, s) | landed 2026-10-26 — see the section below |
 
 ### Reading notes (descriptive, not re-tuned)
 
@@ -230,3 +230,74 @@ exhaustion 1.00.
   row.
 - Both arms' records carry the per-case counts the addenda name (`n_edges`, `n_services_unranked`,
   the fallback flag; `n_services_unranked_per_run`, the kept-column counts, every run's wall clock).
+
+## Stretch arms, landed 2026-10-26: `rca/circa-topology` and `rca/tracerca` (xs, s, m × five seeds)
+
+Registered by `plans/rca-arms.md`, addendum 2026-10-25 (`rca/circa-topology`, D-TBR-9) and addenda
+2026-10-25, later (2) and 2026-10-26, later (`rca/tracerca`, D-TBR-10; the synthetic client's spans
+dropped before the port). Both read the **2026-10-26 exports**: after the owner merged the exporter's
+extras (trace-bench PR #14) the benchmark pin moved to `fcb7ddb3` (D-TBR-11), the `rca` tier was
+re-pulled from the release (now with `views/end-request/**`) and every corpus re-exported with
+`--extras topology spans`; before any read, each case's `data.csv`, `window.json` and `services.json`
+were asserted byte-identical (sha256) to the 2026-10-21 export records, and every input of the earlier
+export hashed the same (the four view files are the only new inputs). `rca/circa-topology` ran from
+tree `41c0f9e3` at xs and `9c7b0438` at s and m (its adapter unchanged since `8c753630`); `rca/tracerca`
+from `9c7b0438` (the correction commit). The records' `git_commit.dirty` is true on every read (the
+reads' own untracked outputs). No value was chosen on any read. The earlier pooled files of the
+regenerated table are byte-identical (28 of 28).
+
+| rung | arm | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 (n services) | misses (no ranking) |
+|---|---|---|---|---|---|---|---|---|
+| xs | `rca/circa-topology` | 10 | 0.100 | 0.500 | 1.000 | 0.500 [0.360, 0.680] | 0.600 (5) | 0 |
+| s | `rca/circa-topology` | 15 | 0.133 | 0.267 | 0.333 | 0.253 [0.067, 0.453] | 0.250 (12) | 0 |
+| m | `rca/circa-topology` | 25 | 0.000 | 0.000 | 0.080 | 0.024 [0.000, 0.056] | 0.058 (52) | 0 |
+| xs | `rca/tracerca` | 10 | 0.200 | 0.700 | 0.900 | 0.640 [0.440, 0.820] | 0.600 (5) | 0 |
+| s | `rca/tracerca` | 15 | 0.400 | 0.600 | 0.600 | 0.520 [0.280, 0.747] | 0.250 (12) | 0 |
+| m | `rca/tracerca` | 25 | 0.000 | 0.080 | 0.200 | 0.088 [0.024, 0.168] | 0.058 (52) | 0 |
+
+Across rungs (50 cases): `rca/circa-topology` Avg@5 0.188 [0.112, 0.272]; `rca/tracerca` 0.328
+[0.220, 0.436] (against `rca/circa` 0.252 [0.168, 0.348], `rca/baro` 0.372 [0.260, 0.488],
+`control/rule` 0.468 [0.344, 0.588] and `rca/rcd` 0.692 [0.576, 0.799]).
+
+Per fault kind, Avg@5 — `rca/circa-topology`: xs crash 0.28 / degrade 0.72; s crash 0.40 / degrade
+0.00 / pool exhaustion 0.36; m degrade 0.06, every other kind 0.00. `rca/tracerca`: xs crash 0.40 /
+degrade 0.88; s crash 0.24 / degrade 0.40 / pool exhaustion 0.92; m cache flush 0.08 / degrade 0.18 /
+crash 0.00 / pool exhaustion 0.00.
+
+### Hypotheses (`plans/rca-arms.md`, addenda 2026-10-25)
+
+| hypothesis | verdict | the numbers |
+|---|---|---|
+| **H-rca-circa-topology-random** — interval above the random expectation on every rung | **fail** (every rung) | lows 0.360 / 0.067 / 0.000 vs 0.600 / 0.250 / 0.058 |
+| **H-rca-circa-topology-rule** — at or above `control/rule` | **fail** (every rung) | arm − rule Avg@5: xs −0.140, s −0.427, m −0.248 |
+| **H-circa-topology-gain** — the structural-graph cell at or above the PC cell on every rung | **fail** (xs, s) | topology − PC Avg@5: xs −0.120, s −0.173, m +0.024 |
+| **H-rca-tracerca-random** — interval above the random expectation on every rung | **fail** (xs, m) | lows 0.440 / 0.280 / 0.024 vs 0.600 / 0.250 / 0.058 (s passes) |
+| **H-rca-tracerca-rule** — at or above `control/rule` | **fail** (s, m) | arm − rule Avg@5: xs 0.000 (tie, passes), s −0.160, m −0.184 |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **The structural graph does not carry CIRCA's head on these bins.** `rca/circa-topology` hands the
+  port's own `rht` head a graph of 43.8 / 248 / 3,061 edges per case (xs / s / m; from 4.8 / 35 / 484
+  deployed-service call edges over 20 / 48 / 208 metric columns) against PC's 16 / 104 / 362, ranks
+  every service on every case (no pruned service, no fallback — PC is not run), and lands below the PC
+  cell at xs and s and at 0.024 beside its 0.000 at m, both under the random expectation. Both cells
+  share the head's registered window (the 1 s resample, 4 / 8 / 2 interpolated reference bins, the
+  10 s test window five minutes after the injection); the graph only decides which parents each metric
+  is regressed on inside that window, so the gain the paper attributes to the structural graph is not
+  measurable here. Wall clock 1–3 s per corpus; peak resident 0.24 GB.
+- **`rca/tracerca` ties the rule control at xs and sits near random at m.** The suite's
+  reimplementation flagged 1.6 / 1.5 / 1.3 % of post-fault spans (per case 115 / 2,237 / 1,409
+  abnormal spans of 7,103 / 147,230 / 108,753), ranked 10.9 of 14 / 54.0 of 59 / 275 of 521
+  operations per case and left 2 / 0 / 24 service slots unranked (services with no abnormal span —
+  misses at every k); neither registered miss rule fired (no `KeyError`, no empty ranking) on any of
+  the 50 cases. At s it clears the random expectation (0.520 vs 0.250) but trails `control/rule`'s
+  0.680; at m its interval [0.024, 0.168] contains the random 0.058. Its strongest kind is pool
+  exhaustion at s (0.92) and its weakest the m faults of every kind but degrade. The input is the
+  reconstructed request view — the correlator's measured loss (paper §3) is in it — and the port
+  counts spans, not traces, with no trace-level anomaly-detection stage. The synthetic client's root
+  spans, 4.1 / 3.8 / 3.2 % of the file, were dropped before the port (correction 2026-10-26; recorded
+  per case as `n_spans_client`). Wall clock 2 / 13 / 26 s per corpus (the m fear of minutes per case
+  did not materialise: ≈ 1.2 M spans per case in pandas), peak resident 1.75 GB.
+- The two 2026-10-26 export stages wrote `topology.json` (4 / 35 / 501 deployed-service edges) and
+  `spans.csv` (xs 6,243 / 4,307 traces per case; s ≈ 310–430 k; m ≈ 105–316 k) beside the three
+  unchanged files; their records hash every input, including the four view files the spans come from.
