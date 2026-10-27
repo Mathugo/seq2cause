@@ -29,6 +29,8 @@ rcaeval = ["RCAEval @ git+https://github.com/phamquiluan/RCAEval@259ea4167160256
 # the CIRCA port's graph construction and head need causal-learn and networkx (plans/rca-arms.md, addendum 2026-10-25);
 # RCAEval's own `default` extra (torch, tigramite, dvc, …) is not installed
 circa = ["causal-learn>=0.1.4", "networkx>=3"]
+# the PC-PageRank port's ranking head (plans/rca-arms.md, addendum 2026-10-28): the pin's own floor for its default mode
+pagerank = ["scikit-network>=0.31.0"]
 dev = ["pytest>=8", "ruff"]
 
 [tool.setuptools]

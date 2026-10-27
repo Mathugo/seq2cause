@@ -89,6 +89,27 @@ def change_point_offsets(pairs, rank_cases, epoch_unix):
     return out
 
 
+def root_tie_groups(pairs, rank_cases):
+    """Per ranked case whose rank record carries PageRank tie groups (`rca/pc-pagerank`): the size of the tie group
+    the root cause's best-ranked metric sits in (metrics sharing its score, and the services first ranked inside
+    that group), or None when the root cause is unranked. A diagnostic for the findings, never a re-ranking."""
+    by_dir = {c["case_dir"]: c for c in rank_cases}
+    out = []
+    for name, c in pairs:
+        row = by_dir[name]
+        if row.get("tie_groups") is None:
+            continue
+        hit = next((g for g in row["tie_groups"] if c["root_cause_component"] in g["services_first_ranked"]), None)
+        out.append(
+            {
+                "case_id": c["case_id"],
+                "root_tie_group_metrics": None if hit is None else hit["n_metrics"],
+                "root_tie_group_services": None if hit is None else len(hit["services_first_ranked"]),
+            }
+        )
+    return out
+
+
 def score(corpus_dir, rank_record, b, seed, out):
     rank_res, rank_sha, positional = read_rank_record(rank_record)
     corpus_id = corpus_id_of(corpus_dir)
@@ -116,6 +137,10 @@ def score(corpus_dir, rank_record, b, seed, out):
     }
     if any("change_point_time" in c or c.get("miss") for c in rank_res["cases"]):
         res["change_points"] = change_point_offsets(pairs, rank_res["cases"], corpus_epoch(corpus_dir))
+    ties = root_tie_groups(pairs, rank_res["cases"])
+    if ties:
+        res["root_tie_groups"] = ties
+        res["n_cases_root_in_tie_group"] = sum(1 for t in ties if (t["root_tie_group_metrics"] or 0) > 1)
     return res
 
 

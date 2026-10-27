@@ -32,6 +32,14 @@ pinned function unmodified, as registered in `plans/rca-arms.md` §2:
   synthetic client's root spans (service `client`: not a candidate, absent from `services.json` and
   `topology.json`; its span is the whole request) are dropped before the port and counted per case
   (`n_spans_client`; correction 2026-10-26).
+- `rca/pc-pagerank` — RCAEval `e2e/pc_pagerank.py::pc_pagerank(data, dataset="trace-bench")` (D-TBR-12: the suite's
+  named-dataset preprocessing drops `time` and whole-table constant columns): PC (causal-learn defaults) over
+  every metric column of the whole case table, every node kept, PageRank (scikit-network defaults) against the
+  edges; the port never reads the injection time, so the arm declares no `window` input and never opens
+  `window.json`. The port's exception fallback (`adj = []`) is a counted miss (D-TBR-8's rule). The record keeps,
+  per case, the undirected PC edge count and the tie structure of the PageRank scores (re-derived from the
+  port's returned adjacency with the port's own PageRank call; the port returns names only): the number of
+  distinct scores and the tie groups in rank order with the services first ranked inside each.
 - `control/rule` — the three-rule alert counter of `plans/controls.md` §2 (addendum 2026-10-23), no
   third-party code: per service, `latency-95`, `error` and `count` alert at the first post-fault bin
   more than 3 population standard deviations from their pre-fault mean; services ranked by the
@@ -65,6 +73,7 @@ from .cases import (
     read_table,
     read_topology,
     read_window,
+    service_of,
     split_at,
 )
 from .constants import (
@@ -73,6 +82,7 @@ from .constants import (
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_PC_PAGERANK,
     ARM_TRACERCA,
     CIRCA_ACROSS,
     CIRCA_META,
@@ -85,6 +95,7 @@ from .constants import (
     INPUT_WINDOW,
     METRIC_SEP,
     MIN_PRE_BINS,
+    PC_PAGERANK_DATASET,
     RESULTS_JSON,
     RUN_DIR,
     RUNGS,
@@ -104,6 +115,7 @@ RANK_ARMS = (
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_TRACERCA,
+    ARM_PC_PAGERANK,
     ARM_CONTROL_RULE,
 )  # the ranking arms with a method-side stage (control/random is analytic)
 POSITIONAL_JSON = "ranking-positional.json"
@@ -131,6 +143,16 @@ def _rht():
 
 def _tracerca():
     return importlib.import_module("RCAEval.e2e.tracerca").tracerca
+
+
+def _pc_pagerank():
+    return importlib.import_module("RCAEval.e2e.pc_pagerank").pc_pagerank
+
+
+def _pagerank_scores(adj):
+    """The port's own PageRank call (`sknetwork.ranking.PageRank().fit_predict(adj.T)`, defaults) on the adjacency it
+    returned — the port keeps the scores to itself and returns names, so the tie structure is re-derived here."""
+    return importlib.import_module("sknetwork.ranking").PageRank().fit_predict(np.asarray(adj).T)
 
 
 def _n_metrics(df):
@@ -372,6 +394,73 @@ def rank_tracerca(case_dir):
     }
 
 
+def tie_groups(node_names, scores, ranks):
+    """The tie structure of a PageRank ranking: `(n_distinct, groups)` where each group, in rank order, holds the
+    number of metrics sharing one score and the services first ranked inside it (the service collapse keeps the
+    first occurrence, so a service whose best metric sits in a tie group of size > 1 owes its position to the
+    port's stable sort over the export's column order)."""
+    by_name = dict(zip(node_names, scores, strict=True))
+    if [n for n, _ in sorted(by_name.items(), key=lambda x: x[1], reverse=True)] != list(ranks):
+        raise ValueError("the re-derived PageRank order differs from the port's ranking")
+    groups, seen, i = [], [], 0
+    while i < len(ranks):
+        j = i
+        while j + 1 < len(ranks) and by_name[ranks[j + 1]] == by_name[ranks[i]]:
+            j += 1
+        first = []
+        for name in ranks[i : j + 1]:
+            s = service_of(name)
+            if s not in seen:
+                seen.append(s)
+                first.append(s)
+        groups.append({"n_metrics": j - i + 1, "services_first_ranked": first})
+        i = j + 1
+    return len({float(v) for v in by_name.values()}), groups
+
+
+def rank_pc_pagerank(case_dir):
+    df, n_filled, services = _table(ARM_PC_PAGERANK, case_dir)
+    err = io.StringIO()
+    with contextlib.redirect_stderr(err):  # PC's progress bar and the wrapper's fallback notice go to standard error
+        out = _pc_pagerank()(df.copy(), dataset=PC_PAGERANK_DATASET)
+    notices = []  # PC's progress bar is dropped; the wrapper's notice may share its last, unterminated line
+    for ln in err.getvalue().replace("\r", "\n").splitlines():
+        if "it/s" in ln:
+            ln = ln.rsplit("]", 1)[-1]
+        if ln.strip():
+            notices.append(ln.strip())
+    if isinstance(out["adj"], list) and len(out["adj"]) == 0:
+        # D-TBR-8's rule: the port caught an exception and returned the unranked column order — a counted miss
+        return {
+            "n_filled": n_filled,
+            "services": None,
+            "miss": "port fallback",
+            "port_stderr": " | ".join(notices)[-500:],
+            "n_rows": len(df),
+            "n_metrics": _n_metrics(df),
+        }
+    ranks = [str(c) for c in out["ranks"]]
+    if TIME_COLUMN in ranks or TIME_COLUMN in out["node_names"]:
+        raise ValueError("the named-dataset path left the time column in the ranking")
+    n_distinct, groups = tie_groups([str(c) for c in out["node_names"]], _pagerank_scores(out["adj"]), ranks)
+    services_ranked = collapse_to_services(ranks)
+    return {
+        "n_filled": n_filled,
+        "n_metrics_in": _n_metrics(df),
+        "n_metrics_dropped": _n_metrics(df) - len(ranks),  # the named-dataset path's whole-table constant columns
+        "n_edges": _n_undirected_edges(out["adj"]),
+        "n_distinct_scores": n_distinct,
+        "tie_groups": groups,
+        "services": services_ranked,
+        "n_rows": len(df),
+        "n_pre_rows": None,  # no split: the port pools every row
+        "n_metrics": _n_metrics(df),
+        "n_metrics_lt_min_pre": 0,
+        "time_rank": None,
+        "n_services_unranked": len(set(services) - set(services_ranked)),
+    }
+
+
 RULE_SERIES = ("latency-95", "error", "count")  # plans/controls.md §2: the median latency is not a rule
 RULE_SIGMAS = 3.0
 
@@ -421,6 +510,7 @@ RANKERS = {
     ARM_CIRCA: rank_circa,
     ARM_CIRCA_TOPOLOGY: rank_circa_topology,
     ARM_TRACERCA: rank_tracerca,
+    ARM_PC_PAGERANK: rank_pc_pagerank,
     ARM_CONTROL_RULE: rank_rule,
 }
 

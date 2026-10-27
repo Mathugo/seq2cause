@@ -16,6 +16,7 @@ from tracebenchrca.constants import (
     ARM_CONTROL_RANDOM,
     ARM_CONTROL_RULE,
     ARM_FLOOR_TOPOLOGY,
+    ARM_PC_PAGERANK,
     ARM_RCD,
     ARM_TRACERCA,
     ARMS,
@@ -43,9 +44,9 @@ from tracebenchrca.constants import (
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def test_three_classes_ten_arms():
+def test_three_classes_eleven_arms():
     assert CLASSES == (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
-    assert len(ARMS) == 10
+    assert len(ARMS) == 11
     assert set(ROOT_CAUSE_ARMS) == {
         ARM_BARO,
         ARM_BARO_BOCPD,
@@ -54,6 +55,7 @@ def test_three_classes_ten_arms():
         ARM_CIRCA_TOPOLOGY,
         ARM_RCD,
         ARM_TRACERCA,
+        ARM_PC_PAGERANK,
     }
     assert set(CONTROL_ARMS) == {ARM_CONTROL_RANDOM, ARM_CONTROL_RULE, ARM_FLOOR_TOPOLOGY}
     assert DISCOVERY_ARMS == ()  # declared, no member yet
@@ -70,7 +72,10 @@ def test_declared_inputs_match_the_plans():
     assert arms.inputs_of(ARM_CIRCA_TOPOLOGY) == (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
     assert INPUT_TOPOLOGY not in arms.inputs_of(ARM_CIRCA)  # the PC cell reads no topology
     assert arms.inputs_of(ARM_TRACERCA) == (INPUT_SPANS, INPUT_WINDOW, INPUT_SERVICES)  # the series are not its input
+    assert arms.inputs_of(ARM_PC_PAGERANK) == (INPUT_SERIES, INPUT_SERVICES)  # the port never reads the injection time
     assert arms.check_input(ARM_BARO, INPUT_WINDOW) == INPUT_WINDOW
+    with pytest.raises(PermissionError):
+        arms.check_input(ARM_PC_PAGERANK, INPUT_WINDOW)
     with pytest.raises(PermissionError):
         arms.check_input(ARM_BARO_BOCPD, INPUT_WINDOW)
     with pytest.raises(PermissionError):
@@ -105,6 +110,7 @@ def test_code_pins_are_full_shas_and_controls_have_none():
         == arms.code_of(ARM_CIRCA_TOPOLOGY)["commit"]
         == arms.code_of(ARM_BARO)["runner_commit"]
     )
+    assert arms.code_of(ARM_PC_PAGERANK)["commit"] == arms.code_of(ARM_CIRCA)["commit"]  # the same pinned suite
     assert "no licence file" in ARMS[ARM_CAUSALRCA]["licence"]
     for arm in CONTROL_ARMS:
         assert arms.code_of(arm) is None
