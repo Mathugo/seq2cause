@@ -101,6 +101,12 @@ at or above `rca/baro` on every s and m kind but the m cache flush (0.00 vs 0.04
   adapter.
 - CausalRCA: test plan sent to Peng Chen and Zhiming Zhao 2026-10-14; no reply as of 2026-10-23
   (its row is stream B5).
+- CIRCA (both rows, the port's window facts stated): test plan sent to Dan Pei 2026-10-26; reply the
+  same day forwarding it to the first author (Mingjie Li); no corrections as of 2026-10-27. Code BSD-3-Clause.
+- RCD: test plan sent to Azam Ikram, Saurabh Bagchi and Murat Kocaoglu 2026-10-26; no reply as of
+  2026-10-27. Code MIT.
+- TraceRCA (the suite's implementation, labelled so): test plan sent to Junjie Chen 2026-10-26; no
+  reply as of 2026-10-27. Licence line below.
 
 ## Deviations in force
 
@@ -258,6 +264,10 @@ regenerated table are byte-identical (28 of 28).
 Across rungs (50 cases): `rca/circa-topology` Avg@5 0.188 [0.112, 0.272]; `rca/tracerca` 0.328
 [0.220, 0.436] (against `rca/circa` 0.252 [0.168, 0.348], `rca/baro` 0.372 [0.260, 0.488],
 `control/rule` 0.468 [0.344, 0.588] and `rca/rcd` 0.692 [0.576, 0.799]).
+
+Licence line (`rca/tracerca`): the standard suite's implementation at `259ea41` (MIT) is run; the
+authors' repository carries no licence file and is cited, not run; authors contacted 2026-10-26, no reply
+as of 2026-10-27.
 
 Per fault kind, Avg@5 — `rca/circa-topology`: xs crash 0.28 / degrade 0.72; s crash 0.40 / degrade
 0.00 / pool exhaustion 0.36; m degrade 0.06, every other kind 0.00. `rca/tracerca`: xs crash 0.40 /
