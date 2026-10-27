@@ -36,6 +36,7 @@ from .constants import (
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_PC_PAGERANK,
     ARM_RCD,
     ARM_TRACERCA,
     CAUSALRCA_SERIES,
@@ -66,6 +67,7 @@ PER_ARM_HYPOTHESES = {
     ARM_CIRCA_TOPOLOGY: "circa-topology",
     ARM_RCD: "rcd",
     ARM_TRACERCA: "tracerca",
+    ARM_PC_PAGERANK: "pc-pagerank",  # addendum 2026-10-28
 }
 
 
@@ -121,6 +123,13 @@ def row_of(rung, arm, pooled, cells):
             "mean": statistics.mean(unranked),
             "max": max(unranked),
             "n_runs": len(unranked),
+        }
+    ties = [t for _, s, _ in cells for t in s.get("root_tie_groups", [])]
+    if ties:
+        row["root_in_tie_group"] = {
+            "n_cases_ranked": sum(1 for t in ties if t["root_tie_group_metrics"] is not None),
+            "n_cases_tied": sum(1 for t in ties if (t["root_tie_group_metrics"] or 0) > 1),
+            "max_group_metrics": max((t["root_tie_group_metrics"] or 0) for t in ties),
         }
     edges = [c["n_edges"] for _, _, r in cells for c in r["cases"] if "n_edges" in c]
     if edges:

@@ -194,12 +194,19 @@ TRACERCA_PORT_COLUMNS = {  # the exporter's columns -> the port's names (RCAEval
 TRACERCA_SIGMAS = 3.0  # the port's threshold: mean + 3 SD of the pre-fault durations per operation (count only)
 US_PER_S = 1_000_000
 
+# --- PC-PageRank (plans/rca-arms.md, addendum 2026-10-28; D-TBR-12) -------------------------------------------
+PC_PAGERANK_DATASET = (
+    "trace-bench"  # any name but "causalrca-sock-shop" selects the suite's named-dataset preprocessing
+)
+# (time dropped, whole-table constant columns dropped, D-TBR-12); the only argument passed beside the table
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
 ARM_CIRCA = "rca/circa"
 ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
 ARM_RCD = "rca/rcd"
 ARM_TRACERCA = "rca/tracerca"
+ARM_PC_PAGERANK = "rca/pc-pagerank"
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -302,6 +309,21 @@ ARMS = {
             "NetManAIOps/TraceRCA (no licence file) is cited, not run",
         },
         "licence": "MIT (the suite's reimplementation); the authors' repository has no licence file; authors contacted",
+    },
+    ARM_PC_PAGERANK: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_SERIES, INPUT_SERVICES),  # the port never reads the injection time: no window
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": RCAEVAL_REPO,
+            "commit": RCAEVAL_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "RCAEval/e2e/pc_pagerank.py::pc_pagerank (the suite's PC graph over every metric column of the whole "
+            "case table, pre- and post-fault rows pooled — the graph CIRCA's port builds — then scikit-network PageRank "
+            "against the edges; named-dataset preprocessing, D-TBR-12; one deterministic run per case)",
+        },
+        "licence": "MIT",
     },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,

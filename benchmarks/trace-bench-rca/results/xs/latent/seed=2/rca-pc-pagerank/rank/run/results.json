@@ -1,0 +1,195 @@
+{
+ "arm": "rca/pc-pagerank",
+ "cases": [
+  {
+   "case_dir": "case-00",
+   "n_distinct_scores": 12,
+   "n_edges": 15,
+   "n_filled": 0,
+   "n_metrics": 20,
+   "n_metrics_dropped": 0,
+   "n_metrics_in": 20,
+   "n_metrics_lt_min_pre": 0,
+   "n_pre_rows": null,
+   "n_rows": 60,
+   "n_services_unranked": 0,
+   "services": [
+    "tb-edge",
+    "tb-vepe",
+    "tb-ninga",
+    "ext-zorto",
+    "tb-bozotel"
+   ],
+   "tie_groups": [
+    {
+     "n_metrics": 2,
+     "services_first_ranked": [
+      "tb-edge",
+      "tb-vepe"
+     ]
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "tb-ninga"
+     ]
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": [
+      "ext-zorto"
+     ]
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "tb-bozotel"
+     ]
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 3,
+     "services_first_ranked": []
+    }
+   ],
+   "time_rank": null
+  },
+  {
+   "case_dir": "case-01",
+   "n_distinct_scores": 13,
+   "n_edges": 13,
+   "n_filled": 0,
+   "n_metrics": 20,
+   "n_metrics_dropped": 0,
+   "n_metrics_in": 20,
+   "n_metrics_lt_min_pre": 0,
+   "n_pre_rows": null,
+   "n_rows": 40,
+   "n_services_unranked": 0,
+   "services": [
+    "tb-ninga",
+    "tb-bozotel",
+    "tb-vepe",
+    "tb-edge",
+    "ext-zorto"
+   ],
+   "tie_groups": [
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "tb-ninga"
+     ]
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "tb-bozotel"
+     ]
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "tb-vepe"
+     ]
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": [
+      "tb-edge"
+     ]
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": [
+      "ext-zorto"
+     ]
+    },
+    {
+     "n_metrics": 3,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 2,
+     "services_first_ranked": []
+    },
+    {
+     "n_metrics": 1,
+     "services_first_ranked": []
+    }
+   ],
+   "time_rank": null
+  }
+ ],
+ "code": {
+  "commit": "259ea4167160256a74ad30004aa3d96a998c846e",
+  "entry": "RCAEval/e2e/pc_pagerank.py::pc_pagerank (the suite's PC graph over every metric column of the whole case table, pre- and post-fault rows pooled — the graph CIRCA's port builds — then scikit-network PageRank against the edges; named-dataset preprocessing, D-TBR-12; one deterministic run per case)",
+  "repo": "phamquiluan/RCAEval",
+  "runner": null,
+  "runner_commit": null
+ },
+ "corpus_id": "xs/latent/seed=2",
+ "export_record_sha256": "0ef3b57f9b0231fccb03a7b1efef29ba7f992edb7129dd59f2f8f830589f1788",
+ "misses_by_reason": {},
+ "n_cases": 2,
+ "n_empty_rankings": 0,
+ "n_filled_cells": 0,
+ "n_metrics_lt_min_pre": 0,
+ "n_unranked_cases": 0,
+ "ranking_file": "ranking-positional.json",
+ "ranking_sha256": "33e1e96ddb7826f9edfd1970e5c81e52aa484e90f509814e36a33cf4f8c08c75",
+ "rung": "xs",
+ "stage": "rank",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok"
+}

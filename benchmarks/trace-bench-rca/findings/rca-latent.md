@@ -311,3 +311,72 @@ crash 0.00 / pool exhaustion 0.00.
 - The two 2026-10-26 export stages wrote `topology.json` (4 / 35 / 501 deployed-service edges) and
   `spans.csv` (xs 6,243 / 4,307 traces per case; s ≈ 310–430 k; m ≈ 105–316 k) beside the three
   unchanged files; their records hash every input, including the four view files the spans come from.
+
+
+## Stretch arm, landed 2026-10-28: `rca/pc-pagerank` (xs, s, m × five seeds)
+
+Registered by `plans/rca-arms.md`, addendum 2026-10-28 (owner go of 2026-10-28; D-TBR-12, the named-dataset
+preprocessing). The standard suite's PC-PageRank: PC (causal-learn defaults) over every metric column of
+the whole case table, pre- and post-fault rows pooled — the graph `rca/circa`'s port builds — then
+scikit-network PageRank (α 0.85, power iteration, ten iterations) against the edges, toward causes, the
+head CausalRCA uses; one deterministic run per case; the port never reads the injection time, so the arm
+declares no window. Reads on fresh exports of the three registered files (2026-10-27/28, no extras; each
+case's `data.csv`, `window.json` and `services.json` sha256-equal to the 2026-10-26 export records), from
+commit `ab6d6995` in `trace-bench-rca` (the `pagerank` extra: scikit-network 0.33.5, whose `__version__`
+prints 0.33.0; causal-learn 0.1.4.8, networkx 3.7, numpy 2.5.4 unchanged). The records' `git_commit.dirty`
+is true on every read (the reads' own untracked outputs; the xs and m seed-0 pull and export records
+name `15a6b5f2`, the trunk the branch was cut from, the others `ab6d6995`). No value was chosen on any
+read. The earlier pooled files of the regenerated table are byte-identical (36 of 36).
+
+| rung | arm | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 (n services) | misses (no ranking) |
+|---|---|---|---|---|---|---|---|---|
+| xs | `rca/pc-pagerank` | 10 | 0.200 | 0.800 | 1.000 | 0.660 [0.480, 0.820] | 0.600 (5) | 0 |
+| s | `rca/pc-pagerank` | 15 | 0.067 | 0.333 | 0.467 | 0.293 [0.120, 0.493] | 0.250 (12) | 0 |
+| m | `rca/pc-pagerank` | 25 | 0.000 | 0.000 | 0.000 | 0.000 [0.000, 0.000] | 0.058 (52) | 0 |
+
+Across rungs (50 cases): `rca/pc-pagerank` Avg@5 0.220 [0.128, 0.320] (against `rca/circa` 0.252
+[0.168, 0.348], `rca/causalrca` 0.214 / 0.203 (p50 / p95 latency), `rca/baro` 0.372 [0.260, 0.488],
+`control/rule` 0.468 [0.344, 0.588] and `rca/rcd` 0.692 [0.576, 0.799]).
+
+Per fault kind, Avg@5 — xs crash 0.56 / degrade 0.76; s crash 0.36 / degrade 0.36 / pool exhaustion
+0.16; m every kind 0.00 (cache flush, crash, degrade, pool exhaustion).
+
+### Hypotheses (`plans/rca-arms.md`, addendum 2026-10-28)
+
+| hypothesis | verdict | the numbers |
+|---|---|---|
+| **H-rca-pc-pagerank-random** — interval above the random expectation on every rung | **fail** (every rung) | lows 0.480 / 0.120 / 0.000 vs 0.600 / 0.250 / 0.058 |
+| **H-rca-pc-pagerank-rule** — at or above `control/rule` | **fail** (s, m) | arm − rule Avg@5: xs +0.020, s −0.387, m −0.272 |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **The two gaps the row was added for.** *The learner under the same head* — PC-PageRank − CausalRCA
+  (Avg@5): +0.064 / +0.045 / −0.040 against the p50-latency series and +0.038 / +0.089 / −0.034 against
+  the p95 series (xs / s / m); every pair of intervals overlaps, and at m both learners are at or below
+  the random expectation (0.000 and 0.040 / 0.034 vs 0.058). Under the PageRank head the classical
+  learner on all four series is no better than the neural one on one latency series. *The head under
+  the same graph* — PC-PageRank − CIRCA: +0.040 / −0.134 / 0.000; the two cells share the PC graph case
+  by case (P5; 16.4 / 103.7 / 362.1 undirected edges per case here against CIRCA's 16 / 104 / 362), so
+  the s gap is the head alone: CIRCA's regression-based hypothesis test on its 1 s window, for all its
+  2–8 interpolated reference bins, does better at s than the stationary centrality of the pooled graph;
+  at m both score 0.000.
+- **PC-PageRank finds nothing at m** (0 of 25 cases in the top five of 52; the root cause's rank is 8–50,
+  median 23) and sits at the random expectation at xs (0.660 vs 0.600, the interval containing it) and
+  at s (0.293 vs 0.250; AC@1 0.067, the root cause's median rank 7 of 12). The ranking is the
+  stationary centrality of a graph learned on the pooled table — the fault window is never read — so a
+  service that is central before the fault stays central after it; a root cause has to be central in
+  the pooled PC graph to rank, which the injected faults of the larger rungs do not make it.
+- **Rankings are complete and nearly tie-free.** Every service ranked on every case (no fallback, no
+  empty ranking, 0 unranked service slots); the named-dataset path dropped 0 constant columns on every
+  case, so the PC graph is exactly CIRCA's. Distinct PageRank scores per case: 12–17 of 20 (xs), 41–43 of
+  48 (s), 146–172 of 208 (m); the ties are the isolated metrics of the PC graph (equal centrality) and sit
+  at the tail. The root cause's best-ranked metric shares its score with another metric on 3 cases of 50,
+  all at xs (a pair; on one of them the pair spans two services, so the root cause's position is the
+  export's column order) and on none at s or m. A diagnostic only; nothing was re-ranked.
+- **Cost.** PC per case 1.8–2.2 s / 7.6–9.4 s / 51–57 s per corpus-average at xs / s / m (rank stage wall
+  10 s / 43 s / 23 min for the five corpora of each rung, longest corpus 288 s); peak resident 0.28 /
+  0.33 / 0.68 GB; PageRank negligible. Pull + export per corpus: xs 4–52 s + 1 s, s 118–220 s + 38–49 s,
+  m 86–200 s + 62–69 s, raw shards (≈ 3 GB at m) deleted after each export.
+- The records carry the per-case counts the addendum names (`n_edges`, `n_metrics_dropped`,
+  `n_distinct_scores`, `tie_groups`, `n_services_unranked`, the fallback flag, `n_filled`), and the
+  score records the root cause's tie group (`root_tie_groups`, `n_cases_root_in_tie_group`).

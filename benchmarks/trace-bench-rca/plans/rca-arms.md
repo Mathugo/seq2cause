@@ -750,3 +750,92 @@ traces, so the correlator's measured loss (paper §3) is part of its input.
   appendix A5.3, one sentence); the §3 widths for xs / s / m (30 / 15 / 60 s) and every landed cell are
   untouched. Nothing is chosen on this read: the rule was fixed on 2026-10-14, the l measurement was
   authorised on 2026-10-25 before any l number existed, and this addendum records the number.
+
+### 2026-10-28 — stretch arm `rca/pc-pagerank` (beside CausalRCA; owner go 2026-10-28; before any PC-PageRank code or read)
+
+Owner go of 2026-10-28 on the proposal of 2026-10-27 ("PC-PageRank beside CausalRCA"), with its
+recommendations: the named-dataset preprocessing path (D-TBR-12), no graph axis, scikit-network as an
+extra of this environment. This re-opens the stretch list (closed 2026-10-26) for one arm; the required
+set is unchanged. CausalRCA is the only root-cause row whose ranking is a **learned graph + PageRank**
+(DAG-GNN on the post-injection latency window, edges reversed, PageRank α 0.85, ten trainings averaged;
+§1 and the addendum of 2026-10-22, later); PC-PageRank is the standard suite's classical counterpart —
+**the same PageRank head on a PC graph**. The row separates two questions the table cannot: under the
+PageRank head, does a classical learner do better than the neural one (PC vs DAG-GNN); and under the same
+PC graph, does the head matter (PageRank vs CIRCA's regression-based hypothesis testing) — because the
+port's PC call on this path is, case by case, the PC call of `rca/circa` (P5 below).
+
+- **Arm.** `rca/pc-pagerank` — class `root-cause`, inputs `series, services` (**no window**: the port
+  never reads the injection time), axis ranking: **PC-PageRank (suite port)**,
+  `RCAEval/e2e/pc_pagerank.py::pc_pagerank(data, dataset="trace-bench")` at `259ea41` (MIT). One
+  deterministic run per case, scored by the standard `tracebench.score_rca` path (the CIRCA precedent),
+  not by the per-run averaging of RCD / CausalRCA.
+- **Facts read at the pin (2026-10-27).** `pc_pagerank(data, inject_time=None, dataset=None,
+  dk_select_useful=False, with_bg=False, n_iter=10, **kwargs)`: `preprocess(data, dataset,
+  dk_select_useful)` → causal-learn `pc(data.to_numpy())` with its defaults (Fisher-z, α 0.05,
+  `stable=True`, `uc_rule 0`, `uc_priority 2`, no background knowledge; `show_progress=True`, a progress
+  bar on standard error) → a `networkx.DiGraph` with **every node kept** ("keep isolated nodes so the
+  scores stay aligned"); `adj[i, j] == −1` adds `i → j`, `adj[i, j] == 1` adds `j → i` (a directed
+  causal-learn edge yields one arc, an undirected one both) → `sknetwork.ranking.PageRank().fit_predict(adj.T)`
+  (walks against the edges, toward causes — CausalRCA's reading) → metrics sorted by score, descending, by
+  Python's stable sort (**ties keep the column order**, i.e. the export's). Returns `adj`, `node_names`,
+  `ranks` — names only; the scores are not returned. **`inject_time`, `with_bg` and `n_iter` are never
+  read**: the graph is learned on the whole case table, pre- and post-fault rows pooled, and PageRank is
+  unpersonalised, so the ranking is the stationary centrality of the pooled PC graph. PageRank defaults
+  at the installed version: `damping_factor 0.85, solver "piteration", n_iter 10, tol 1e-6`.
+  Preprocessing (`io/time_series.py::preprocess`): `dataset=None` is the identity (the `time` column
+  would enter PC and PageRank as a variable — the `rca/baro` / RCD trap); any other name but
+  `"causalrca-sock-shop"` runs `drop_time` → `drop_constant` (whole-table) → `convert_mem_mb` (no `_mem`
+  column here: a no-op). `rca/circa`'s port runs `pc_default(table minus time)` = `pc()` with the same
+  defaults, so on the named path the two PC graphs coincide whenever `drop_constant` drops nothing. The
+  `@rca` wrapper catches any exception, prints one line to standard error and returns the unranked
+  column order with `adj = []`.
+- **D-TBR-12 — the named-dataset preprocessing.** The adapter calls `pc_pagerank(table, dataset="trace-bench")`
+  and passes nothing else (the D-TBR-6 rule, applied to this port): the suite's own path on every dataset
+  it publishes, which keeps the clock out of the graph and makes the PC graph CIRCA's. The alternative —
+  `dataset=None` with `time` removed from the returned ranking (D-TBR-2) — is rejected: the clock would
+  still shape the graph every other metric is ranked on. The record counts the columns the path drops.
+- **Choices.** Inputs `series, services` only — the door never opens `window.json` (as for
+  `rca/baro-bocpd`). One run per case (stable PC + Fisher-z + power-iteration PageRank are deterministic;
+  P3). Rankings are complete (isolated nodes kept) unless the wrapper falls back; collapsed to services by
+  first occurrence (`cases.collapse_to_services`); `n_services_unranked` recorded (expected 0; a service
+  unranked because its every column is constant over the table is a miss, the BOCPD precedent). **Ties =
+  the port's order** (the export's column order); recorded per case — the number of distinct PageRank
+  scores and the tie groups in rank order with the services first ranked inside each, re-derived from the
+  port's returned adjacency with the port's own PageRank call (the port returns names only); on the score
+  side the size of the tie group holding the root cause's best-ranked metric, and the count of cases where
+  that group holds more than one metric. A diagnostic, never a re-ranking. **Fallback = D-TBR-8's rule:**
+  `adj == []` → miss "port fallback", the wrapper's line kept; any other exception fails the run. Defaults
+  as the port's; **no sweep**; the xs seed-0 export is the smoke test (no value chosen on it). Not
+  proposed: a CausalRCA-matched variant (PC on the post-injection latency window only) — a non-suite
+  recipe, i.e. a new method; and the graph axis (a service coarsening of the PC graph) — owner's call,
+  no, at this date.
+- **Hypotheses (mechanical in `report`).** **H-rca-pc-pagerank-random** and **H-rca-pc-pagerank-rule**: the
+  §6 H-rca-random / H-rca-rule rules applied to `rca/pc-pagerank`. Two descriptive gaps go to the findings,
+  not to hypotheses: PC-PageRank − CausalRCA (each series; the learner under the same head) and
+  PC-PageRank − CIRCA (the head under the same graph).
+- **Environment.** `pyproject.toml` gains the extra `pagerank = ["scikit-network>=0.31.0"]` (the pin's own
+  floor for its default mode; its changelog records a PageRank fix for scikit-network ≥ 0.32). Resolved
+  2026-10-27 into `trace-bench-rca`: scikit-network **0.33.5** (the cp312 macOS arm64 wheel; the package's
+  `__version__` string prints 0.33.0), beside numpy 2.5.4, scipy 1.18.1, causal-learn 0.1.4.8, networkx
+  3.7, unchanged; every record's `pip freeze` names it. The RCD environment is not needed (no
+  `local_skeleton_discovery`; D-TBR-7 does not apply) and the CausalRCA environment is not touched.
+- **Premise checks (2026-10-27, on fresh xs and m seed-0 exports of the three registered files, no
+  extras; every case file sha256-equal to the 2026-10-26 export records; nothing kept).**
+  **P1** — in a clone of `trace-bench-rca` with the wheel installed, `RCAEval.e2e.pc_pagerank` imports
+  under numpy 2.5.4 / scipy 1.18.1 (the suite's lenient import had silently skipped the module), PageRank
+  defaults as read above, and `rca/baro` and `rca/circa` rankings on both xs seed-0 cases are identical
+  with and without the wheel. **P2** — xs seed 0, both cases: complete rankings over the 20 metric
+  columns, no fallback, `time` absent, 0 constant columns dropped; PC graphs of 19 / 16 undirected edges;
+  17 / 13 distinct PageRank scores of 20, the ties being isolated nodes at the tail (groups of 4 and 5)
+  and, on case 1, three pairs mid-ranking. **P3** — two calls on the same table: identical `ranks` and
+  `adj` on every case tried (xs both, m case 0). **P4** — m seed 0 case 0 (208 columns × 246 rows): one
+  port call 94.9 s wall, peak memory footprint 0.60 GB (resident 0.67 GB) — the CIRCA PC call's cost;
+  expected ≈ 35–40 min for the 25 m cases, local. **P5** — the port's `adj` equals the networkx
+  adjacency built by the port's edge rule from `rca/circa`'s `pc_default(table minus time)` on xs both
+  cases and m case 0 (376 undirected edges at m — the CIRCA premise's number); `drop_constant` dropped
+  0 columns on every case tried.
+- **Staging, protocol, reporting.** As §4 and §5: `rank` per arm, xs → s → m by `--prior-rung-record`,
+  `score` (`tracebench.score_rca`, B = 2000, seed 0), five seeds or nothing, the random expectation and
+  `control/rule` beside every row; per case the record keeps `n_edges`, `n_metrics_dropped`,
+  `n_distinct_scores`, `tie_groups`, `n_services_unranked`, the fallback flag and the loader's filled
+  cells. Paper placement is the paper's decision; nothing here depends on it.

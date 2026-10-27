@@ -27,6 +27,9 @@
 | xs | `rca/tracerca` | 10 | 0.200 | 0.700 | 0.900 | 0.640 [0.440, 0.820] | 0.600 | 0 |
 | s | `rca/tracerca` | 15 | 0.400 | 0.600 | 0.600 | 0.520 [0.280, 0.747] | 0.250 | 0 |
 | m | `rca/tracerca` | 25 | 0.000 | 0.080 | 0.200 | 0.088 [0.024, 0.168] | 0.058 | 0 |
+| xs | `rca/pc-pagerank` | 10 | 0.200 | 0.800 | 1.000 | 0.660 [0.480, 0.820] | 0.600 | 0 |
+| s | `rca/pc-pagerank` | 15 | 0.067 | 0.333 | 0.467 | 0.293 [0.120, 0.493] | 0.250 | 0 |
+| m | `rca/pc-pagerank` | 25 | 0.000 | 0.000 | 0.000 | 0.000 [0.000, 0.000] | 0.058 | 0 |
 
 | rung | arm | graph edges per case, mean [min, max] |
 |---|---|---|
@@ -36,6 +39,9 @@
 | xs | `rca/circa-topology` | 43.8 [39, 51] |
 | s | `rca/circa-topology` | 248.4 [228, 258] |
 | m | `rca/circa-topology` | 3061.2 [2718, 3228] |
+| xs | `rca/pc-pagerank` | 16.4 [13, 19] |
+| s | `rca/pc-pagerank` | 103.7 [96, 112] |
+| m | `rca/pc-pagerank` | 362.1 [336, 385] |
 
 | rung | arm | alerting services per case, mean [min, max] |
 |---|---|---|
@@ -68,5 +74,7 @@ Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation sp
 | H-rca-rcd-rule | pass |
 | H-rca-tracerca-random | fail |
 | H-rca-tracerca-rule | fail |
+| H-rca-pc-pagerank-random | fail |
+| H-rca-pc-pagerank-rule | fail |
 | H-circa-topology-gain | fail |
 | H-graph-topology | pass |
