@@ -839,3 +839,119 @@ port's PC call on this path is, case by case, the PC call of `rca/circa` (P5 bel
   `control/rule` beside every row; per case the record keeps `n_edges`, `n_metrics_dropped`,
   `n_distinct_scores`, `tie_groups`, `n_services_unranked`, the fallback flag and the loader's filled
   cells. Paper placement is the paper's decision; nothing here depends on it.
+
+### 2026-10-30 — stretch arms `rca/trace` and `rca/trace-core` (the reference algorithm's own root-cause rule; publication plan B4b; owner go 2026-10-30; before any TRACE root-cause code or read)
+
+Owner go of 2026-10-30 on the draft of 2026-10-21 ("proceed with the rule as recorded"). The rule is the
+one the owner proposed to the method's author in the mail of 2026-10-21 (point 2), as the lab's reading of
+the author's own ask of 2026-10-19 (point 2: "TRACE evaluated on AC@k with its own RCA rule (Markov boundary
+of the outcome, then upstream traversal of the sample graph), next to BARO and CausalRCA"). The author
+neither confirmed nor declined the proposed reading by this date; the owner registers it as proposed and the
+author reviews the draft. A different rule text from the author before the freeze enters by a dated addendum
+and a re-run, never by an edit here. The row answers the question the author asked: with its own sample
+graph and its own rule, how does TRACE rank the deployed services of a fault case, under the same scorer
+and intervals as the published root-cause methods.
+
+- **Arms.** `rca/trace` — class `root-cause`, inputs `views, window, services`, axis ranking: **TRACE
+  (Math & Lienhart 2026), the atomic construction** — the seed's frozen latent backbone and the frozen cell
+  `trace/cli-atomic/shipped/frozen/request` of the seed's committed freeze (the reference harness's
+  `freezes/<date>-<rung>-latent-s<k>.json`): the per-cause intervention construction, best within-trace on
+  every rung up to l; the shipped arithmetic and the frozen cut — the one path and one cut the paper reports
+  (owner 2026-10-28). `rca/trace-core` — the same with `trace/core/shipped/frozen/request` (the full
+  ancestral-history construction, the second row). Code: the author's `Mathugo/seq2cause` at the shipped
+  commit `67416a2f0ba6ef675a39028518f7a45bbf327291` (v0.1.9, MIT in `pyproject.toml`), driven through the
+  reference harness's engine adapter `seq2causebench.engine` (RUN.md D-SB-2 of `benchmarks/trace-bench`: the
+  shipped functions in the shipped order from one forward pass; bit-equal to both shipped entry points on the
+  fixture) — the code path that produced every landed TRACE cell — so the sample graph a trace gets here is
+  the one the reference harness's per-sequence axis scored. Grain: request (the call tree is where a fault
+  propagates upstream); the end-ordered view (every landed TRACE cell; the start view's per-sequence truth is
+  empty by construction, `plans/per-sequence-rules.md` addendum 2026-10-23).
+- **The declared input `views`.** The end-ordered request view of the pulled corpus:
+  `views/end-request/sequences/split=*/…/part-*.parquet` rows (`trace_id`, `ops`, `outcomes`, `n_spans`,
+  `start_ns`) and `views/end-request/model-vocab.json` (`base_ops` with `{id, service, name, kind}`, the
+  minted variants) — opened through the benchmark's method accessor (`tracebench.allowlist.open_for_method`,
+  via `seq2causebench.corpus.Corpus`), which refuses the graphs, the labels, the oracle and the topology.
+  `parent_pos` is never read (the reference harness's scenario 34). The exporter is not changed: the view is
+  method-readable by the benchmark's own contract (`raw/` and `views/`), and this arm is declared
+  trace-reading and call-tree-informed by construction, as `rca/tracerca` is. **Window traces:** every row
+  of the three splits with `inject_time · 1e9 ≤ start_ns < end_time · 1e9` (`window.json` through the case
+  door; `start_ns` is the trace's earliest span start, UNIX ns). The backbone was trained on the train split
+  of the same corpus, so a window trace may be one the backbone saw during pretraining: the root-cause read is
+  not a held-out read on the discovery axis — the method trains nothing here (the backbone is frozen), and the
+  statement travels with the row. Order: `start_ns`, then `trace_id`; **the first 500 are probed** (the cap,
+  fixed here before any read; `n_traces_window` and `n_traces_probed` recorded per case).
+- **The sequence and the sample graph.** Encoded exactly as the frozen cell's reads were
+  (`seq2causebench.data.encode_sequence`: `BOS + ids + EOS`, at most 64 real tokens, an unminted non-OK
+  variant folded to its base op and counted); the frozen `(c, N, g, τ)` of the cell and the seed's backbone,
+  whose weights hash must equal the freeze's `model_sha256` and whose vocabulary size the view's
+  `model-vocab.json`; one probe pass per trace (`engine.probe_sequence`, noise `all`, no autocast, the
+  shipped KL); the shipped samplers draw from torch's global generator, seeded per trace as the reference
+  harness seeds per sequence (`(seed · 1000003 + 3) · 1000003 + i`: stream 3 = root-cause reads, seed = the
+  corpus seed, i = the trace's index in the case's probed list). A trace with fewer than two window
+  positions is skipped and counted (`discover`'s rule). The sample graph of a trace is the frozen cut of its
+  score matrix: a directed edge j → q for every window position pair j < q with `S[j, q] > τ` (strict, the
+  cell's frozen τ; window position t is token `ids[c + t]`; `S[j, q]` with j before q is the statistic the
+  per-sequence axis scores as j → q), both tokens real (PAD, BOS, EOS, UNK never enter). The first c tokens
+  (BOS and the context) are outside the matrix: they are neither effects nor causes, and a non-OK token
+  among them is counted (`n_nonok_in_context`), never ranked.
+- **The rule (the lab's reading of the author's rule, as sent 2026-10-21).** A **non-OK position** is a
+  window position whose token's outcome is `5xx`, `err` or `slow` in the model vocabulary (`4xx` is a
+  client-side outcome, excluded; a folded rare variant is `:ok` and invisible — the fold share at xs–m is
+  stated in the datasheet). For each non-OK position q, its **parents** are `{j < q : S[j, q] > τ}` (its
+  Markov boundary in the sample graph, which has only backward-in-time edges, is its parent set), and its
+  **upstream set** is the transitive closure of the parent relation, with the hop distance of a position = the
+  length of the shortest parent chain from q. Positions map to operations through the token (`op_of`) and to
+  services through `model-vocab.json`'s `base_ops`; the synthetic client's operations (service `client`,
+  kind client — not a candidate, absent from `services.json`) are dropped and counted. **Per case, a
+  service's score = the number of probed traces in which it is upstream (hop ≥ 1) of at least one non-OK
+  position;** ties by the mean, over those traces, of the trace's smallest hop distance to the service
+  (smaller first); then `services.json` order. Services never upstream of a non-OK position follow, in
+  `services.json` order, so every deployed service is ranked (`n_services_reached` recorded). A case with no
+  probed trace, no non-OK position in any probed trace, or no upstream service is **a counted miss** (reasons
+  `no window trace`, `no non-OK position`, `no upstream service`) — the export's order is never scored. The
+  non-OK position's own service is not scored by its own failure (hop 0): its count comes only from traces
+  in which it is upstream of another non-OK position; the hop-0 counts are recorded as a diagnostic
+  (`self_counts`), never ranked.
+- **Choices.** No sweep: every knob is the frozen cell's or fixed here; the xs seed-0 export is the smoke
+  test (no value chosen on it). Device: CPU (the reference harness's CPU reads are bit-identical; a GPU or
+  Apple-silicon device, if the m cost forces one, is recorded and disclosed with the row). Both rows run on
+  xs, s, m × seeds 0–4; the per-case record keeps `n_traces_window`, `n_traces_probed`, `n_skipped_short`,
+  `n_truncated`, `n_folded`, `n_nonok_positions`, `n_nonok_in_context`, `n_traces_with_nonok`,
+  `n_traces_with_upstream`, `n_edges` (cut edges over the probed traces), `n_client_positions_dropped`,
+  `n_services_reached`, the per-service counts and mean hops, `self_counts`, the probe's wall clock and
+  token-positions per second, and the miss reason. Not proposed: the session grain (journey and retry
+  edges cross requests; the rule is a within-request traversal), the fixed paths (the paper reports the
+  shipped arithmetic), the shipped cut (its union is a type-level rule), a hop-weighted score (a new rule).
+- **Hypotheses (mechanical in `report`).** **H-rca-trace-random**, **H-rca-trace-rule**,
+  **H-rca-trace-core-random**, **H-rca-trace-core-rule**: the §6 H-rca-random / H-rca-rule rules applied to
+  each row. Descriptive gaps for the findings, not hypotheses: `rca/trace` − `rca/tracerca` (the two
+  trace-reading arms), `rca/trace` − `rca/trace-core` (the construction), `rca/trace` − `rca/rcd` (the
+  best published arm).
+- **Environment and code path.** The probe runs in the reference harness's environment
+  `seq2cause-trace-bench` (Python 3.11, torch 2.14.1, transformers 5.19.0, seq2cause 0.1.9, numpy 2.4.6 — the
+  environment of every landed TRACE cell, RUN.md of `benchmarks/trace-bench`), through a runner script
+  (`trace_runner.py`, imports `seq2causebench` and `seq2cause` from the same commit as this directory) that
+  this directory's `ranktrace` stage executes once per corpus and arm (the `rankrcd` pattern: the backbone
+  loaded once; one JSON per case holding every probed trace's cut edges and, per window position, its
+  operation, outcome and service, plus the counts above); the rule and the ranking run on this side
+  (`tracerule.py`, pure Python, tested on hand-built sample graphs), never in the runner. The record names
+  both environments' `pip freeze`, the freeze file's path, sha256 and commit, the cell's `(c, N, g, τ)`, the
+  model sha256, the runner's `seq2causebench` and `seq2cause` import paths and commit, and the device.
+- **D-TBR-13** (RUN.md): follows the author's rule as he stated it and the frozen cells as landed; deviates
+  from TRACE as published, which has no root-cause stage in the X→X regime the harness exercises (the paper's
+  Markov-boundary rule is stated for the outcome head of the X→Y regime, which this benchmark does not
+  provide — the owner's mail of 2026-10-21, point 6): the rule registered here is the lab's reading in the X→X
+  regime (the Markov boundary of each non-OK event token in the sample graph, then the upstream traversal);
+  the probe is driven by the harness's engine adapter rather than the shipped CLI (as every landed cell);
+  the window traces are read from all three splits. Dated 2026-10-30, before any TRACE root-cause run.
+- **Premise checks (to run on the xs seed-0 export and corpus before the first ranking; results in the
+  findings).** P1 — the view's rows carry `start_ns` and the window selection finds traces in every case.
+  P2 — the number of window traces per case at xs, s and m seed 0 against the cap. P3 — the probe's cost
+  per trace on the CPU at xs and m (the m cell's cost sizes the five-seed run). P4 — the runner's sample
+  graph of one trace equals the reference harness's stored matrix cut at τ for a trace of the landed test
+  read, where that trace is in the window (a spot check of the code path; if no landed test-read trace falls
+  in a window, the check is on the matrix shape and the cut only).
+- **Staging, protocol, reporting.** As §4 and §5: `ranktrace` per arm, xs → s → m by `--prior-rung-record`
+  on the same arm, `score` (`tracebench.score_rca`, B = 2000, seed 0), five seeds or nothing, the random
+  expectation and `control/rule` beside every row. Paper placement is the paper's decision; nothing here
+  depends on it.
