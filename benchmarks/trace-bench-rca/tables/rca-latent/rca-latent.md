@@ -30,6 +30,12 @@
 | xs | `rca/pc-pagerank` | 10 | 0.200 | 0.800 | 1.000 | 0.660 [0.480, 0.820] | 0.600 | 0 |
 | s | `rca/pc-pagerank` | 15 | 0.067 | 0.333 | 0.467 | 0.293 [0.120, 0.493] | 0.250 | 0 |
 | m | `rca/pc-pagerank` | 25 | 0.000 | 0.000 | 0.000 | 0.000 [0.000, 0.000] | 0.058 | 0 |
+| xs | `rca/trace` | 10 | 0.000 | 0.600 | 1.000 | 0.540 [0.360, 0.720] | 0.600 | 0 |
+| s | `rca/trace` | 15 | 0.133 | 0.267 | 0.600 | 0.333 [0.160, 0.520] | 0.250 | 0 |
+| m | `rca/trace` | 25 | 0.000 | 0.040 | 0.200 | 0.080 [0.016, 0.160] | 0.058 | 0 |
+| xs | `rca/trace-core` | 10 | 0.100 | 0.600 | 1.000 | 0.560 [0.380, 0.740] | 0.600 | 0 |
+| s | `rca/trace-core` | 15 | 0.133 | 0.267 | 0.467 | 0.307 [0.120, 0.507] | 0.250 | 0 |
+| m | `rca/trace-core` | 25 | 0.000 | 0.200 | 0.240 | 0.144 [0.048, 0.256] | 0.058 | 0 |
 
 | rung | arm | graph edges per case, mean [min, max] |
 |---|---|---|
@@ -42,12 +48,27 @@
 | xs | `rca/pc-pagerank` | 16.4 [13, 19] |
 | s | `rca/pc-pagerank` | 103.7 [96, 112] |
 | m | `rca/pc-pagerank` | 362.1 [336, 385] |
+| xs | `rca/trace` | 2101.0 [814, 4272] |
+| s | `rca/trace` | 2854.3 [2048, 3642] |
+| m | `rca/trace` | 4274.6 [3342, 5845] |
+| xs | `rca/trace-core` | 2016.4 [874, 4243] |
+| s | `rca/trace-core` | 2134.1 [1630, 2856] |
+| m | `rca/trace-core` | 2829.7 [1893, 5044] |
 
 | rung | arm | alerting services per case, mean [min, max] |
 |---|---|---|
 | xs | `control/rule` | 2.50 [0, 5] |
 | s | `control/rule` | 8.80 [3, 12] |
 | m | `control/rule` | 29.04 [3, 51] |
+
+| rung | arm | window traces per case, mean [min, max] | probed, mean [min, max] | services reached, mean |
+|---|---|---|---|---|
+| xs | `rca/trace` | 1589 [1046, 2144] | 435 [333, 500] | 5.0 |
+| s | `rca/trace` | 26019 [17429, 43836] | 498 [486, 500] | 12.0 |
+| m | `rca/trace` | 20935 [10722, 32016] | 500 [500, 500] | 51.2 |
+| xs | `rca/trace-core` | 1589 [1046, 2144] | 500 [495, 500] | 5.0 |
+| s | `rca/trace-core` | 26019 [17429, 43836] | 500 [500, 500] | 12.0 |
+| m | `rca/trace-core` | 20935 [10722, 32016] | 500 [500, 500] | 51.0 |
 
 Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation split. Mean over the test cases.
 
@@ -76,5 +97,9 @@ Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation sp
 | H-rca-tracerca-rule | fail |
 | H-rca-pc-pagerank-random | fail |
 | H-rca-pc-pagerank-rule | fail |
+| H-rca-trace-random | fail |
+| H-rca-trace-rule | fail |
+| H-rca-trace-core-random | fail |
+| H-rca-trace-core-rule | fail |
 | H-circa-topology-gain | fail |
 | H-graph-topology | pass |
