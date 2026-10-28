@@ -98,7 +98,8 @@ INPUT_TOPOLOGY = "topology"  # `floor/topology`: score side (instantiation.json)
 INPUT_SPANS = (
     "spans"  # <case>/spans.csv — the correlated request view's spans (a trace-reading, call-tree-informed arm)
 )
-INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY, INPUT_SPANS)
+INPUT_VIEWS = "views"  # the corpus's end-ordered request view through the benchmark's method accessor (rca/trace*)
+INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY, INPUT_SPANS, INPUT_VIEWS)
 
 # --- axes a result is scored on (tracebench.score_rca, tracebench.score_service) -----------------
 AXIS_RANKING = "ranking"
@@ -200,6 +201,19 @@ PC_PAGERANK_DATASET = (
 )
 # (time dropped, whole-table constant columns dropped, D-TBR-12); the only argument passed beside the table
 
+# --- TRACE's own root-cause rule (plans/rca-arms.md, addendum 2026-10-30; D-TBR-13) ---------------------------
+SEQ2CAUSE_REPO = "Mathugo/seq2cause"
+SEQ2CAUSE_COMMIT = "67416a2f0ba6ef675a39028518f7a45bbf327291"  # v0.1.9, the shipped commit the harness builds on
+TRACE_NONOK_OUTCOMES = ("5xx", "err", "slow")  # a non-OK position; 4xx is a client-side outcome
+TRACE_TRACE_CAP = 500  # window traces probed per case, the first by start time
+TRACE_MAX_LEN = 64  # real tokens per sequence, as the frozen cells' reads (discover --max-len)
+TRACE_SEED_STREAM = 3  # the per-trace noise seed stream (the reference harness uses 0-2 for its splits)
+TRACE_ENV = "seq2cause-trace-bench"  # the reference harness's environment, where trace_runner.py runs
+TRACE_DEVICES = ("cpu", "cuda", "mps")
+TRACE_MISS_NO_TRACE = "no window trace"
+TRACE_MISS_NO_NONOK = "no non-OK position"
+TRACE_MISS_NO_UPSTREAM = "no upstream service"
+
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
 ARM_CIRCA = "rca/circa"
@@ -207,6 +221,8 @@ ARM_CIRCA_TOPOLOGY = "rca/circa-topology"
 ARM_RCD = "rca/rcd"
 ARM_TRACERCA = "rca/tracerca"
 ARM_PC_PAGERANK = "rca/pc-pagerank"
+ARM_TRACE = "rca/trace"  # the atomic construction's frozen request cell under the lab's reading of the author's rule
+ARM_TRACE_CORE = "rca/trace-core"  # the core path's frozen request cell, the second row
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -325,6 +341,36 @@ ARMS = {
         },
         "licence": "MIT",
     },
+    ARM_TRACE: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": SEQ2CAUSE_REPO,
+            "commit": SEQ2CAUSE_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "the seed's frozen backbone and the frozen cell trace/cli-atomic/shipped/frozen/request of the committed "
+            "freeze, probed through the reference harness's engine adapter (seq2causebench.engine, D-SB-2) on the window "
+            "traces; the lab's reading of the author's rule (parents of each non-OK token, upstream closure, positions -> "
+            "services, traces-upstream counts; D-TBR-13)",
+        },
+        "licence": "MIT (pyproject.toml of the author's repository; benchmarking authorised by the author)",
+    },
+    ARM_TRACE_CORE: {
+        "class": CLASS_ROOT_CAUSE,
+        "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),
+        "axes": (AXIS_RANKING,),
+        "code": {
+            "repo": SEQ2CAUSE_REPO,
+            "commit": SEQ2CAUSE_COMMIT,
+            "runner": None,
+            "runner_commit": None,
+            "entry": "as rca/trace with the frozen cell trace/core/shipped/frozen/request (the full ancestral-history "
+            "construction, the shipped arithmetic)",
+        },
+        "licence": "MIT (pyproject.toml of the author's repository; benchmarking authorised by the author)",
+    },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,
         "inputs": (INPUT_SERVICES,),
@@ -351,6 +397,10 @@ ROOT_CAUSE_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_ROOT_C
 CONTROL_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_FLOOR_CONTROL)
 DISCOVERY_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_DISCOVERY)  # none registered yet
 GRAPH_ARMS = tuple(a for a, s in ARMS.items() if AXIS_GRAPH in s["axes"])
+TRACE_CELLS = {  # the frozen cell each TRACE arm reads, by the reference harness's four-slot key (addendum 2026-10-30)
+    ARM_TRACE: "trace/cli-atomic/shipped/frozen/request",
+    ARM_TRACE_CORE: "trace/core/shipped/frozen/request",
+}
 
 # --- per-arm result files (one directory per arm per corpus) ----------------------------------------
 RANKING_JSON = "ranking.json"  # {"cases": {"<case_id>": ["<service>", ...]}} — tracebench.score_rca's prediction shape
