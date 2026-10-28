@@ -537,19 +537,17 @@ def _cell(cell_dict, arm_pred, mode, hop0, corpus, prediction=None):
     return score_trace_axis(corpus, cell_dict, prediction if prediction is not None else arm_pred, mode, hop0, 0, 0)
 
 
+CELL = {"c": C, "max_len": MAX_LEN, "select": TRACE_SELECT_POST_NONOK, "cap": 0, "selected": SELECTED, "skipped": SKIPPED}
+
+
 @pytest.fixture(scope="module")
 def cell_rows(corpus):
     """`{arm: {row_id: result}}` — the rows of one corpus's cell per TRACE arm, in `score-trace.json`'s shape (the
     benchmark's `score` minus `traces`), the shared rows computed once and copied into both arms' cells."""
-    cell = {
-        "c": C,
-        "max_len": MAX_LEN,
-        "select": TRACE_SELECT_POST_NONOK,
-        "cap": 0,
-        "selected": SELECTED,
-        "skipped": SKIPPED,
-    }
+    return _cell_rows(corpus, CELL)
 
+
+def _cell_rows(corpus, cell):
     def strip(res):
         res = dict(res)
         res.pop("traces")
@@ -752,6 +750,35 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
                 + bad
                 + ["--bootstrap-b", "1", "--bootstrap-seed", "0", "--output-folder", "x"]
             )
+
+
+def test_reporttrace_shared_rows_across_context_lengths(corpus, cell_rows, tmp_path):
+    """The TRACE arms run at their own context length (xs seed 0: c = 3 and 2), so the shared rows' window
+    coordinates differ between the arms' cells; the copies agree on every other field, the report runs, and the
+    shared rows are the first named arm's."""
+    short = _cell_rows(corpus, {**CELL, "c": C - 1, "skipped": {"case-00": [], "case-01": []}})[ARM_TRACE_CORE]
+    for row_id in SHARED_ROWS:
+        assert short[row_id] != cell_rows[ARM_TRACE][row_id]  # `c` at least moved with the window
+        assert reporttrace.without_window_fields(short[row_id]) == reporttrace.without_window_fields(
+            cell_rows[ARM_TRACE][row_id]
+        )
+    results = tmp_path / "results"
+    for k in SEEDS5:
+        _write_cell(reporttrace.cell_dir(results, RUNG, k, ARM_TRACE), ARM_TRACE, cell_rows[ARM_TRACE])
+        _write_cell(reporttrace.cell_dir(results, RUNG, k, ARM_TRACE_CORE), ARM_TRACE_CORE, short)
+    out, ref = tmp_path / "tables", tmp_path / "tables-ref"
+    assert reporttrace.main(_report_argv(results, out)) == 0
+    assert reporttrace.main(_report_argv(_results_tree(tmp_path / "results-ref", cell_rows), ref)) == 0
+    for row_id in SHARED_ROWS:
+        name = f"pooled-{RUNG}-{row_id.replace('/', '-')}.json"
+        assert read_json(out / name) == read_json(ref / name)
+    # a service-level difference still refuses
+    bad = {**short, ARM_CONTROL_TRACE_RANDOM: {**short[ARM_CONTROL_TRACE_RANDOM], "counts": {"n_candidates": -1}}}
+    d = reporttrace.cell_dir(results, RUNG, 3, ARM_TRACE_CORE)
+    shutil.rmtree(d)
+    _write_cell(d, ARM_TRACE_CORE, bad)
+    with pytest.raises(ValueError, match="differs between"):
+        reporttrace.main(_report_argv(results, tmp_path / "tables-bad"))
 
 
 # --- 4. the hypotheses on hand-built summary rows ------------------------------------------------------------------

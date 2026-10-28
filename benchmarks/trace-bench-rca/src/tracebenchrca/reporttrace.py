@@ -6,8 +6,11 @@
 `plans/rca-arms.md`, addendum 2026-10-31. Reads, per rung, seed and TRACE arm, the landed
 `results/<rung>/latent/seed=<k>/<arm slug>/trace/score-trace.json` and the two stage records beside it
 (`run/`, `rank/run/`), refusing a rung with fewer seeds than named (five seeds or nothing) and a file that
-does not hash to its record. The floor, control and broadcast rows ride every TRACE arm's cell as identical
-copies; they are read from the first named arm and the other arms' copies must agree on every metric.
+does not hash to its record. The floor, control and broadcast rows ride every TRACE arm's cell as copies; they
+are read from the first named arm and the other arms' copies must agree on every field outside the window
+coordinates (`WINDOW_FIELDS`: the cell's context length c, the position hits, the traces skipped short and the
+root-cause positions inside the context all follow the arm's c, which differs between the arms at `xs` and `s`), so
+a shared row's position metrics are those of the first named arm's window.
 Writes per row one pooled table per rung and one across the named rungs (`tracebench.score_rca_trace.pool`:
 the case rows concatenated — the cluster is the (corpus, case) pair — with the same bootstrap),
 `summary.json` (every row with its interval and random expectation, the counts, the hypotheses) and
@@ -54,6 +57,8 @@ TRACE_ARMS = (ARM_TRACE, ARM_TRACE_CORE)
 S1 = "s@1"
 METRIC_KEYS = ("s@1", "s@3", "p@1", "p@3", "exact", "mean_set_size")
 SHARED_PREFIXES = (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES, "broadcast/")
+# the fields of a score row in the window's coordinates (a position p = i − c + 1), which follow the cell's c
+WINDOW_FIELDS = frozenset({"c", "p@1", "p@3", "n_skipped", "n_rc_unreachable_context"})
 
 
 def cell_dir(results_dir, rung, seed, arm):
@@ -81,8 +86,18 @@ def is_shared(row_id):
     return any(row_id.startswith(p) for p in SHARED_PREFIXES)
 
 
+def without_window_fields(x):
+    """A score row (or any part of one) with every `WINDOW_FIELDS` key dropped, at any depth."""
+    if isinstance(x, dict):
+        return {k: without_window_fields(v) for k, v in x.items() if k not in WINDOW_FIELDS}
+    if isinstance(x, list):
+        return [without_window_fields(v) for v in x]
+    return x
+
+
 def check_shared_rows_agree(cells_by_arm):
-    """The floor, control and broadcast rows must be identical across the TRACE arms' cells of one corpus."""
+    """The floor, control and broadcast rows must be identical across the TRACE arms' cells of one corpus outside
+    the window coordinates."""
     arms = list(cells_by_arm)
     first = cells_by_arm[arms[0]][0]
     for arm in arms[1:]:
@@ -90,7 +105,7 @@ def check_shared_rows_agree(cells_by_arm):
         for row_id, r in first.items():
             if not is_shared(row_id):
                 continue
-            if row_id not in rows or rows[row_id]["metrics"] != r["metrics"] or rows[row_id]["cases"] != r["cases"]:
+            if row_id not in rows or without_window_fields(rows[row_id]) != without_window_fields(r):
                 raise ValueError(f"row {row_id!r} differs between the {arms[0]!r} and {arm!r} cells")
 
 
