@@ -5,6 +5,7 @@
     python -m tracebenchrca.artifacts pull   <run-dir> --s3-uri <prefix> [--only-records]
     python -m tracebenchrca.artifacts verify <run-dir>
     python -m tracebenchrca.artifacts status <run-dir>
+    python -m tracebenchrca.artifacts manifest <run-dir>   # the manifest only; no object storage
 
 Shells out to the AWS CLI (the lab's convention; no boto3 dependency). The
 object-store prefix comes only from the command line or the
@@ -139,12 +140,20 @@ def build_parser():
         )
         if name == "pull":
             sp.add_argument("--only-records", action="store_true", help="fetch the small record files only")
-    for name in ("verify", "status"):
+    for name in ("verify", "status", "manifest"):
         sp = sub.add_parser(name)
         sp.add_argument("folder")
         if name == "verify":
             sp.add_argument("--only-records", action="store_true")
     return p
+
+
+def manifest(folder):
+    """Write the location-free manifest beside the files without touching object storage (2026-10-31: the last
+    line of a job whose provisioning syncs the folder itself; the sync then carries the manifest up)."""
+    m = build_manifest(folder)
+    write_json(Path(folder) / ARTIFACTS_JSON, m)
+    return m
 
 
 def main(argv=None):
@@ -163,6 +172,10 @@ def main(argv=None):
         problems = pull(args.folder, args.s3_uri, args.profile, only_records=args.only_records)
         print(json.dumps({"problems": problems}))
         return 0 if not problems else 1
+    if args.cmd == "manifest":
+        m = manifest(args.folder)
+        print(json.dumps({"manifest": len(m["files"]), "run_name": m["run_name"]}))
+        return 0
     if args.cmd == "verify":
         problems = verify(args.folder, only_records=args.only_records)
         print(json.dumps({"problems": problems}))

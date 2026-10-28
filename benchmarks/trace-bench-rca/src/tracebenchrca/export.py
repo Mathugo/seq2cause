@@ -1,7 +1,10 @@
 """Export one pulled corpus's fault cases through the benchmark's own exporter and record it.
 
     python -m tracebenchrca.export --corpus-dir <pulled corpus> --rung xs --out <export root> \
-        --workers 1 --extras topology spans --output-folder <run-dir>
+        --workers 1 --extras topology spans --expect-cases none --output-folder <run-dir>
+
+`--expect-cases` (2026-10-31) names a landed export record whose per-case sha256 this export must
+reproduce (a re-export on another host is then the same input by construction), or `none`.
 
 `--extras` (2026-10-26; may be empty) asks the exporter for its optional case files — `topology.json`
 (`rca/circa-topology`) and `spans.csv` (`rca/tracerca`); a pin whose exporter has no extras refuses a
@@ -25,7 +28,7 @@ from pathlib import Path
 
 from .constants import BIN_WIDTH_S, RUNGS
 from .log import log
-from .record import RunRecord
+from .record import RunRecord, read_json, sha256_file
 
 
 def corpus_id_of(corpus_dir):
@@ -50,7 +53,22 @@ def _exporter():
     return export_rca
 
 
-def export(corpus_dir, rung, out, workers, extras=()):
+def check_expected_cases(results, expect):
+    """Per-case content check against a landed export record (`--expect-cases`): every case directory's
+    exporter sha256 must equal the landed one, so a re-export on another host is the same input. Returns
+    the landed record's path and sha256, or None when `expect` is "none"."""
+    if expect == "none":
+        return None
+    landed = read_json(expect)
+    new = {c["dir"]: c["sha256"] for c in results["exporter"]["cases"]}
+    old = {c["dir"]: c["sha256"] for c in landed["exporter"]["cases"]}
+    if new != old:
+        bad = sorted(d for d in set(new) | set(old) if new.get(d) != old.get(d))
+        raise ValueError(f"the export differs from the landed record {expect} on {bad}")
+    return {"path": str(expect), "sha256": sha256_file(expect), "n_cases": len(new)}
+
+
+def export(corpus_dir, rung, out, workers, extras=(), expect="none"):
     exporter = _exporter()
     extras = tuple(extras)
     if extras:
@@ -61,7 +79,7 @@ def export(corpus_dir, rung, out, workers, extras=()):
         results = exporter.export(corpus_dir, rung, out, workers=workers, extras=extras)
     else:
         results = exporter.export(corpus_dir, rung, out, workers=workers)
-    return {
+    res = {
         "corpus_id": corpus_id_of(corpus_dir),
         "export_dir": str(Path(out).resolve()),
         "stage": "export",
@@ -69,6 +87,8 @@ def export(corpus_dir, rung, out, workers, extras=()):
         "extras": list(extras),
         "exporter": results,
     }
+    res["expected_cases"] = check_expected_cases(res, expect)
+    return res
 
 
 def build_parser():
@@ -86,6 +106,11 @@ def build_parser():
         choices=("topology", "spans"),
         help="the exporter's optional case files; may be empty",
     )
+    p.add_argument(
+        "--expect-cases",
+        required=True,
+        help="a landed export record's results.json whose per-case sha256 this export must reproduce, or none",
+    )
     p.add_argument("--output-folder", required=True, help="where this stage's run record is written")
     return p
 
@@ -93,7 +118,7 @@ def build_parser():
 def main(argv=None):
     args = build_parser().parse_args(argv)
     with RunRecord(args.output_folder, "export", vars(args)) as rec:
-        res = export(args.corpus_dir, args.rung, args.out, args.workers, tuple(args.extras))
+        res = export(args.corpus_dir, args.rung, args.out, args.workers, tuple(args.extras), args.expect_cases)
         log({"event": "export", "corpus_id": res["corpus_id"], "n_cases": len(res["exporter"]["cases"])})
         rec.finish(res)
     return 0

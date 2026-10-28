@@ -4,7 +4,7 @@
     python -m tracebenchrca.pull --repo chadyuk/trace-bench --revision v0.3.0 \
         --rung xs --variant latent --seed 0 --tier rca --dest <root> --output-folder <run-dir>
 
-One tier, `rca`: exactly the files this directory reads and nothing more —
+Two tiers. `rca`: exactly the files the case-level axes read and nothing more —
 
 - `config.yaml`, `instantiation.json`, `labels/cases.json` and the access-log shards
   `raw/shard=*/vl.jsonl.gz` for the exporter (`tracebench.export_rca`, score side);
@@ -17,7 +17,13 @@ One tier, `rca`: exactly the files this directory reads and nothing more —
 
 Not fetched: the other three views, the client-side `sentry.jsonl.gz`
 shards, the oracle, `labels/faults.json` and `labels/sequence-labels.parquet` (never read),
-and the token-level scoring targets. Files land as real files under
+and the token-level scoring targets.
+
+`trace` (the per-trace root-cause axis, 2026-10-31): `config.yaml`, `instantiation.json`,
+`labels/cases.json`, `labels/sequence-labels.parquet` (the per-trace root-cause positions the
+score side reads — `tracebench.score_rca_trace`; the method side never opens it), the end-ordered
+request view, `manifest.json` and `COMPLETE`. Never `labels/faults.json`, the raw shards, the
+graphs or the topology. Files land as real files under
 `<dest>/instances/<rung>/<variant>/seed=<k>/` (never symlinks). Every fetched file's size and
 sha256 are checked against the manifest; a corpus whose manifest does not verify, or whose
 tool version is not the one this repository scores, is refused. Re-running resumes: files
@@ -64,9 +70,21 @@ TIERS = {
         MANIFEST_JSON,
         COMPLETE_MARKER,
     ),
+    "trace": (
+        CONFIG_YAML,
+        INSTANTIATION_JSON,
+        f"{LABELS_DIR}/{CASES_JSON}",
+        f"{LABELS_DIR}/sequence-labels.parquet",
+        f"{VIEWS_DIR}/end-request/**",
+        MANIFEST_JSON,
+        COMPLETE_MARKER,
+    ),
 }
 UNFLAGGED = (MANIFEST_JSON, COMPLETE_MARKER)
-NEVER_FETCHED = (f"{LABELS_DIR}/faults.json", f"{LABELS_DIR}/sequence-labels.parquet")
+NEVER_FETCHED = {  # per tier: files that must not be present in a pulled corpus of that tier
+    "rca": (f"{LABELS_DIR}/faults.json", f"{LABELS_DIR}/sequence-labels.parquet"),
+    "trace": (f"{LABELS_DIR}/faults.json",),
+}
 
 
 def corpus_prefix(rung, variant, seed):
@@ -118,7 +136,7 @@ def verify_pulled(corpus_dir, tier):
         if p.stat().st_size != f["bytes"] or sha256_file(p) != f["sha256"]:
             problems.append(f"changed {rel}")
         checked.append(rel)
-    for rel in NEVER_FETCHED:
+    for rel in NEVER_FETCHED[tier]:
         if (corpus_dir / rel).exists():
             problems.append(f"never fetched but present: {rel}")
     return manifest, checked, problems

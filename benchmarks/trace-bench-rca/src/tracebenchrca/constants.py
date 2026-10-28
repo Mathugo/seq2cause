@@ -104,7 +104,8 @@ INPUTS = (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY, INPUT_SPAN
 # --- axes a result is scored on (tracebench.score_rca, tracebench.score_service) -----------------
 AXIS_RANKING = "ranking"
 AXIS_GRAPH = "graph"
-AXES = (AXIS_RANKING, AXIS_GRAPH)
+AXIS_TRACE = "trace"  # the per-trace root-cause axis (tracebench.score_rca_trace; plan of 2026-10-31)
+AXES = (AXIS_RANKING, AXIS_GRAPH, AXIS_TRACE)
 
 # --- code pins (registered in plans/rca-arms.md with the two outreach mails of 2026-10-14) -------
 BARO_REPO = "phamquiluan/baro"
@@ -205,7 +206,7 @@ PC_PAGERANK_DATASET = (
 SEQ2CAUSE_REPO = "Mathugo/seq2cause"
 SEQ2CAUSE_COMMIT = "67416a2f0ba6ef675a39028518f7a45bbf327291"  # v0.1.9, the shipped commit the harness builds on
 TRACE_NONOK_OUTCOMES = ("5xx", "err", "slow")  # a non-OK position; 4xx is a client-side outcome
-TRACE_TRACE_CAP = 500  # window traces probed per case, the first by start time
+TRACE_TRACE_CAP = 500  # the landed case-level runs' cap: window traces probed per case, the first by start time
 TRACE_MAX_LEN = 64  # real tokens per sequence, as the frozen cells' reads (discover --max-len)
 TRACE_SEED_STREAM = 3  # the per-trace noise seed stream (the reference harness uses 0-2 for its splits)
 TRACE_ENV = "seq2cause-trace-bench"  # the reference harness's environment, where trace_runner.py runs
@@ -213,6 +214,16 @@ TRACE_DEVICES = ("cpu", "cuda", "mps")
 TRACE_MISS_NO_TRACE = "no window trace"
 TRACE_MISS_NO_NONOK = "no non-OK position"
 TRACE_MISS_NO_UPSTREAM = "no upstream service"
+# --- the per-trace axis (plan of 2026-10-31; contract-per-trace-axis.md) ---------------------------------------
+TRACE_SELECT_WINDOW = "window"  # legacy: start in [inject, end), no non-OK test — reproduces the landed case-level runs
+TRACE_SELECT_POST_NONOK = "post-nonok"  # rule R: whole trace inside the window and at least one non-client non-OK span
+TRACE_SELECTS = (TRACE_SELECT_WINDOW, TRACE_SELECT_POST_NONOK)
+TRACE_AXIS_CAP = 0  # the per-trace axis probes every R-trace (`--cap 0` = uncapped)
+STAGE_RANK_TRACE = "rank-trace"
+STAGE_SCORE_TRACE = "score-trace"
+TRACE_AXIS_DIR = "trace"  # the axis's directory inside an arm's results directory
+TRACE_TOLERANCE_JACCARD = 0.80  # the GPU/CPU edge-set tolerance gate (tracebenchrca.tolerance), mean Jaccard
+TRACE_READINGS = ("hop1", "hop0")  # the two readings of the rule per trace: upstream only / plus the failed position
 
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
@@ -228,6 +239,11 @@ ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
 ARM_CONTROL_RULE = "control/rule"
 ARM_FLOOR_TOPOLOGY = "floor/topology"
+ARM_FLOOR_TRACE_TOPOLOGY = "floor/trace-topology"  # per-trace axis: the call-tree subtree below each failed span
+ARM_CONTROL_TRACE_RANDOM = (
+    "control/trace-random"  # per-trace axis: analytic random over the trace's services / positions
+)
+ARM_CONTROL_TRACE_CALLEES = "control/trace-callees"  # per-trace axis: the direct callees of each failed span
 ARMS = {
     ARM_BARO: {
         "class": CLASS_ROOT_CAUSE,
@@ -344,7 +360,7 @@ ARMS = {
     ARM_TRACE: {
         "class": CLASS_ROOT_CAUSE,
         "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),
-        "axes": (AXIS_RANKING,),
+        "axes": (AXIS_RANKING, AXIS_TRACE),
         "code": {
             "repo": SEQ2CAUSE_REPO,
             "commit": SEQ2CAUSE_COMMIT,
@@ -360,7 +376,7 @@ ARMS = {
     ARM_TRACE_CORE: {
         "class": CLASS_ROOT_CAUSE,
         "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),
-        "axes": (AXIS_RANKING,),
+        "axes": (AXIS_RANKING, AXIS_TRACE),
         "code": {
             "repo": SEQ2CAUSE_REPO,
             "commit": SEQ2CAUSE_COMMIT,
@@ -392,11 +408,46 @@ ARMS = {
         "code": None,  # tracebench.score_service --prediction topology: the deployment topology coarsened to services
         "licence": None,
     },
+    ARM_FLOOR_TRACE_TOPOLOGY: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (),  # score side only: the view's own call tree (tracebench.score_rca_trace --mode topology)
+        "axes": (AXIS_TRACE,),
+        "code": None,
+        "licence": None,
+    },
+    ARM_CONTROL_TRACE_RANDOM: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (),  # analytic: min(k, n) / n over the trace's services; hypergeometric over its positions
+        "axes": (AXIS_TRACE,),
+        "code": None,
+        "licence": None,
+    },
+    ARM_CONTROL_TRACE_CALLEES: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (),  # score side only: the direct callees of each failed span (tracebench.score_rca_trace --mode callees)
+        "axes": (AXIS_TRACE,),
+        "code": None,
+        "licence": None,
+    },
 }
 ROOT_CAUSE_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_ROOT_CAUSE)
 CONTROL_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_FLOOR_CONTROL)
 DISCOVERY_ARMS = tuple(a for a, s in ARMS.items() if s["class"] == CLASS_DISCOVERY)  # none registered yet
 GRAPH_ARMS = tuple(a for a, s in ARMS.items() if AXIS_GRAPH in s["axes"])
+TRACE_AXIS_ARMS = tuple(a for a, s in ARMS.items() if AXIS_TRACE in s["axes"])
+# the case-level arms whose ranking is broadcast to every scored trace of the case on the per-trace axis
+# (tracebench.score_rca_trace --mode broadcast)
+TRACE_BROADCAST_ARMS = (
+    ARM_CONTROL_RULE,
+    ARM_BARO,
+    ARM_BARO_BOCPD,
+    ARM_CAUSALRCA,
+    ARM_PC_PAGERANK,
+    ARM_CIRCA,
+    ARM_CIRCA_TOPOLOGY,
+    ARM_TRACERCA,
+    ARM_RCD,
+)
 TRACE_CELLS = {  # the frozen cell each TRACE arm reads, by the reference harness's four-slot key (addendum 2026-10-30)
     ARM_TRACE: "trace/cli-atomic/shipped/frozen/request",
     ARM_TRACE_CORE: "trace/core/shipped/frozen/request",
@@ -407,6 +458,9 @@ RANKING_JSON = "ranking.json"  # {"cases": {"<case_id>": ["<service>", ...]}} �
 GRAPH_JSON = "graph.json"  # tracebench.score_service's prediction shape
 SCORE_RCA_JSON = "score-rca.json"
 SCORE_SERVICE_JSON = "score-service.json"
+RANKING_TRACE_JSON = "ranking-trace.json"  # the per-trace axis's compact prediction file (schema ranking-trace@1)
+SCORE_TRACE_JSON = "score-trace.json"  # tracebench.score_rca_trace's result without the per-trace table
+SCORE_TRACE_TRACES_JSON = "score-trace-traces.json"  # the per-trace table (git-ignored: one row per scored trace)
 
 # --- registered scoring values (docs/scorers-service-rca.md in the benchmark; plans/rca-arms.md §5) ----
 BOOTSTRAP_B = 2000

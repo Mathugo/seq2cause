@@ -12,6 +12,12 @@ upstream (hop >= 1) of at least one non-OK position; ties by the mean, over thos
 hop to the service (smaller first), then `services.json` order; services never upstream follow in
 `services.json` order. A case with no probed trace, no non-OK position or no upstream service is a counted miss.
 The hop-0 counts (a non-OK position's own service) are recorded as `self_counts`, never ranked.
+
+`rank_trace` is the per-trace axis's reading of the same rule (plan of 2026-10-31): inside ONE probed trace, every
+reached service (and every reached window position) is ranked by the number of non-OK positions whose upstream
+closure holds it, ties by the smallest hop, then `services.json` order (positions: by index). The `hop0` reading
+adds each non-OK position itself, and its service, to its closure at hop 0; the `hop1` reading is upstream only.
+Client positions are dropped and counted under both readings. `rank_case` is untouched.
 """
 
 from __future__ import annotations
@@ -81,6 +87,49 @@ def trace_upstream_services(trace, nonok=TRACE_NONOK_OUTCOMES):
     return reached, selfs, len(nonok_idx), n_client
 
 
+def rank_trace(trace, services, nonok=TRACE_NONOK_OUTCOMES, hop0=False):
+    """One probed trace's ranking of its reached services and window positions (the per-trace axis).
+    `{"services": [reached, ranked], "positions": [reached window positions, ranked], "n_nonok", "n_client_dropped"}`;
+    an item's statistic is `(number of non-OK positions whose closure holds it, min hop)`, ties by `services` order
+    (positions by index). `hop0=True` puts each non-OK position itself (and its service) into its closure at hop 0.
+    Services the view names outside `services` are refused."""
+    positions = trace["positions"]
+    parents = parents_of(trace["edges"], len(positions))
+    order = {s: i for i, s in enumerate(services)}
+    svc_count, svc_hop, pos_count, pos_hop = {}, {}, {}, {}
+    n_client = 0
+    nonok_idx = nonok_positions(positions, nonok)
+    for q in nonok_idx:
+        closure = upstream(parents, q)
+        if hop0:
+            closure[q] = 0
+        held = {}  # service -> its smallest hop inside this closure
+        for p, h in closure.items():
+            pos = positions[p]
+            if pos is None:  # the runner never cuts an edge at a special token; refuse rather than skip silently
+                raise ValueError(f"edge into a special token at window position {p}")
+            if pos["is_client"]:
+                n_client += 1
+                continue
+            pos_count[p] = pos_count.get(p, 0) + 1
+            pos_hop[p] = min(h, pos_hop.get(p, h))
+            s = pos["service"]
+            if s not in order:
+                raise ValueError(f"the view names a service outside services.json: {s!r}")
+            held[s] = min(h, held.get(s, h))
+        for s, h in held.items():
+            svc_count[s] = svc_count.get(s, 0) + 1
+            svc_hop[s] = min(h, svc_hop.get(s, h))
+    ranked_services = sorted(svc_count, key=lambda s: (-svc_count[s], svc_hop[s], order[s]))
+    ranked_positions = sorted(pos_count, key=lambda p: (-pos_count[p], pos_hop[p], p))
+    return {
+        "services": ranked_services,
+        "positions": ranked_positions,
+        "n_nonok": len(nonok_idx),
+        "n_client_dropped": n_client,
+    }
+
+
 def rank_case(traces, services, nonok=TRACE_NONOK_OUTCOMES):
     """The service ranking of one case from its probed traces (the runner's per-trace records) over the
     deployed services (`services.json` order). Returns the record fields of the case, with `services` None
@@ -129,4 +178,4 @@ def rank_case(traces, services, nonok=TRACE_NONOK_OUTCOMES):
     return {**facts, "services": reached + rest, "miss": None}
 
 
-__all__ = ["parents_of", "upstream", "nonok_positions", "trace_upstream_services", "rank_case"]
+__all__ = ["parents_of", "upstream", "nonok_positions", "trace_upstream_services", "rank_trace", "rank_case"]
