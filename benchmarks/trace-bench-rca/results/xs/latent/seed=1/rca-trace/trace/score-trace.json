@@ -1,0 +1,2790 @@
+{
+ "rows": {
+  "broadcast/control/rule": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.3697478991596639,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.36363636363636365
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.36363636363636365
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.3697478991596639,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.3578336557059961,
+     "s@3": 0.97678916827853
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.35,
+     "s@3": 0.98
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.3697478991596639,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.36363636363636365
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.18487394957983194,
+    "s@3": 0.6818181818181819
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "1fb36ce77a2ee9c864ad4f5e3a5153198653b420a4b7469bda33fd593c79593e",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.3565640194489465,
+    "s@3": 0.9773095623987034
+   }
+  },
+  "broadcast/rca/baro": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 1.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 1.0
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "997ba1834d9b5bb2c1793091c74b928fae35d03d9d87baab9436fc905cf4ecd9",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 1.0
+   }
+  },
+  "broadcast/rca/baro-bocpd": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 0.0,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.0
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "7414a14e2c4202a7fae8cdd14e1a2ef7267f35a9665b0633001349c698d4e4e7",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.0
+   }
+  },
+  "broadcast/rca/causalrca/latency-50": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.1,
+      "low": 0.03697478991596639
+     },
+     "s@3": {
+      "high": 0.8369747899159664,
+      "low": 0.4
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.1,
+     "s@3": 0.4
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.03697478991596639,
+     "s@3": 0.8369747899159664
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.03887814313346229,
+     "s@3": 0.8234042553191491
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.04100000000000001,
+     "s@3": 0.811
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.03697478991596639,
+      "s@3": 0.8369747899159664
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.1,
+      "s@3": 0.4
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0684873949579832,
+    "s@3": 0.6184873949579832
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "21a9e08c91c375a176fc7b9f0cc228a804e6f9a6d123dc039abf74afce86a473",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.03922204213938412,
+    "s@3": 0.8213938411669368
+   }
+  },
+  "broadcast/rca/causalrca/latency-95": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.11310924369747899,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 0.526890756302521,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.11310924369747899,
+     "s@3": 0.526890756302521
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.11121856866537717,
+     "s@3": 0.5133462282398453
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.098,
+     "s@3": 0.48100000000000004
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.11310924369747899,
+      "s@3": 0.526890756302521
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.056554621848739495,
+    "s@3": 0.2634453781512605
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "6de08176387f1584d37087049a875ffb71db26f7511326fe980501b92fa5f143",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.10907617504051863,
+    "s@3": 0.5081037277147488
+   }
+  },
+  "broadcast/rca/circa": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.36363636363636365
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.36363636363636365
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.97678916827853
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.98
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.36363636363636365
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.6818181818181819
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "cf77d5bcc8175f84c4bfbac4ad8805cc0bea41834536b7cda247a09123fe039a",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.9773095623987034
+   }
+  },
+  "broadcast/rca/circa-topology": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.9690522243713733
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.94
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.5
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "5c39fc69acc9984897eca9bf1dcc8efa3a3453d4e8e647c4b952e1f983f30fe2",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.0,
+    "s@3": 0.9643435980551054
+   }
+  },
+  "broadcast/rca/pc-pagerank": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 1.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 1.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 1.0,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.030947775628626693,
+     "s@3": 1.0
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.06,
+     "s@3": 1.0
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 1.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.5,
+    "s@3": 1.0
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "312a9bab1f78e51c81aaac9283ebd3fc380645de5f1c4f5aad54307f3f13b1f4",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.03565640194489465,
+    "s@3": 1.0
+   }
+  },
+  "broadcast/rca/rcd": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 1.0,
+      "low": 0.21818181818181817
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.8363636363636364
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.21818181818181817,
+     "s@3": 0.8363636363636364
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 1.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.9736943907156672,
+     "s@3": 0.9945841392649905
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.9640000000000001,
+     "s@3": 0.992
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 1.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.8363636363636364
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.6090909090909091,
+    "s@3": 0.9181818181818182
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "af641ac26e421d34699bcf417903503e82a3a70f5db7b75f1e22cd56e92ec863",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.9721231766612641,
+    "s@3": 0.9941653160453808
+   }
+  },
+  "broadcast/rca/tracerca": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 1.0,
+      "low": 0.0
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.0,
+     "s@3": 0.0
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 1.0,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.9690522243713733,
+     "s@3": 0.9690522243713733
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.94,
+     "s@3": 0.94
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 1.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.0,
+      "s@3": 0.0
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.5,
+    "s@3": 0.5
+   },
+   "mode": "broadcast",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "source_ranking_sha256": "4e68c85c1e0ccc48bc452bdcf09b9ae739fc4a71e71b5e5a0e6ab9bccf8d5b37",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.9643435980551054,
+    "s@3": 0.9643435980551054
+   }
+  },
+  "control/trace-callees/hop0": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.3572549019607843,
+      "low": 0.271969696969697
+     },
+     "s@3": {
+      "high": 0.8768067226890757,
+      "low": 0.7931818181818181
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.271969696969697,
+     "s@3": 0.7931818181818181
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.3572549019607843,
+     "s@3": 0.8768067226890757
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.35157962604771115,
+     "s@3": 0.8729206963249516
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.3678333333333333,
+     "s@3": 0.8785
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.3572549019607843,
+      "s@3": 0.8768067226890757
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.271969696969697,
+      "s@3": 0.7931818181818181
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.3146122994652406,
+    "s@3": 0.8349942704354469
+   },
+   "mode": "callees",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.35421393841166937,
+    "s@3": 0.8738249594813614
+   }
+  },
+  "control/trace-callees/hop1": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "s@1": {
+      "high": 0.499719887955182,
+      "low": 0.3977272727272727
+     },
+     "s@3": {
+      "high": 0.9204545454545454,
+      "low": 0.9117647058823529
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.3977272727272727,
+     "s@3": 0.9204545454545454
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.499719887955182,
+     "s@3": 0.9117647058823529
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.4922630560928433,
+     "s@3": 0.913926499032882
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": null,
+     "p@3": null,
+     "s@1": 0.5158333333333334,
+     "s@3": 0.9025
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.499719887955182,
+      "s@3": 0.9117647058823529
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.3977272727272727,
+      "s@3": 0.9204545454545454
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": null,
+      "p@3": null,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.4487235803412274,
+    "s@3": 0.9161096256684491
+   },
+   "mode": "callees",
+   "random": {
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": null,
+    "p@3": null,
+    "s@1": 0.49608319827120473,
+    "s@3": 0.9120745542949756
+   }
+  },
+  "control/trace-random": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "p@1": {
+      "high": 0.2784784823020117,
+      "low": 0.14374098124098125
+     },
+     "p@3": {
+      "high": 0.6939730437629597,
+      "low": 0.38966450216450216
+     },
+     "s@1": {
+      "high": 0.26182072829131653,
+      "low": 0.21818181818181817
+     },
+     "s@3": {
+      "high": 0.7854621848739496,
+      "low": 0.6545454545454545
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": 0.14374098124098125,
+     "p@3": 0.38966450216450216,
+     "s@1": 0.21818181818181817,
+     "s@3": 0.6545454545454545
+    },
+    "degrade": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": 0.2784784823020117,
+     "p@3": 0.6939730437629597,
+     "s@1": 0.26182072829131653,
+     "s@3": 0.7854621848739496
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": 0.2715649169227506,
+     "p@3": 0.6784948127307896,
+     "s@1": 0.26060606060606056,
+     "s@3": 0.7818181818181817
+    },
+    "val+test": {
+     "exact": null,
+     "mean_set_size": null,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": 0.2845793650793651,
+     "p@3": 0.7070476190476191,
+     "s@1": 0.2585,
+     "s@3": 0.7755
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": null,
+      "p@1": 0.2784784823020117,
+      "p@3": 0.6939730437629597,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.2784784823020117,
+      "p@3": 0.6939730437629597,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": null,
+      "p@1": 0.14374098124098125,
+      "p@3": 0.38966450216450216,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "mean_set_size": null,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.14374098124098125,
+      "p@3": 0.38966450216450216,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.2111097317714965,
+    "p@3": 0.5418187729637309,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "mode": "random",
+   "random": {
+    "p@1": 0.2111097317714965,
+    "p@3": 0.5418187729637309,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": null,
+    "mean_set_size": null,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.2736742278071289,
+    "p@3": 0.6831224960884604,
+    "s@1": 0.26026472177201515,
+    "s@3": 0.7807941653160454
+   }
+  },
+  "floor/trace-topology/hop0": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.03697478991596639,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 1.0,
+      "low": 0.9378151260504202
+     },
+     "p@3": {
+      "high": 1.0,
+      "low": 1.0
+     },
+     "s@1": {
+      "high": 0.8722689075630252,
+      "low": 0.8181818181818182
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 1.0
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 3.909090909090909,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": 1.0,
+     "p@3": 1.0,
+     "s@1": 0.8181818181818182,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": 0.03697478991596639,
+     "mean_set_size": 3.2184873949579833,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": 0.9378151260504202,
+     "p@3": 1.0,
+     "s@1": 0.8722689075630252,
+     "s@3": 1.0
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.03481624758220503,
+     "mean_set_size": 3.2591876208897483,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": 0.9361702127659575,
+     "p@3": 1.0,
+     "s@1": 0.8607350096711799,
+     "s@3": 1.0
+    },
+    "val+test": {
+     "exact": 0.04,
+     "mean_set_size": 3.16,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": 0.96,
+     "p@3": 1.0,
+     "s@1": 0.92,
+     "s@3": 1.0
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.03697478991596639,
+      "p@1": 0.9378151260504202,
+      "p@3": 1.0,
+      "s@1": 0.8722689075630252,
+      "s@3": 1.0
+     },
+     "mean_set_size": 3.2184873949579833,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.29376429359622636,
+      "p@3": 0.7145307213794608,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 1.0,
+      "p@3": 1.0,
+      "s@1": 0.8181818181818182,
+      "s@3": 1.0
+     },
+     "mean_set_size": 3.909090909090909,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.20690836940836943,
+      "p@3": 0.5512445887445887,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.018487394957983194,
+    "mean_set_size": 3.5637891520244462,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.9689075630252101,
+    "p@3": 1.0,
+    "s@1": 0.8452253628724218,
+    "s@3": 1.0
+   },
+   "mode": "topology",
+   "random": {
+    "p@1": 0.2503363315022979,
+    "p@3": 0.6328876550620248,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.03565640194489465,
+    "mean_set_size": 3.2431118314424636,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.940032414910859,
+    "p@3": 1.0,
+    "s@1": 0.8703403565640194,
+    "s@3": 1.0
+   }
+  },
+  "floor/trace-topology/hop1": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.2218487394957983,
+      "low": 0.045454545454545456
+     },
+     "p@1": {
+      "high": 0.8636363636363636,
+      "low": 0.6722689075630253
+     },
+     "p@3": {
+      "high": 1.0,
+      "low": 0.9092436974789916
+     },
+     "s@1": {
+      "high": 0.9545454545454546,
+      "low": 0.7058823529411765
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.934453781512605
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.045454545454545456,
+     "mean_set_size": 2.8636363636363638,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": 0.8636363636363636,
+     "p@3": 1.0,
+     "s@1": 0.9545454545454546,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": 0.2218487394957983,
+     "mean_set_size": 2.196638655462185,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": 0.6722689075630253,
+     "p@3": 0.9092436974789916,
+     "s@1": 0.7058823529411765,
+     "s@3": 0.934453781512605
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.20696324951644102,
+     "mean_set_size": 2.2359767891682787,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": 0.6769825918762089,
+     "p@3": 0.9148936170212766,
+     "s@1": 0.7117988394584139,
+     "s@3": 0.9400386847195358
+    },
+    "val+test": {
+     "exact": 0.26,
+     "mean_set_size": 2.14,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": 0.69,
+     "p@3": 0.9,
+     "s@1": 0.73,
+     "s@3": 0.92
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.2218487394957983,
+      "p@1": 0.6722689075630253,
+      "p@3": 0.9092436974789916,
+      "s@1": 0.7058823529411765,
+      "s@3": 0.934453781512605
+     },
+     "mean_set_size": 2.196638655462185,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.29376429359622636,
+      "p@3": 0.7145307213794608,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.045454545454545456,
+      "p@1": 0.8636363636363636,
+      "p@3": 1.0,
+      "s@1": 0.9545454545454546,
+      "s@3": 1.0
+     },
+     "mean_set_size": 2.8636363636363638,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.20690836940836943,
+      "p@3": 0.5512445887445887,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.1336516424751719,
+    "mean_set_size": 2.5301375095492746,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.7679526355996944,
+    "p@3": 0.9546218487394957,
+    "s@1": 0.8302139037433156,
+    "s@3": 0.9672268907563025
+   },
+   "mode": "topology",
+   "random": {
+    "p@1": 0.2503363315022979,
+    "p@3": 0.6328876550620248,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.21555915721231766,
+    "mean_set_size": 2.2204213938411668,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.6790923824959482,
+    "p@3": 0.9124797406807131,
+    "s@1": 0.7147487844408428,
+    "s@3": 0.9367909238249594
+   }
+  },
+  "rca/trace/hop0": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.02857142857142857,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.7092436974789916,
+      "low": 0.5909090909090909
+     },
+     "p@3": {
+      "high": 0.9176470588235294,
+      "low": 0.7272727272727273
+     },
+     "s@1": {
+      "high": 0.7361344537815127,
+      "low": 0.5
+     },
+     "s@3": {
+      "high": 0.9243697478991597,
+      "low": 0.7272727272727273
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 3.6363636363636362,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": 0.5909090909090909,
+     "p@3": 0.7272727272727273,
+     "s@1": 0.5,
+     "s@3": 0.7272727272727273
+    },
+    "degrade": {
+     "exact": 0.02857142857142857,
+     "mean_set_size": 3.057142857142857,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": 0.7092436974789916,
+     "p@3": 0.9176470588235294,
+     "s@1": 0.7361344537815127,
+     "s@3": 0.9243697478991597
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.029013539651837523,
+     "mean_set_size": 3.0889748549323017,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": 0.6943907156673114,
+     "p@3": 0.9110251450676983,
+     "s@1": 0.7137330754352031,
+     "s@3": 0.9148936170212766
+    },
+    "val+test": {
+     "exact": 0.02,
+     "mean_set_size": 3.02,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": 0.76,
+     "p@3": 0.91,
+     "s@1": 0.8,
+     "s@3": 0.93
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.02857142857142857,
+      "p@1": 0.7092436974789916,
+      "p@3": 0.9176470588235294,
+      "s@1": 0.7361344537815127,
+      "s@3": 0.9243697478991597
+     },
+     "mean_set_size": 3.057142857142857,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.2784784823020117,
+      "p@3": 0.6939730437629597,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.5909090909090909,
+      "p@3": 0.7272727272727273,
+      "s@1": 0.5,
+      "s@3": 0.7272727272727273
+     },
+     "mean_set_size": 3.6363636363636362,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.14374098124098125,
+      "p@3": 0.38966450216450216,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.014285714285714285,
+    "mean_set_size": 3.346753246753247,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.6500763941940413,
+    "p@3": 0.8224598930481284,
+    "s@1": 0.6180672268907563,
+    "s@3": 0.8258212375859435
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.2111097317714965,
+    "p@3": 0.5418187729637309,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.027552674230145867,
+    "mean_set_size": 3.0777957860615883,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.7050243111831442,
+    "p@3": 0.9108589951377634,
+    "s@1": 0.7277147487844409,
+    "s@3": 0.9173419773095624
+   }
+  },
+  "rca/trace/hop1": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.16134453781512606,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.5909090909090909,
+      "low": 0.534453781512605
+     },
+     "p@3": {
+      "high": 0.838655462184874,
+      "low": 0.7272727272727273
+     },
+     "s@1": {
+      "high": 0.584873949579832,
+      "low": 0.5
+     },
+     "s@3": {
+      "high": 0.8588235294117647,
+      "low": 0.7272727272727273
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 3.0,
+     "n_cases": 1,
+     "n_traces": 22,
+     "p@1": 0.5909090909090909,
+     "p@3": 0.7272727272727273,
+     "s@1": 0.5,
+     "s@3": 0.7272727272727273
+    },
+    "degrade": {
+     "exact": 0.16134453781512606,
+     "mean_set_size": 2.2974789915966385,
+     "n_cases": 1,
+     "n_traces": 595,
+     "p@1": 0.534453781512605,
+     "p@3": 0.838655462184874,
+     "s@1": 0.584873949579832,
+     "s@3": 0.8588235294117647
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.15860735009671179,
+     "mean_set_size": 2.3133462282398454,
+     "n_cases": 2,
+     "n_traces": 517,
+     "p@1": 0.5183752417794971,
+     "p@3": 0.8317214700193424,
+     "s@1": 0.5647969052224371,
+     "s@3": 0.8549323017408124
+    },
+    "val+test": {
+     "exact": 0.14,
+     "mean_set_size": 2.37,
+     "n_cases": 2,
+     "n_traces": 100,
+     "p@1": 0.63,
+     "p@3": 0.85,
+     "s@1": 0.67,
+     "s@3": 0.85
+    }
+   },
+   "c": 2,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-lifomu_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.16134453781512606,
+      "p@1": 0.534453781512605,
+      "p@3": 0.838655462184874,
+      "s@1": 0.584873949579832,
+      "s@3": 0.8588235294117647
+     },
+     "mean_set_size": 2.2974789915966385,
+     "n_rc_unreachable_context": 219,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1186,
+     "n_skipped": 2,
+     "n_took_4xx_only": 0,
+     "n_traces": 595,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.2784784823020117,
+      "p@3": 0.6939730437629597,
+      "s@1": 0.26182072829131653,
+      "s@3": 0.7854621848739496
+     },
+     "root_cause_component": "tb-lifomu"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-migo_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.5909090909090909,
+      "p@3": 0.7272727272727273,
+      "s@1": 0.5,
+      "s@3": 0.7272727272727273
+     },
+     "mean_set_size": 3.0,
+     "n_rc_unreachable_context": 14,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 326,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 22,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.14374098124098125,
+      "p@3": 0.38966450216450216,
+      "s@1": 0.21818181818181817,
+      "s@3": 0.6545454545454545
+     },
+     "root_cause_component": "tb-migo"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 3.9578606158833063,
+    "n_candidates": 617,
+    "n_rc_unreachable_context": 233,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1512,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 0,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.08067226890756303,
+    "mean_set_size": 2.6487394957983192,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.562681436210848,
+    "p@3": 0.7829640947288006,
+    "s@1": 0.542436974789916,
+    "s@3": 0.7930481283422459
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.2111097317714965,
+    "p@3": 0.5418187729637309,
+    "s@1": 0.24000127323656734,
+    "s@3": 0.7200038197097021
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.15559157212317667,
+    "mean_set_size": 2.3225283630470015,
+    "n_cases": 2,
+    "n_traces": 617,
+    "p@1": 0.5364667747163695,
+    "p@3": 0.8346839546191248,
+    "s@1": 0.5818476499189628,
+    "s@3": 0.8541329011345219
+   }
+  }
+ }
+}
