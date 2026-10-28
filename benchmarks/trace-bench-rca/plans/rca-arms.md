@@ -955,3 +955,132 @@ and intervals as the published root-cause methods.
   on the same arm, `score` (`tracebench.score_rca`, B = 2000, seed 0), five seeds or nothing, the random
   expectation and `control/rule` beside every row. Paper placement is the paper's decision; nothing here
   depends on it.
+
+### 2026-10-31 — the per-trace root-cause axis for `rca/trace` and `rca/trace-core`, with `floor/trace-topology`, `control/trace-random` and `control/trace-callees` (publication plan of 2026-10-31, approved by the owner the same day; before any per-trace code or read)
+
+Owner decision 2026-10-30 ("a per-trace root-cause axis goes into this submission") and the owner's
+answers of 2026-10-31 on the plan's four forks (uncapped selection on a GPU box; floors on the whole
+trace; case-weighted aggregation; the full row set plus an exact-set line). The ranking axis above
+asks, per fault case, which deployed service is the root; this axis asks, per **failed request**,
+which service in *this* trace is the root — the method author's own framing (2026-10-19: the Markov
+boundary of the outcome, then the upstream traversal of the sample graph) applied trace by trace
+instead of aggregated over a case's traces. The benchmark ships the truth for it in
+`labels/sequence-labels.parquet` (one row per request trace and injected fault: the fault phase of
+the trace, the end-view positions of the root-cause service's operations, whether one of them failed),
+which nothing read before this date. Scorer: `tracebench.score_rca_trace` (benchmark branch
+`clear-2027`, `docs/scorers-service-rca.md` §4, dated 2026-10-31), through this directory's
+`scoretrace` and `reporttrace` stages.
+
+- **Axis `trace`** (a third value beside `ranking` and `graph`). Request grain only (the only grain the
+  labels cover). Arms scored on it: `rca/trace` and `rca/trace-core` (their declared inputs unchanged:
+  `views, window, services`), each under two **readings** — `hop1` (the author's rule as registered on
+  2026-10-30: a service is a candidate when it is upstream, hop ≥ 1, of a failed position) and `hop0`
+  (the failed positions' own services enter at hop 0) — the primary row is `hop1`, the `hop0` row is
+  reported beside it; three model-free score-side rows: `floor/trace-topology` (the same rule run on
+  the trace's **true call tree**: for every failed non-client span its call-tree descendants —
+  `parent_pos` followed downwards, hop = chain length — ranked by the number of failed spans whose
+  subtree holds the service, then the smallest hop, then name order; both readings), `control/trace-random`
+  (the analytic expectation of a uniformly random ranking of the trace's distinct non-client services:
+  min(k, n_t) / n_t) and `control/trace-callees` (the analytic expectation of a random ranking restricted
+  to the failed spans' descendant services, the predict-all audit of this axis; both readings); and
+  **broadcast rows** for the eleven landed case-level rankings (`control/rule`, `rca/baro`,
+  `rca/baro-bocpd`, `rca/causalrca` p50 and p95, `rca/pc-pagerank`, `rca/circa`, `rca/circa-topology`,
+  `rca/tracerca`, `rca/rcd`): the case ranking filtered to the trace's own services, order kept, services
+  the case ranking lacks appended in name order, an unranked case a miss; for the run-averaged arms the
+  per-trace hit is the mean over the ten runs (a failed run 0). The broadcast rows cannot localise within
+  a trace by construction and are reported as references, as the discovery axis's floors are.
+- **Selection rule R (method side, label-free; the score side recomputes it and refuses a mismatch).**
+  Per case, every request trace of the end-ordered view, all three splits, that lies wholly inside the
+  fault window — `inject_time · 1e9 ≤ start_ns` and `start_ns + max(offsets + durations) < end_time · 1e9`,
+  integer nanoseconds, the two `window.json` fields — and holds at least one **failed non-client span**
+  (raw view `outcomes` in {5xx, err, slow}; 4xx is a client-side outcome, as above). Ordered by
+  `start_ns`, then `trace_id`; **no cap** (`--cap 0`; the owner's decision of 2026-10-31 — the case
+  rule's first 500 would have left 28 scored traces for the xs crash fault). The runner records the
+  selected and the skipped (fewer than two window positions) trace ids per case. The case-level
+  selection of 2026-10-30 (start in the window, first 500) stays available as `--select window` for the
+  landed rows and the tolerance check below. Measured 2026-10-31 on seed 0 (label side, before
+  registration): R holds 1,128 / 758 traces of the two xs windows, 7,463–35,450 per s window and
+  4,031–22,597 per m window; R's phase test agrees with the labels' POST phase on every trace of xs, s
+  and m seed 0 (0 mismatches).
+- **Scored set C (score side).** The selected traces in which **the fault took**: a trace whose
+  root-cause positions (`rc_positions_end`: the end-view positions whose operation belongs to the
+  fault's service and endpoints) hold at least one outcome in {5xx, err, slow} — recomputed from the view
+  row, not the label's `rc_took`, which also counts 4xx (0–8 traces per case at seed 0; the implication
+  took ⇒ `rc_took` is asserted). A selected trace the runner skipped is a counted miss. Measured on seed 0:
+  |C| = 623 / 48 (xs), 1,844 / 1,442 / 7,754 (s), 2,565 / **30** / 889 / 305 / 1,058 (m) — the m crash
+  fault's 30 traces are disclosed with the row. Splits of C at seed 0: 79 % train, 10 % val, 11 % test
+  (the backbone saw the train split; the per-split hit rate is reported as the training-overlap audit,
+  never as the axis). Not proposed: STRADDLE / PRE / NONE traces, OK traces, a "no root cause" class, the
+  session grain.
+- **Prediction, truth, metrics.** Per scored trace a ranking of the trace's distinct non-client
+  **services** (every row) and, for the trace-reading rows, of **positions** (the arms: window positions;
+  the floor: end-view positions). Truth: `root_cause_component`; for positions `rc_positions_end`, mapped
+  for an arm to window position `i − c + 1` where reachable (`c − 1 ≤ i < min(len(ops), 64)`); a
+  root-cause position inside the context or beyond the length cap is unreachable and counted
+  (`n_rc_unreachable_context`, `n_rc_unreachable_truncation`; the floor and the controls are defined on
+  the whole trace, so the arms' context cost is a reported diagnostic, owner decision 2026-10-31).
+  **hit@1** and **hit@3** of the root-cause service (positions: of any root-cause position); the **exact
+  set** (owner addition 2026-10-31; trace-reading rows only): the method's native candidate set — the
+  union of non-client services upstream (hop ≥ 1; hop 0 added in the `hop0` row) of the trace's failed
+  positions under the frozen τ, for the floor the descendant services under the true call tree — scores 1
+  iff it equals {root-cause service}; reported with the mean set size; "n/a" for the broadcast and
+  random rows. **Random expectation per trace**: services min(k, n_t) / n_t; positions 1 − C(m − r, k′) /
+  C(m, k′), k′ = min(k, m), 0 when r = 0. Per trace the candidate universe has 3.9–6.7 services at seed 0,
+  so hit@3 is near its ceiling; hit@1 and the exact set carry the comparison. **Aggregation (owner
+  2026-10-31): per case the mean over its scored traces; the point is the mean over cases** (the ranking
+  axis's unit, equal fault weight); **intervals = the percentile bootstrap over cases** (`numpy.random
+  .default_rng(seed).integers(0, n, (b, n))`, B = 2000, seed 0, the run-averaged machinery of 2026-10-23),
+  pooled per rung over the five seeds and across rungs by concatenating the case rows (the cluster is the
+  (seed, case) pair; xs has 10 clusters, disclosed). Secondary points, no interval: the trace-weighted
+  mean, the mean candidate count, per fault kind, per split.
+- **Hypotheses (mechanical in `reporttrace`).** **H-trace-perseq-random**: on every rung the hit@1
+  interval of each trace-reading row (`rca/trace`, `rca/trace-core`, `floor/trace-topology`, reading
+  `hop1`) lies above the per-trace random expectation. **H-trace-perseq-topology**: on every rung the
+  floor's hit@1 ≥ each TRACE row's (same reading). **H-trace-perseq-broadcast**: on every rung each TRACE
+  row's hit@1 ≥ every broadcast row's (the author's claim, stated as the pre-registered expectation).
+  **H-trace-perseq-self**: the `hop0` reading changes the sign of (TRACE − the best broadcast row) on no
+  rung. The exact set is descriptive. Descriptive gaps for the findings: TRACE − floor, `hop0` − `hop1`,
+  the context-unreachable share, the per-split gap.
+- **Environment, device and the tolerance check (D-TBR-15).** The 30 probe runs (xs, s, m × seeds 0–4 ×
+  two arms; ≈ 1.1 M traces, ≈ 4 h at the measured GPU probe cost) run on one g5-class EC2 replica of the
+  reference harness's provisioning (`infra/algos/seq2cause-bench-26-10-31-rca-trace-axis.tfvars`, job
+  script `scripts/jobs/rca-trace-axis-26-10-31.sh`: both environments built on the box, the fifteen
+  frozen backbones as input artifacts and hash-checked against the freezes, corpora pulled and exported
+  on the box, exports hash-checked against the landed `export-trace` records, the per-trace outputs synced
+  back), **device `cuda`**. CPU and CUDA draw different noise under the same seed, so a GPU probe is a
+  **disclosed replica of the frozen cells, not a bit-identical reproduction** of the landed CPU rows
+  (which stay as landed; nothing under `rca-trace{,-core}/` is rewritten). In place of the CPU
+  bit-identity check (P4 of 2026-10-30) the replica's first stage re-probes the 30 landed case-level
+  selections (`--select window`, cap 500) on the GPU and `tolerance` compares them trace by trace with
+  the landed CPU work files: positions identical (refused otherwise), the Jaccard of the cut edge sets per
+  trace; **gate: mean per-trace Jaccard ≥ 0.80 per run** (`TRACE_TOLERANCE_JACCARD`); the per-case
+  top-1 service of the GPU re-probe against the landed one is reported beside it. A failed gate is a
+  disclosed deviation and an owner decision, never a silent block or a silent pass. The per-trace noise
+  seed is the trace's index in the selected list, so the uncapped selection gives a trace a different
+  draw than the capped one — a second reason the two reads are not compared trace by trace.
+- **Files and records.** The per-trace rankings (`ranking-trace.json`: per case the selected and skipped
+  ids and, per probed trace, the reached services as indices into the export's name-ordered
+  `services.json` and the reached positions, both readings) and the per-trace score rows
+  (`score-trace-traces.json`) are too large to track uncapped (up to ≈ 60 MB per m run) and live on the
+  bucket and in the local scratch; **only their sha256 ride the records** (`rank-trace` and
+  `score-trace`), as the case-level `ranking-positional.json` does. Tracked: the `rank-trace`,
+  `tolerance` and `score-trace` records, `score-trace.json` (aggregates and per-case rows) under
+  `results/<rung>/latent/seed=<k>/<arm slug>/trace/`, and `tables/rca-trace/` from `reporttrace`.
+  `pull --tier trace` fetches `labels/sequence-labels.parquet` for the score side only; the runner's source
+  never names it and never reads `parent_pos` (a source test), so the method side's contract is unchanged.
+- **D-TBR-14** (RUN.md): the benchmark pin moves from `fcb7ddb3` to the `clear-2027` commit that carries
+  `tracebench.score_rca_trace` once the owner merges it; `score.py`, `score_rca`, `score_service` and the
+  exporter are unchanged, so no landed cell moves. **D-TBR-15**: the axis, the selection rule R without a
+  cap, the GPU device as a disclosed replica with the tolerance check, the per-trace files out of git.
+- **Premise checks.** P1–P3 run 2026-10-31 on seed 0 of xs, s and m from the released labels before this
+  registration (the counts above; the identity `rc_positions_end` ↔ the root-cause service's operations
+  holds on every label row; `parent_pos` points to a later position on 97–98 % of links, inversions kept):
+  a root-cause span is the only failed span of its trace in 1–14 % of C at xs and s and in 29 % / 37 % /
+  68 % of C for the m degrade (`tb-sitizo`), cache-flush and edge-service (`tb-edge`, whose only caller is
+  the client) faults — where the `hop1` reading cannot name it and the `hop0` row carries the comparison.
+  P4 = the tolerance check above, run on the box's first stage and scored before any per-trace read is
+  landed. No hit rate of any row was computed before this registration.
+- **Staging, protocol, reporting.** `ranktrace --axis trace` per arm, xs → s → m by `--prior-rung-record`
+  on the same arm and stage (`rank-trace`); `scoretrace` (every row of the axis, B = 2000, seed 0);
+  `reporttrace` (five seeds or nothing; `tables/rca-trace/`); the findings in `findings/rca-trace.md`.
+  Paper placement is the paper's decision; nothing here depends on it.
