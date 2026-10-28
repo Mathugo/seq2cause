@@ -38,6 +38,8 @@ from .constants import (
     ARM_CONTROL_RULE,
     ARM_PC_PAGERANK,
     ARM_RCD,
+    ARM_TRACE,
+    ARM_TRACE_CORE,
     ARM_TRACERCA,
     CAUSALRCA_SERIES,
     RESULTS_JSON,
@@ -68,6 +70,8 @@ PER_ARM_HYPOTHESES = {
     ARM_RCD: "rcd",
     ARM_TRACERCA: "tracerca",
     ARM_PC_PAGERANK: "pc-pagerank",  # addendum 2026-10-28
+    ARM_TRACE: "trace",  # addendum 2026-10-30
+    ARM_TRACE_CORE: "trace-core",
 }
 
 
@@ -138,6 +142,20 @@ def row_of(rung, arm, pooled, cells):
             "min": min(edges),
             "max": max(edges),
             "n_cases": len(edges),
+        }
+    probed = [c["n_traces_probed"] for _, _, r in cells for c in r["cases"] if "n_traces_window" in c]
+    if probed:
+        windows = [c["n_traces_window"] for _, _, r in cells for c in r["cases"]]
+        reached = [c["n_services_reached"] for _, _, r in cells for c in r["cases"]]
+        row["traces_per_case"] = {
+            "window_mean": statistics.mean(windows),
+            "window_min": min(windows),
+            "window_max": max(windows),
+            "probed_mean": statistics.mean(probed),
+            "probed_min": min(probed),
+            "probed_max": max(probed),
+            "services_reached_mean": statistics.mean(reached),
+            "n_cases": len(probed),
         }
     offsets = [
         cp["change_point_offset_s"]
@@ -297,6 +315,19 @@ def markdown(rows, hyp, graph_rows=()):
         for r in rule_rows:
             a = r["alerting_services_per_case"]
             lines.append(f"| {r['rung']} | `{r['arm']}` | {a['mean']:.2f} [{a['min']}, {a['max']}] |")
+    trace_rows = [r for r in rows if "traces_per_case" in r]
+    if trace_rows:
+        lines += [
+            "",
+            "| rung | arm | window traces per case, mean [min, max] | probed, mean [min, max] | services reached, mean |",
+            "|---|---|---|---|---|",
+        ]
+        for r in trace_rows:
+            t = r["traces_per_case"]
+            lines.append(
+                f"| {r['rung']} | `{r['arm']}` | {t['window_mean']:.0f} [{t['window_min']}, {t['window_max']}] | "
+                f"{t['probed_mean']:.0f} [{t['probed_min']}, {t['probed_max']}] | {t['services_reached_mean']:.1f} |"
+            )
     if graph_rows:
         lines += [
             "",

@@ -380,3 +380,91 @@ Per fault kind, Avg@5 — xs crash 0.56 / degrade 0.76; s crash 0.36 / degrade 0
 - The records carry the per-case counts the addendum names (`n_edges`, `n_metrics_dropped`,
   `n_distinct_scores`, `tie_groups`, `n_services_unranked`, the fallback flag, `n_filled`), and the
   score records the root cause's tie group (`root_tie_groups`, `n_cases_root_in_tie_group`).
+
+## Stretch arms, landed 2026-10-30: `rca/trace` and `rca/trace-core` (xs, s, m × five seeds)
+
+Registered by `plans/rca-arms.md`, addendum 2026-10-30 (owner go of 2026-10-30; D-TBR-13). The reference
+algorithm under its own root-cause rule — the rule the owner proposed to the method's author on 2026-10-21
+as the lab's reading of his ask of 2026-10-19 (the Markov boundary of the outcome, then the upstream
+traversal of the sample graph); the author neither confirmed nor declined it and reviews the draft. Per
+case, every trace of the end-ordered request view whose start falls in the fault window (all three
+splits; the first 500 by start time) is probed once with the seed's frozen backbone and the arm's frozen
+request cell of the committed freeze (`trace/cli-atomic/shipped/frozen/request` for `rca/trace`,
+`trace/core/shipped/frozen/request` for `rca/trace-core`) through the reference harness's engine adapter
+(bit-identical to a CPU `discover` read of the same cell on six stored traces, P4); the sample graph is
+the frozen cut; the parents of each non-OK token (`5xx`, `err`, `slow`) and their upstream closure map
+to services; a service's score is the number of probed traces in which it is upstream of a non-OK
+token (ties by mean hop, then `services.json` order; never-upstream services after). Reads on fresh
+2026-10-30 exports of the three registered files (each case's `data.csv`, `window.json` and
+`services.json` sha256-equal to the 2026-10-28 export records), from commit `e76c2ad5` in
+`trace-bench-rca`, the probe in `seq2cause-trace-bench` (torch 2.14.1, CPU). The records' `git_commit.dirty`
+is true on every read (the reads' own untracked outputs). No value was chosen on any read; no case was
+a miss. The earlier pooled files of the regenerated table are byte-identical (40 of 40).
+
+| rung | arm | cases | AC@1 | AC@3 | AC@5 | Avg@5 [95 % CI] | random Avg@5 (n services) | misses (no ranking) |
+|---|---|---|---|---|---|---|---|---|
+| xs | `rca/trace` | 10 | 0.000 | 0.600 | 1.000 | 0.540 [0.360, 0.720] | 0.600 (5) | 0 |
+| s | `rca/trace` | 15 | 0.133 | 0.267 | 0.600 | 0.333 [0.160, 0.520] | 0.250 (12) | 0 |
+| m | `rca/trace` | 25 | 0.000 | 0.040 | 0.200 | 0.080 [0.016, 0.160] | 0.058 (52) | 0 |
+| xs | `rca/trace-core` | 10 | 0.100 | 0.600 | 1.000 | 0.560 [0.380, 0.740] | 0.600 (5) | 0 |
+| s | `rca/trace-core` | 15 | 0.133 | 0.267 | 0.467 | 0.307 [0.120, 0.507] | 0.250 (12) | 0 |
+| m | `rca/trace-core` | 25 | 0.000 | 0.200 | 0.240 | 0.144 [0.048, 0.256] | 0.058 (52) | 0 |
+
+Across rungs (50 cases): `rca/trace` Avg@5 0.248 [0.160, 0.340], `rca/trace-core` 0.276 [0.184, 0.372]
+(against `rca/tracerca` 0.328 [0.220, 0.436], `rca/baro` 0.372 [0.260, 0.488], `control/rule` 0.468
+[0.344, 0.588] and `rca/rcd` 0.692 [0.576, 0.799]).
+
+Per fault kind, Avg@5 — `rca/trace`: xs crash 0.28 / degrade 0.80; s crash 0.24 / degrade 0.04 / pool
+exhaustion 0.72; m cache flush 0.00 / crash 0.08 / degrade 0.16 / pool exhaustion 0.00. `rca/trace-core`:
+xs 0.28 / 0.84; s 0.20 / 0.00 / 0.72; m 0.00 / 0.12 / 0.30 / 0.00.
+
+### Hypotheses (`plans/rca-arms.md`, addendum 2026-10-30)
+
+| hypothesis | verdict | the numbers |
+|---|---|---|
+| **H-rca-trace-random** — interval above the random expectation on every rung | **fail** (every rung) | lows 0.360 / 0.160 / 0.016 vs 0.600 / 0.250 / 0.058 |
+| **H-rca-trace-rule** — at or above `control/rule` | **fail** (every rung) | arm − rule Avg@5: xs −0.100, s −0.347, m −0.192 |
+| **H-rca-trace-core-random** | **fail** (every rung) | lows 0.380 / 0.120 / 0.048 vs 0.600 / 0.250 / 0.058 |
+| **H-rca-trace-core-rule** | **fail** (every rung) | arm − rule Avg@5: xs −0.080, s −0.373, m −0.128 |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **The three gaps the rows were added for.** *The two trace-reading arms* — `rca/trace` − `rca/tracerca`
+  (Avg@5): −0.100 / −0.187 / −0.008 (xs / s / m); every pair of intervals overlaps. *The construction* —
+  `rca/trace` − `rca/trace-core`: −0.020 / +0.027 / −0.064; the two rows are within 0.07 of each other on
+  every rung and their intervals overlap. *The best published arm* — `rca/trace` − `rca/rcd`: −0.278 /
+  −0.567 / −0.438. Against `rca/baro`: −0.180 / −0.133 / −0.096.
+- **Where the rule finds the root cause.** Pool exhaustion at s (0.72 on both rows: first on two seeds of
+  five, within the top four on the other three) and the degrade faults at xs (0.80 / 0.84: second of five
+  on every seed but one, where the full construction places it first). The crash faults sit last of five
+  at xs on four seeds (0.28), and at m cache flush and pool exhaustion are never in the top five (0.00);
+  the m degrade faults are the rows' best m cells (0.16 / 0.30). The root cause's median rank is 2.5 / 5 /
+  14 (`rca/trace`) and 2.5 / 6 / 15 (`rca/trace-core`) of 5 / 12 / 52.
+- **The sample graphs reach almost every service.** With 500 probed traces per case the upstream closures
+  touch every deployed service at xs and s and 51.2 / 51.0 of 52 at m on average, so the ranking is a
+  count over traces, not a short list: 106,866 / 70,742 cut edges over the 12,500 probed m traces, 1.4 / 1.4
+  non-OK tokens per probed trace at s (0.7 at xs, 1.5 at m), and a non-OK token with at least one
+  upstream service in 47 % (s) and 48 % / 44 % (m) of the probed traces. The non-OK token's own service is
+  never scored by its own failure (hop 0 is a diagnostic), which is where a crashed leaf service's
+  evidence sits: the crash rows are the weakest at xs.
+- **What the rows read.** The fault windows hold 1,046–2,144 (xs), 17,429–43,836 (s) and 10,722–32,016 (m)
+  traces per case; the registered cap probes the first 500 by start time, i.e. 23–48 % of an xs window and
+  1.1–4.8 % of an s or m window — the first minute or so after the injection at the larger rungs. Traces
+  with fewer than two positions after the context are skipped (`rca/trace` at xs: 648 of 5,000 at c = 3;
+  s 37; m 0; `rca/trace-core` xs 5, s and m 0); no trace was truncated at 64 tokens; 6 / 0 / 17 folded
+  positions per rung; 200–674 client positions dropped per rung. The backbone saw the train split of the
+  same corpus in pretraining: the root-cause read is not a held-out read on the discovery axis.
+- **Device.** The probe ran on the CPU of the laptop. A CPU re-probe of six stored traces of the landed xs
+  seed-0 test read with the test read's own per-sequence seeds reproduces the stored matrices bit for bit
+  when the stored read is itself a CPU `discover` read, and differs from the landed GPU read by the
+  device's noise stream (N = 2 particles; 3 of 6 edge sets equal), so the rows here are a CPU replica of
+  the frozen cells with their own noise draws, as the addendum allows and discloses.
+- **Cost.** Probe wall clock per corpus 5–38 s (xs), 9–86 s (s), 20–138 s (m) for `rca/trace` and 5–12 / 10–79 /
+  118–138 s for `rca/trace-core` (the N = 32 cells are the slow ones); rank stage ≤ 2.5 min per corpus;
+  peak resident 0.1 GB; the 30 rank + score runs in 29 min of wall clock. Pull + export per corpus: xs 3–51 s
+  + ≤ 1 s, s 97–137 s + 22–28 s, m 129–186 s + 34–38 s, raw shards (≈ 3 GB at m) deleted after each export.
+- The records carry the per-case counts the addendum names (`n_traces_window`, `n_traces_probed`,
+  `n_skipped_short`, `n_truncated`, `n_folded`, `n_nonok_positions`, `n_traces_with_nonok`,
+  `n_traces_with_upstream`, `n_edges`, `n_client_positions_dropped`, `n_services_reached`, the per-service
+  `counts` and `mean_hops`, `self_counts`, the miss reason), the cell's `(c, N, g, tau)`, the model and
+  freeze hashes, both environments' `pip freeze` and the runner's import paths and commit.
