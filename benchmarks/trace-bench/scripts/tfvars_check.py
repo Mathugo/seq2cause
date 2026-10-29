@@ -5,8 +5,9 @@
     python scripts/tfvars_check.py <replica.tfvars> --args-diff <run-dir>
 
 The replica's `train_command` is shlex-split into `&&`-chained segments; every
-segment of the form `python -m seq2causebench.<module> ...` is parsed with that
-module's `build_parser()`, so a missing or misspelt knob fails here rather
+segment of the form `python -m seq2causebench.<module> ...` (or, for a replica of the
+root-cause sibling `benchmarks/trace-bench-rca`, `python -m tracebenchrca.<module> ...`;
+2026-10-31) is parsed with that module's `build_parser()`, so a missing or misspelt knob fails here rather
 than on the instance (every knob is required, none has a default). With
 `--args-diff`, the parsed values are compared to a finished run's
 `run/arguments.json`, so the replica and the record agree by construction.
@@ -36,6 +37,8 @@ CHECKED_KEYS = (
     "repo_subdir",
 )
 BENCH_SUBDIR = "benchmarks/trace-bench"
+RCA_SUBDIR = "benchmarks/trace-bench-rca"  # the root-cause sibling (its first replica: 2026-10-31)
+SUBDIRS = {BENCH_SUBDIR: "seq2causebench", RCA_SUBDIR: "tracebenchrca"}
 
 
 def read_tfvars(path):
@@ -86,15 +89,19 @@ def segments(command, base=None):
     return out
 
 
-def parse_segment(seg):
+def parse_segment(seg, package="seq2causebench"):
     argv = shlex.split(seg)
     if (
         len(argv) < 3
         or argv[0] != "python"
         or argv[1] != "-m"
-        or not argv[2].startswith("seq2causebench.")
+        or not argv[2].startswith(package + ".")
     ):
         return None
+    if package == "tracebenchrca":
+        sibling_src = str(REPO.parent / "trace-bench-rca" / "src")
+        if sibling_src not in sys.path:
+            sys.path.insert(0, sibling_src)
     module = importlib.import_module(argv[2])
     parser = module.build_parser()
     ns = parser.parse_args(argv[3:])
@@ -113,13 +120,16 @@ def check(path, base=None):
         and tf.get("push_results") is not False
     ):
         problems.append("push_results must be false for the public repository")
-    if tf.get("repo_subdir") != BENCH_SUBDIR:
-        problems.append(f"repo_subdir must be {BENCH_SUBDIR!r} (the harness directory)")
+    if tf.get("repo_subdir") not in SUBDIRS:
+        problems.append(f"repo_subdir must be one of {sorted(SUBDIRS)} (the harness or its root-cause sibling)")
+    package = SUBDIRS.get(tf.get("repo_subdir"), "seq2causebench")
+    if base is None and tf.get("repo_subdir") == RCA_SUBDIR:
+        base = REPO.parent / "trace-bench-rca"  # a `bash scripts/jobs/…` segment of the sibling resolves there
     parsed = []
     skipped = []
     for seg in segments(str(tf.get("train_command", "")), base):
         try:
-            r = parse_segment(seg)
+            r = parse_segment(seg, package)
         except SystemExit:
             problems.append(f"argparse rejected: {seg[:120]}...")
             continue
@@ -135,7 +145,8 @@ def args_diff(parsed, run_dir):
     appears in several segments (the two grains' sweeps, the two pull tiers, the two
     scoresweeps) the segment whose `output_folder` equals the record's is the one compared."""
     rec = json.loads((Path(run_dir) / "run" / "arguments.json").read_text(encoding="utf-8"))
-    module = "seq2causebench." + rec["command"]
+    package = parsed[0][0].split(".")[0] if parsed else "seq2causebench"
+    module = package + "." + rec["command"]
     candidates = [args for mod, args in parsed if mod == module]
     if not candidates:
         return {"_": (f"no {module} segment in the replica", None)}
@@ -160,7 +171,7 @@ def main(argv=None):
     for mod, args in parsed:
         print(f"OK {mod}: {len(args)} arguments parsed")
     for seg in skipped:
-        print(f"SKIP (not a seq2causebench command, unchecked): {seg[:80]}")
+        print(f"SKIP (not a harness command, unchecked): {seg[:80]}")
     if len(argv) >= 3 and argv[1] == "--args-diff":
         diffs = args_diff(parsed, argv[2])
         if diffs:

@@ -87,31 +87,119 @@ def test_rank_case_drops_the_client_and_counts_the_three_miss_reasons():
         tracerule.rank_case([{"positions": [pos("elsewhere"), pos("tb-edge", "5xx")], "edges": [[0, 1, 1.0]]}], NAMES)
 
 
+def test_rank_trace_hop0_and_hop1():
+    # 0 client(ok) -> 3; 1 tb-edge(ok) -> 2 tb-beta(ok) -> 3 ext-gamma(5xx); 1 -> 4 tb-beta(slow) <- 2; 5 tb-edge(ok) idle
+    trace = {
+        "positions": [
+            pos("client", is_client=True),
+            pos("tb-edge"),
+            pos("tb-beta"),
+            pos("ext-gamma", "5xx"),
+            pos("tb-beta", "slow"),
+            pos("tb-edge"),
+        ],
+        "edges": [[0, 3, 0.9], [1, 2, 0.8], [2, 3, 0.7], [1, 4, 0.6], [2, 4, 0.5]],
+    }
+    h1 = tracerule.rank_trace(trace, NAMES)
+    # both non-OK closures hold positions 1 and 2 (count 2, min hop 1 each): a full tie, broken by services.json
+    # order for services (tb-edge before tb-beta) and by index for positions; the client at hop 1 of q=3 is dropped
+    assert h1["services"] == ["tb-edge", "tb-beta"] and h1["positions"] == [1, 2]
+    assert h1["n_nonok"] == 2 and h1["n_client_dropped"] == 1
+    h0 = tracerule.rank_trace(trace, NAMES, hop0=True)
+    # hop 0 adds 3 (ext-gamma) and 4 (tb-beta): tb-beta now (2 closures, min hop 0) beats tb-edge (2, hop 1);
+    # ext-gamma (1 closure, hop 0) is reached last; positions 3 and 4 join at (1, 0) after 1 and 2 at (2, 1)
+    assert h0["services"] == ["tb-beta", "tb-edge", "ext-gamma"] and h0["positions"] == [1, 2, 3, 4]
+    assert set(h1["services"]) <= set(h0["services"]) and set(h1["positions"]) <= set(h0["positions"])
+    assert h0["n_nonok"] == 2 and h0["n_client_dropped"] == 1
+    # reached only: a trace without a non-OK position ranks nothing; one without parents ranks nothing at hop 1
+    quiet = {"positions": [pos("tb-beta"), pos("tb-edge")], "edges": [[0, 1, 1.0]]}
+    assert tracerule.rank_trace(quiet, NAMES) == {"services": [], "positions": [], "n_nonok": 0, "n_client_dropped": 0}
+    lone = {"positions": [pos("tb-beta"), pos("tb-edge", "5xx")], "edges": []}
+    assert tracerule.rank_trace(lone, NAMES)["services"] == []
+    assert tracerule.rank_trace(lone, NAMES, hop0=True) == {
+        "services": ["tb-edge"],
+        "positions": [1],
+        "n_nonok": 1,
+        "n_client_dropped": 0,
+    }
+    # a client's own non-OK position is dropped (and counted) at hop 0 too
+    client_nonok = {"positions": [pos("tb-beta"), pos("client", "5xx", True)], "edges": [[0, 1, 1.0]]}
+    assert tracerule.rank_trace(client_nonok, NAMES, hop0=True) == {
+        "services": ["tb-beta"],
+        "positions": [0],
+        "n_nonok": 1,
+        "n_client_dropped": 1,
+    }
+    assert tracerule.rank_trace(client_nonok, NAMES)["n_client_dropped"] == 0
+    # the count beats the hop: tb-edge held by both closures at hop 2 outranks tb-beta and ext-gamma, each held by one
+    # closure at hop 1 (their tie broken by services.json order)
+    two = {
+        "positions": [
+            pos("tb-edge"),
+            pos("tb-beta"),
+            pos("ext-gamma", "5xx"),
+            pos("ext-gamma"),
+            pos("ext-gamma", "err"),
+        ],
+        "edges": [[0, 1, 1.0], [1, 2, 1.0], [0, 3, 1.0], [3, 4, 1.0]],
+    }
+    h = tracerule.rank_trace(two, NAMES)
+    assert h["services"] == ["tb-edge", "tb-beta", "ext-gamma"] and h["positions"] == [0, 1, 3]
+    with pytest.raises(ValueError):
+        tracerule.rank_trace({"positions": [pos("elsewhere"), pos("tb-edge", "5xx")], "edges": [[0, 1, 1.0]]}, NAMES)
+
+
 def _fake_runner(docs, seen):
-    """A stand-in for trace_runner.py: records the command line and writes the canned per-case files."""
+    """A stand-in for trace_runner.py: records the command line and writes the canned per-case files. `docs[case]` is a
+    list of traces, or `{"traces": [...], "skipped": [ids], "n_nonok_folded": k}`; a trace without a `trace_id` gets
+    one; `--cap N > 0` keeps the first N canned traces (0 = all) and `--select` is echoed into every document."""
 
     def spawn(cmd, env):
         seen.append({"cmd": cmd, "env": env})
         out = Path(cmd[cmd.index("--out-dir") + 1])
         out.mkdir(parents=True, exist_ok=True)
         windows = json.loads(Path(cmd[cmd.index("--cases") + 1]).read_text())
+        select = cmd[cmd.index("--select") + 1]
+        cap = int(cmd[cmd.index("--cap") + 1])
         for w in windows:
+            canned = docs[w["case_dir"]]
+            spec = canned if isinstance(canned, dict) else {"traces": canned}
+            traces = [
+                {"trace_id": tr.get("trace_id", f"{w['case_dir']}-t{i:02d}"), **tr}
+                for i, tr in enumerate(spec["traces"])
+            ]
+            if cap > 0:
+                traces = traces[:cap]
+            skipped = list(spec.get("skipped", []))
+            selected = [tr["trace_id"] for tr in traces] + skipped
             doc = {
                 "case_dir": w["case_dir"],
+                "select": select,
                 "n_traces_window": 7,
-                "n_traces_selected": 7,
-                "n_traces_probed": len(docs[w["case_dir"]]),
-                "n_skipped_short": 0,
+                "n_traces_candidates": len(spec["traces"]) + len(skipped),
+                "n_traces_selected": len(selected),
+                "n_traces_probed": len(traces),
+                "n_skipped_short": len(skipped),
                 "n_truncated": 0,
                 "n_folded": 0,
+                "n_nonok_folded": spec.get("n_nonok_folded", 0),
+                "selected_trace_ids": selected,
+                "skipped_trace_ids": skipped,
                 "tok_pos": 10,
                 "probe_wall_clock_s": 0.1,
-                "traces": docs[w["case_dir"]],
+                "traces": traces,
             }
             (out / f"{w['case_dir']}.json").write_text(json.dumps(doc))
         (out / rt.SUMMARY_JSON).write_text(
             json.dumps(
-                {"cell": cmd[cmd.index("--cell") + 1], "corpus_id": "xs/latent/seed=0", "model_sha256": "x" * 64}
+                {
+                    "cell": cmd[cmd.index("--cell") + 1],
+                    "corpus_id": "xs/latent/seed=0",
+                    "model_sha256": "x" * 64,
+                    "select": select,
+                    "cap": cap,
+                    "c": 1,
+                }
             )
         )
 
@@ -125,13 +213,19 @@ def _fake_runner(docs, seen):
     return spawn
 
 
-def _ranktrace(arm, rec, corpus, out, tmp_path, harness_root):
+def _ranktrace(arm, rec, corpus, out, tmp_path, harness_root, axis="ranking", select="window", cap=TRACE_TRACE_CAP):
     freeze = tmp_path / "freeze.json"
     freeze.write_text("{}")
     return rt.main(
         [
             "--arm",
             arm,
+            "--axis",
+            axis,
+            "--select",
+            select,
+            "--cap",
+            str(cap),
             "--export-record",
             str(rec),
             "--corpus-dir",
@@ -224,7 +318,16 @@ def test_the_stage_refuses_a_foreign_seed_cell_or_corpus(tmp_path, monkeypatch):
     monkeypatch.setattr(rt, "pinned_environment", lambda python: [])
     freeze = tmp_path / "f.json"
     freeze.write_text("{}")
-    args = dict(python=Path("py"), harness_root=harness_root, device="cpu", prior="smallest-rung", ledger="unused.json")
+    args = dict(
+        python=Path("py"),
+        harness_root=harness_root,
+        device="cpu",
+        prior="smallest-rung",
+        ledger="unused.json",
+        axis="ranking",
+        select="window",
+        cap=TRACE_TRACE_CAP,
+    )
     with pytest.raises(ValueError):  # --seed must name the corpus
         rt.rank(
             ARM_TRACE,

@@ -30,7 +30,12 @@ class _Stub:
     def export(self, corpus_dir, rung, out, workers, extras=()):
         self.calls.append((str(corpus_dir), rung, str(out), workers, tuple(extras)))
         dirs = fixture_export(out)
-        return {"rung": rung, "width_s": self.BIN_WIDTH_S[rung], "cases": [{"dir": d.name} for d in dirs], "inputs": []}
+        return {
+            "rung": rung,
+            "width_s": self.BIN_WIDTH_S[rung],
+            "cases": [{"dir": d.name, "sha256": f"{i:064x}"} for i, d in enumerate(dirs)],
+            "inputs": [],
+        }
 
 
 def test_stage_records_the_exporters_results(tmp_path, monkeypatch):
@@ -51,6 +56,8 @@ def test_stage_records_the_exporters_results(tmp_path, monkeypatch):
             "--workers",
             "1",
             "--extras",
+            "--expect-cases",
+            "none",
             "--output-folder",
             str(rec_dir),
         ]
@@ -59,7 +66,27 @@ def test_stage_records_the_exporters_results(tmp_path, monkeypatch):
     res = read_json(rec_dir / RUN_DIR / RESULTS_JSON)
     assert res["status"] == "ok" and res["corpus_id"] == "xs/latent/seed=0" and res["stage"] == "export"
     assert [c["dir"] for c in res["exporter"]["cases"]] == ["case-00", "case-01"]
-    assert (out / "case-00" / "data.csv").exists() and res["extras"] == []
+    assert (out / "case-00" / "data.csv").exists() and res["extras"] == [] and res["expected_cases"] is None
+
+
+def test_expect_cases_binds_a_re_export_to_the_landed_record(tmp_path, monkeypatch):
+    """`--expect-cases` (2026-10-31): a re-export on another host must reproduce the landed export case by case."""
+    stub = _Stub()
+    monkeypatch.setattr(export_mod, "_exporter", lambda: stub)
+    corpus = tmp_path / "instances/xs/latent/seed=0"
+    corpus.mkdir(parents=True)
+    landed = tmp_path / "landed"
+    assert export_mod.main(["--corpus-dir", str(corpus), "--rung", "xs", "--out", str(tmp_path / "e0"), "--workers", "1",
+                            "--extras", "--expect-cases", "none", "--output-folder", str(landed)]) == 0
+    record = landed / RUN_DIR / RESULTS_JSON
+    res = export_mod.export(corpus, "xs", tmp_path / "e1", 1, (), str(record))
+    assert res["expected_cases"]["n_cases"] == 2 and res["expected_cases"]["path"] == str(record)
+    doc = read_json(record)
+    doc["exporter"]["cases"][0]["sha256"] = "f" * 64
+    tampered = tmp_path / "tampered.json"
+    tampered.write_text(__import__("json").dumps(doc))
+    with pytest.raises(ValueError):
+        export_mod.export(corpus, "xs", tmp_path / "e2", 1, (), str(tampered))
 
 
 def test_extras_are_passed_through_and_refused_on_a_pin_without_them(tmp_path, monkeypatch):

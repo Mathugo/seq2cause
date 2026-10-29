@@ -59,6 +59,36 @@ def test_rca_tier_pulls_exactly_what_the_directory_reads(tmp_path):
     assert all(not p.is_symlink() for p in d.rglob("*"))
 
 
+def test_pull_trace_tier(tmp_path):
+    """`--tier trace` (the per-trace axis): the per-trace labels parquet IS fetched (the score side reads it), the raw
+    shards, graphs and topology are not, and `labels/faults.json` is still never fetched."""
+    res = pull_mod.pull(
+        "x/y", "v0.3.0", "xs", "latent", 0, "trace", tmp_path, download=_fake_download(fixture_corpus())
+    )
+    assert res["problems"] == [] and res["tier"] == "trace"
+    d = Path(res["corpus_dir"])
+    present = sorted(p.relative_to(d).as_posix() for p in d.rglob("*") if p.is_file())
+    assert present == [
+        "COMPLETE",
+        "config.yaml",
+        "instantiation.json",
+        "labels/cases.json",
+        "labels/sequence-labels.parquet",
+        "manifest.json",
+        "views/end-request/model-vocab.json",
+    ]
+    assert res["n_files_checked"] == 5
+    assert pull_mod.NEVER_FETCHED["trace"] == ("labels/faults.json",)
+    (d / "labels/faults.json").write_text("{}")
+    _, _, problems = pull_mod.verify_pulled(d, "trace")
+    assert problems == ["never fetched but present: labels/faults.json"]
+    (d / "labels/faults.json").unlink()
+    # the same directory read as an `rca` pull is refused: that tier never fetches the parquet (and lacks the shards)
+    _, _, problems = pull_mod.verify_pulled(d, "rca")
+    assert "never fetched but present: labels/sequence-labels.parquet" in problems
+    assert any(p.startswith("missing raw/") for p in problems)
+
+
 def test_corruption_symlink_version_and_unread_labels_are_refused(tmp_path):
     dl = _fake_download(fixture_corpus())
     res = pull_mod.pull("x/y", "v0.3.0", "xs", "latent", 0, "rca", tmp_path, download=dl)

@@ -15,7 +15,10 @@ from tracebenchrca.constants import (
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RANDOM,
     ARM_CONTROL_RULE,
+    ARM_CONTROL_TRACE_CALLEES,
+    ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TOPOLOGY,
+    ARM_FLOOR_TRACE_TOPOLOGY,
     ARM_PC_PAGERANK,
     ARM_RCD,
     ARM_TRACE,
@@ -25,6 +28,7 @@ from tracebenchrca.constants import (
     AXES,
     AXIS_GRAPH,
     AXIS_RANKING,
+    AXIS_TRACE,
     BIN_WIDTH_S,
     CLASS_DISCOVERY,
     CLASS_FLOOR_CONTROL,
@@ -42,14 +46,16 @@ from tracebenchrca.constants import (
     INPUTS,
     MIN_POST_BINS,
     ROOT_CAUSE_ARMS,
+    TRACE_AXIS_ARMS,
+    TRACE_BROADCAST_ARMS,
 )
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def test_three_classes_thirteen_arms():
+def test_three_classes_sixteen_arms():
     assert CLASSES == (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
-    assert len(ARMS) == 13
+    assert len(ARMS) == 16
     assert set(ROOT_CAUSE_ARMS) == {
         ARM_BARO,
         ARM_BARO_BOCPD,
@@ -62,7 +68,14 @@ def test_three_classes_thirteen_arms():
         ARM_TRACE,
         ARM_TRACE_CORE,
     }
-    assert set(CONTROL_ARMS) == {ARM_CONTROL_RANDOM, ARM_CONTROL_RULE, ARM_FLOOR_TOPOLOGY}
+    assert set(CONTROL_ARMS) == {
+        ARM_CONTROL_RANDOM,
+        ARM_CONTROL_RULE,
+        ARM_FLOOR_TOPOLOGY,
+        ARM_FLOOR_TRACE_TOPOLOGY,
+        ARM_CONTROL_TRACE_RANDOM,
+        ARM_CONTROL_TRACE_CALLEES,
+    }
     assert DISCOVERY_ARMS == ()  # declared, no member yet
     for arm in ARMS:
         assert arms.arm_class(arm) in CLASSES
@@ -74,6 +87,10 @@ def test_declared_inputs_match_the_plans():
     assert INPUT_WINDOW not in arms.inputs_of(ARM_BARO_BOCPD)  # the detector locates the change point
     assert arms.inputs_of(ARM_CONTROL_RANDOM) == (INPUT_SERVICES,)
     assert arms.inputs_of(ARM_FLOOR_TOPOLOGY) == (INPUT_TOPOLOGY,)
+    for arm in (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES):
+        assert arms.inputs_of(arm) == ()  # score-side floors of the per-trace axis: no method-side input at all
+        with pytest.raises(PermissionError):
+            arms.check_input(arm, INPUT_SERVICES)
     assert arms.inputs_of(ARM_CIRCA_TOPOLOGY) == (INPUT_SERIES, INPUT_WINDOW, INPUT_SERVICES, INPUT_TOPOLOGY)
     assert INPUT_TOPOLOGY not in arms.inputs_of(ARM_CIRCA)  # the PC cell reads no topology
     assert arms.inputs_of(ARM_TRACERCA) == (INPUT_SPANS, INPUT_WINDOW, INPUT_SERVICES)  # the series are not its input
@@ -95,8 +112,27 @@ def test_declared_inputs_match_the_plans():
 
 
 def test_axes_and_cell_keys():
+    assert AXES == (AXIS_RANKING, AXIS_GRAPH, AXIS_TRACE)
     assert set(GRAPH_ARMS) == {ARM_CAUSALRCA, ARM_FLOOR_TOPOLOGY}
     assert arms.axes_of(ARM_CAUSALRCA) == (AXIS_RANKING, AXIS_GRAPH)
+    assert set(TRACE_AXIS_ARMS) == {
+        ARM_TRACE,
+        ARM_TRACE_CORE,
+        ARM_FLOOR_TRACE_TOPOLOGY,
+        ARM_CONTROL_TRACE_RANDOM,
+        ARM_CONTROL_TRACE_CALLEES,
+    }
+    for arm in (ARM_TRACE, ARM_TRACE_CORE):
+        assert arms.axes_of(arm) == (AXIS_RANKING, AXIS_TRACE)
+    for arm in (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES):
+        assert arms.axes_of(arm) == (AXIS_TRACE,) and arms.arm_class(arm) == CLASS_FLOOR_CONTROL
+    assert arms.cell_key(ARM_TRACE, AXIS_TRACE) == "rca/trace/trace"
+    assert arms.parse_cell_key("control/trace-random/trace") == (ARM_CONTROL_TRACE_RANDOM, AXIS_TRACE)
+    # the case-level arms broadcast to the per-trace axis are ranking arms without a trace stage of their own
+    assert set(TRACE_BROADCAST_ARMS) <= set(ARMS) and not set(TRACE_BROADCAST_ARMS) & set(TRACE_AXIS_ARMS)
+    assert all(AXIS_RANKING in arms.axes_of(a) for a in TRACE_BROADCAST_ARMS)
+    with pytest.raises(ValueError):
+        arms.cell_key(ARM_BARO, AXIS_TRACE)  # BARO reaches the per-trace axis only by broadcast
     assert arms.cell_key(ARM_BARO_BOCPD, AXIS_RANKING) == "rca/baro-bocpd/ranking"
     assert arms.parse_cell_key("rca/causalrca/graph") == (ARM_CAUSALRCA, AXIS_GRAPH)
     assert arms.arm_slug(ARM_BARO_BOCPD) == "rca-baro-bocpd"
