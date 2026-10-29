@@ -57,6 +57,10 @@ sides probed: 755–1,000 per corpus at xs, where c = 3 skips short rows, 1,468�
   traces against 33–94 % elsewhere); its case-level top-1 service agrees GPU vs CPU in all three cases. Under the
   registration a failed gate is a disclosed deviation and an **owner decision** (keep the run with this disclosure, or
   turn the gate into a diagnostic); the run's per-trace rows are in the tables as scored, nothing was re-run.
+- **2026-11-02, owner decision: the gate is a diagnostic.** The 0.80 threshold (`TRACE_TOLERANCE_JACCARD`) stays as the
+  reported reference value of the P4 check, not a pass/fail condition on a run; the `s` seed 4 `rca/trace-core` run
+  stands as scored with the 0.793 disclosed beside it (positions identical, case top-1 unchanged), no re-run, no
+  number moved. The paper's A5.5 names the value and the one run below it.
 - The case-level top-1 service of the GPU re-probe equals the landed CPU one in 99 of 100 cases (the exception: m
   seed 2, `rca/trace`, case 0, mean Jaccard 0.937). The recomputed Avg@5 named beside it in the plan is not computed
   by `tolerance` (top-1 only).
