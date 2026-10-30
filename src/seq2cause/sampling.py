@@ -591,6 +591,52 @@ def multinomial_sample(
         raise ValueError("prob_x must be 2D or 3D tensor")
 
 
+def model_sample_excluding_observed(
+    prob_x: Float[Tensor, "bs L vocab"],
+    observed: Int[Tensor, "bs L"],
+    n_samples: int = 128,
+    min_id: int = 0,
+) -> Int[Tensor, "bs n_samples L"]:
+    """Counterfactual tokens drawn from the model instead of uniformly, never equal to the
+    observed token.
+
+    At every position `j`, a token is drawn from `prob_x[:, j]` (the model's distribution of
+    the token at `j`, aligned by the caller) with the observed token `observed[:, j]` and the
+    ids below `min_id` removed and the rest renormalised. Replacing the cause by such a token
+    realises `E_t = 0` with a plausible alternative event, i.e. a draw from
+    `P(X_t | x_<t, X_t != x_t)`, instead of a random event of the vocabulary.
+
+    The distributions are those of the observed sequence: the draws are not resampled
+    autoregressively after the replaced cause (that would need one forward pass per row).
+
+    Args:
+        prob_x: [bs, L, vocab] probabilities of the token at each position.
+        observed: [bs, L] observed token ids, excluded from the draw.
+        n_samples: Number of particles.
+        min_id: Smallest allowed id (reserved/special ids below it are never drawn).
+
+    Returns:
+        [bs, n_samples, L] sampled token ids.
+    """
+    if prob_x.dim() != 3:
+        raise ValueError("prob_x must be a [bs, L, vocab] tensor")
+    bs, L, vocab = prob_x.shape
+    if not 0 <= min_id < vocab - 1:
+        raise ValueError(f"min_id must satisfy 0 <= min_id < vocab - 1 ({vocab - 1}), got {min_id}")
+
+    allowed = torch.ones_like(prob_x, dtype=torch.bool)
+    allowed[..., :min_id] = False
+    allowed.scatter_(-1, observed.unsqueeze(-1).long(), False)
+    # tiny floor so a distribution concentrated on the observed token stays samplable
+    probs = torch.where(
+        allowed, prob_x.float().clamp_min(0) + 1e-12, torch.zeros((), device=prob_x.device)
+    )
+    probs = probs / probs.sum(dim=-1, keepdim=True)
+
+    flat = probs.unsqueeze(1).expand(bs, n_samples, L, vocab).reshape(-1, vocab)
+    return torch.multinomial(flat, 1).view(bs, n_samples, L)
+
+
 def ancestral_sampling(
     model: any,
     encoded_input: dict[str, Float[Tensor, "bs L"]],

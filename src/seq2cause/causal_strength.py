@@ -8,10 +8,13 @@ from tqdm.auto import tqdm
 
 from seq2cause.kl import (
     DEFAULT_KL_MODE,
+    LOG_CLAMP,
     accumulate_counts,
     bernoulli_kl_from_log,
     check_kl_mode,
     corrupted_cell_counts,
+    log1mexp,
+    wide_dtype,
 )
 from seq2cause.utils import estimate_tensor_bytes, format_bytes
 
@@ -35,8 +38,10 @@ def calc_lag_info_gain(
 ) -> Float[Tensor, "bs L_minus_c L_minus_c"]:
     """Calculates Lagged Information Gain (KL Divergence) between the intervention and baseline distributions.
     This method quantifies how much information about the true token is gained by observing the cause (intervention)
-    compared to not observing it (baseline). By averaging over the particles, this is equivalent to the conditional
-    mutual information I(X_t; X'_t | History) for each potential cause X_t' and effect X_t.
+    compared to not observing it (baseline). It is the information gain of the OBSERVED cause
+    (`e_t = 1`), averaged over the particles: it does not average over the two values of the
+    cause, so it is not the conditional mutual information and is not bounded by `log 2`
+    (see `calc_lag_cmi` for the CMI).
     Args:
         prob_x_inter: The next-token distributions obtained from the intervention sampling. In
             `"logspace"` mode (the default) these are LOG-probabilities (`log_softmax` of the
@@ -113,6 +118,95 @@ def calc_lag_info_gain(
     full_cmi = torch.zeros((bs, Lc, Lc), device=device)
     full_cmi[:, start_row:, :] = cmi_window
 
+    return torch.nan_to_num(full_cmi, nan=0.0)
+
+
+def calc_lag_cmi(
+    prob_x_inter: Float[Tensor, "bs N num_rows L V"],
+    batch: dict[str, Float[Tensor, "bs L"]],
+    params: dict,
+    eps: float = 1e-9,
+    kl_mode: str | None = None,
+) -> Float[Tensor, "bs L_minus_c L_minus_c"]:
+    """Conditional mutual information `I(E_t', E_t | X_<t)` between a cause and an effect.
+
+    `calc_lag_info_gain` returns the information gain of the observed cause only. The CMI
+    averages the information gain over both values of the binary cause indicator `E_t`:
+
+        pi  = P(E_t = 1 | x_<t)              model probability of the observed cause token
+        q1  = P(E_t' = 1 | E_t = 1, x_<t)    effect probability, cause observed
+        q0  = P(E_t' = 1 | E_t = 0, x_<t)    effect probability, cause replaced by noise
+        m   = pi * q1 + (1 - pi) * q0        effect probability without knowing E_t
+        CMI = pi * KL(Bern(q1) || Bern(m)) + (1 - pi) * KL(Bern(q0) || Bern(m))
+
+    per particle, then averaged over the N particles. This is the mutual information between
+    a Bernoulli(pi) variable and a binary effect, so `0 <= CMI <= log 2`. Both an excitatory
+    (q1 > q0) and an inhibitory (q1 < q0) cause give a positive value.
+
+    The rows of `prob_x_inter` follow the "full" staircase: row r keeps the suffix positions
+    0..r observed and noises the later ones, so rows r and r-1 differ only at the cause r.
+    `E_t = 0` is realised by the noise token of the proposal (uniform by default), which
+    differs from the observed token with probability 1 - 1/V.
+
+    Args:
+        prob_x_inter: Next-token LOG-probabilities in `"logspace"` mode (the default), or
+            probabilities in `"clamp"` mode, as for `calc_lag_info_gain`.
+        batch: The original input batch containing 'input_ids'.
+        params: Parameters, including `params["sampling"]["context"]`.
+        eps: Clamping constant for probabilities in `"clamp"` mode.
+        kl_mode: `"logspace"` or `"clamp"`; defaults to `params.get("kl_mode", "logspace")`.
+
+    Returns:
+        A tensor of shape [bs, L_minus_c, L_minus_c]; entry [b, cause, effect] is the CMI.
+    """
+    if kl_mode is None:
+        kl_mode = params.get("kl_mode", DEFAULT_KL_MODE)
+    check_kl_mode(kl_mode)
+
+    device = prob_x_inter.device
+    c = params["sampling"]["context"]
+    bs, N, num_rows, L, V = prob_x_inter.shape
+    input_ids = batch["input_ids"]
+    Lc = input_ids.shape[1] - c
+    suffix_tokens = input_ids[:, c:]  # [bs, Lc]
+
+    # Probability of the observed token at every suffix position, per particle and row.
+    prob_suffix = prob_x_inter[:, :, :, c - 1 : L - 1, :]  # [bs, N, num_rows, Lc, V]
+    gather_ids = (
+        suffix_tokens.unsqueeze(1).unsqueeze(1).unsqueeze(-1).expand(-1, N, num_rows, -1, 1)
+    )
+    p_event = torch.gather(prob_suffix, dim=-1, index=gather_ids).squeeze(-1)
+
+    dtype = wide_dtype(p_event)
+    if kl_mode == "clamp":
+        log_p_event = torch.log(torch.clamp(p_event.to(dtype), eps, 1 - eps))
+    else:
+        log_p_event = p_event.to(dtype)
+
+    log_q0 = log_p_event[:, :, :-1, :]  # cause noised  [bs, N, R, Lc]
+    log_q1 = log_p_event[:, :, 1:, :]  # cause observed [bs, N, R, Lc]
+
+    # pi: probability of the observed cause token given its trajectory, read in the
+    # cause-observed row at the cause position (the tokens before it are the same in both rows).
+    start_row = Lc - (num_rows - 1)
+    cause_pos = torch.arange(num_rows - 1, device=device) + start_row  # [R]
+    idx = cause_pos.view(1, 1, -1, 1).expand(bs, N, -1, 1)
+    log_pi = torch.gather(log_q1, dim=-1, index=idx)  # [bs, N, R, 1]
+    log_pi = torch.clamp(log_pi, max=LOG_CLAMP)
+    log_1m_pi = log1mexp(log_pi)
+
+    log_m = torch.logaddexp(log_pi + log_q1, log_1m_pi + log_q0)
+    kl1 = bernoulli_kl_from_log(log_q1, log_m)
+    kl0 = bernoulli_kl_from_log(log_q0, log_m)
+    cmi = torch.exp(log_pi) * kl1 + torch.exp(log_1m_pi) * kl0  # [bs, N, R, Lc]
+    cmi_window = torch.mean(cmi, dim=1).to(prob_x_inter.dtype)  # [bs, R, Lc]
+
+    # Only effects strictly after the cause are meaningful.
+    band = _band_mask(num_rows - 1, Lc, start_row, device)
+    cmi_window = cmi_window * band
+
+    full_cmi = torch.zeros((bs, Lc, Lc), device=device, dtype=prob_x_inter.dtype)
+    full_cmi[:, start_row:, :] = cmi_window
     return torch.nan_to_num(full_cmi, nan=0.0)
 
 
