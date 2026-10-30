@@ -19,6 +19,9 @@ simulates multiple processes over the CPU/`gloo` backend without requiring
 real GPUs -- the practical way to test the *multi*-device logic in CI.
 """
 
+import math
+
+import pytest
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 
@@ -102,6 +105,50 @@ def test_run_with_granger_causal_strength():
     lc = seq_len - context
     assert adj.shape == (1, lc, lc)
     assert not torch.isnan(adj).any()
+
+
+def test_run_with_cmi_causal_strength():
+    torch.manual_seed(0)
+    vocab_size, seq_len, context = 6, 6, 2
+    model, ds_test = _tiny_model_and_dataset(vocab_size, seq_len)
+    params = _params(context=context)
+    params["causal_strength"] = "CMI"
+    algo = SampleLevelCausalDiscovery(model, params, ds_test)
+    algo.prepare()
+
+    _, adj = algo.run()
+
+    lc = seq_len - context
+    assert adj.shape == (1, lc, lc)
+    assert not torch.isnan(adj).any()
+    assert torch.all(adj >= 0) and torch.all(adj <= math.log(2) + 1e-6)
+
+
+def test_run_with_cause_sampled_from_model():
+    torch.manual_seed(0)
+    vocab_size, seq_len, context = 6, 6, 2
+    model, ds_test = _tiny_model_and_dataset(vocab_size, seq_len)
+    for cs in ("CMI", None):
+        params = _params(context=context)
+        params["causal_strength"] = cs
+        params["sampling"]["cause_from_model"] = True
+        algo = SampleLevelCausalDiscovery(model, params, ds_test)
+        algo.prepare()
+
+        _, adj = algo.run()
+
+        lc = seq_len - context
+        assert adj.shape == (1, lc, lc)
+        assert not torch.isnan(adj).any()
+        assert torch.all(adj >= 0)
+
+
+def test_cause_from_model_requires_context():
+    model, ds_test = _tiny_model_and_dataset()
+    params = _params(context=0)
+    params["sampling"]["cause_from_model"] = True
+    with pytest.raises(ValueError, match="cause_from_model"):
+        SampleLevelCausalDiscovery(model, params, ds_test)
 
 
 def test_run_with_input_x_gradient_causal_strength():
@@ -247,3 +294,75 @@ def test_run_honours_noise_min_id():
         _, adj = algo.run()
         outs.append(adj.cpu())
     assert torch.equal(outs[0], outs[1])
+
+
+def _context_params(mode, context, guidance, cs=None, n_particles=3):
+    params = _params(context=context, n_particles=n_particles)
+    params["sampling"]["guidance"] = guidance
+    params["sampling"]["context_mode"] = mode
+    params["causal_strength"] = cs
+    return params
+
+
+@pytest.mark.parametrize("cs", [None, "CMI"])
+@pytest.mark.parametrize(
+    "mode,context,guidance",
+    [("prepend", 4, 1), ("prepend", 2, 2), ("prepend", 3, 0), ("none", 3, 1)],
+)
+def test_context_modes_test_every_observed_token(cs, mode, context, guidance):
+    torch.manual_seed(0)
+    seq_len = 6
+    model, ds_test = _tiny_model_and_dataset(6, seq_len + 4)  # room for the prepended past
+    algo = SampleLevelCausalDiscovery(model, _context_params(mode, context, guidance, cs), ds_test)
+    algo.prepare()
+
+    batch, adj = algo.run()
+
+    n = seq_len - guidance  # every observed token after the anchor is tested, none overwritten
+    assert algo.first_position() == guidance
+    assert batch["input_ids"].shape == (1, seq_len)
+    assert adj.shape == (1, n, n)
+    assert not torch.isnan(adj).any()
+    assert torch.all(adj >= 0)
+    assert torch.all(torch.tril(adj[0]) == 0)  # only effects after their cause
+    if cs == "CMI":
+        assert torch.all(adj <= math.log(2) + 1e-6)
+
+
+def test_overwrite_is_the_default_and_tests_tokens_after_the_context():
+    torch.manual_seed(0)
+    model, ds_test = _tiny_model_and_dataset(6, 6)
+    params = _params(context=2)
+    algo = SampleLevelCausalDiscovery(model, params, ds_test)
+    algo.prepare()
+    _, adj = algo.run()
+    assert algo.context_mode == "overwrite"
+    assert algo.first_position() == 2
+    assert adj.shape == (1, 4, 4)
+
+
+@pytest.mark.parametrize("cs", [None, "CMI"])
+def test_prepend_without_sampled_tokens_equals_none(cs):
+    # prepend with context == guidance generates nothing, so it must give exactly the
+    # same adjacency as "none" for the same random draws of the counterfactual tokens
+    model, ds_test = _tiny_model_and_dataset(6, 10)
+    outs = []
+    for mode in ("prepend", "none"):
+        torch.manual_seed(0)
+        algo = SampleLevelCausalDiscovery(model, _context_params(mode, 1, 1, cs), ds_test)
+        algo.prepare()
+        _, adj = algo.run()
+        outs.append(adj.cpu())
+    assert torch.allclose(outs[0], outs[1])
+
+
+def test_context_mode_validation():
+    model, ds_test = _tiny_model_and_dataset()
+    with pytest.raises(ValueError, match="context_mode"):
+        SampleLevelCausalDiscovery(model, _context_params("bogus", 2, 2), ds_test)
+    with pytest.raises(ValueError, match="guidance"):
+        SampleLevelCausalDiscovery(model, _context_params("none", 2, 0), ds_test)
+    with pytest.raises(ValueError, match="context"):
+        SampleLevelCausalDiscovery(model, _context_params("prepend", 1, 2), ds_test)
+    with pytest.raises(ValueError, match="context"):
+        SampleLevelCausalDiscovery(model, _context_params("prepend", 0, 0), ds_test)

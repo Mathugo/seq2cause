@@ -1,7 +1,33 @@
 import pytest
 import torch
 
-from seq2cause.sampling import uniform_sample, unigram_sample
+from seq2cause.sampling import model_sample_excluding_observed, uniform_sample, unigram_sample
+
+
+def test_model_sample_never_draws_observed_or_reserved_ids():
+    torch.manual_seed(0)
+    prob_x = torch.softmax(torch.randn(2, 5, 8), dim=-1)
+    observed = torch.randint(2, 8, (2, 5))
+    out = model_sample_excluding_observed(prob_x, observed, n_samples=200, min_id=2)
+    assert out.shape == (2, 200, 5)
+    assert torch.all(out != observed.unsqueeze(1))
+    assert torch.all(out >= 2)
+
+
+def test_model_sample_follows_renormalised_model_distribution():
+    torch.manual_seed(0)
+    # observed token 0 holds most of the mass; among the others, token 1 is 3x token 2
+    prob_x = torch.tensor([[[0.6, 0.3, 0.1]]])
+    observed = torch.tensor([[0]])
+    out = model_sample_excluding_observed(prob_x, observed, n_samples=20000)
+    frac_1 = (out == 1).float().mean().item()
+    assert frac_1 == pytest.approx(0.75, abs=0.02)
+
+
+def test_model_sample_handles_distribution_concentrated_on_observed():
+    prob_x = torch.tensor([[[1.0, 0.0, 0.0, 0.0]]])
+    out = model_sample_excluding_observed(prob_x, torch.tensor([[0]]), n_samples=50)
+    assert torch.all(out != 0)
 
 
 def test_unigram_sample_requires_freqs():

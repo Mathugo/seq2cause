@@ -4,7 +4,37 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
-### Fixed
+## [0.3.0] - 2026-10-30
+
+First release containing the changes since 0.1.9 (the `v0.2.0` tag was placed on
+a commit whose package version was still 0.1.9).
+
+### Added
+- **`params["sampling"]["context_mode"]` for `SampleLevelCausalDiscovery`**, how
+  the past before the tested tokens is built (g = `guidance`, c = `context`):
+  - `"overwrite"` (default, unchanged behaviour): the first g observed tokens are
+    kept, positions g..c-1 are overwritten by tokens sampled from the model, and
+    only the observed tokens c..L-1 are tested (adjacency `[n, L-c, L-c]`);
+  - `"prepend"`: the c - g sampled tokens are placed *before* the observed
+    tokens instead of over them, so every observed token after the anchor is
+    kept and tested (adjacency `[n, L-g, L-g]`). With `guidance=0` (sequences
+    without a CLS token) the past starts with a uniformly random token and the
+    whole sequence is kept;
+  - `"none"`: no sampled past, only the anchor of g >= 1 observed tokens.
+  `SampleLevelCausalDiscovery.first_position()` gives the observed position of
+  adjacency index 0. In synthetic experiments (`scripts/compare_cmi_and_proposals.py`,
+  `scripts/validate_context_modes.py`), `"prepend"` matched `"overwrite"` on the
+  pairs both test and raised the average precision on all pairs of a
+  sequence from 0.57-0.59 to 0.77-0.82 (L = 24, c = 5), since overwriting loses
+  the first c positions; the decoding rule of the sampled past made no
+  difference.
+- `scripts/compare_cmi_and_proposals.py`: synthetic ablations (information gain
+  vs. CMI, mediator and cause proposals, context modes, Monte Carlo simulators,
+  context samplers, thresholds, particles vs. an exact estimator), and
+  `scripts/validate_context_modes.py`: end-to-end check of the pipeline in
+  every context mode against the exact SCM ground truth.
+
+### Fixed (since 0.1.9)
 - **The float32 `1 - 1e-9` clamp in the Bernoulli KL was a no-op at the
   upper end.** `float32(1 - 1e-9) == 1.0`, so a next-token probability that
   saturates to exactly `1.0` (a logit gap of about 17 nats) produced `NaN`
@@ -25,7 +55,22 @@ All notable changes to this project are documented in this file.
   Reported by Alex Chadyuk (trace-bench harness; sibling implementation
   `alex-chadyuk/trace-cmi-bench`, deviation D-CB-6).
 
-### Added
+### Added (since 0.1.9)
+- `causal_strength.calc_lag_cmi` (`params["causal_strength"] = "CMI"`): the
+  conditional mutual information `I(E_t', E_t | X_<t)`. The existing
+  `calc_lag_info_gain` is the information gain of the *observed* cause only
+  (`e_t = 1`), averaged over particles; it is not bounded by `log 2`. The new
+  function also weights the cause-absent branch: per particle,
+  `pi * KL(q1 || m) + (1 - pi) * KL(q0 || m)` with `pi` the model
+  probability of the observed cause and `m = pi * q1 + (1 - pi) * q0`, so
+  `0 <= CMI <= log 2`. Same staircase rows, both `kl_mode`s. The docstring
+  of `calc_lag_info_gain` no longer claims it equals the CMI.
+- `params["sampling"]["cause_from_model"]` (default `False`): replace the
+  cause and the mediators by tokens drawn from the model given the observed
+  trajectory (`sampling.model_sample_excluding_observed`, observed token
+  excluded and the rest renormalised) instead of uniform noise, so the
+  cause-absent branch is a plausible alternative event. Not resampled
+  autoregressively after the replaced cause; requires `context >= 1`.
 - `seq2cause --kl-mode {logspace,clamp}` (default `logspace`); the CLI
   prints the clamp-mode corruption count and warns when a `clamp` run's
   pooled threshold is `NaN`.
