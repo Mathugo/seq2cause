@@ -37,8 +37,13 @@ SIBLING = (
 )
 
 # --- the method under test ---------------------------------------------------------------
-SHIPPED_VERSION = "0.1.9"  # the seq2cause release every "as shipped" claim refers to
+SHIPPED_VERSION = "0.1.9"  # the seq2cause release every landed cell and "as shipped" claim refers to
 SHIPPED_COMMIT = "67416a2"  # its commit on the author's main line
+# the release merged on 2026-10-30 (RUN.md D-SB-18): adds `calc_lag_cmi` and the `prepend` / `none`
+# context modes; its "overwrite" layout is byte-identical to v0.1.9 on the fixture (the golden
+# check of that deviation), so every landed cell stands; run records written after the merge say 0.3.0
+CONTEXT_FAMILY_VERSION = "0.3.0"
+CONTEXT_FAMILY_COMMIT = "b63b4328"
 
 # --- the benchmark this directory scores --------------------------------------------------
 DATASET_REPO = "chadyuk/trace-bench"  # dataset host id (public)
