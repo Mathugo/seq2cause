@@ -4,6 +4,30 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-31
+
+### Added
+- The CMI score and the prepended sampled past in the functional API and the CLI
+  (0.3.0 only had them in `SampleLevelCausalDiscovery`):
+  - `diagnostics.compute_cmi_matrix(..., score="cmi")` (requires
+    `strategy="atomic"`): the conditional mutual information, with the cause-absent
+    branch drawn from the model's `P(X_t | x_<t, X_t != x_t)` and weighted by the model
+    probability of the observed cause; between 0 and log 2. The default
+    `score="info_gain"` is unchanged.
+  - `compute_cmi_matrix(..., prepend_len=p, n_pasts=k)`: `p` tokens sampled from the
+    model are inserted between the observed anchor (`sequence[:context_len]`) and the
+    tested tokens, so every observed token after the anchor is tested; scores are
+    averaged over `k` sampled pasts.
+  - CLI: `--score {info_gain,cmi}`, `--prepend-len`, `--n-pasts`.
+- `diagnostics.ground_truth_cmi_matrix(scm, sequence)`: the exact CMI of every pair of
+  a `NonlinearSCM` sequence (every alternative token enumerated); the estimate of
+  `compute_cmi_matrix(score="cmi")` converges to it (0.5% max error at 4000 particles).
+- `compare_intervention_strategies(..., include_cmi=True)` adds an `"atomic_cmi"` result.
+
+### Changed
+- `compute_cmi_matrix` raises `ValueError` when `context_len + prepend_len < 1`
+  (with no past at all, the first tested token was read from a wrapped-around logit).
+
 ## [0.3.0] - 2026-10-30
 
 First release containing the changes since 0.1.9 (the `v0.2.0` tag was placed on

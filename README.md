@@ -217,6 +217,18 @@ batch, adj = algo.run()  # adj[b, i, j]: observed position s0 + i -> s0 + j, s0 
 
 `python scripts/validate_context_modes.py` trains a tiny model on a synthetic SCM and checks every mode end to end against the exact ground truth.
 
+The same options exist in the functional API and the CLI (v0.3.1): `compute_cmi_matrix(..., score="cmi", prepend_len=p)` and `seq2cause --score cmi --prepend-len p`. `context_len` is then the number of observed leading tokens kept as an untested anchor (1 for a CLS/BOS token, 0 if there is none), and `prepend_len` sampled tokens are inserted between that anchor and the tested tokens; the result is still `[L - context_len, L - context_len]`, so every observed token after the anchor is tested. `score="cmi"` requires `strategy="atomic"`.
+
+```python
+cmi_matrix = compute_cmi_matrix(adapter, sequence, context_len=1, prepend_len=4, score="cmi", n_particles=32)
+```
+
+```bash
+seq2cause --dataset events.txt --model my-checkpoint --score cmi --context-len 1 --prepend-len 4
+```
+
+For evaluation on a `NonlinearSCM`, `ground_truth_cmi_matrix(scm, sequence)` gives the exact CMI of every pair (all alternative tokens enumerated), and `compare_intervention_strategies(..., include_cmi=True)` adds an `"atomic_cmi"` result.
+
 ## Sparse / Bounded-Memory Construction
 
 If you know, or are willing to assume, an upper bound on the true causal lag (for example a `NonlinearSCM(memory=m)` generator), `compute_cmi_matrix_sparse` recovers the same causal graph as the unbounded computation for a fraction of the compute on long sequences. It slides a short local window across the sequence instead of processing it all at once.
@@ -246,7 +258,7 @@ If you use seq2cause in your research, please cite our works:
   publisher = {Zenodo},
   doi = {10.5281/zenodo.19068730},
   url = {https://doi.org/10.5281/zenodo.19068730},
-  version = {0.3.0}
+  version = {0.3.1}
 }
 ```
 
