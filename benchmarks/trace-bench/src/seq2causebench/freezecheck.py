@@ -57,9 +57,22 @@ def _iso(s):
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def assert_freeze(freeze, freeze_path, cells, c, N, g, model_sha256, corpus_id, started, ordering):
+def assert_freeze(
+    freeze,
+    freeze_path,
+    cells,
+    c,
+    N,
+    g,
+    model_sha256,
+    corpus_id,
+    started,
+    ordering,
+    context_mode=None,
+):
     """The freeze names this run's values exactly and predates it (scenarios 13, 29). A freeze
-    written before orderings were recorded carries none and is accepted on either view."""
+    written before orderings were recorded carries none and is accepted on either view; a cell
+    that records a `context_mode` (D-SB-20) must name this run's."""
     sha, committed_at = freeze_commit(freeze_path)
     if not _iso(committed_at) < _iso(started):
         raise FreezeRefusal(
@@ -76,6 +89,11 @@ def assert_freeze(freeze, freeze_path, cells, c, N, g, model_sha256, corpus_id, 
         if got != want:
             raise FreezeRefusal(
                 f"freeze cell {key} = {got} but the command line says {want} (PRD scenario 13)"
+            )
+        if cell.get("context_mode") is not None and cell["context_mode"] != context_mode:
+            raise FreezeRefusal(
+                f"freeze cell {key} was swept with context_mode {cell['context_mode']!r} but this "
+                f"run's probe builds {context_mode!r} (D-SB-20)"
             )
     if freeze.get("model_sha256") != model_sha256:
         raise FreezeRefusal(

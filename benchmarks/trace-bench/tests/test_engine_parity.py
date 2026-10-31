@@ -22,7 +22,12 @@ from seq2causebench.backbone import build_model, save_model
 from seq2causebench.constants import (
     ARM_CLI,
     ARM_CLI_ATOMIC,
+    ARM_CLI_ATOMIC_CMI_KEEP,
     ARM_CORE,
+    ARM_CORE_CMI_KEEP,
+    ARM_CORE_CMI_OVERWRITE,
+    ARM_CORE_IG_KEEP,
+    ARM_CORE_IG_OVERWRITE,
     ARM_GRANGER,
     CLI_SHIPPED_RULE,
     NOISE_ALL,
@@ -31,8 +36,10 @@ from seq2causebench.constants import (
     PATH_FIXED_KL,
     PATH_SHIPPED,
     PROBE_CLI_ATOMIC,
+    PROBE_CLI_ATOMIC_CMI,
     PROBE_CLI_FULL,
     PROBE_CORE,
+    PROBE_CORE_KEEP,
     PROBE_SALIENCY,
     PROBE_SHAPLEY,
 )
@@ -77,7 +84,18 @@ def cpu_accelerator(monkeypatch):
     PartialState._reset_state()
 
 
-def _run_shipped_core(hf_model, ids, c, g, N, kl_mode, noise, causal_strength=None):
+def _consume_dataloader_seed():
+    """`run()` iterates a `DataLoader`, whose iterator draws one int64 base seed from the global
+    generator before any sampling; the harness has no loader. Consume the same draw on the
+    harness side so the two noise streams coincide (found 2026-10-31: the landed core parity
+    test read a 5-token sequence at c = 3, whose matrix is all zeros, so the offset was
+    invisible; the constructions are identical, the streams were offset by one draw)."""
+    torch.empty((), dtype=torch.int64).random_()
+
+
+def _run_shipped_core(
+    hf_model, ids, c, g, N, kl_mode, noise, causal_strength=None, context_mode="overwrite"
+):
     stats = {}
     params = {
         "BS": 1,
@@ -93,6 +111,7 @@ def _run_shipped_core(hf_model, ids, c, g, N, kl_mode, noise, causal_strength=No
             "guidance": g,
             "value": N,
             "noise_min_id": engine.noise_min_id(noise),
+            "context_mode": context_mode,
         },
     }
     ds = [{"input_ids": ids.tolist(), "attention_mask": [1] * len(ids)}]
@@ -106,23 +125,26 @@ def _run_shipped_core(hf_model, ids, c, g, N, kl_mode, noise, causal_strength=No
 def test_core_probe_matches_run_bit_for_bit(tmp_path, cpu_accelerator, g):
     hf_model, adapter, _ = _backbone(tmp_path)
     _, _, store = _corpus_store()
-    ids = _sequence(store, 1)
+    ids = _sequence(store, 0)  # 11 tokens: 21 tested cells at c = 3 (sequence 1 has none)
     c, N = 3, 4
     for noise in (NOISE_ALL, NOISE_REAL):
         cols = engine.probe_columns(PROBE_CORE, noise)
         torch.manual_seed(11)
+        _consume_dataloader_seed()
         res = engine.probe_sequence(PROBE_CORE, noise, hf_model, adapter, ids, c, g, N, cols)
         for path, col in cols[ARM_CORE].items():
             torch.manual_seed(11)
             want, stats = _run_shipped_core(
                 hf_model, ids, c, g, N, "clamp" if path == PATH_SHIPPED else "logspace", noise
             )
+            assert (want != 0).sum() >= 20, "a vacuous comparison"
             assert np.array_equal(res.matrices[col], want), (noise, path)
             assert res.counts[path] == stats, (noise, path)
         torch.manual_seed(11)
         want_g, _ = _run_shipped_core(
             hf_model, ids, c, g, N, "clamp", noise, causal_strength="Granger"
         )
+        assert (want_g != 0).sum() >= 20, "a vacuous comparison"
         assert np.array_equal(
             res.matrices[cols[ARM_GRANGER][PATH_SHIPPED if noise == NOISE_ALL else PATH_FIXED]],
             want_g,
@@ -135,8 +157,27 @@ def test_core_pass_columns_follow_the_registry():
     assert set(all_cols[ARM_CORE]) == {PATH_SHIPPED, PATH_FIXED_KL} and set(
         all_cols[ARM_GRANGER]
     ) == {PATH_SHIPPED}
+    # since 2026-10-31 the core pass also writes the context family's two overwrite columns
+    assert set(all_cols) == {ARM_CORE, ARM_GRANGER, ARM_CORE_IG_OVERWRITE, ARM_CORE_CMI_OVERWRITE}
+    assert all_cols[ARM_CORE_IG_OVERWRITE] == {PATH_FIXED_KL: "trace-core-ig-overwrite__fixed-kl"}
     real_cols = engine.probe_columns(PROBE_CORE, NOISE_REAL)
     assert set(real_cols[ARM_CORE]) == {PATH_FIXED} and set(real_cols[ARM_GRANGER]) == {PATH_FIXED}
+    assert set(real_cols) == {ARM_CORE, ARM_GRANGER}  # the family reads fixed-kl only
+    assert set(engine.probe_columns(PROBE_CORE_KEEP, NOISE_ALL)) == {
+        ARM_CORE_IG_KEEP,
+        ARM_CORE_CMI_KEEP,
+    }
+    assert engine.probe_columns(PROBE_CORE_KEEP, NOISE_REAL) == {}
+    assert engine.probe_columns(PROBE_CLI_ATOMIC_CMI, NOISE_ALL) == {
+        ARM_CLI_ATOMIC_CMI_KEEP: {PATH_FIXED_KL: "trace-cli-atomic-cmi-keep__fixed-kl"}
+    }
+    assert engine.probe_columns(PROBE_CLI_ATOMIC_CMI, NOISE_REAL) == {
+        ARM_CLI_ATOMIC_CMI_KEEP: {PATH_FIXED: "trace-cli-atomic-cmi-keep__fixed"}
+    }
+    assert engine.counts_source(all_cols) == {ARM_CORE_CMI_OVERWRITE: "ig-same-pass"}
+    assert engine.counts_source(engine.probe_columns(PROBE_CLI_ATOMIC_CMI, NOISE_ALL)) == {
+        ARM_CLI_ATOMIC_CMI_KEEP: "none"
+    }
     assert engine.probe_columns(PROBE_CLI_FULL, NOISE_ALL) == {
         ARM_CLI: {PATH_SHIPPED: "trace-cli__shipped", PATH_FIXED_KL: "trace-cli__fixed-kl"}
     }
@@ -324,3 +365,184 @@ def test_seed_sequence_is_deterministic_per_split_and_index():
     with pytest.raises(ValueError):
         engine.seed_sequence(3, "holdout", 0)
     assert os.environ.get("ACCELERATE_USE_CPU") is None or True
+
+
+# ---------------------------------------------------------------- the context family (2026-10-31)
+
+
+@pytest.mark.parametrize("mode,c,g", [("none", 1, 1), ("overwrite", 1, 1), ("overwrite", 3, 1)])
+def test_core_context_modes_and_cmi_match_run_bit_for_bit(tmp_path, cpu_accelerator, mode, c, g):
+    """D-SB-20: the `core-keep` probe (`context_mode = "none"`) and the CMI read-out of both core
+    probes equal `SampleLevelCausalDiscovery.run()` with v0.3.0's `context_mode` and
+    `causal_strength = "CMI"` bit for bit; the overwrite information-gain column of the family is
+    `trace/core`'s own (identity check (ii))."""
+    hf_model, adapter, _ = _backbone(tmp_path)
+    _, _, store = _corpus_store()
+    ids = _sequence(store, 0)  # 11 tokens
+    N = 4
+    probe = PROBE_CORE_KEEP if mode == "none" else PROBE_CORE
+    ig_arm, cmi_arm = (
+        (ARM_CORE_IG_KEEP, ARM_CORE_CMI_KEEP)
+        if mode == "none"
+        else (ARM_CORE_IG_OVERWRITE, ARM_CORE_CMI_OVERWRITE)
+    )
+    cols = engine.probe_columns(probe, NOISE_ALL)
+    torch.manual_seed(11)
+    _consume_dataloader_seed()
+    res = engine.probe_sequence(probe, NOISE_ALL, hf_model, adapter, ids, c, g, N, cols)
+    torch.manual_seed(11)
+    want_ig, stats = _run_shipped_core(
+        hf_model, ids, c, g, N, "logspace", NOISE_ALL, context_mode=mode
+    )
+    assert (want_ig != 0).sum() >= 20, "a vacuous comparison"
+    assert np.array_equal(res.matrices[cols[ig_arm][PATH_FIXED_KL]], want_ig)
+    assert res.counts[PATH_FIXED_KL] == stats
+    torch.manual_seed(11)
+    want_cmi, _ = _run_shipped_core(
+        hf_model, ids, c, g, N, "logspace", NOISE_ALL, causal_strength="CMI", context_mode=mode
+    )
+    got = res.matrices[cols[cmi_arm][PATH_FIXED_KL]]
+    assert (want_cmi != 0).sum() >= 20 and np.array_equal(got, want_cmi)
+    assert got.shape == (len(ids) - c, len(ids) - c)
+    assert np.all(got >= 0) and np.all(got <= np.log(2) + 1e-6) and np.isfinite(got).all()
+    if probe == PROBE_CORE:
+        assert np.array_equal(
+            res.matrices[cols[ARM_CORE][PATH_FIXED_KL]], res.matrices[cols[ig_arm][PATH_FIXED_KL]]
+        )
+
+
+def test_keep_at_c1_equals_overwrite_at_c1_and_refuses_g_below_c(tmp_path):
+    """Identity check (iii) of the addendum: `none` and `overwrite` build the same tensors at
+    g = c = 1 (nothing is sampled either way), so the keep arms equal the overwrite arms there."""
+    hf_model, adapter, _ = _backbone(tmp_path)
+    _, _, store = _corpus_store()
+    ids = _sequence(store, 2)
+    N = 4
+    keep_cols = engine.probe_columns(PROBE_CORE_KEEP, NOISE_ALL)
+    core_cols = engine.probe_columns(PROBE_CORE, NOISE_ALL)
+    torch.manual_seed(7)
+    keep = engine.probe_sequence(
+        PROBE_CORE_KEEP, NOISE_ALL, hf_model, adapter, ids, 1, 1, N, keep_cols
+    )
+    torch.manual_seed(7)
+    over = engine.probe_sequence(PROBE_CORE, NOISE_ALL, hf_model, adapter, ids, 1, 1, N, core_cols)
+    for keep_arm, over_arm in (
+        (ARM_CORE_IG_KEEP, ARM_CORE_IG_OVERWRITE),
+        (ARM_CORE_CMI_KEEP, ARM_CORE_CMI_OVERWRITE),
+    ):
+        assert np.array_equal(
+            keep.matrices[keep_cols[keep_arm][PATH_FIXED_KL]],
+            over.matrices[core_cols[over_arm][PATH_FIXED_KL]],
+        )
+    assert keep.counts == {PATH_FIXED_KL: over.counts[PATH_FIXED_KL]}
+    assert keep.tok_pos == over.tok_pos
+    with pytest.raises(ValueError, match="g == c"):
+        engine.core_forward(hf_model, ids, 2, 1, N, NOISE_ALL, context_mode="none")
+    with pytest.raises(ValueError, match="context_mode"):
+        engine.core_forward(hf_model, ids, 2, 1, N, NOISE_ALL, context_mode="prepend")
+
+
+@pytest.mark.parametrize("c", [1, 2])
+def test_cli_atomic_cmi_probe_matches_compute_cmi_matrix_bit_for_bit(tmp_path, c):
+    """D-SB-23: the `cli-atomic-cmi` probe equals v0.3.1 `compute_cmi_matrix(score="cmi")` bit for
+    bit on both noise draws (the specials excluded from the model draw on `real`); no corrupted-cell
+    counts exist on this path (D-SB-22)."""
+    hf_model, adapter, _ = _backbone(tmp_path)
+    _, _, store = _corpus_store()
+    ids = _sequence(store, 2)
+    N = 4
+    for noise in (NOISE_ALL, NOISE_REAL):
+        cols = engine.probe_columns(PROBE_CLI_ATOMIC_CMI, noise)
+        torch.manual_seed(5)
+        res = engine.probe_sequence(
+            PROBE_CLI_ATOMIC_CMI, noise, hf_model, adapter, ids, c, 1, N, cols
+        )
+        for path, col in cols[ARM_CLI_ATOMIC_CMI_KEEP].items():
+            torch.manual_seed(5)
+            want = compute_cmi_matrix(
+                adapter,
+                ids,
+                context_len=c,
+                n_particles=N,
+                strategy="atomic",
+                score="cmi",
+                prepend_len=0,
+                noise_min_id=engine.noise_min_id(noise),
+            )
+            got = res.matrices[col]
+            assert np.array_equal(got, want.cpu().numpy().astype(np.float32)), (noise, path)
+            assert res.counts[path] == {}
+            lc = len(ids) - c
+            assert got.shape == (lc, lc) and np.all(np.tril(got) == 0)
+            assert np.all(got >= 0) and np.all(got <= np.log(2) + 1e-6) and np.isfinite(got).all()
+        assert res.tok_pos == N * (len(ids) - c) * len(ids) + len(ids)
+
+
+def test_shipped_cut_on_the_atomic_cmi_matches_seq2cause_cli(tmp_path):
+    """The tool's pooled-percentile rule on the CMI scores equals what the v0.3.1 CLI writes with
+    `--score cmi --strategy atomic` for the same sequences, model and seed (identity check (iv))."""
+    from seq2cause.cli import main as cli_main
+
+    hf_model, adapter, _ = _backbone(tmp_path)
+    _, vocab, store = _corpus_store()
+    seqs = [store.get(s) for s in range(4)]
+    dataset = tmp_path / "events.pt"
+    torch.save([torch.as_tensor(np.asarray(s), dtype=torch.long) for s in seqs], dataset)
+    out = tmp_path / "graphs.pt"
+    c, N = 1, 4
+    cli_main(
+        [
+            "--dataset",
+            str(dataset),
+            "--model",
+            str(tmp_path / "model"),
+            "--context-len",
+            str(c),
+            "--n-particles",
+            str(N),
+            "--strategy",
+            "atomic",
+            "--score",
+            "cmi",
+            "--kl-mode",
+            "logspace",
+            "--seed",
+            "0",
+            "--device",
+            "cpu",
+            "--output",
+            str(out),
+        ]
+    )
+    shipped = torch.load(out, weights_only=True)
+    cols = engine.probe_columns(PROBE_CLI_ATOMIC_CMI, NOISE_ALL)
+    col = cols[ARM_CLI_ATOMIC_CMI_KEEP][PATH_FIXED_KL]
+    torch.manual_seed(0)
+    mats = []
+    for s in seqs:
+        res = engine.probe_sequence(
+            PROBE_CLI_ATOMIC_CMI,
+            NOISE_ALL,
+            hf_model,
+            adapter,
+            torch.as_tensor(np.asarray(s), dtype=torch.long),
+            c,
+            1,
+            N,
+            cols,
+        )
+        j, q, vals = engine.triangle(res.matrices[col])
+        mats.append(engine.from_triangle(res.matrices[col].shape[0], j, q, vals))
+    tau_by_lag, graphs, finite = engine.shipped_cut(mats, CLI_SHIPPED_RULE)
+    assert finite
+    for want, got in zip(shipped, graphs, strict=True):
+        assert torch.equal(want["sample_graph"], got)
+    edges, facts = engine.shipped_cut_union(seqs, graphs, c, vocab)
+    want_edges = set()
+    for entry in shipped:
+        active = entry["summary_graph"]["active_tokens"].tolist()
+        for a, b in torch.nonzero(entry["summary_graph"]["adj"]).tolist():
+            u, v = int(active[a]), int(active[b])
+            if vocab.is_real(u) and vocab.is_real(v):
+                want_edges.add((u, v))
+    assert edges == want_edges and facts["n_edges"] == len(edges)

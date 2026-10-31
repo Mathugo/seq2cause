@@ -416,3 +416,33 @@ the two extra columns of every future `core` pass (tracked pre-change scripts re
 **D-SB-21** `scoresweep --arms`, the derived family `context`, the `-context` freeze name, `results-context/`;
 **D-SB-22** the CMI corrupted-cell counts (§6 a); **D-SB-23** the `cli-atomic-cmi` probe (two forwards, the
 model draw, `fixed` = the specials excluded from the model draw, both cuts).
+
+#### 2026-10-31, later — the premise checks P1′, P2 and P4′ of the addendum above (run with the family's code, before any job)
+
+- **P1′ (identity check (iii)) — passes.** On the seed-0 backbones of xs, s and m, the first 50 validation
+  sequences of each grain (`head`, `--max-len 64`), under the harness's per-sequence seed: the `core-keep`
+  probe (`none`, c = g = 1) and the `core` probe (`overwrite`, c = g = 1) at N = 8 give bit-identical
+  information-gain and CMI matrices and identical corrupted-cell counts on **50 / 50 sequences of every
+  grain and rung**; `trace-core-ig-overwrite__fixed-kl` equals `trace-core__fixed-kl` on every one.
+- **P2 (parity and range) — passes.** The parity tests of §7 (iv) pass on the fixture: the core probes equal
+  `SampleLevelCausalDiscovery.run()` with `context_mode` and `causal_strength = "CMI"` bit for bit (both
+  modes, both noise draws), the atomic CMI probe equals `compute_cmi_matrix(score="cmi")` bit for bit on
+  both noise draws, and the shipped cut on the CMI scores equals the v0.3.1 CLI's graphs. On the seed-0
+  backbones every CMI value lies in [0, log 2]: the largest observed is 0.604 / 0.689 / 0.692 (xs / s / m,
+  core, either grain) and 0.597 / 0.519 / 0.692 (atomic, request); no NaN, `nan_to_num` never fires.
+  **A finding on the way (RUN.md D-SB-2, amended):** `run()` iterates a `DataLoader` whose iterator draws
+  one int64 base seed from the global generator before any sampling, so under one seed the shipped and
+  the harness noise streams were offset by one draw; the core parity test of 2026-09-24 read a five-token
+  fixture sequence at c = 3, whose matrix holds no tested cell, and could not see it. With that draw
+  consumed on the harness side the core probe is bit-equal to `run()` on every noised row of an
+  eleven-token sequence. The constructions were identical all along; no landed number depends on `run()`'s
+  stream. The tests now read the longer sequence and refuse a vacuous comparison.
+- **P4′ (memory and cost) — passes.** The D-SB-12 estimate at N = 8, L = 66, c = 1 on the xl backbone
+  (V = 15,263, 6 layers, d = 256) is 4.72 GiB for `cli-atomic-cmi`, `core-keep` and `core` alike (the same
+  tensors as the landed probes; `core` at c = 8: 4.21 GiB), under the 20 GiB cap; at m 1.39 GiB. CPU cost
+  on a laptop (4 threads, seed-0 backbones, request grain, N = 8, c = 1): `core` 0.013–0.015 s per
+  sequence, the atomic CMI probe 0.012–0.016 s per sequence on either noise (xs / s / m); session `core`
+  0.06–0.09 s. The per-trace replica's third layout therefore costs what the two core layouts cost.
+- **Golden check of the family's code against the v0.3.1 merge:** the 69 fixture cases of D-SB-18 and
+  D-SB-19 are byte-identical (every landed column and count); the `core` pass writes the two registered
+  columns beside them (18 new cases), nothing else changes. P3 is in §9 above.

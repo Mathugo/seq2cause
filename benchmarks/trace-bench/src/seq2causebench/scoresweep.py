@@ -3,6 +3,7 @@
 non-negotiable 8; score side).
 
     python -m seq2causebench.scoresweep --corpus <dir> --sweep-dir out/<sweep-run> --grains request \
+        --arms trace/core baseline/granger ... (empty = every arm of every file; D-SB-21) \
         --taus 1e-6 3e-6 1e-5 3e-5 1e-4 3e-4 1e-3 3e-3 1e-2 3e-2 1e-1 3e-1 \
         --granger-taus 1e-4 3e-4 1e-3 3e-3 1e-2 3e-2 1e-1 3e-1 1 \
         --quantiles 0.5 0.8 0.9 0.95 0.99 --output-folder out/<run>
@@ -38,13 +39,14 @@ from .constants import (
     ARM_GRANGER,
     ARM_SALIENCY,
     ARM_SHAPLEY,
+    ARMS,
     CUT_FROZEN,
     CUT_SHIPPED,
     FLOOR_ARMS,
     FLOOR_PROBES,
     GRAINS,
     MANIFEST_JSON,
-    REFERENCE_ARMS,
+    TAU_GRID_ARMS,
     VAL_TABLE_JSON,
 )
 from .corpus import Corpus
@@ -138,7 +140,7 @@ def _grid(arm, values, flag):
 
 def taus_for(arm, scores, col, args):
     """`[(tau, source)]`: the absolute grid of the arm's class, or quantiles of the pooled scores."""
-    if arm in REFERENCE_ARMS:
+    if arm in TAU_GRID_ARMS:  # the reference arms and the context family (addendum 2026-10-31)
         return _grid(arm, args.taus, "--taus")
     if arm == ARM_GRANGER:
         return _grid(arm, args.granger_taus, "--granger-taus")
@@ -190,6 +192,11 @@ def run_scoresweep(args, rec):
             else:
                 vocab = Vocab.from_model_vocab(Corpus(args.corpus, ordering, grain).vocab_json())
                 columns = probe_columns(probe, noise)
+            if args.arms:  # D-SB-21: a family's tables hold its own arms only
+                columns = {a: ps for a, ps in columns.items() if a in args.arms}
+                if not columns:
+                    log({"event": "scoresweep_file_skipped", "file": f.name, "arms": args.arms})
+                    continue
             shipped = None
             sc_path = f.with_name(f.name.replace("scores-", "shippedcut-").replace(".npz", ".json"))
             if sc_path.exists():
@@ -261,6 +268,7 @@ def run_scoresweep(args, rec):
         "sweep_dir_name": Path(args.sweep_dir).name,
         "ordering": sweep_ordering,
         "grains": list(args.grains),
+        "arms": list(args.arms),  # empty = every arm of every file (D-SB-21)
         "taus": [float(t) for t in args.taus],
         "granger_taus": [float(t) for t in args.granger_taus],
         "quantiles": [float(q) for q in args.quantiles],
@@ -288,6 +296,13 @@ def build_parser():
     )
     p.add_argument("--sweep-dir", required=True, help="the sweep run's output folder")
     p.add_argument("--grains", required=True, nargs="+", choices=GRAINS)
+    p.add_argument(
+        "--arms",
+        required=True,
+        nargs="*",
+        choices=sorted(ARMS),
+        help="score these arms only (empty = every arm of every file; D-SB-21)",
+    )
     p.add_argument(
         "--taus",
         required=True,
