@@ -195,6 +195,28 @@ An independent replication found that the paper's original "full" staircase cons
 
 Run `python scripts/snr_diagnostic.py` for a self-contained comparison of all four on a synthetic oracle SCM.
 
+## Context Modes and the CMI Estimator (`SampleLevelCausalDiscovery`, v0.3.0)
+
+`params["causal_strength"]` selects the edge score: the default is the information gain of the *observed* cause (`calc_lag_info_gain`, not bounded by log 2); `"CMI"` is the conditional mutual information `I(E_t', E_t | X_<t)` (`calc_lag_cmi`, between 0 and log 2), which also weights the cause-absent branch by the model probability of the cause.
+
+`params["sampling"]["context_mode"]` selects how the past before the tested tokens is built (g = `guidance`, c = `context`):
+
+- **`overwrite`** (default, original behaviour): positions g..c-1 are overwritten by sampled tokens and only the observed tokens c..L-1 are tested.
+- **`prepend`** (recommended): the c - g sampled tokens are placed *before* the observed tokens, so every observed token after the g-token anchor (e.g. a CLS token) is kept and tested. Use `guidance=0` for sequences without a CLS token.
+- **`none`**: no sampled past, only the g >= 1 anchor tokens.
+
+```python
+params = {
+    "BS": 8, "causal_strength": "CMI",
+    "sampling": {"context_mode": "prepend", "context": 5, "guidance": 1, "value": 32},
+}
+algo = SampleLevelCausalDiscovery(model, params, dataset)
+algo.prepare()
+batch, adj = algo.run()  # adj[b, i, j]: observed position s0 + i -> s0 + j, s0 = algo.first_position()
+```
+
+`python scripts/validate_context_modes.py` trains a tiny model on a synthetic SCM and checks every mode end to end against the exact ground truth.
+
 ## Sparse / Bounded-Memory Construction
 
 If you know, or are willing to assume, an upper bound on the true causal lag (for example a `NonlinearSCM(memory=m)` generator), `compute_cmi_matrix_sparse` recovers the same causal graph as the unbounded computation for a fraction of the compute on long sequences. It slides a short local window across the sequence instead of processing it all at once.
@@ -224,7 +246,7 @@ If you use seq2cause in your research, please cite our works:
   publisher = {Zenodo},
   doi = {10.5281/zenodo.19068730},
   url = {https://doi.org/10.5281/zenodo.19068730},
-  version = {0.1.9}
+  version = {0.3.0}
 }
 ```
 
