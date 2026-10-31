@@ -170,8 +170,9 @@ BROADCAST_ROWS = [
     for arm in TRACE_BROADCAST_ARMS
     for series in (CAUSALRCA_SERIES if arm == ARM_CAUSALRCA else (None,))
 ]
-SHARED_ROWS = [f"{ARM_FLOOR_TRACE_TOPOLOGY}/{r}" for r in TRACE_READINGS] + [ARM_CONTROL_TRACE_RANDOM]
-SHARED_ROWS += [f"{ARM_CONTROL_TRACE_CALLEES}/{r}" for r in TRACE_READINGS] + BROADCAST_ROWS
+LANDED_READINGS = TRACE_READINGS[:2]  # hop1, hop0: the readings of a schema-@1 ranking file (the landed cells)
+SHARED_ROWS = [f"{ARM_FLOOR_TRACE_TOPOLOGY}/{r}" for r in LANDED_READINGS] + [ARM_CONTROL_TRACE_RANDOM]
+SHARED_ROWS += [f"{ARM_CONTROL_TRACE_CALLEES}/{r}" for r in LANDED_READINGS] + BROADCAST_ROWS
 SHARED_S1 = {  # the benchmark test's hand answers for the floor and the controls
     f"{ARM_FLOOR_TRACE_TOPOLOGY}/hop1": 0.25,
     f"{ARM_FLOOR_TRACE_TOPOLOGY}/hop0": 1.0,
@@ -351,6 +352,8 @@ def _score_argv(corpus, rank_folder, ranking, broadcast, out, b=50):
         str(ranking),
         "--broadcast-results-dir",
         str(broadcast),
+        "--rows",
+        "all",
         "--bootstrap-b",
         str(b),
         "--bootstrap-seed",
@@ -378,7 +381,7 @@ def test_scoretrace_end_to_end_on_a_hand_corpus(corpus, tmp_path):
 
     score = read_json(out / SCORE_TRACE_JSON)
     rows = score["rows"]
-    expected_rows = [f"{ARM_TRACE}/{r}" for r in TRACE_READINGS] + SHARED_ROWS
+    expected_rows = [f"{ARM_TRACE}/{r}" for r in LANDED_READINGS] + SHARED_ROWS
     assert set(score) == {"rows"} and sorted(rows) == sorted(expected_rows) and len(expected_rows) == 17
     assert all("traces" not in r for r in rows.values())
     traces = read_json(out / SCORE_TRACE_TRACES_JSON)
@@ -456,7 +459,7 @@ def test_scoretrace_end_to_end_on_a_hand_corpus(corpus, tmp_path):
     core_out = tmp_path / "trace-core"
     assert scoretrace.main(_score_argv(corpus, core_folder, core_ranking, broadcast, core_out)) == 0
     core_rows = read_json(core_out / SCORE_TRACE_JSON)["rows"]
-    assert sorted(core_rows) == sorted([f"{ARM_TRACE_CORE}/{r}" for r in TRACE_READINGS] + SHARED_ROWS)
+    assert sorted(core_rows) == sorted([f"{ARM_TRACE_CORE}/{r}" for r in LANDED_READINGS] + SHARED_ROWS)
     assert all(core_rows[row_id] == rows[row_id] for row_id in SHARED_ROWS)
     assert (
         core_rows[f"{ARM_TRACE_CORE}/hop1"]["metrics"]["s@1"] == 0.0
@@ -537,7 +540,14 @@ def _cell(cell_dict, arm_pred, mode, hop0, corpus, prediction=None):
     return score_trace_axis(corpus, cell_dict, prediction if prediction is not None else arm_pred, mode, hop0, 0, 0)
 
 
-CELL = {"c": C, "max_len": MAX_LEN, "select": TRACE_SELECT_POST_NONOK, "cap": 0, "selected": SELECTED, "skipped": SKIPPED}
+CELL = {
+    "c": C,
+    "max_len": MAX_LEN,
+    "select": TRACE_SELECT_POST_NONOK,
+    "cap": 0,
+    "selected": SELECTED,
+    "skipped": SKIPPED,
+}
 
 
 @pytest.fixture(scope="module")
@@ -619,7 +629,7 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
     assert reporttrace.main(_report_argv(results, out)) == 0
     summary = read_json(out / "summary.json")
     rows, hyp = summary["rows"], summary["hypotheses"]
-    arm_rows = [f"{arm}/{r}" for arm in ARMS2 for r in TRACE_READINGS]
+    arm_rows = [f"{arm}/{r}" for arm in ARMS2 for r in LANDED_READINGS]
     assert sorted(r["row"] for r in rows) == sorted(SHARED_ROWS + arm_rows)  # shared rows once, arm rows per arm
     assert all(r["rung"] == RUNG and r["n_seeds"] == 5 for r in rows) and len(rows) == 19
     by = {r["row"]: r for r in rows}
@@ -667,8 +677,10 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
         "H-trace-perseq-topology",
         "H-trace-perseq-broadcast",
         "H-trace-perseq-self",
+        "H-trace-earliest",
     }
-    assert all(h["verdict"] in ("pass", "fail") for h in hyp.values())
+    assert hyp["H-trace-earliest"]["verdict"] == "not run"  # no control/trace-earliest cell in this tree
+    assert all(h["verdict"] in ("pass", "fail") for k, h in hyp.items() if k != "H-trace-earliest")
     # random: the hit@1 of every trace-reading row (0.25, 0.0, 0.25) is below the random expectation 5/12; no interval
     # can lie above it -> fail; the per-entry booleans are low > random
     rnd = hyp["H-trace-perseq-random"]
@@ -717,7 +729,7 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
     out1 = tmp_path / "tables-core"
     assert reporttrace.main(_report_argv(results, out1, arms=(ARM_TRACE_CORE,))) == 0
     assert read_json(out1 / RUN_DIR / RESULTS_JSON)["rows"] == sorted(
-        SHARED_ROWS + [f"{ARM_TRACE_CORE}/{r}" for r in TRACE_READINGS]
+        SHARED_ROWS + [f"{ARM_TRACE_CORE}/{r}" for r in LANDED_READINGS]
     )
     # refusal: a shared row differs between the two arms' cells of one corpus
     differing = _results_tree(tmp_path / "results-differ", cell_rows)
@@ -811,12 +823,13 @@ def test_reporttrace_hypotheses_by_hand():
         _row(rule, 0.4),
     ]
     hyp = reporttrace.hypotheses(rows, (RUNG,), ARMS2)
-    assert [h["verdict"] for h in hyp.values()] == ["pass"] * 4
+    assert [h["verdict"] for h in hyp.values()] == ["pass"] * 4 + ["not run"]
     assert list(hyp) == [
         "H-trace-perseq-random",
         "H-trace-perseq-topology",
         "H-trace-perseq-broadcast",
         "H-trace-perseq-self",
+        "H-trace-earliest",  # not run without the control's row (addendum "2026-10-31, later")
     ]
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"] == {
         f"xs {ARM_TRACE}/hop1": True,
@@ -852,7 +865,7 @@ def test_reporttrace_hypotheses_by_hand():
         _row(rule, 0.4),
     ]
     hyp = reporttrace.hypotheses(rows, (RUNG,), ARMS2)
-    assert [h["verdict"] for h in hyp.values()] == ["fail"] * 4
+    assert [h["verdict"] for h in hyp.values()] == ["fail"] * 4 + ["not run"]
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"][f"xs {ARM_TRACE}/hop1"] is False
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"][f"xs {ARM_TRACE_CORE}/hop1"] is True
     assert hyp["H-trace-perseq-topology"]["per_rung_and_row"] == {
@@ -892,5 +905,7 @@ def test_reporttrace_hypotheses_by_hand():
         f"s {floor1}": True,
     }
     # without the rows a hypothesis needs it cannot pass
-    assert all(h["verdict"] == "fail" for h in reporttrace.hypotheses([], (RUNG,), ARMS2).values())
+    empty = reporttrace.hypotheses([], (RUNG,), ARMS2)
+    assert all(h["verdict"] == "fail" for k, h in empty.items() if k != "H-trace-earliest")
+    assert empty["H-trace-earliest"]["verdict"] == "not run"
     assert reporttrace._sign(0.0) == 0 and reporttrace._sign(-0.2) == -1 and reporttrace._sign(1e-9) == 1

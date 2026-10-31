@@ -53,6 +53,17 @@ def _harness(tmp_path):
     return harness_root
 
 
+NEW_RECORD_KEYS = {  # the record fields of 2026-10-31 (D-TBR-16 … 18): readings, phases, the subtraction, the reuse
+    "reading",
+    "phase",
+    "subtract",
+    "probe_arms",
+    "layout",
+    "pre_starts",
+    "runner_reused",
+    "work_files_sha256",
+    "n_cases_no_pre",
+}
 TRACE_DOCS = {
     "case-00": {
         "traces": [
@@ -92,11 +103,25 @@ def test_ranktrace_trace_axis_writes_compact_file_and_record(tmp_path, monkeypat
     (call,) = seen
     cmd = call["cmd"]
     assert cmd[cmd.index("--select") + 1] == TRACE_SELECT_POST_NONOK and cmd[cmd.index("--cap") + 1] == "0"
-    assert cmd[cmd.index("--cell") + 1] == TRACE_CELLS[ARM_TRACE] and TRACE_AXIS_CAP == 0
+    assert cmd[cmd.index("--cells") + 1] == TRACE_CELLS[ARM_TRACE] and TRACE_AXIS_CAP == 0
     # the compact prediction file: header, services, per case the selected / skipped ids and reached-only entries
     ranking = read_json(out / RANKING_TRACE_JSON)
-    assert set(ranking) == {"schema", "arm", "cell", "c", "max_len", "select", "cap", "device", "services", "cases"}
-    assert ranking["schema"] == "ranking-trace@1" and ranking["arm"] == ARM_TRACE and ranking["c"] == 1
+    assert set(ranking) == {
+        "schema",
+        "arm",
+        "cell",
+        "readings",
+        "primary_reading",
+        "c",
+        "max_len",
+        "select",
+        "cap",
+        "device",
+        "services",
+        "cases",
+    }
+    assert ranking["schema"] == "ranking-trace@2" and ranking["arm"] == ARM_TRACE and ranking["c"] == 1
+    assert ranking["readings"] == list(TRACE_READINGS) and ranking["primary_reading"] == "hop1"
     assert ranking["cell"] == TRACE_CELLS[ARM_TRACE] and ranking["max_len"] == TRACE_MAX_LEN
     assert ranking["select"] == TRACE_SELECT_POST_NONOK and ranking["cap"] == 0 and ranking["device"] == "cpu"
     assert ranking["services"] == NAMES
@@ -105,13 +130,25 @@ def test_ranktrace_trace_axis_writes_compact_file_and_record(tmp_path, monkeypat
     assert c0["selected"] == ["t-a", "t-b", "t-skip"] and c0["skipped"] == ["t-skip"]
     assert set(c0["traces"]) == {"t-a", "t-b"}  # the skipped trace has no entry
     # t-a: tb-beta (index 1) upstream of the failed tb-edge at hop 1; hop 0 adds tb-edge (index 0) first (hop 0 < 1)
-    assert c0["traces"]["t-a"] == {"s": [1], "p": [0], "s0": [0, 1], "p0": [1, 0]}
+    # the source reading: t-a's failed tb-edge (position 1) has an OK parent, so it is a source
+    assert c0["traces"]["t-a"] == {"s": [1], "p": [0], "s0": [0, 1], "p0": [1, 0], "ss": [0], "ps": [1]}
     # t-b: ext-gamma (2) upstream of both failures (count 2), tb-beta (1) of one; hop 0 lifts tb-beta to (2, hop 0)
-    assert c0["traces"]["t-b"] == {"s": [2, 1], "p": [0, 1], "s0": [1, 2, 0], "p0": [1, 0, 2]}
+    # t-b: tb-beta's slow position 1 (parent ext-gamma OK) is a source; tb-edge's 5xx position 2 has the non-OK
+    # parent 1 and is not
+    assert c0["traces"]["t-b"] == {
+        "s": [2, 1],
+        "p": [0, 1],
+        "s0": [1, 2, 0],
+        "p0": [1, 0, 2],
+        "ss": [1],
+        "ps": [1],
+    }
     for entry in c0["traces"].values():
         assert set(entry["s"]) <= set(entry["s0"]) and set(entry["p"]) <= set(entry["p0"])
         assert all(0 <= i < len(NAMES) for i in entry["s"] + entry["s0"])
-    assert ranking["cases"]["case-01"]["traces"] == {"t-c": {"s": [], "p": [], "s0": [], "p0": []}}  # nothing failed
+    assert ranking["cases"]["case-01"]["traces"] == {
+        "t-c": {"s": [], "p": [], "s0": [], "p0": [], "ss": [], "ps": []}
+    }  # nothing failed
     # the record
     res = read_json(out / RUN_DIR / RESULTS_JSON)
     assert res["stage"] == STAGE_RANK_TRACE and res["axis"] == "trace" and res["arm"] == ARM_TRACE
@@ -209,7 +246,7 @@ def test_ranktrace_ranking_axis_unchanged(tmp_path, monkeypatch):
     cmd = call["cmd"]
     assert cmd[cmd.index("--select") + 1] == TRACE_SELECT_WINDOW and cmd[cmd.index("--cap") + 1] == str(TRACE_TRACE_CAP)
     res = read_json(out / RUN_DIR / RESULTS_JSON)
-    assert set(res) == LANDED_RANKING_KEYS | {"axis", "select"}
+    assert set(res) == LANDED_RANKING_KEYS | {"axis", "select"} | NEW_RECORD_KEYS
     assert res["stage"] == "rank" and res["axis"] == "ranking" and res["select"] == TRACE_SELECT_WINDOW
     assert res["cap"] == TRACE_TRACE_CAP and res["ranking_file"] == rt.POSITIONAL_JSON
     assert read_json(out / RUN_DIR / ARGUMENTS_JSON)["command"] == "rank"

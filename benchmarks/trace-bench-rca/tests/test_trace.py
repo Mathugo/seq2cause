@@ -161,11 +161,21 @@ def _fake_runner(docs, seen):
         windows = json.loads(Path(cmd[cmd.index("--cases") + 1]).read_text())
         select = cmd[cmd.index("--select") + 1]
         cap = int(cmd[cmd.index("--cap") + 1])
+        phase = cmd[cmd.index("--phase") + 1]
+        i = cmd.index("--cells") + 1
+        cells = []
+        while i < len(cmd) and not cmd[i].startswith("--"):
+            cells.append(cmd[i])
+            i += 1
         for w in windows:
             canned = docs[w["case_dir"]]
             spec = canned if isinstance(canned, dict) else {"traces": canned}
             traces = [
-                {"trace_id": tr.get("trace_id", f"{w['case_dir']}-t{i:02d}"), **tr}
+                {
+                    "trace_id": tr.get("trace_id", f"{w['case_dir']}-t{i:02d}"),
+                    **tr,
+                    "edges_by_cell": {c: list(tr["edges"]) for c in cells},  # one layout: every cell the same cut
+                }
                 for i, tr in enumerate(spec["traces"])
             ]
             if cap > 0:
@@ -175,6 +185,8 @@ def _fake_runner(docs, seen):
             doc = {
                 "case_dir": w["case_dir"],
                 "select": select,
+                "phase": phase,
+                "cells": cells,
                 "n_traces_window": 7,
                 "n_traces_candidates": len(spec["traces"]) + len(skipped),
                 "n_traces_selected": len(selected),
@@ -193,7 +205,10 @@ def _fake_runner(docs, seen):
         (out / rt.SUMMARY_JSON).write_text(
             json.dumps(
                 {
-                    "cell": cmd[cmd.index("--cell") + 1],
+                    "cell": cells[0],
+                    "cells": cells,
+                    "phase": phase,
+                    "seed": int(cmd[cmd.index("--seed") + 1]),
                     "corpus_id": "xs/latent/seed=0",
                     "model_sha256": "x" * 64,
                     "select": select,
@@ -213,13 +228,40 @@ def _fake_runner(docs, seen):
     return spawn
 
 
-def _ranktrace(arm, rec, corpus, out, tmp_path, harness_root, axis="ranking", select="window", cap=TRACE_TRACE_CAP):
+def _ranktrace(
+    arm,
+    rec,
+    corpus,
+    out,
+    tmp_path,
+    harness_root,
+    axis="ranking",
+    select="window",
+    cap=TRACE_TRACE_CAP,
+    reading="hop1",
+    phase="post",
+    subtract="none",
+    pre_record="none",
+    probe_arms=None,
+    work_dir=None,
+):
     freeze = tmp_path / "freeze.json"
-    freeze.write_text("{}")
+    if not freeze.exists():
+        freeze.write_text("{}")
     return rt.main(
         [
             "--arm",
             arm,
+            "--probe-arms",
+            *(probe_arms or [arm]),
+            "--reading",
+            reading,
+            "--phase",
+            phase,
+            "--subtract",
+            subtract,
+            "--pre-record",
+            str(pre_record),
             "--axis",
             axis,
             "--select",
@@ -245,7 +287,7 @@ def _ranktrace(arm, rec, corpus, out, tmp_path, harness_root, axis="ranking", se
             "--device",
             "cpu",
             "--work-dir",
-            str(tmp_path / "work" / arm.replace("/", "-")),
+            str(work_dir or (tmp_path / "work" / arm.replace("/", "-"))),
             "--prior-rung-record",
             "smallest-rung",
             "--staging-ledger",
@@ -284,7 +326,8 @@ def test_the_stage_reads_only_the_declared_inputs_and_scores_through_the_benchma
     assert _ranktrace(ARM_TRACE, rec, corpus, out, tmp_path, harness_root) == 0
     (call,) = seen
     cmd = call["cmd"]
-    assert cmd[1].endswith("trace_runner.py") and cmd[cmd.index("--cell") + 1] == TRACE_CELLS[ARM_TRACE]
+    assert cmd[1].endswith("trace_runner.py") and cmd[cmd.index("--cells") + 1] == TRACE_CELLS[ARM_TRACE]
+    assert cmd[cmd.index("--phase") + 1] == "post"
     assert cmd[cmd.index("--cap") + 1] == str(TRACE_TRACE_CAP) and cmd[cmd.index("--max-len") + 1] == str(TRACE_MAX_LEN)
     assert cmd[cmd.index("--corpus-dir") + 1] == str(corpus) and cmd[cmd.index("--seed") + 1] == "0"
     assert all(str(harness_root / rel) in call["env"]["PYTHONPATH"] for rel in rt.HARNESS_SRC)
@@ -327,6 +370,10 @@ def test_the_stage_refuses_a_foreign_seed_cell_or_corpus(tmp_path, monkeypatch):
         axis="ranking",
         select="window",
         cap=TRACE_TRACE_CAP,
+        reading="hop1",
+        phase="post",
+        subtract="none",
+        pre_record="none",
     )
     with pytest.raises(ValueError):  # --seed must name the corpus
         rt.rank(
@@ -339,6 +386,7 @@ def test_the_stage_refuses_a_foreign_seed_cell_or_corpus(tmp_path, monkeypatch):
             1,
             work_dir=tmp_path / "w1",
             out=tmp_path / "o1",
+            probe_arms=[ARM_TRACE],
             **args,
         )
     with pytest.raises(ValueError):  # a BARO arm has no TRACE stage
@@ -352,6 +400,7 @@ def test_the_stage_refuses_a_foreign_seed_cell_or_corpus(tmp_path, monkeypatch):
             0,
             work_dir=tmp_path / "w2",
             out=tmp_path / "o2",
+            probe_arms=["rca/baro"],
             **args,
         )
     monkeypatch.setattr(rt, "_spawn", _fake_runner({"case-00": [], "case-01": []}, []))
@@ -366,10 +415,23 @@ def test_the_stage_refuses_a_foreign_seed_cell_or_corpus(tmp_path, monkeypatch):
             0,
             work_dir=tmp_path / "w3",
             out=tmp_path / "o3",
+            probe_arms=[ARM_TRACE_CORE],
             **{**args, "harness_root": tmp_path / "nowhere"},
         )
     out = tmp_path / "o4"
-    rt.rank(ARM_TRACE_CORE, rec, corpus, tmp_path / "m", freeze, "xs", 0, work_dir=tmp_path / "w4", out=out, **args)
+    rt.rank(
+        ARM_TRACE_CORE,
+        rec,
+        corpus,
+        tmp_path / "m",
+        freeze,
+        "xs",
+        0,
+        work_dir=tmp_path / "w4",
+        out=out,
+        probe_arms=[ARM_TRACE_CORE],
+        **args,
+    )
     res = read_json(out / rt.POSITIONAL_JSON)
     assert res == {"cases": {}}  # every case a miss: no window trace
 

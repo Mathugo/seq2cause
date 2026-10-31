@@ -36,18 +36,32 @@ from .constants import (
     ARM_CIRCA,
     ARM_CIRCA_TOPOLOGY,
     ARM_CONTROL_RULE,
+    ARM_CONTROL_TRACE_EARLIEST,
     ARM_PC_PAGERANK,
     ARM_RCD,
     ARM_TRACE,
+    ARM_TRACE_ATOMIC_CMI_KEEP,
+    ARM_TRACE_CMI_KEEP,
+    ARM_TRACE_CMI_OVERWRITE,
     ARM_TRACE_CORE,
+    ARM_TRACE_IG_KEEP,
+    ARM_TRACE_IG_OVERWRITE,
     ARM_TRACERCA,
     CAUSALRCA_SERIES,
+    CONTEXT_TRACE_ARMS,
+    LANDED_TRACE_ARMS,
     RESULTS_JSON,
     ROOT_CAUSE_ARMS,
     RUN_DIR,
     RUNGS,
     SCORE_RCA_JSON,
     SEEDS,
+    TRACE_ARMS_ALL,
+    TRACE_READING_HOP0,
+    TRACE_READING_HOP1,
+    TRACE_READING_SOURCE,
+    TRACE_SERIES,
+    TRACE_SUBTRACT_PRE,
     VARIANT,
 )
 from .graphaxis import SCORE_SERVICE_JSON, TEST_SEEDS
@@ -62,7 +76,12 @@ RUN_AVERAGED_ARMS = (
     ARM_CAUSALRCA,
     ARM_RCD,
 )  # arms scored by per-run averaging (plans/rca-arms.md, addenda 2026-10-23 / 2026-10-25)
-REPORT_ARMS = tuple(a for a in ROOT_CAUSE_ARMS) + (ARM_CONTROL_RULE,)
+REPORT_ARMS = tuple(a for a in ROOT_CAUSE_ARMS) + (ARM_CONTROL_RULE, ARM_CONTROL_TRACE_EARLIEST)
+# the context family's case-level rows (addendum "2026-10-31, later"): per arm one row per series — the readings
+# hop1 / hop0 / source and their post − pre subtractions (`<reading>-subpre`); the landed TRACE arms keep their landed
+# directory as the hop1 row and gain hop0 / source rows; the hop0 row is the primary row of every TRACE arm
+PRIMARY_SERIES = {**{a: None for a in LANDED_TRACE_ARMS}, **{a: TRACE_READING_HOP0 for a in CONTEXT_TRACE_ARMS}}
+REQUIRED_SERIES = {**{a: (None,) for a in LANDED_TRACE_ARMS}, **{a: (TRACE_READING_HOP0,) for a in CONTEXT_TRACE_ARMS}}
 # the stretch arms' hypotheses: the §6 random / rule rules applied per arm (addenda 2026-10-25)
 PER_ARM_HYPOTHESES = {
     ARM_CIRCA: "circa",
@@ -72,7 +91,28 @@ PER_ARM_HYPOTHESES = {
     ARM_PC_PAGERANK: "pc-pagerank",  # addendum 2026-10-28
     ARM_TRACE: "trace",  # addendum 2026-10-30
     ARM_TRACE_CORE: "trace-core",
+    ARM_TRACE_IG_OVERWRITE: "trace-ig-overwrite",  # addendum "2026-10-31, later": on the hop0 (primary) row
+    ARM_TRACE_CMI_OVERWRITE: "trace-cmi-overwrite",
+    ARM_TRACE_IG_KEEP: "trace-ig-keep",
+    ARM_TRACE_CMI_KEEP: "trace-cmi-keep",
+    ARM_TRACE_ATOMIC_CMI_KEEP: "trace-atomic-cmi-keep",
 }
+
+
+def series_of(arm):
+    """The result series of an arm: CausalRCA's two series, a TRACE arm's readings, else the one landed directory."""
+    if arm == ARM_CAUSALRCA:
+        return tuple(CAUSALRCA_SERIES)
+    return TRACE_SERIES.get(arm, (None,))
+
+
+def reading_of(series):
+    """`(reading, subtract)` of a TRACE series name (`None` = the landed hop1 row)."""
+    if series is None:
+        return TRACE_READING_HOP1, None
+    if series.endswith("-subpre"):
+        return series[: -len("-subpre")], TRACE_SUBTRACT_PRE
+    return series, None
 
 
 def cell_dir(results_dir, rung, seed, arm, series=None):
@@ -118,6 +158,15 @@ def row_of(rung, arm, pooled, cells):
     }
     if arm == ARM_CAUSALRCA:
         row["series"] = cells[0][1]["series"]
+    if arm in TRACE_ARMS_ALL:
+        series = cells[0][2].get("reading") if cells[0][2].get("subtract", "none") == "none" else None
+        series = series if cells[0][2].get("subtract", "none") == "none" else f"{cells[0][2]['reading']}-subpre"
+        if series is not None and series != TRACE_READING_HOP1 or arm in CONTEXT_TRACE_ARMS:
+            row["series"] = series
+        row["reading"], row["subtract"] = (
+            cells[0][2].get("reading", TRACE_READING_HOP1),
+            cells[0][2].get("subtract", "none"),
+        )
     if arm in RUN_AVERAGED_ARMS:
         row["n_failed_runs"] = sum(r["n_failed_runs"] for _, _, r in cells)
         row["aggregation"] = pooled["aggregation"]
@@ -182,8 +231,89 @@ def row_of(rung, arm, pooled, cells):
     return row
 
 
+def _trace_index(rows):
+    """`{(rung, arm, reading, subtract): row}` over the TRACE arms' rows (the landed row is hop1, no subtraction)."""
+    out = {}
+    for r in rows:
+        if r["arm"] in TRACE_ARMS_ALL:
+            out[(r["rung"], r["arm"], r.get("reading", TRACE_READING_HOP1), r.get("subtract", "none"))] = r
+    return out
+
+
+def _ge_hypothesis(pairs):
+    """`pairs`: `{key: (a_row, b_row)}` → the per-key verdict a >= b on Avg@5, the gaps, and the overall verdict."""
+    per = {k: a["metrics"][AVG] >= b["metrics"][AVG] for k, (a, b) in pairs.items()}
+    gaps = {k: a["metrics"][AVG] - b["metrics"][AVG] for k, (a, b) in pairs.items()}
+    if not per:
+        return {"verdict": "not run", "reason": "no row pair on a named rung"}
+    return {"gap": gaps, "per_rung_and_arm": per, "verdict": "pass" if all(per.values()) else "fail"}
+
+
+def trace_hypotheses(rows, rungs):
+    """The context family's case-level hypotheses (addendum "2026-10-31, later"), on Avg@5."""
+    idx = _trace_index(rows)
+    by = {(r["rung"], r["arm"]): r for r in rows if r["arm"] not in TRACE_ARMS_ALL}
+    out = {}
+
+    def row(g, a, reading, subtract="none"):
+        return idx.get((g, a, reading, subtract))
+
+    out["H-rca-hop0"] = _ge_hypothesis(
+        {
+            f"{g} {a}": (row(g, a, TRACE_READING_HOP0), row(g, a, TRACE_READING_HOP1))
+            for g in rungs
+            for a in TRACE_ARMS_ALL
+            if row(g, a, TRACE_READING_HOP0) and row(g, a, TRACE_READING_HOP1)
+        }
+    )
+    for name, ref in (("H-rca-ctx-rule", ARM_CONTROL_RULE), ("H-rca-ctx-rcd", ARM_RCD)):
+        out[name] = _ge_hypothesis(
+            {
+                f"{g} {a}": (row(g, a, TRACE_READING_HOP0), by[(g, ref)])
+                for g in rungs
+                for a in CONTEXT_TRACE_ARMS
+                if row(g, a, TRACE_READING_HOP0) and (g, ref) in by
+            }
+        )
+    out["H-rca-source"] = _ge_hypothesis(
+        {
+            f"{g} {a}": (row(g, a, TRACE_READING_SOURCE), row(g, a, TRACE_READING_HOP1))
+            for g in rungs
+            for a in TRACE_ARMS_ALL
+            if row(g, a, TRACE_READING_SOURCE) and row(g, a, TRACE_READING_HOP1)
+        }
+    )
+    out["H-rca-presub"] = _ge_hypothesis(
+        {
+            f"{g} {a}": (row(g, a, TRACE_READING_HOP0, TRACE_SUBTRACT_PRE), row(g, a, TRACE_READING_HOP0))
+            for g in rungs
+            for a in CONTEXT_TRACE_ARMS
+            if row(g, a, TRACE_READING_HOP0, TRACE_SUBTRACT_PRE) and row(g, a, TRACE_READING_HOP0)
+        }
+    )
+    out["H-rca-atomic-cmi"] = _ge_hypothesis(
+        {
+            f"{g}": (row(g, ARM_TRACE_ATOMIC_CMI_KEEP, TRACE_READING_HOP0), row(g, ARM_TRACE, TRACE_READING_HOP0))
+            for g in rungs
+            if row(g, ARM_TRACE_ATOMIC_CMI_KEEP, TRACE_READING_HOP0) and row(g, ARM_TRACE, TRACE_READING_HOP0)
+        }
+    )
+    return out
+
+
 def hypotheses(rows, rungs, graph_rows=()):
-    by = {(r["rung"], r["arm"]): r for r in rows}
+    # the landed hypotheses read one row per (rung, arm): the landed row of every arm as before, and for the context
+    # family's arms (whose rows are all series) the hop0 row, their primary
+    by = {}
+    for r in rows:
+        if r["arm"] in CONTEXT_TRACE_ARMS:
+            if r.get("reading") == TRACE_READING_HOP0 and r.get("subtract", "none") == "none":
+                by[(r["rung"], r["arm"])] = r
+        elif r["arm"] in LANDED_TRACE_ARMS:
+            if r.get("reading", TRACE_READING_HOP1) == TRACE_READING_HOP1 and r.get("subtract", "none") == "none":
+                by[(r["rung"], r["arm"])] = r
+        else:
+            by[(r["rung"], r["arm"])] = r
     out = {}
     if all((g, ARM_BARO) in by for g in rungs):
         per = {
@@ -253,6 +383,7 @@ def hypotheses(rows, rungs, graph_rows=()):
             "verdict": "not run",
             "reason": "needs rca/causalrca's graph test reads on every named rung",
         }
+    out.update(trace_hypotheses(rows, rungs))
     return out
 
 
@@ -351,12 +482,22 @@ def report(results_dir, rungs, seeds, arms, b, seed, out):
     out = Path(out)
     rows, files = [], {}
     graph_rows = []
+    absent = []
     for arm in arms:
-        for series in CAUSALRCA_SERIES if arm == ARM_CAUSALRCA else (None,):
+        for series in series_of(arm):
             pooler = pool_run_averaged if arm in RUN_AVERAGED_ARMS else pool
             stem = arm_slug(arm) if series is None else f"{arm_slug(arm)}-{series}"
             all_results = []
             for rung in rungs:
+                if arm in TRACE_ARMS_ALL and series not in REQUIRED_SERIES[arm]:
+                    missing = [
+                        k
+                        for k in seeds
+                        if not (cell_dir(results_dir, rung, k, arm, series) / RUN_DIR / RESULTS_JSON).exists()
+                    ]
+                    if missing:  # a reading not yet landed is reported absent, never improvised
+                        absent.append({"rung": rung, "arm": arm, "series": series, "seeds_missing": missing})
+                        continue
                 cells = [load_cell(results_dir, rung, k, arm, series) for k in seeds]
                 pooled = pooler([c[0] for c in cells], b, seed)
                 name = f"pooled-{rung}-{stem}.json"
@@ -371,7 +512,7 @@ def report(results_dir, rungs, seeds, arms, b, seed, out):
                 write_json(out / name, pooler(all_results, b, seed))
                 files[name] = sha256_file(out / name)
     hyp = hypotheses(rows, rungs, graph_rows)
-    write_json(out / "summary.json", {"rows": rows, "graph_rows": graph_rows, "hypotheses": hyp})
+    write_json(out / "summary.json", {"rows": rows, "graph_rows": graph_rows, "hypotheses": hyp, "absent": absent})
     (out / "rca-latent.md").write_text(markdown(rows, hyp, graph_rows), encoding="utf-8")
     files["summary.json"] = sha256_file(out / "summary.json")
     files["rca-latent.md"] = sha256_file(out / "rca-latent.md")
@@ -381,6 +522,7 @@ def report(results_dir, rungs, seeds, arms, b, seed, out):
         "seeds": list(seeds),
         "arms": list(arms),
         "files": files,
+        "absent": absent,
         "hypotheses": {k: v["verdict"] for k, v in hyp.items()},
     }
 
