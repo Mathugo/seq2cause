@@ -40,10 +40,9 @@ from .arms import arm_slug
 from .constants import (
     ARM_CAUSALRCA,
     ARM_CONTROL_TRACE_CALLEES,
+    ARM_CONTROL_TRACE_EARLIEST,
     ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TRACE_TOPOLOGY,
-    ARM_TRACE,
-    ARM_TRACE_CORE,
     CAUSALRCA_SERIES,
     RANKING_JSON,
     RESULTS_JSON,
@@ -52,7 +51,9 @@ from .constants import (
     SCORE_TRACE_TRACES_JSON,
     STAGE_RANK_TRACE,
     STAGE_SCORE_TRACE,
+    TRACE_ARMS_ALL,
     TRACE_BROADCAST_ARMS,
+    TRACE_READING_EARLIEST,
     TRACE_READINGS,
     VARIANT,
 )
@@ -61,9 +62,22 @@ from .log import log
 from .record import RunRecord, read_json, sha256_file, write_json
 
 STAGE = STAGE_SCORE_TRACE
-HOP1, HOP0 = TRACE_READINGS
-READING_KEYS = {HOP1: ("s", "p"), HOP0: ("s0", "p0")}
-TRACE_ARMS = (ARM_TRACE, ARM_TRACE_CORE)
+HOP1, HOP0, SOURCE = TRACE_READINGS
+READING_KEYS = {HOP1: ("s", "p"), HOP0: ("s0", "p0"), SOURCE: ("ss", "ps"), TRACE_READING_EARLIEST: ("s", "p")}
+TRACE_ARMS = TRACE_ARMS_ALL
+SCORED_ARMS = TRACE_ARMS + (ARM_CONTROL_TRACE_EARLIEST,)  # the control's own file, scored through mode `arm`
+ROWS_ALL = "all"
+ROWS_ARM_ONLY = "arm-only"  # the arm's reading rows only: the control's cell (D-TBR-19) and re-scores
+ROWS_MODES = (ROWS_ALL, ROWS_ARM_ONLY)
+
+
+def doc_readings(doc):
+    """The readings a ranking file carries: `readings` since schema @2, the two landed readings before."""
+    return tuple(doc.get("readings") or (HOP1, HOP0))
+
+
+def primary_reading(doc):
+    return doc.get("primary_reading") or doc_readings(doc)[0]
 
 
 def read_rank_trace_record(rank_record, ranking_trace):
@@ -124,8 +138,12 @@ def broadcast_sources(results_dir, rung, seed):
     return out
 
 
-def rows_of(corpus_dir, arm, doc, broadcast_results_dir, rung, seed, b, boot_seed):
-    """Every row of the axis for this cell: `{row_id: result}` with the per-trace rows still inside."""
+def rows_of(corpus_dir, arm, doc, broadcast_results_dir, rung, seed, b, boot_seed, rows_mode=ROWS_ALL):
+    """Every row of the axis for this cell: `{row_id: result}` with the per-trace rows still inside. The arm's row
+    per reading the file carries (the `hop0` flag of the scorer set for every reading but `hop1`); with `rows_mode`
+    `all` the floor, the two controls (both landed readings) and the broadcast rows beside them."""
+    if rows_mode not in ROWS_MODES:
+        raise ValueError(f"rows must be one of {ROWS_MODES}, got {rows_mode!r}")
     cell = cell_of(doc)
     inputs = load_inputs(corpus_dir, cell)  # the view and the labels read once per cell
 
@@ -133,12 +151,14 @@ def rows_of(corpus_dir, arm, doc, broadcast_results_dir, rung, seed, b, boot_see
         return score_trace_axis(corpus_dir, cell, prediction, mode, hop0, b, boot_seed, inputs=inputs)
 
     rows = {}
-    for reading in TRACE_READINGS:
-        rows[f"{arm}/{reading}"] = one(arm_prediction(doc, reading), "arm", reading == HOP0)
-    for reading in TRACE_READINGS:
+    for reading in doc_readings(doc):
+        rows[f"{arm}/{reading}"] = one(arm_prediction(doc, reading), "arm", reading != HOP1)
+    if rows_mode == ROWS_ARM_ONLY:
+        return rows
+    for reading in (HOP1, HOP0):
         rows[f"{ARM_FLOOR_TRACE_TOPOLOGY}/{reading}"] = one(None, "topology", reading == HOP0)
     rows[ARM_CONTROL_TRACE_RANDOM] = one(None, "random", False)
-    for reading in TRACE_READINGS:
+    for reading in (HOP1, HOP0):
         rows[f"{ARM_CONTROL_TRACE_CALLEES}/{reading}"] = one(None, "callees", reading == HOP0)
     for row_id, path in broadcast_sources(broadcast_results_dir, rung, seed):
         rows[row_id] = one(read_json(path), "broadcast", False)
@@ -155,11 +175,11 @@ def check_case_dirs(corpus_dir, doc):
         )
 
 
-def score(corpus_dir, rank_record, ranking_trace, broadcast_results_dir, b, boot_seed, out):
+def score(corpus_dir, rank_record, ranking_trace, broadcast_results_dir, b, boot_seed, out, rows_mode=ROWS_ALL):
     rank_res, rank_sha, doc = read_rank_trace_record(rank_record, ranking_trace)
     arm = rank_res["arm"]
-    if arm not in TRACE_ARMS:
-        raise ValueError(f"{arm!r} has no per-trace axis; the TRACE arms are {TRACE_ARMS}")
+    if arm not in SCORED_ARMS:
+        raise ValueError(f"{arm!r} has no per-trace axis; the scored arms are {SCORED_ARMS}")
     corpus_id = corpus_id_of(corpus_dir)
     if corpus_id != rank_res["corpus_id"]:
         raise ValueError(f"the rank read is of {rank_res['corpus_id']!r}; this corpus is {corpus_id!r}")
@@ -167,16 +187,21 @@ def score(corpus_dir, rank_record, ranking_trace, broadcast_results_dir, b, boot
     if list(doc["services"]) != expected:
         raise ValueError("the rank read's services are not the corpus's deployed services in name order")
     check_case_dirs(corpus_dir, doc)
-    rows = rows_of(corpus_dir, arm, doc, broadcast_results_dir, rank_res["rung"], rank_res["seed"], b, boot_seed)
+    rows = rows_of(
+        corpus_dir, arm, doc, broadcast_results_dir, rank_res["rung"], rank_res["seed"], b, boot_seed, rows_mode
+    )
     traces = {row_id: r.pop("traces") for row_id, r in rows.items()}
     out = Path(out)
     write_json(out / SCORE_TRACE_JSON, {"rows": rows})
     write_json(out / SCORE_TRACE_TRACES_JSON, traces)
-    primary = rows[f"{arm}/{HOP1}"]
+    primary = rows[f"{arm}/{primary_reading(doc)}"]
     return {
         "stage": STAGE,
         "axis": primary["axis"],
         "arm": arm,
+        "readings": list(doc_readings(doc)),
+        "primary_reading": primary_reading(doc),
+        "rows_mode": rows_mode,
         "rung": rank_res["rung"],
         "seed": rank_res["seed"],
         "corpus_id": corpus_id,
@@ -211,6 +236,12 @@ def build_parser():
         required=True,
         help="the results root holding the landed case rankings (ranking.json)",
     )
+    p.add_argument(
+        "--rows",
+        required=True,
+        choices=ROWS_MODES,
+        help="all: the arm's readings, the floor, the controls and the broadcast rows; arm-only: the arm's rows",
+    )
     p.add_argument("--bootstrap-b", required=True, type=int, help="bootstrap resamples over cases (registered: 2000)")
     p.add_argument("--bootstrap-seed", required=True, type=int, help="bootstrap seed (registered: 0)")
     p.add_argument("--output-folder", required=True, help="the arm's trace folder: score-trace.json, the sidecar, run/")
@@ -228,6 +259,7 @@ def main(argv=None):
             args.bootstrap_b,
             args.bootstrap_seed,
             args.output_folder,
+            rows_mode=args.rows,
         )
         log(
             {

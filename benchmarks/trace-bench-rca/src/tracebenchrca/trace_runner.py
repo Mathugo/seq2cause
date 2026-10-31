@@ -3,8 +3,8 @@ graph (method side; runs in the reference harness's environment, `plans/rca-arms
 the per-trace axis's selection rule, plan of 2026-10-31).
 
     <seq2cause-trace-bench python> trace_runner.py --corpus-dir <pulled corpus> --cases <cases.json> \
-        --model <backbone dir> --freeze <committed freeze> --cell trace/cli-atomic/shipped/frozen/request \
-        --select post-nonok --cap 0 --max-len 64 --device cpu --seed 0 --out-dir <dir>
+        --model <backbone dir> --freeze <committed freeze> --cells trace/cli-atomic/shipped/frozen/request \
+        --phase post --select post-nonok --cap 0 --max-len 64 --device cpu --seed 0 --out-dir <dir>
 
 Imports `seq2causebench` (the reference harness: the corpus door, the vocabulary, the encoder and the engine
 adapter `probe_sequence`) and nothing from `tracebenchrca`. `cases.json` is `[{"case_dir", "inject_time",
@@ -25,6 +25,13 @@ traces with, per window position, `(op, outcome, service, is_client)` from the v
 cut edges, the selected and skipped trace ids, and the count of window positions whose raw outcome is non-OK but
 whose token folded to the base op (`n_nonok_folded`) — and `<out-dir>/summary.json` (the cell, the model and
 freeze hashes, versions, import paths, throughput).
+
+Since 2026-10-31 (`plans/rca-arms.md`, addendum "2026-10-31, later"; D-TBR-16, D-TBR-18): `--cells` names one or
+more frozen cells of ONE pass (the same `(probe, noise, c, N, g)` in the freeze — the information-gain and CMI cells
+of a layout): every trace is probed once and cut at each cell's own tau; a trace's document carries `edges` (the
+first cell's, the landed shape) and `edges_by_cell`. `--phase pre` probes the pre-fault stretch `[pre_start_time,
+inject_time)` of each case (`cases.json` carries `pre_start_time`; `--select window` only), the candidates ordered by
+descending start time (nearest the injection first), the cap applied; `--phase post` is the landed selection.
 """
 
 from __future__ import annotations
@@ -41,6 +48,8 @@ import torch
 
 SELECT_WINDOW = "window"
 SELECT_POST_NONOK = "post-nonok"
+PHASE_POST = "post"
+PHASE_PRE = "pre"
 SPLITS = ("train", "val", "test")
 SEQUENCE_COLUMNS = ("trace_id", "ops", "outcomes", "offsets", "durations", "n_spans", "start_ns")
 
@@ -68,7 +77,18 @@ def main(argv=None):
     p.add_argument("--cases", required=True, help="JSON list of {case_dir, inject_time, end_time}")
     p.add_argument("--model", required=True, help="the seed's frozen backbone directory")
     p.add_argument("--freeze", required=True, help="the committed freeze record of the same corpus and backbone")
-    p.add_argument("--cell", required=True, help="the frozen cell key, <arm>/<path>/frozen/request")
+    p.add_argument(
+        "--cells",
+        required=True,
+        nargs="+",
+        help="the frozen cell keys of ONE pass, <arm>/<path>/frozen/request ... (the first is the document's `edges`)",
+    )
+    p.add_argument(
+        "--phase",
+        required=True,
+        choices=(PHASE_POST, PHASE_PRE),
+        help="post: the fault window; pre: the pre-fault stretch [pre_start_time, inject_time), nearest first",
+    )
     p.add_argument(
         "--select",
         required=True,
@@ -95,12 +115,24 @@ def main(argv=None):
     from tracebench.constants import KIND_CLIENT, OUTCOME_5XX, OUTCOME_ERR, OUTCOME_NAMES, OUTCOME_OK, OUTCOME_SLOW
 
     nonok_ids = (OUTCOME_5XX, OUTCOME_ERR, OUTCOME_SLOW)  # = tracebenchrca.constants.TRACE_NONOK_OUTCOMES by name
+    if args.phase == PHASE_PRE and args.select != SELECT_WINDOW:
+        raise ValueError("--phase pre selects by the case rule only (--select window; D-TBR-18)")
     freeze = json.loads(Path(args.freeze).read_text(encoding="utf-8"))
-    arm, path, cut, grain = parse_cell_key(args.cell)
-    if cut != "frozen" or grain != "request":
-        raise ValueError(f"the cell must be a frozen request cell, got {args.cell}")
-    cell = freeze["cells"][args.cell]
-    c, N, g, tau, probe, noise = cell["c"], cell["N"], cell["g"], float(cell["tau"]), cell["probe"], cell["noise"]
+    layouts, taus, cols = {}, {}, {}
+    for key in args.cells:
+        arm_k, path_k, cut, grain = parse_cell_key(key)
+        if cut != "frozen" or grain != "request":
+            raise ValueError(f"the cell must be a frozen request cell, got {key}")
+        cell_k = freeze["cells"][key]
+        layouts[key] = (cell_k["probe"], cell_k["noise"], cell_k["c"], cell_k["N"], cell_k["g"])
+        taus[key] = float(cell_k["tau"])
+        cols[key] = column_of(arm_k, path_k)
+    if len(set(layouts.values())) != 1:
+        raise ValueError(f"--cells must share one pass (probe, noise, c, N, g); got {layouts}")
+    first = args.cells[0]
+    arm, path, _, _ = parse_cell_key(first)
+    probe, noise, c, N, g = layouts[first]
+    tau = taus[first]
     hf_model, adapter, model_sha = load_backbone(args.model, args.device)
     if model_sha != freeze["model_sha256"]:
         raise ValueError(f"the backbone hashes to {model_sha} but the freeze binds {freeze['model_sha256']}")
@@ -116,9 +148,14 @@ def main(argv=None):
         return op_service[op][1]
 
     columns = probe_columns(probe, noise)
-    col = column_of(arm, path)
+    col = cols[first]
     cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
-    windows = [(k["case_dir"], int(k["inject_time"]) * 10**9, int(k["end_time"]) * 10**9) for k in cases]
+    if args.phase == PHASE_PRE:
+        if any("pre_start_time" not in k for k in cases):
+            raise ValueError("--phase pre needs pre_start_time on every case of cases.json (D-TBR-18)")
+        windows = [(k["case_dir"], int(k["pre_start_time"]) * 10**9, int(k["inject_time"]) * 10**9) for k in cases]
+    else:
+        windows = [(k["case_dir"], int(k["inject_time"]) * 10**9, int(k["end_time"]) * 10**9) for k in cases]
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -153,7 +190,10 @@ def main(argv=None):
     }
     t_all = time.monotonic()
     for name, _, _ in windows:
-        candidates = sorted(selected[name])
+        if args.phase == PHASE_PRE:  # nearest the injection first (D-TBR-18)
+            candidates = sorted(selected[name], key=lambda r: (-r[0], r[1]))
+        else:
+            candidates = sorted(selected[name])
         rows = candidates[: args.cap] if args.cap > 0 else candidates
         traces, skipped, n_trunc, n_fold, n_nonok_fold = [], [], 0, 0, 0
         t0 = time.monotonic()
@@ -169,7 +209,7 @@ def main(argv=None):
             ids_t = torch.as_tensor(np.asarray(ids), dtype=torch.long, device=device)
             res = probe_sequence(probe, noise, hf_model, adapter, ids_t, c, g, N, columns, "none")
             tok_pos += res.tok_pos
-            m = np.asarray(res.matrices[col], dtype=np.float64)
+            mats = {key: np.asarray(res.matrices[cols[key]], dtype=np.float64) for key in args.cells}
             window = ids[c:]
             positions = []
             for pidx, t in enumerate(window):
@@ -184,8 +224,14 @@ def main(argv=None):
                     positions.append(None)
             real = np.array([pos is not None for pos in positions])
             jj, qq = np.triu_indices(len(window), k=1)
-            keep = (m[jj, qq] > tau) & real[jj] & real[qq]
-            edges = [[int(j), int(q), float(m[j, q])] for j, q in zip(jj[keep], qq[keep], strict=True)]
+            edges_by_cell = {}
+            for key in args.cells:
+                mk = mats[key]
+                keep = (mk[jj, qq] > taus[key]) & real[jj] & real[qq]
+                edges_by_cell[key] = [
+                    [int(j), int(q), float(mk[j, q])] for j, q in zip(jj[keep], qq[keep], strict=True)
+                ]
+            edges = edges_by_cell[first]
             traces.append(
                 {
                     "trace_id": tid,
@@ -194,12 +240,15 @@ def main(argv=None):
                     "n_window": len(window),
                     "positions": positions,
                     "edges": edges,
+                    "edges_by_cell": edges_by_cell,
                 }
             )
         wall = time.monotonic() - t0
         doc = {
             "case_dir": name,
             "select": args.select,
+            "phase": args.phase,
+            "cells": list(args.cells),
             "n_traces_window": n_window[name],
             "n_traces_candidates": len(candidates),
             "n_traces_selected": len(rows),
@@ -235,7 +284,10 @@ def main(argv=None):
             flush=True,
         )
     summary = {
-        "cell": args.cell,
+        "cell": first,
+        "cells": list(args.cells),
+        "taus": taus,
+        "phase": args.phase,
         "arm": arm,
         "path": path,
         "probe": probe,

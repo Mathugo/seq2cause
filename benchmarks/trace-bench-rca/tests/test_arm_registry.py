@@ -16,6 +16,7 @@ from tracebenchrca.constants import (
     ARM_CONTROL_RANDOM,
     ARM_CONTROL_RULE,
     ARM_CONTROL_TRACE_CALLEES,
+    ARM_CONTROL_TRACE_EARLIEST,
     ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TOPOLOGY,
     ARM_FLOOR_TRACE_TOPOLOGY,
@@ -34,6 +35,7 @@ from tracebenchrca.constants import (
     CLASS_FLOOR_CONTROL,
     CLASS_ROOT_CAUSE,
     CLASSES,
+    CONTEXT_TRACE_ARMS,
     CONTROL_ARMS,
     DISCOVERY_ARMS,
     GRAPH_ARMS,
@@ -53,9 +55,9 @@ from tracebenchrca.constants import (
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def test_three_classes_sixteen_arms():
+def test_three_classes_twenty_two_arms():
     assert CLASSES == (CLASS_DISCOVERY, CLASS_ROOT_CAUSE, CLASS_FLOOR_CONTROL)
-    assert len(ARMS) == 16
+    assert len(ARMS) == 22  # 16 landed + the context family's five + the earliest-error control (2026-10-31)
     assert set(ROOT_CAUSE_ARMS) == {
         ARM_BARO,
         ARM_BARO_BOCPD,
@@ -67,6 +69,7 @@ def test_three_classes_sixteen_arms():
         ARM_PC_PAGERANK,
         ARM_TRACE,
         ARM_TRACE_CORE,
+        *CONTEXT_TRACE_ARMS,
     }
     assert set(CONTROL_ARMS) == {
         ARM_CONTROL_RANDOM,
@@ -75,6 +78,7 @@ def test_three_classes_sixteen_arms():
         ARM_FLOOR_TRACE_TOPOLOGY,
         ARM_CONTROL_TRACE_RANDOM,
         ARM_CONTROL_TRACE_CALLEES,
+        ARM_CONTROL_TRACE_EARLIEST,
     }
     assert DISCOVERY_ARMS == ()  # declared, no member yet
     for arm in ARMS:
@@ -118,11 +122,13 @@ def test_axes_and_cell_keys():
     assert set(TRACE_AXIS_ARMS) == {
         ARM_TRACE,
         ARM_TRACE_CORE,
+        *CONTEXT_TRACE_ARMS,
         ARM_FLOOR_TRACE_TOPOLOGY,
         ARM_CONTROL_TRACE_RANDOM,
         ARM_CONTROL_TRACE_CALLEES,
+        ARM_CONTROL_TRACE_EARLIEST,
     }
-    for arm in (ARM_TRACE, ARM_TRACE_CORE):
+    for arm in (ARM_TRACE, ARM_TRACE_CORE, *CONTEXT_TRACE_ARMS, ARM_CONTROL_TRACE_EARLIEST):
         assert arms.axes_of(arm) == (AXIS_RANKING, AXIS_TRACE)
     for arm in (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES):
         assert arms.axes_of(arm) == (AXIS_TRACE,) and arms.arm_class(arm) == CLASS_FLOOR_CONTROL

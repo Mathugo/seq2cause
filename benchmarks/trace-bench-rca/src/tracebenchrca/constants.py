@@ -205,6 +205,9 @@ PC_PAGERANK_DATASET = (
 # --- TRACE's own root-cause rule (plans/rca-arms.md, addendum 2026-10-30; D-TBR-13) ---------------------------
 SEQ2CAUSE_REPO = "Mathugo/seq2cause"
 SEQ2CAUSE_COMMIT = "67416a2f0ba6ef675a39028518f7a45bbf327291"  # v0.1.9, the shipped commit the harness builds on
+CONTEXT_FAMILY_SEQ2CAUSE_COMMIT = (  # v0.3.1, the context family's cells (plans/rca-arms.md, addendum "2026-10-31, later")
+    "280ed948a2407baaf929ac16e6a113318d0848fb"
+)
 TRACE_NONOK_OUTCOMES = ("5xx", "err", "slow")  # a non-OK position; 4xx is a client-side outcome
 TRACE_TRACE_CAP = 500  # the landed case-level runs' cap: window traces probed per case, the first by start time
 TRACE_MAX_LEN = 64  # real tokens per sequence, as the frozen cells' reads (discover --max-len)
@@ -214,6 +217,7 @@ TRACE_DEVICES = ("cpu", "cuda", "mps")
 TRACE_MISS_NO_TRACE = "no window trace"
 TRACE_MISS_NO_NONOK = "no non-OK position"
 TRACE_MISS_NO_UPSTREAM = "no upstream service"
+TRACE_MISS_NO_SOURCE = "no source service"  # the source rule: every source position is the client's
 # --- the per-trace axis (plan of 2026-10-31; contract-per-trace-axis.md) ---------------------------------------
 TRACE_SELECT_WINDOW = "window"  # legacy: start in [inject, end), no non-OK test — reproduces the landed case-level runs
 TRACE_SELECT_POST_NONOK = "post-nonok"  # rule R: whole trace inside the window and at least one non-client non-OK span
@@ -223,7 +227,28 @@ STAGE_RANK_TRACE = "rank-trace"
 STAGE_SCORE_TRACE = "score-trace"
 TRACE_AXIS_DIR = "trace"  # the axis's directory inside an arm's results directory
 TRACE_TOLERANCE_JACCARD = 0.80  # the GPU/CPU edge-set tolerance gate (tracebenchrca.tolerance), mean Jaccard
-TRACE_READINGS = ("hop1", "hop0")  # the two readings of the rule per trace: upstream only / plus the failed position
+# the readings of the rule (addendum "2026-10-31, later", D-TBR-17): `hop1` = the upstream-closure rule as landed
+# (upstream only); `hop0` = the closure plus the non-OK position's own service — THE PRIMARY READING on both axes
+# from 2026-10-31; `source` = the author's source rule (only non-OK positions with no non-OK parent credit their
+# service, at hop 0)
+TRACE_READING_HOP1 = "hop1"
+TRACE_READING_HOP0 = "hop0"
+TRACE_READING_SOURCE = "source"
+TRACE_READINGS = (TRACE_READING_HOP1, TRACE_READING_HOP0, TRACE_READING_SOURCE)
+TRACE_PRIMARY_READING = TRACE_READING_HOP0
+TRACE_READING_EARLIEST = "earliest"  # the earliest-error control's one reading (plans/controls.md §3)
+TRACE_RULE_CLOSURE = "closure"  # the upstream-closure rule (hop1 / hop0)
+TRACE_RULE_SOURCE = "source"
+TRACE_RULES = (TRACE_RULE_CLOSURE, TRACE_RULE_SOURCE)
+# the probed phase of a case (D-TBR-18): the fault window, or the pre-fault stretch before the injection
+TRACE_PHASE_POST = "post"
+TRACE_PHASE_PRE = "pre"
+TRACE_PHASES = (TRACE_PHASE_POST, TRACE_PHASE_PRE)
+TRACE_PRE_SOURCE_PREVIOUS = "previous-fault-end"
+TRACE_PRE_SOURCE_CORPUS_START = "corpus-start"
+TRACE_SUBTRACT_NONE = "none"
+TRACE_SUBTRACT_PRE = "pre"  # score = the post credit rate minus the pre credit rate (case level only)
+TRACE_SUBTRACTS = (TRACE_SUBTRACT_NONE, TRACE_SUBTRACT_PRE)
 
 # --- arms (plans/rca-arms.md §1, plans/controls.md) ----------------------------------------------
 ARM_BARO = "rca/baro"
@@ -234,6 +259,13 @@ ARM_TRACERCA = "rca/tracerca"
 ARM_PC_PAGERANK = "rca/pc-pagerank"
 ARM_TRACE = "rca/trace"  # the atomic construction's frozen request cell under the lab's reading of the author's rule
 ARM_TRACE_CORE = "rca/trace-core"  # the core path's frozen request cell, the second row
+# the context family's arms (addendum "2026-10-31, later"; D-TBR-16): the reference harness's context freeze
+ARM_TRACE_IG_OVERWRITE = "rca/trace-ig-overwrite"
+ARM_TRACE_CMI_OVERWRITE = "rca/trace-cmi-overwrite"
+ARM_TRACE_IG_KEEP = "rca/trace-ig-keep"
+ARM_TRACE_CMI_KEEP = "rca/trace-cmi-keep"
+ARM_TRACE_ATOMIC_CMI_KEEP = "rca/trace-atomic-cmi-keep"
+ARM_CONTROL_TRACE_EARLIEST = "control/trace-earliest"  # the earliest-error control (plans/controls.md §3; D-TBR-19)
 ARM_BARO_BOCPD = "rca/baro-bocpd"
 ARM_CAUSALRCA = "rca/causalrca"
 ARM_CONTROL_RANDOM = "control/random"
@@ -387,11 +419,59 @@ ARMS = {
         },
         "licence": "MIT (pyproject.toml of the author's repository; benchmarking authorised by the author)",
     },
+    **{
+        arm: {
+            "class": CLASS_ROOT_CAUSE,
+            "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),
+            "axes": (AXIS_RANKING, AXIS_TRACE),
+            "code": {
+                "repo": SEQ2CAUSE_REPO,
+                "commit": CONTEXT_FAMILY_SEQ2CAUSE_COMMIT,
+                "runner": None,
+                "runner_commit": None,
+                "entry": entry,
+            },
+            "licence": "MIT (pyproject.toml of the author's repository; benchmarking authorised by the author)",
+        }
+        for arm, entry in (
+            (
+                ARM_TRACE_IG_OVERWRITE,
+                "as rca/trace-core with the context freeze's cell trace/core-ig-overwrite/fixed-kl/frozen/request "
+                "(the information gain, the overwrite layout, the log-space KL; addendum 2026-10-31 of the reference "
+                "harness); readings hop1 / hop0 / source (D-TBR-17)",
+            ),
+            (
+                ARM_TRACE_CMI_OVERWRITE,
+                "as rca/trace-ig-overwrite with trace/core-cmi-overwrite/fixed-kl/frozen/request (v0.3.0 calc_lag_cmi)",
+            ),
+            (
+                ARM_TRACE_IG_KEEP,
+                "as rca/trace-ig-overwrite with trace/core-ig-keep/fixed-kl/frozen/request (context_mode none, c = 1: "
+                "every position tested)",
+            ),
+            (
+                ARM_TRACE_CMI_KEEP,
+                "as rca/trace-ig-keep with trace/core-cmi-keep/fixed-kl/frozen/request",
+            ),
+            (
+                ARM_TRACE_ATOMIC_CMI_KEEP,
+                "as rca/trace with the context freeze's cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request (v0.3.1 "
+                "compute_cmi_matrix(score='cmi'), the model-drawn cause-absent branch, c = 1)",
+            ),
+        )
+    },
     ARM_CONTROL_RANDOM: {
         "class": CLASS_FLOOR_CONTROL,
         "inputs": (INPUT_SERVICES,),
         "axes": (AXIS_RANKING,),
         "code": None,  # analytic: AC@k = min(k, n) / n over the n deployed services (tracebench.score_rca.random_expectation)
+        "licence": None,
+    },
+    ARM_CONTROL_TRACE_EARLIEST: {
+        "class": CLASS_FLOOR_CONTROL,
+        "inputs": (INPUT_VIEWS, INPUT_WINDOW, INPUT_SERVICES),  # method-side, label-free, like control/rule
+        "axes": (AXIS_RANKING, AXIS_TRACE),
+        "code": None,  # the earliest non-OK span's service first (plans/controls.md §3; tracebenchrca.earliest)
         "licence": None,
     },
     ARM_CONTROL_RULE: {
@@ -451,6 +531,27 @@ TRACE_BROADCAST_ARMS = (
 TRACE_CELLS = {  # the frozen cell each TRACE arm reads, by the reference harness's four-slot key (addendum 2026-10-30)
     ARM_TRACE: "trace/cli-atomic/shipped/frozen/request",
     ARM_TRACE_CORE: "trace/core/shipped/frozen/request",
+    # the context family reads the fixed-kl path of the context freeze (addendum "2026-10-31, later")
+    ARM_TRACE_IG_OVERWRITE: "trace/core-ig-overwrite/fixed-kl/frozen/request",
+    ARM_TRACE_CMI_OVERWRITE: "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    ARM_TRACE_IG_KEEP: "trace/core-ig-keep/fixed-kl/frozen/request",
+    ARM_TRACE_CMI_KEEP: "trace/core-cmi-keep/fixed-kl/frozen/request",
+    ARM_TRACE_ATOMIC_CMI_KEEP: "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+}
+LANDED_TRACE_ARMS = (ARM_TRACE, ARM_TRACE_CORE)  # the rows of 2026-10-30 / 31, as landed
+CONTEXT_TRACE_ARMS = (
+    ARM_TRACE_IG_OVERWRITE,
+    ARM_TRACE_CMI_OVERWRITE,
+    ARM_TRACE_IG_KEEP,
+    ARM_TRACE_CMI_KEEP,
+    ARM_TRACE_ATOMIC_CMI_KEEP,
+)
+TRACE_ARMS_ALL = LANDED_TRACE_ARMS + CONTEXT_TRACE_ARMS  # every arm `ranktrace` probes
+# the per-arm result series of the case-level readings (results/<rung>/latent/seed=<k>/<arm slug>/<series>/):
+# the landed arms keep their landed directory as the hop1 row; the family's rows are all series
+TRACE_SERIES = {
+    **{a: (None, TRACE_READING_HOP0, TRACE_READING_SOURCE) for a in LANDED_TRACE_ARMS},
+    **{a: tuple(TRACE_READINGS) + tuple(f"{r}-subpre" for r in TRACE_READINGS) for a in CONTEXT_TRACE_ARMS},
 }
 
 # --- per-arm result files (one directory per arm per corpus) ----------------------------------------

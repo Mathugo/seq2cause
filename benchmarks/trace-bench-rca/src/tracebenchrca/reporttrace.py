@@ -33,10 +33,9 @@ from tracebench.score_rca_trace import pool
 from .arms import arm_slug
 from .constants import (
     ARM_CONTROL_TRACE_CALLEES,
+    ARM_CONTROL_TRACE_EARLIEST,
     ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TRACE_TOPOLOGY,
-    ARM_TRACE,
-    ARM_TRACE_CORE,
     RESULTS_JSON,
     RUN_DIR,
     RUNGS,
@@ -44,7 +43,9 @@ from .constants import (
     SEEDS,
     STAGE_RANK_TRACE,
     STAGE_SCORE_TRACE,
+    TRACE_ARMS_ALL,
     TRACE_AXIS_DIR,
+    TRACE_READING_EARLIEST,
     TRACE_READINGS,
     VARIANT,
 )
@@ -52,8 +53,10 @@ from .log import log
 from .record import RunRecord, read_json, sha256_file, write_json
 
 STAGE = "report-trace"
-HOP1, HOP0 = TRACE_READINGS
-TRACE_ARMS = (ARM_TRACE, ARM_TRACE_CORE)
+HOP1, HOP0, SOURCE = TRACE_READINGS
+TRACE_ARMS = TRACE_ARMS_ALL
+REPORT_ARMS = TRACE_ARMS + (ARM_CONTROL_TRACE_EARLIEST,)  # the control's cell carries its own rows only
+EARLIEST_ROW = f"{ARM_CONTROL_TRACE_EARLIEST}/{TRACE_READING_EARLIEST}"
 S1 = "s@1"
 METRIC_KEYS = ("s@1", "s@3", "p@1", "p@3", "exact", "mean_set_size")
 SHARED_PREFIXES = (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES, "broadcast/")
@@ -95,10 +98,16 @@ def without_window_fields(x):
     return x
 
 
+def has_shared_rows(rows):
+    return any(is_shared(rid) for rid in rows)
+
+
 def check_shared_rows_agree(cells_by_arm):
     """The floor, control and broadcast rows must be identical across the TRACE arms' cells of one corpus outside
-    the window coordinates."""
-    arms = list(cells_by_arm)
+    the window coordinates (a cell scored arm-only — the earliest-error control's — carries none and is skipped)."""
+    arms = [a for a in cells_by_arm if has_shared_rows(cells_by_arm[a][0])]
+    if not arms:
+        return
     first = cells_by_arm[arms[0]][0]
     for arm in arms[1:]:
         rows = cells_by_arm[arm][0]
@@ -137,6 +146,7 @@ def _low(row, key=S1):
 def hypotheses(rows, rungs, arms):
     by = {(r["rung"], r["row"]): r for r in rows}
     out = {}
+    arms = [a for a in arms if a in TRACE_ARMS]  # the control has rows of its own, never an arm's hypotheses
     trace_reading = [f"{a}/{HOP1}" for a in arms] + [f"{ARM_FLOOR_TRACE_TOPOLOGY}/{HOP1}"]
     per = {}
     for row_id in trace_reading:
@@ -193,6 +203,25 @@ def hypotheses(rows, rungs, arms):
         "per_rung_and_arm": per,
         "verdict": "pass" if per and all(per.values()) else "fail",
     }
+    # H-trace-earliest (addendum "2026-10-31, later"): each TRACE arm's hop0 hit@1 >= the earliest-error control's
+    per, gaps = {}, {}
+    for a in arms:
+        for g in rungs:
+            arm_row, ctl = by.get((g, f"{a}/{HOP0}")), by.get((g, EARLIEST_ROW))
+            if arm_row is None or ctl is None:
+                continue
+            key = f"{g} {a}/{HOP0}"
+            gaps[key] = arm_row["metrics"][S1] - ctl["metrics"][S1]
+            per[key] = arm_row["metrics"][S1] >= ctl["metrics"][S1]
+    out["H-trace-earliest"] = (
+        {
+            "gap_arm_minus_earliest_hit1": gaps,
+            "per_rung_and_row": per,
+            "verdict": "pass" if all(per.values()) else "fail",
+        }
+        if per
+        else {"verdict": "not run", "reason": f"needs {EARLIEST_ROW} and a hop0 row on a named rung"}
+    )
     return out
 
 
@@ -242,8 +271,9 @@ def report(results_dir, rungs, seeds, arms, b, seed, out):
                 raise ValueError(f"rung {rung!r} arm {arm!r}: {len(cells)} seeds, {len(seeds)} named")
         for k in range(len(seeds)):
             check_shared_rows_agree({arm: (cells_by_arm[arm][k][0], None, None) for arm in arms})
-        first = arms[0]
-        row_ids = [rid for rid in cells_by_arm[first][0][0] if is_shared(rid)]
+        shared_arms = [a for a in arms if has_shared_rows(cells_by_arm[a][0][0])]
+        first = shared_arms[0] if shared_arms else None
+        row_ids = [rid for rid in cells_by_arm[first][0][0] if is_shared(rid)] if first else []
         for arm in arms:
             row_ids += [rid for rid in cells_by_arm[arm][0][0] if rid.startswith(arm + "/")]
         for row_id in row_ids:
@@ -282,7 +312,7 @@ def build_parser():
     p.add_argument("--results-dir", required=True)
     p.add_argument("--rungs", required=True, nargs="+", choices=RUNGS)
     p.add_argument("--seeds", required=True, nargs="+", type=int, choices=SEEDS)
-    p.add_argument("--arms", required=True, nargs="+", choices=TRACE_ARMS)
+    p.add_argument("--arms", required=True, nargs="+", choices=REPORT_ARMS)
     p.add_argument("--bootstrap-b", required=True, type=int, help="bootstrap resamples of the pooled tables")
     p.add_argument("--bootstrap-seed", required=True, type=int)
     p.add_argument("--output-folder", required=True, help="the tables directory and this stage's run record")
