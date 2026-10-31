@@ -133,6 +133,7 @@ TAUS = ["0", "1e-6", "1e-4", "1e-2", "1e-1"]
 GRANGER_TAUS = ["0", "1e-3", "1e-2", "1e-1"]
 QUANTILES = ["0", "0.5", "0.9"]
 PROBES = ["core", "cli-full", "saliency"]
+LANDED_ARMS = ["trace/core", "baseline/granger", "trace/cli", "baseline/saliency"]
 CORE_CELLS = (
     "trace/core/shipped/frozen",
     "trace/core/fixed-kl/frozen",
@@ -255,6 +256,8 @@ def world(tmp_path_factory):
                 "--quantiles",
                 *QUANTILES,
                 "--floor-taus",  # no floor table in this sweep: the grid may be empty
+                "--arms",  # the landed arms only: the core pass also writes the context family's
+                *LANDED_ARMS,  # columns since 2026-10-31, which freeze apart (D-SB-21)
                 "--output-folder",
                 str(root / "scoresweep"),
             ]

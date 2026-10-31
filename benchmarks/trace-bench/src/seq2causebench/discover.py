@@ -45,6 +45,8 @@ from .arms import arm_slug, parse_cell_key
 from .constants import (
     AMP_MODES,
     CLI_SHIPPED_RULE,
+    CONTEXT_MODE_OF_PROBE,
+    CORE_PROBES,
     CUT_FROZEN,
     CUT_SHIPPED,
     DEVICES,
@@ -55,6 +57,7 @@ from .constants import (
     PARTICLE_PROBES,
     PREDICTION_JSON_FMT,
     PREDICTION_LAG_JSON_FMT,
+    PROBE_CORE_KEEP,
     PROBES,
     RANKING_JSON_FMT,
     RANKING_LAG_JSON_FMT,
@@ -69,6 +72,7 @@ from .corpus import Corpus
 from .data import SequenceStore
 from .engine import (
     check_memory,
+    counts_source,
     load_backbone,
     merge_counts,
     probe_columns,
@@ -178,8 +182,13 @@ def probe_store(
         raise ValueError(f"probe {probe!r} needs --particles >= 1")
     if probe not in PARTICLE_PROBES and N != 0:
         raise ValueError(f"probe {probe!r} has no particle axis; pass --particles 0")
-    if probe == "core" and not 1 <= g <= c:
+    if probe in CORE_PROBES and not 1 <= g <= c:
         raise ValueError(f"guidance g = {g} must satisfy 1 <= g <= c = {c}")
+    if probe == PROBE_CORE_KEEP and g != c:
+        raise ValueError(
+            f"probe {probe!r} (context_mode 'none') needs g == c (got g = {g}, c = {c}): the kept "
+            "observed tokens are the whole past and the window offset stays c (D-SB-20)"
+        )
     if len(store) == 0:
         raise ValueError("the sequence store is empty")
     columns = probe_columns(probe, noise)
@@ -450,6 +459,7 @@ def run_discover(args, rec):
             corpus.corpus_id,
             rec.started,
             args.ordering,
+            context_mode=CONTEXT_MODE_OF_PROBE.get(args.probe),
         )
         log({"event": "freeze_ok", **freeze_facts})
     store = SequenceStore.from_corpus(
@@ -529,6 +539,8 @@ def run_discover(args, rec):
         n_sequences=facts["n_probed"],
         probe=args.probe,
         noise=args.noise,
+        context_mode=CONTEXT_MODE_OF_PROBE.get(args.probe),
+        window_offset=args.context,
     )
     rec.note(tok_pos_per_s=facts["tok_pos_per_s"])
     return {
@@ -543,6 +555,9 @@ def run_discover(args, rec):
         "c": args.context,
         "N": args.particles,
         "g": args.guidance,
+        "context_mode": CONTEXT_MODE_OF_PROBE.get(args.probe),  # the core probes only (D-SB-20)
+        "window_offset": args.context,  # the first tested observed position, every probe
+        "counts_source": counts_source(probe_columns(args.probe, args.noise)),  # D-SB-22
         "probe_amp": args.probe_amp,
         "columns": facts["columns"],
         "n_sequences": facts["n_sequences"],

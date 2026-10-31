@@ -43,15 +43,19 @@ from .arms import arm_spec, cell_key, parse_cell_key
 from .constants import (
     ARGUMENTS_JSON,
     ARM_GRANGER,
+    CONTEXT_ARMS,
+    CONTEXT_FAMILY_GRID,
+    CONTEXT_MODE_OF_PROBE,
     CUT_FROZEN,
     CUT_SHIPPED,
+    FAMILY_CONTEXT,
     FAMILY_FLOOR,
     FAMILY_MODEL,
     FLOOR_ARMS,
     MODEL_NONE,
-    REFERENCE_ARMS,
     RUNGS,
     SEEDS,
+    TAU_GRID_ARMS,
     VARIANTS,
 )
 from .log import log, now_iso
@@ -80,7 +84,7 @@ def grid_of(arm, tau_source):
         return None
     if arm in FLOOR_ARMS:
         return "floor_taus"
-    if arm in REFERENCE_ARMS:
+    if arm in TAU_GRID_ARMS:  # the reference arms and the context family (addendum 2026-10-31)
         return "taus"
     if arm == ARM_GRANGER:
         return "granger_taus"
@@ -118,11 +122,35 @@ def every_scored_pair(ranked):
     return (2 * tp / (predicted + truth) if predicted + truth else 0.0), "coverage"
 
 
-def select_cells(table):
-    """The argmax rows per frozen cell with the plan's tie-breaks; shipped cuts inherit (c, N, g)."""
+def inside_family_grid(row, grid):
+    """Whether a swept row's (probe, grain, c, N) lies inside a family's registered grid."""
+    try:
+        return row["N"] in grid["N"] and row["c"] in grid["c"][row["probe"]][row["grain"]]
+    except KeyError as e:
+        raise FreezeRefusal(
+            f"the family grid has no entry for probe {row['probe']!r} / grain {row['grain']!r}: {e}"
+        ) from None
+
+
+def select_cells(table, family_grid=None):
+    """The argmax rows per frozen cell with the plan's tie-breaks; shipped cuts inherit (c, N, g).
+    With `family_grid` (the context family, D-SB-21) only rows inside the registered grid are
+    candidates; the rows set aside are counted per cell (`n_rows_outside_family_grid`)."""
     frozen_rows = [r for r in table["cells"] if r["cut"] == CUT_FROZEN]
     if not frozen_rows:
         raise FreezeRefusal("the val table has no frozen-cut rows")
+    n_outside = {}
+    if family_grid is not None:
+        kept = []
+        for r in frozen_rows:
+            key = cell_key(r["arm"], r["path"], CUT_FROZEN, r["grain"])
+            if inside_family_grid(r, family_grid):
+                kept.append(r)
+            else:
+                n_outside[key] = n_outside.get(key, 0) + 1
+        frozen_rows = kept
+        if not frozen_rows:
+            raise FreezeRefusal("no swept row lies inside the family's registered grid")
     floor = frozen_rows[0]["floor"]
     by_cell = {}
     for r in frozen_rows:
@@ -163,6 +191,9 @@ def select_cells(table):
             "floor": float(best["floor"]),
             "n_rows_considered": len(rows),
             "n_rows_negative_tau": len(all_rows) - len(rows),
+            "n_rows_outside_family_grid": n_outside.get(key, 0),
+            "context_mode": CONTEXT_MODE_OF_PROBE.get(best["probe"]),  # core probes (D-SB-20)
+            "window_offset": int(best["c"]),
         }
         arm, path, grain = best["arm"], best["path"], best["grain"]
         if CUT_SHIPPED in arm_spec(arm)["cuts"]:
@@ -176,13 +207,17 @@ def select_cells(table):
                 "noise": best["noise"],
                 "inherits": key,
                 "floor": float(best["floor"]),
+                "context_mode": CONTEXT_MODE_OF_PROBE.get(best["probe"]),
+                "window_offset": int(best["c"]),
             }
     return chosen
 
 
 def family_of(cells):
-    """`floor` when every frozen cell is a floor arm's, `model` when none is; a mixture is refused
-    (floor cells are frozen apart from model-bound cells, D-SB-16)."""
+    """`floor` when every frozen cell is a floor arm's, `context` when every cell is a context
+    arm's (addendum 2026-10-31, D-SB-21), `model` when none is either; a mixture is refused
+    (floor cells are frozen apart from model-bound cells, D-SB-16; the context family apart from
+    the landed arms, so the landed freezes and tables never move)."""
     arms = {parse_cell_key(k)[0] for k in cells}
     floors = {a for a in arms if a in FLOOR_ARMS}
     if floors and floors != arms:
@@ -190,13 +225,23 @@ def family_of(cells):
             f"floor cells {sorted(floors)} cannot be frozen together with model-bound cells "
             f"{sorted(arms - floors)} (D-SB-16)"
         )
-    return FAMILY_FLOOR if floors else FAMILY_MODEL
+    context = {a for a in arms if a in CONTEXT_ARMS}
+    if context and context != arms:
+        raise FreezeRefusal(
+            f"context-family cells {sorted(context)} cannot be frozen together with other cells "
+            f"{sorted(arms - context)} (D-SB-21)"
+        )
+    if floors:
+        return FAMILY_FLOOR
+    return FAMILY_CONTEXT if context else FAMILY_MODEL
 
 
 def freeze_name(date, rung, variant, seed, family, ordering):
     name = f"{date}-{rung}-{variant}-s{seed}"
     if family == FAMILY_FLOOR:
         name += "-floors"
+    if family == FAMILY_CONTEXT:
+        name += "-context"
     if ordering == "start":
         name += "-start"
     return name + ".json"
@@ -293,8 +338,12 @@ def check_backbone_ordering(pretrain_results, table):
 
 def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
     paths = [Path(p) for p in val_table_paths]
-    cells = select_cells(table)
-    family = family_of(cells)
+    family = family_of(
+        {cell_key(r["arm"], r["path"], CUT_FROZEN, r["grain"]) for r in table["cells"]}
+    )
+    cells = select_cells(table, CONTEXT_FAMILY_GRID if family == FAMILY_CONTEXT else None)
+    if family_of(cells) != family:
+        raise FreezeRefusal("the selected cells do not form the table's family")
     if (family == FAMILY_FLOOR) != (table.get("model_sha256") == MODEL_NONE):
         raise FreezeRefusal(
             f"a {family} table carries model hash {table.get('model_sha256')!r} (D-SB-16)"
@@ -318,6 +367,7 @@ def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
         "quantiles": table.get("quantiles"),
         "floor_taus": table.get("floor_taus"),
         "grains": table.get("grains"),
+        "family_grid": CONTEXT_FAMILY_GRID if family == FAMILY_CONTEXT else None,
         "cells": cells,
         "diagnostics": {
             **pretrain,

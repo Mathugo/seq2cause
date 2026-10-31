@@ -104,8 +104,39 @@ PROBE_CLI_ATOMIC = (
 )
 PROBE_SALIENCY = "saliency"  # calc_neural_saliency (captum InputXGradient), no particles
 PROBE_SHAPLEY = "shapley"  # calc_neural_shapley (captum ShapleyValueSampling), no particles
-PROBES = (PROBE_CORE, PROBE_CLI_FULL, PROBE_CLI_ATOMIC, PROBE_SALIENCY, PROBE_SHAPLEY)
-PARTICLE_PROBES = (PROBE_CORE, PROBE_CLI_FULL, PROBE_CLI_ATOMIC)
+# the context family (plans/reference-arms.md, addendum 2026-10-31; RUN.md D-SB-20, D-SB-23)
+PROBE_CORE_KEEP = "core-keep"  # the core build with v0.3.0 `context_mode = "none"`: the first g = c
+# observed tokens kept, nothing sampled, every later token tested (the window offset stays c)
+PROBE_CLI_ATOMIC_CMI = "cli-atomic-cmi"  # v0.3.1 compute_cmi_matrix(score="cmi", strategy="atomic")
+# internals: the cause-absent branch drawn from the model, two forwards per sequence
+PROBES = (
+    PROBE_CORE,
+    PROBE_CORE_KEEP,
+    PROBE_CLI_FULL,
+    PROBE_CLI_ATOMIC,
+    PROBE_CLI_ATOMIC_CMI,
+    PROBE_SALIENCY,
+    PROBE_SHAPLEY,
+)
+PARTICLE_PROBES = (
+    PROBE_CORE,
+    PROBE_CORE_KEEP,
+    PROBE_CLI_FULL,
+    PROBE_CLI_ATOMIC,
+    PROBE_CLI_ATOMIC_CMI,
+)
+CORE_PROBES = (PROBE_CORE, PROBE_CORE_KEEP)  # SampleLevelCausalDiscovery's tensor build
+SHIPPED_CUT_PROBES = (  # the cli probes: every matrix kept, the tool's own cut fitted per cell
+    PROBE_CLI_FULL,
+    PROBE_CLI_ATOMIC,
+    PROBE_CLI_ATOMIC_CMI,
+)
+# how the past before the tested tokens is built (v0.3.0 `sampling.context_mode`; core probes only;
+# `prepend` is not run — the addendum's P1): the window offset equals c in both modes
+CONTEXT_OVERWRITE = "overwrite"  # the first g observed tokens kept, g..c-1 sampled, c..L-1 tested
+CONTEXT_NONE = "none"  # the first g = c observed tokens kept, nothing sampled, c..L-1 tested
+CONTEXT_MODES = (CONTEXT_OVERWRITE, CONTEXT_NONE)
+CONTEXT_MODE_OF_PROBE = {PROBE_CORE: CONTEXT_OVERWRITE, PROBE_CORE_KEEP: CONTEXT_NONE}
 
 # the noise draw of a pass: the whole id range (v0.1.9) or real event ids only (fix PR #3)
 NOISE_ALL = "all"
@@ -142,6 +173,20 @@ CUTS = (CUT_FROZEN, CUT_SHIPPED)
 ARM_CORE = "trace/core"
 ARM_CLI = "trace/cli"
 ARM_CLI_ATOMIC = "trace/cli-atomic"
+# the context family (addendum 2026-10-31): score × context on the core probe, one atomic CMI arm
+ARM_CORE_IG_OVERWRITE = "trace/core-ig-overwrite"  # = trace/core's fixed-kl column, by construction
+ARM_CORE_CMI_OVERWRITE = "trace/core-cmi-overwrite"
+ARM_CORE_IG_KEEP = "trace/core-ig-keep"
+ARM_CORE_CMI_KEEP = "trace/core-cmi-keep"
+ARM_CLI_ATOMIC_CMI_KEEP = "trace/cli-atomic-cmi-keep"
+# the statistics the engine reads out (`engine.core_readouts` iterates a pass's arms by statistic)
+STAT_LAG_INFO_GAIN = "lag_info_gain"
+STAT_LAG_CMI = "lag_cmi"  # v0.3.0 calc_lag_cmi on the information gain's log-probabilities
+STAT_ATOMIC_CMI = "atomic_cmi"  # v0.3.1 _cmi_matrix_atomic: the model-drawn cause-absent branch
+STAT_GRANGER = "granger_diff"
+# where a CMI column's corrupted-cell counts come from (D-SB-22): calc_lag_cmi fills none, so the
+# core CMI columns carry the information-gain counts of the same pass; the atomic CMI has none
+COUNTS_SOURCE = {STAT_LAG_CMI: "ig-same-pass", STAT_ATOMIC_CMI: "none"}
 ARM_GRANGER = "baseline/granger"
 ARM_SALIENCY = "baseline/saliency"
 ARM_SHAPLEY = "baseline/shapley"
@@ -164,7 +209,7 @@ ARMS = {
     ARM_CORE: {
         "class": "reference",
         "probe": PROBE_CORE,
-        "statistic": "lag_info_gain",
+        "statistic": STAT_LAG_INFO_GAIN,
         "paths": (PATH_SHIPPED, PATH_FIXED_KL, PATH_FIXED),
         "cuts": (CUT_FROZEN,),
     },
@@ -185,7 +230,7 @@ ARMS = {
     ARM_GRANGER: {
         "class": "baseline",
         "probe": PROBE_CORE,
-        "statistic": "granger_diff",
+        "statistic": STAT_GRANGER,
         "paths": (PATH_SHIPPED, PATH_FIXED),
         "cuts": (CUT_FROZEN,),
     },
@@ -217,8 +262,63 @@ ARMS = {
         "paths": (PATH_NONE,),
         "cuts": (CUT_FROZEN,),
     },
+    # the context family: the fixed-kl path only on the core probes (v0.3.0's own CMI defaults:
+    # log-space KL, noise over [0, V)); both paths and both cuts on the atomic CMI arm (D-SB-23)
+    ARM_CORE_IG_OVERWRITE: {
+        "class": "reference",
+        "probe": PROBE_CORE,
+        "statistic": STAT_LAG_INFO_GAIN,
+        "paths": (PATH_FIXED_KL,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CORE_CMI_OVERWRITE: {
+        "class": "reference",
+        "probe": PROBE_CORE,
+        "statistic": STAT_LAG_CMI,
+        "paths": (PATH_FIXED_KL,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CORE_IG_KEEP: {
+        "class": "reference",
+        "probe": PROBE_CORE_KEEP,
+        "statistic": STAT_LAG_INFO_GAIN,
+        "paths": (PATH_FIXED_KL,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CORE_CMI_KEEP: {
+        "class": "reference",
+        "probe": PROBE_CORE_KEEP,
+        "statistic": STAT_LAG_CMI,
+        "paths": (PATH_FIXED_KL,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CLI_ATOMIC_CMI_KEEP: {
+        "class": "reference",
+        "probe": PROBE_CLI_ATOMIC_CMI,
+        "statistic": STAT_ATOMIC_CMI,
+        "paths": (PATH_FIXED_KL, PATH_FIXED),
+        "cuts": (CUT_FROZEN, CUT_SHIPPED),
+    },
 }
-REFERENCE_ARMS = (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)
+REFERENCE_ARMS = (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)  # the landed reference arms; never extended
+CONTEXT_ARMS = (  # the context family of 2026-10-31: its own freeze family, its own results tree
+    ARM_CORE_IG_OVERWRITE,
+    ARM_CORE_CMI_OVERWRITE,
+    ARM_CORE_IG_KEEP,
+    ARM_CORE_CMI_KEEP,
+    ARM_CLI_ATOMIC_CMI_KEEP,
+)
+TAU_GRID_ARMS = REFERENCE_ARMS + CONTEXT_ARMS  # the arms cut on the absolute `--taus` grid
+FAMILY_CONTEXT = "context"  # a freeze of context-family cells only (`…-context.json`, D-SB-21)
+CONTEXT_FAMILY_GRID = {  # the registered grid of the family (addendum 2026-10-31 §4): N = 8;
+    # c per probe and grain; the freeze keeps only rows inside it
+    "N": (8,),
+    "c": {
+        PROBE_CORE: {"request": (1, 2, 3), "session": (2, 4, 8)},
+        PROBE_CORE_KEEP: {"request": (1,), "session": (1,)},
+        PROBE_CLI_ATOMIC_CMI: {"request": (1,), "session": (1,)},
+    },
+}
 BASELINE_ARMS = (ARM_GRANGER, ARM_SALIENCY, ARM_SHAPLEY)
 FLOOR_ARMS = (ARM_FLOOR_TOPOLOGY, ARM_FLOOR_BIGRAM)  # model-free; no (c, N, g); plans/floors.md
 FLOOR_ARM_OF_PROBE = {

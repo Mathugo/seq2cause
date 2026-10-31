@@ -102,6 +102,7 @@ def _scoresweep(corpus, sweep_dir, grain, out, floor_taus=FLOOR_TAUS):
             "--quantiles",
             "--floor-taus",
             *floor_taus,
+            "--arms",  # every arm of the floor files (D-SB-21)
             "--output-folder",
             str(out),
         ]

@@ -14,9 +14,17 @@ parity against both entry points is asserted on the fixture
 Probes (forward-sharing units):
 - `core` — `ancestral_sampling` → `uniform_sample` → `do_interventions(full)` →
   one forward over `N · rows` rows → `calc_lag_info_gain` / `calc_granger_score`.
+- `core-keep` — the same build with v0.3.0 `context_mode = "none"`: the first
+  g = c observed tokens kept as the past (no `ancestral_sampling`), every later
+  token tested; read out by the same functions (D-SB-20). The CMI read-out
+  (`calc_lag_cmi`, v0.3.0) rides both core probes on the same log-probabilities.
 - `cli-full` / `cli-atomic` — `uniform_sample` → `do_interventions` → one
   forward (plus the fully-real baseline row for `atomic`) →
   `_predicted_true_token_(log_)probs`'s gather → `_cmi_matrix_from_*`.
+- `cli-atomic-cmi` — v0.3.1 `compute_cmi_matrix(score="cmi")`: the unintervened
+  forward → `model_sample_excluding_observed` (the cause-absent branch drawn from
+  the model) → `do_interventions(atomic)` → one forward over the rows → the
+  mixture of Bernoulli KLs, bounded by log 2 (D-SB-23; no corrupted-cell counts).
 - `saliency` / `shapley` — `calc_neural_saliency` / `calc_neural_shapley`
   on the raw library model (no particles).
 
@@ -39,6 +47,7 @@ import torch
 from seq2cause.adapters import HFModelAdapter
 from seq2cause.causal_strength import (
     calc_granger_score,
+    calc_lag_cmi,
     calc_lag_info_gain,
     calc_neural_saliency,
     calc_neural_shapley,
@@ -52,15 +61,34 @@ from seq2cause.diagnostics import (
     _count_staircase,
     summary_graph,
 )
-from seq2cause.kl import accumulate_counts, corrupted_cell_counts, logmeanexp
-from seq2cause.sampling import ancestral_sampling, do_interventions, uniform_sample
+from seq2cause.kl import (
+    accumulate_counts,
+    bernoulli_kl_from_log,
+    corrupted_cell_counts,
+    log1mexp,
+    logmeanexp,
+    wide_dtype,
+)
+from seq2cause.sampling import (
+    ancestral_sampling,
+    do_interventions,
+    model_sample_excluding_observed,
+    uniform_sample,
+)
 from seq2cause.threshold import AdaptiveThreshold
 from seq2cause.utils import estimate_tensor_bytes
 
 from .arms import column_of
 from .backbone import load_model, model_sha256, n_params
 from .constants import (
+    ARM_CLI_ATOMIC_CMI_KEEP,
     ARMS,
+    CONTEXT_MODE_OF_PROBE,
+    CONTEXT_MODES,
+    CONTEXT_NONE,
+    CONTEXT_OVERWRITE,
+    CORE_PROBES,
+    COUNTS_SOURCE,
     KL_FIXED,
     KL_SHIPPED,
     N_SPECIALS,
@@ -69,11 +97,14 @@ from .constants import (
     PARTICLE_PROBES,
     PATH_SPEC,
     PROBE_CLI_ATOMIC,
+    PROBE_CLI_ATOMIC_CMI,
     PROBE_CLI_FULL,
-    PROBE_CORE,
     PROBE_SALIENCY,
     PROBE_SHAPLEY,
     PROBES,
+    STAT_GRANGER,
+    STAT_LAG_CMI,
+    STAT_LAG_INFO_GAIN,
 )
 
 SPLIT_STREAM = {"train": 0, "val": 1, "test": 2}
@@ -106,6 +137,17 @@ def noise_min_id(noise):
     return 0 if noise == NOISE_ALL else N_SPECIALS
 
 
+def counts_source(columns):
+    """`{arm: source}` for the arms of a pass whose corrupted-cell counts are not their own
+    (D-SB-22): the core CMI columns carry the information-gain counts of the same pass, the
+    atomic CMI none."""
+    return {
+        arm: COUNTS_SOURCE[ARMS[arm]["statistic"]]
+        for arm in columns
+        if ARMS[arm]["statistic"] in COUNTS_SOURCE
+    }
+
+
 def seed_sequence(seed, split, s):
     """Seed the global torch RNG (the shipped samplers draw from it) per sequence."""
     if split not in SPLIT_STREAM:
@@ -128,8 +170,19 @@ def _autocast(device, amp):
 
 # --- the core probe: SampleLevelCausalDiscovery.run()'s tensor build, verbatim order ---------------
 @torch.inference_mode()
-def core_forward(hf_model, ids, c, g, N, noise, amp="none"):
-    """`(batch, logits [1, N, rows, L, V] float32)` for one sequence `ids [L]`."""
+def core_forward(hf_model, ids, c, g, N, noise, amp="none", context_mode=CONTEXT_OVERWRITE):
+    """`(batch, logits [1, N, rows, L, V] float32)` for one sequence `ids [L]`. `context_mode`
+    is v0.3.0's: `overwrite` samples the past g..c-1 (`ancestral_sampling`); `none` keeps the
+    first g observed tokens as the whole past and samples nothing — the harness fixes g = c
+    there, so the tested tokens are `ids[c:]` in both modes (the window offset is c) and the
+    attention mask is the sequence's own, as `run()` builds it (anchor = min(s0, c_eff) = c)."""
+    if context_mode not in CONTEXT_MODES:
+        raise ValueError(f"context_mode must be one of {CONTEXT_MODES}, got {context_mode!r}")
+    if context_mode == CONTEXT_NONE and g != c:
+        raise ValueError(
+            f"context_mode 'none' keeps the first g observed tokens and tests every later one; the "
+            f"harness fixes g == c so the window offset stays c (got g = {g}, c = {c}; D-SB-20)"
+        )
     device = ids.device
     L = int(ids.shape[0])
     batch = {
@@ -142,9 +195,12 @@ def core_forward(hf_model, ids, c, g, N, noise, amp="none"):
         ].float()
     prob_x = torch.nn.functional.softmax(o_b, dim=-1)
     expanded_attention_mask = batch["attention_mask"].unsqueeze(1).repeat(1, N, 1)
-    with _autocast(device.type, amp):
-        prefix_upsampled = ancestral_sampling(hf_model, batch, value=N, guidance=g, context=c)
-    prefix_upsampled = prefix_upsampled.reshape(1, N, -1)
+    if context_mode == CONTEXT_NONE:
+        prefix_upsampled = batch["input_ids"][:, :c].unsqueeze(1).repeat(1, N, 1)
+    else:
+        with _autocast(device.type, amp):
+            prefix_upsampled = ancestral_sampling(hf_model, batch, value=N, guidance=g, context=c)
+        prefix_upsampled = prefix_upsampled.reshape(1, N, -1)
     rest = batch["input_ids"][:, c:]
     rest_upsampled_using_q = uniform_sample(
         prob_x[:, c:, :], n_samples=N, cls_token_id=None, min_id=noise_min_id(noise)
@@ -167,16 +223,36 @@ def core_forward(hf_model, ids, c, g, N, noise, amp="none"):
 
 
 def core_readouts(logits, batch, c, columns):
-    """`columns`: `{arm: {path: column}}` of the core probe. Returns `({column: [Lc, Lc] np.float32},
-    {path: counts})`; the shipped KL, the fixed KL and the Granger score are read from the same
-    logits, each through the shipped function."""
+    """`columns`: `{arm: {path: column}}` of a core probe's pass. Returns `({column: [Lc, Lc]
+    np.float32}, {path: counts})`; every read-out comes from the same logits through the shipped
+    function of its arm's statistic: the shipped KL, the fixed KL and the Granger score as at M6,
+    and since 2026-10-31 the CMI (`calc_lag_cmi`, log-space only) on the same log-probabilities.
+    The information-gain matrix of a path is computed once and written to every arm that reads it
+    (`trace/core` and `trace/core-ig-overwrite` are one column by construction); its corrupted-cell
+    counts are the path's, which the CMI columns of the pass share (D-SB-22)."""
     mats, counts = {}, {}
-    core = columns.get("trace/core", {})
-    granger = columns.get("baseline/granger", {})
-    need_probs = any(PATH_SPEC[p]["kl"] == KL_SHIPPED for p in core) or bool(granger)
+    by_stat = {}
+    for arm, paths in columns.items():
+        by_stat.setdefault(ARMS[arm]["statistic"], {})[arm] = paths
+    ig = by_stat.get(STAT_LAG_INFO_GAIN, {})
+    granger = by_stat.get(STAT_GRANGER, {})
+    cmi = by_stat.get(STAT_LAG_CMI, {})
+    ig_paths = sorted({path for paths in ig.values() for path in paths})
+    for paths in cmi.values():
+        for path in paths:
+            if PATH_SPEC[path]["kl"] != KL_FIXED:
+                raise ValueError(f"the CMI is always read in log space; path {path!r} is not")
+
+    def _write_ig(adj, path):
+        mat = adj[0].cpu().numpy().astype(np.float32)
+        for paths in ig.values():
+            if path in paths:
+                mats[paths[path]] = mat.copy()
+
+    need_probs = any(PATH_SPEC[p]["kl"] == KL_SHIPPED for p in ig_paths) or bool(granger)
     if need_probs:
         probs = torch.nn.functional.softmax(logits, dim=-1)
-        for path, col in core.items():
+        for path in ig_paths:
             if PATH_SPEC[path]["kl"] == KL_SHIPPED:
                 stats = {}
                 adj = calc_lag_info_gain(
@@ -184,15 +260,16 @@ def core_readouts(logits, batch, c, columns):
                     batch,
                     {"sampling": {"context": c}, "kl_mode": KL_SHIPPED, "kl_stats": stats},
                 )
-                mats[col] = adj[0].cpu().numpy().astype(np.float32)
+                _write_ig(adj, path)
                 counts[path] = stats
-        for col in granger.values():
-            adj = calc_granger_score(probs, batch, {"sampling": {"context": c}})
-            mats[col] = adj[0].cpu().numpy().astype(np.float32)
+        for paths in granger.values():
+            for col in paths.values():
+                adj = calc_granger_score(probs, batch, {"sampling": {"context": c}})
+                mats[col] = adj[0].cpu().numpy().astype(np.float32)
         del probs
-    if any(PATH_SPEC[p]["kl"] == KL_FIXED for p in core):
+    if any(PATH_SPEC[p]["kl"] == KL_FIXED for p in ig_paths) or cmi:
         logp = torch.nn.functional.log_softmax(logits, dim=-1)
-        for path, col in core.items():
+        for path in ig_paths:
             if PATH_SPEC[path]["kl"] == KL_FIXED:
                 stats = {}
                 adj = calc_lag_info_gain(
@@ -200,8 +277,12 @@ def core_readouts(logits, batch, c, columns):
                     batch,
                     {"sampling": {"context": c}, "kl_mode": KL_FIXED, "kl_stats": stats},
                 )
-                mats[col] = adj[0].cpu().numpy().astype(np.float32)
+                _write_ig(adj, path)
                 counts[path] = stats
+        for paths in cmi.values():
+            for col in paths.values():
+                adj = calc_lag_cmi(logp, batch, {"sampling": {"context": c}, "kl_mode": KL_FIXED})
+                mats[col] = adj[0].cpu().numpy().astype(np.float32)
         del logp
     return mats, counts
 
@@ -280,6 +361,63 @@ def cli_readouts(rows_logits, baseline_logits, rest, c, strategy, columns):
     return mats, counts
 
 
+# --- the atomic CMI probe: v0.3.1 `_cmi_matrix_atomic`, one forward pair for both paths' algebra ---
+@torch.no_grad()
+def cli_cmi_forward(adapter, sequence, c, N, noise, amp="none", max_pairs=SHIPPED_MAX_PAIRS):
+    """`(rows_logits [N, Lc, L, V], baseline_logits [1, L, V], rest [Lc])` for one sequence: the
+    unintervened forward first (its probabilities draw the cause-absent branch from the model,
+    `P(X_j | x_<j, X_j != x_j)`, the observed token and the ids below `noise_min_id` excluded),
+    then the atomic intervention rows — v0.3.1 `_cmi_matrix_atomic` up to its rows forward, in
+    its order (the draw consumes the global RNG after the baseline forward)."""
+    seq_len = sequence.shape[-1]
+    prefix = sequence[:c].unsqueeze(0)
+    rest = sequence[c:].unsqueeze(0)
+    with _autocast(sequence.device.type, amp):
+        baseline_logits = adapter.forward(input_ids=sequence.unsqueeze(0))["logits"].float()
+    dtype = wide_dtype(baseline_logits)
+    log_prior = torch.log_softmax(baseline_logits[0, c - 1 : seq_len - 1, :].to(dtype), dim=-1)
+    repl = model_sample_excluding_observed(
+        log_prior.exp().unsqueeze(0), rest, n_samples=N, min_id=noise_min_id(noise)
+    )  # [1, N, Lc]
+    rows = do_interventions(
+        repl.to(sequence.dtype), rest, prefix, strategy="atomic", max_pairs=max_pairs
+    ).squeeze(0)  # [N, Lc, L]
+    with _autocast(sequence.device.type, amp):
+        rows_logits = adapter.forward(input_ids=rows)["logits"].float()
+    return rows_logits, baseline_logits, rest.squeeze(0)
+
+
+def cli_cmi_readouts(rows_logits, baseline_logits, rest, c, columns):
+    """`({column: [Lc, Lc] np.float32}, {path: {}})` for the atomic CMI arm: π = q1 = the
+    observed token's log-probability from the baseline forward, q0 = the log-mean over particles
+    of the effect's log-probability with the cause replaced, `CMI = π KL(q1‖m) + (1−π) KL(q0‖m)`,
+    strict upper triangle, clamped at 0 — v0.3.1 `_cmi_matrix_atomic` from its rows forward on.
+    No corrupted-cell counts exist on this path (D-SB-22)."""
+    paths = columns.get(ARM_CLI_ATOMIC_CMI_KEEP, {})
+    seq_len = baseline_logits.shape[-2]
+    lc = rest.shape[-1]
+    dtype = wide_dtype(baseline_logits)
+    log_prior = torch.log_softmax(baseline_logits[0, c - 1 : seq_len - 1, :].to(dtype), dim=-1)
+    log_obs = log_prior.gather(-1, rest.unsqueeze(-1)).squeeze(-1)  # [Lc]
+    logp_do = _gather_true_token(torch.log_softmax(rows_logits, dim=-1), rest, c)  # [N, Lc, Lc]
+    log_q0 = logmeanexp(logp_do.to(dtype), dim=0)  # [Lc(causes), Lc(effects)]
+    log_pi = log_obs.unsqueeze(1).expand(lc, lc)
+    log_1m_pi = log1mexp(log_pi)
+    log_q1 = log_obs.unsqueeze(0).expand(lc, lc)
+    log_m = torch.logaddexp(log_pi + log_q1, log_1m_pi + log_q0)
+    cmi = log_pi.exp() * bernoulli_kl_from_log(
+        log_q1, log_m
+    ) + log_1m_pi.exp() * bernoulli_kl_from_log(log_q0, log_m)
+    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=cmi.device), diagonal=1)
+    m = torch.where(mask, cmi.clamp_min(0.0), torch.zeros_like(cmi)).to(torch.float32)
+    mat = m.cpu().numpy().astype(np.float32)
+    mats, counts = {}, {}
+    for path, col in paths.items():
+        mats[col] = mat.copy()
+        counts[path] = {}
+    return mats, counts
+
+
 # --- the read-out baselines (no particles) -----------------------------------------------------------
 def saliency_matrix(hf_model, ids, c):
     batch = {"input_ids": ids.unsqueeze(0)}
@@ -306,8 +444,10 @@ def probe_sequence(probe, noise, hf_model, adapter, ids, c, g, N, columns, amp="
     read out every column of `columns` (`probe_columns(probe, noise)`)."""
     L = int(ids.shape[0])
     lc = L - c
-    if probe == PROBE_CORE:
-        batch, logits = core_forward(hf_model, ids, c, g, N, noise, amp)
+    if probe in CORE_PROBES:
+        batch, logits = core_forward(
+            hf_model, ids, c, g, N, noise, amp, context_mode=CONTEXT_MODE_OF_PROBE[probe]
+        )
         mats, counts = core_readouts(logits, batch, c, columns)
         tok_pos = int(logits.shape[1] * logits.shape[2] * L) + L
         del logits
@@ -319,6 +459,12 @@ def probe_sequence(probe, noise, hf_model, adapter, ids, c, g, N, columns, amp="
         tok_pos = int(rows_logits.shape[0] * rows_logits.shape[1] * L) + (
             L if baseline_logits is not None else 0
         )
+        del rows_logits, baseline_logits
+        return ProbeResult(mats, counts, tok_pos)
+    if probe == PROBE_CLI_ATOMIC_CMI:
+        rows_logits, baseline_logits, rest = cli_cmi_forward(adapter, ids, c, N, noise, amp)
+        mats, counts = cli_cmi_readouts(rows_logits, baseline_logits, rest, c, columns)
+        tok_pos = int(rows_logits.shape[0] * rows_logits.shape[1] * L) + L
         del rows_logits, baseline_logits
         return ProbeResult(mats, counts, tok_pos)
     if probe == PROBE_SALIENCY:
@@ -460,12 +606,15 @@ __all__ = [
     "ProbeResult",
     "probe_columns",
     "noise_min_id",
+    "counts_source",
     "seed_sequence",
     "load_backbone",
     "core_forward",
     "core_readouts",
     "cli_forward",
     "cli_readouts",
+    "cli_cmi_forward",
+    "cli_cmi_readouts",
     "saliency_matrix",
     "shapley_matrix",
     "probe_sequence",

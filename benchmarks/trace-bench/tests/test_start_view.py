@@ -12,6 +12,7 @@ import pytest
 from fixture_corpus import fixture_corpus
 from test_m6_pipeline import (  # noqa: F401  (world: the end-view model + freeze, module fixture)
     GRANGER_TAUS,
+    LANDED_ARMS,
     PRETRAIN,
     PROBE,
     PROBES,
@@ -120,6 +121,8 @@ def sworld(tmp_path_factory):
         "--quantiles",
         *QUANTILES,
         "--floor-taus",
+        "--arms",  # the landed arms only (D-SB-21)
+        *LANDED_ARMS,
         "--output-folder",
         str(root / "scoresweep"),
     ]

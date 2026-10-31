@@ -4,6 +4,7 @@
 
     python -m seq2causebench.sweep --corpus <dir> --ordering end --grains request --split val \
         --rung xs --model <model dir> --probes core cli-full cli-atomic saliency shapley --noises all real \
+        (the context family's probes `core-keep` and `cli-atomic-cmi` likewise; D-SB-20, D-SB-23) \
         --contexts 1 2 3 --particles-grid 2 8 32 --guidance 3 --num-sequences 0 --shapley-sequences 0 \
         --shipped-method percentile ... --shipped-min-group-size 8 \
         --max-len 64 --max-lag 63 --sequence-sample head --memory-cap-gb 20 --probe-amp none \
@@ -27,15 +28,15 @@ from __future__ import annotations
 import argparse
 
 from .constants import (
+    CONTEXT_MODE_OF_PROBE,
     GRAINS,
     NOISES,
     ORDERINGS,
     PARTICLE_PROBES,
-    PROBE_CLI_ATOMIC,
-    PROBE_CLI_FULL,
     PROBE_SHAPLEY,
     PROBES,
     SHIPPED_CUT_JSON_FMT,
+    SHIPPED_CUT_PROBES,
     SPLITS,
     SWEEP_SCORES_NPZ_FMT,
 )
@@ -48,7 +49,7 @@ from .discover import (
     probe_store,
     shipped_rule,
 )
-from .engine import load_backbone, probe_columns, shipped_cut, shipped_cut_union
+from .engine import counts_source, load_backbone, probe_columns, shipped_cut, shipped_cut_union
 from .log import log
 from .project import write_scores_npz
 from .record import RunRecord, write_json
@@ -127,7 +128,7 @@ def run_sweep(args, rec):
                     g = min(args.guidance, c)
                     for N in n_grid:
                         keep = (
-                            0 if probe in (PROBE_CLI_FULL, PROBE_CLI_ATOMIC) else 1
+                            0 if probe in SHIPPED_CUT_PROBES else 1
                         )  # cli probes keep every matrix for the shipped cut
                         scores, _, stored, facts = probe_store(
                             hf_model,
@@ -173,6 +174,9 @@ def run_sweep(args, rec):
                             "c": c,
                             "N": N,
                             "g": g,
+                            "context_mode": CONTEXT_MODE_OF_PROBE.get(probe),  # D-SB-20
+                            "window_offset": c,
+                            "counts_source": counts_source(probe_columns(probe, noise)),
                             "grain": grain,
                             "file": name,
                             "columns": facts["columns"],
@@ -191,7 +195,7 @@ def run_sweep(args, rec):
                                 )
                             },
                         }
-                        if probe in (PROBE_CLI_FULL, PROBE_CLI_ATOMIC):
+                        if probe in SHIPPED_CUT_PROBES:
                             stored_ids = [probe_store_.get(s) for s in facts["stored_seq"]]
                             sc = {}
                             for arm, paths in probe_columns(probe, noise).items():
