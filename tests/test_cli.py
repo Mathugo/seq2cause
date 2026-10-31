@@ -3,6 +3,7 @@ end-to-end run through `main()`."""
 
 from __future__ import annotations
 
+import pytest
 import torch
 
 from seq2cause.cli import build_arg_parser, load_tokenized_dataset, main
@@ -291,3 +292,38 @@ def test_main_noise_min_id_flag(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "noise_min_id=4" in captured.out
     assert "Done in" in captured.out
+
+
+def test_main_score_cmi_with_prepended_past(tmp_path, capsys):
+    torch.manual_seed(0)
+    dataset_path = tmp_path / "events.txt"
+    seqs = torch.randint(0, 30, (2, 12))
+    dataset_path.write_text("\n".join(" ".join(str(t) for t in row.tolist()) for row in seqs))
+    output_path = tmp_path / "graphs.pt"
+
+    main(
+        [
+            "--dataset", str(dataset_path),
+            "--context-len", "0",
+            "--prepend-len", "3",
+            "--score", "cmi",
+            "--n-particles", "4",
+            "--seed", "0",
+            "--graph-level", "sample",
+            "--output", str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    assert "score='cmi'" in captured.out
+    assert "prepend_len=3" in captured.out
+    assert "Clamp-mode corruption:" not in captured.out
+    assert "Done in" in captured.out
+    for result in torch.load(output_path, weights_only=True):
+        assert result["sample_graph"].shape == (12, 12)  # every observed token is tested
+
+
+def test_main_score_cmi_requires_atomic(tmp_path):
+    dataset_path = tmp_path / "events.txt"
+    dataset_path.write_text("1 2 3 4 5 6\n")
+    with pytest.raises(SystemExit):
+        main(["--dataset", str(dataset_path), "--score", "cmi", "--strategy", "full"])

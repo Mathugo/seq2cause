@@ -1,3 +1,5 @@
+import math
+
 import pytest
 import torch
 
@@ -7,6 +9,7 @@ from seq2cause.diagnostics import (
     compute_cmi_matrix_sparse,
     estimate_oracle_score,
     ground_truth_adjacency,
+    ground_truth_cmi_matrix,
     recall_by_lag,
     recall_by_lag_with_tau_by_lag,
     snr_by_lag,
@@ -568,3 +571,118 @@ def test_compute_cmi_matrix_forwards_noise_min_id():
         noise_min_id=vocab_size - 1,
     )
     assert torch.isfinite(sparse).all()
+
+
+# ---------------------------------------------------------------------------
+# score="cmi", prepend_len, ground_truth_cmi_matrix
+# ---------------------------------------------------------------------------
+
+
+class _TinyLM(torch.nn.Module):
+    """Causal toy LM (each position sees itself and the previous token), any input length."""
+
+    def __init__(self, vocab_size=12):
+        super().__init__()
+        torch.manual_seed(0)
+        self.vocab_size = vocab_size
+        self.e1 = torch.nn.Embedding(vocab_size, 16)
+        self.e2 = torch.nn.Embedding(vocab_size, 16)
+        self.head = torch.nn.Linear(16, vocab_size)
+
+    def forward(self, input_ids, **kwargs):
+        prev = torch.roll(input_ids, 1, dims=-1)
+        h = self.e1(input_ids) + self.e2(prev)
+        return {"logits": 3 * self.head(torch.tanh(h))}
+
+
+def test_compute_cmi_matrix_cmi_converges_to_the_exact_ground_truth():
+    scm, seq = create_scm(vocab_size=8, memory=2, length=12, seed=1, sparsity=0.5)
+    sequence, c = seq[0], 2
+    torch.manual_seed(0)
+    est = compute_cmi_matrix(scm, sequence, context_len=c, n_particles=4000, score="cmi").double()
+    gt = ground_truth_cmi_matrix(scm, sequence)[c:, c:]
+    assert est.shape == gt.shape == (10, 10)
+    assert gt.max() > 0.1  # the check is not vacuous
+    assert (est - gt).abs().max() < 0.02 * gt.max()  # observed 0.5% at N=4000, 8% at N=100
+    # beyond the SCM memory the effect does not depend on the cause at all
+    lag = torch.arange(10).unsqueeze(0) - torch.arange(10).unsqueeze(1)
+    assert est[lag > 2].abs().max() < 1e-6
+
+
+def test_compute_cmi_matrix_cmi_is_bounded_and_upper_triangular():
+    model = _TinyLM()
+    torch.manual_seed(1)
+    seq = torch.randint(0, 12, (14,))
+    cmi = compute_cmi_matrix(model, seq, context_len=2, n_particles=16, score="cmi")
+    assert cmi.shape == (12, 12)
+    assert torch.isfinite(cmi).all()
+    assert cmi.min() >= 0 and cmi.max() <= math.log(2) + 1e-6
+    assert torch.equal(cmi.tril(), torch.zeros_like(cmi))
+    assert cmi.max() > 0
+
+
+def test_compute_cmi_matrix_validates_score_and_context():
+    model = _TinyLM()
+    seq = torch.randint(0, 12, (10,))
+    with pytest.raises(ValueError, match="score must be one of"):
+        compute_cmi_matrix(model, seq, context_len=2, score="kl")
+    with pytest.raises(ValueError, match="requires strategy='atomic'"):
+        compute_cmi_matrix(model, seq, context_len=2, score="cmi", strategy="full")
+    with pytest.raises(ValueError, match="context_len \\+ prepend_len >= 1"):
+        compute_cmi_matrix(model, seq, context_len=0)
+    with pytest.raises(ValueError, match="n_pasts >= 1"):
+        compute_cmi_matrix(model, seq, context_len=1, prepend_len=2, n_pasts=0)
+
+
+@pytest.mark.parametrize("score", ["info_gain", "cmi"])
+@pytest.mark.parametrize("context_len,prepend_len", [(0, 3), (1, 3), (2, 0)])
+def test_compute_cmi_matrix_prepend_tests_every_token_after_the_anchor(score, context_len, prepend_len):
+    model = _TinyLM()
+    torch.manual_seed(2)
+    seq = torch.randint(0, 12, (10,))
+    cmi = compute_cmi_matrix(
+        model, seq, context_len=context_len, n_particles=8, score=score,
+        prepend_len=prepend_len, n_pasts=2,
+    )
+    lc = 10 - context_len
+    assert cmi.shape == (lc, lc)
+    assert torch.isfinite(cmi).all()
+    assert cmi[0].abs().sum() > 0  # the first observed token after the anchor is tested
+
+
+def test_compute_cmi_matrix_prepend_is_reproducible_and_samples_the_past():
+    model = _TinyLM()
+    seq = torch.randint(0, 12, (10,), generator=torch.Generator().manual_seed(3))
+    kw = dict(context_len=1, n_particles=8, score="cmi", prepend_len=3)
+    torch.manual_seed(0)
+    a = compute_cmi_matrix(model, seq, **kw)
+    torch.manual_seed(0)
+    b = compute_cmi_matrix(model, seq, **kw)
+    assert torch.equal(a, b)
+    torch.manual_seed(0)
+    no_past = compute_cmi_matrix(model, seq, context_len=1, n_particles=8, score="cmi")
+    assert a.shape == no_past.shape
+    assert not torch.equal(a, no_past)
+
+
+def test_ground_truth_cmi_matrix_is_banded_and_bounded():
+    scm, seq = create_scm(vocab_size=10, memory=3, length=15, seed=1)
+    gt = ground_truth_cmi_matrix(scm, seq[0])
+    assert gt.shape == (15, 15)
+    assert gt.min() >= 0 and gt.max() <= math.log(2)
+    j, q = torch.nonzero(gt, as_tuple=True)
+    assert ((q - j >= 1) & (q - j <= 3) & (q >= 3)).all()
+
+
+def test_compare_intervention_strategies_include_cmi():
+    scm, seq = create_scm(vocab_size=10, memory=2, length=10, seed=0)
+    sequence = seq[0]
+    adjacency = ground_truth_adjacency(scm, sequence, threshold=0.05, n_counterfactuals=4)
+    results = compare_intervention_strategies(
+        scm, sequence, context_len=2, adjacency=adjacency, n_particles=8, include_cmi=True
+    )
+    assert "atomic_cmi" in results
+    assert results["atomic_cmi"].cmi_matrix.shape == (8, 8)
+    assert "atomic_cmi" not in compare_intervention_strategies(
+        scm, sequence, context_len=2, adjacency=adjacency, n_particles=4
+    )

@@ -18,7 +18,7 @@ import torch
 from tqdm import tqdm
 
 from seq2cause.adapters import HFModelAdapter
-from seq2cause.diagnostics import compute_cmi_matrix, summary_graph
+from seq2cause.diagnostics import SCORES, compute_cmi_matrix, summary_graph
 from seq2cause.kl import DEFAULT_KL_MODE, KL_MODES
 from seq2cause.threshold import AdaptiveThreshold
 from seq2cause.utils import check_memory_budget, estimate_tensor_bytes, format_bytes
@@ -112,7 +112,34 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--context-len",
         type=int,
         default=4,
-        help="Length of the fixed, always-real prefix (default: 4).",
+        help="Length of the fixed, always-real prefix, never tested (default: 4). With "
+        "--prepend-len, set it to the number of special leading tokens (e.g. 1 for a CLS/BOS "
+        "token, 0 if there is none).",
+    )
+    parser.add_argument(
+        "--prepend-len",
+        type=int,
+        default=0,
+        help="Number of tokens sampled from the model and inserted between the fixed prefix "
+        "and the tested tokens, so the first tested tokens also get a past without losing "
+        "any observed token (default: 0, no sampled past). Recommended: >= the expected "
+        "causal memory, with --context-len 0 or 1.",
+    )
+    parser.add_argument(
+        "--n-pasts",
+        type=int,
+        default=1,
+        help="With --prepend-len, number of sampled pasts whose scores are averaged "
+        "(default: 1).",
+    )
+    parser.add_argument(
+        "--score",
+        choices=list(SCORES),
+        default="info_gain",
+        help="Edge score (default: 'info_gain', the original TRACE score). 'cmi': the "
+        "conditional mutual information I(E_t'; E_t | X_<t), which also weights the "
+        "cause-absent branch by the model probability of the cause (between 0 and log 2; "
+        "requires --strategy atomic).",
     )
     parser.add_argument(
         "--n-particles",
@@ -197,6 +224,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> None:
     args = build_arg_parser().parse_args(argv)
+    if args.score == "cmi" and args.strategy != "atomic":
+        raise SystemExit("--score cmi requires --strategy atomic")
     if args.seed is not None:
         torch.manual_seed(args.seed)
 
@@ -217,7 +246,7 @@ def main(argv: list[str] | None = None) -> None:
         from transformers import LlamaConfig, LlamaForCausalLM
 
         vocab_size = max(int(seq.max()) for seq in sequences) + 1
-        max_len = max(seq.numel() for seq in sequences)
+        max_len = max(seq.numel() for seq in sequences) + args.prepend_len
         config = LlamaConfig(
             vocab_size=vocab_size,
             hidden_size=256,
@@ -240,14 +269,17 @@ def main(argv: list[str] | None = None) -> None:
 
     print(
         f"seq2cause: {len(sequences)} event sequence(s), "
-        f"do-intervention strategy={args.strategy!r}, threshold={args.threshold_method!r}, "
+        f"do-intervention strategy={args.strategy!r}, score={args.score!r}, "
+        f"prepend_len={args.prepend_len}, threshold={args.threshold_method!r}, "
         f"kl_mode={args.kl_mode!r}, "
         f"noise_min_id={args.noise_min_id}"
     )
     kl_stats: dict[str, int] = {}
     first = sequences[0]
     first_lc = first.numel() - args.context_len
-    est_bytes = estimate_tensor_bytes(args.n_particles, first_lc, first.numel(), vocab_size)
+    est_bytes = estimate_tensor_bytes(
+        args.n_particles, first_lc, first.numel() + args.prepend_len, vocab_size
+    )
     print(f"est. VRAM/RAM per sequence (approx.): {format_bytes(est_bytes)}\n")
 
     # Pass 1: run the (expensive) do-intervention CI-test for every sequence.
@@ -256,7 +288,9 @@ def main(argv: list[str] | None = None) -> None:
     for sequence in tqdm(sequences, desc="CI-tests (do-intervention)", unit="seq"):
         sequence = sequence.to(device)
         lc = sequence.numel() - args.context_len
-        seq_est_bytes = estimate_tensor_bytes(args.n_particles, lc, sequence.numel(), vocab_size)
+        seq_est_bytes = estimate_tensor_bytes(
+            args.n_particles, lc, sequence.numel() + args.prepend_len, vocab_size
+        )
         check_memory_budget(seq_est_bytes, device)
         cmi_matrix = compute_cmi_matrix(
             adapter,
@@ -267,6 +301,9 @@ def main(argv: list[str] | None = None) -> None:
             kl_mode=args.kl_mode,
             stats=kl_stats,
             noise_min_id=args.noise_min_id,
+            score=args.score,
+            prepend_len=args.prepend_len,
+            n_pasts=args.n_pasts,
         )
         cmi_matrices.append(cmi_matrix)
     elapsed = time.perf_counter() - t0
@@ -314,14 +351,15 @@ def main(argv: list[str] | None = None) -> None:
             total_summary_edges += int(summary_adj.sum())
         results.append(entry)
 
-    print(f"\nDone in {elapsed:.1f}s. Top CMI score: {top_score:.2e}")
+    print(f"\nDone in {elapsed:.1f}s. Top {args.score} score: {top_score:.2e}")
     print(f"Threshold fit on {pooled_scores.numel()} scores pooled across {len(sequences)} sequence(s).")
     n_corrupt = kl_stats.get("n_cell_collapsed", 0) + kl_stats.get("n_cell_saturated", 0)
-    print(
-        f"Clamp-mode corruption: {kl_stats.get('n_cell_collapsed', 0)} collapsed (NaN) and "
-        f"{kl_stats.get('n_cell_saturated', 0)} saturated (+inf) of {kl_stats.get('n_cells', 0)} "
-        f"cells{' would be' if args.kl_mode != 'clamp' else ''} produced by the v0.1.9 algebra."
-    )
+    if args.score == "info_gain":
+        print(
+            f"Clamp-mode corruption: {kl_stats.get('n_cell_collapsed', 0)} collapsed (NaN) and "
+            f"{kl_stats.get('n_cell_saturated', 0)} saturated (+inf) of {kl_stats.get('n_cells', 0)} "
+            f"cells{' would be' if args.kl_mode != 'clamp' else ''} produced by the v0.1.9 algebra."
+        )
     if args.kl_mode == "clamp" and any(tau != tau for tau in tau_by_lag.values()):
         print(
             f"WARNING: the pooled threshold is NaN ({n_corrupt} corrupted cell(s) under --kl-mode "

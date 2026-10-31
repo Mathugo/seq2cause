@@ -33,13 +33,26 @@ from seq2cause.kl import (
     bernoulli_kl_from_log,
     check_kl_mode,
     corrupted_cell_counts,
+    log1mexp,
     logmeanexp,
+    wide_dtype,
 )
-from seq2cause.sampling import do_interventions, uniform_sample, unigram_sample
+from seq2cause.sampling import (
+    do_interventions,
+    model_sample_excluding_observed,
+    uniform_sample,
+    unigram_sample,
+)
 from seq2cause.scm import NonlinearSCM
 
+# Edge scores of `compute_cmi_matrix`: "info_gain" is the information gain of the observed
+# cause (the original TRACE score), "cmi" the conditional mutual information I(E_t'; E_t | X_<t).
+SCORES = ("info_gain", "cmi")
+
 __all__ = [
+    "SCORES",
     "ground_truth_adjacency",
+    "ground_truth_cmi_matrix",
     "snr_by_lag",
     "recall_by_lag",
     "recall_by_lag_with_tau_by_lag",
@@ -127,6 +140,56 @@ def ground_truth_adjacency(
             if divergences and (sum(divergences) / len(divergences)) > threshold:
                 adj[j, q] = True
     return adj
+
+
+@torch.no_grad()
+def ground_truth_cmi_matrix(scm: NonlinearSCM, sequence: Tensor) -> Tensor:
+    """Exact conditional mutual information of every (cause j, effect q) pair, from the
+    SCM's exact conditional: the ground truth of `compute_cmi_matrix(score="cmi")`.
+
+    With the mediators observed (only position `j` changes, as in `ground_truth_adjacency`),
+    `q1 = P(x_q | x_<q)`, `q0 = sum_v w_v P(x_q | x_<q with x_j := v)` with `w_v` the SCM's
+    `P(X_j = v | x_<j)` renormalised over `v != x_j`, and `pi = P(x_j | x_<j)` (uniform for the
+    first `memory` positions, which the SCM draws uniformly):
+
+        CMI = pi KL(q1 || m) + (1 - pi) KL(q0 || m),  m = pi q1 + (1 - pi) q0,
+
+    a Bernoulli Jensen-Shannon divergence, between 0 and log 2. Every alternative token is
+    enumerated (no Monte Carlo).
+
+    Returns:
+        float64 `[L, L]`, same indexing as `ground_truth_adjacency`: `[j, q]` for
+        `q - scm.memory <= j < q`, `q >= scm.memory`; 0 elsewhere.
+    """
+    m = scm.memory
+    V = scm.vocab_size
+    L = sequence.shape[-1]
+    out = torch.zeros((L, L), dtype=torch.float64)
+    allv = torch.arange(V, device=sequence.device)
+
+    def _prior(j: int) -> Tensor:
+        if j < m:
+            return torch.full((V,), 1.0 / V, dtype=torch.float64)
+        return scm.conditional_probs(sequence[j - m : j]).double().cpu()
+
+    for q in range(m, L):
+        ctx = sequence[q - m : q]
+        xq = int(sequence[q])
+        q1 = scm.conditional_probs(ctx).double()[xq].cpu()
+        for j in range(q - m, q):
+            xj = int(sequence[j])
+            alt = ctx.unsqueeze(0).repeat(V, 1)
+            alt[:, j - (q - m)] = allv
+            qv = scm.conditional_probs(alt).double()[:, xq].cpu()  # [V]
+            prior = _prior(j)
+            pi = prior[xj]
+            w = prior.clone()
+            w[xj] = 0.0
+            w = w / w.sum()
+            q0 = (w * qv).sum()
+            mix = pi * q1 + (1 - pi) * q0
+            out[j, q] = pi * _bernoulli_kl(q1, mix) + (1 - pi) * _bernoulli_kl(q0, mix)
+    return out
 
 
 def snr_by_lag(
@@ -369,6 +432,66 @@ def _count_atomic(stats: dict, q32: Tensor, p32: Tensor) -> None:
 
 
 @torch.no_grad()
+def _sample_past(model, anchor: Tensor, length: int, min_id: int) -> Tensor:
+    """`length` tokens drawn ancestrally from `model` after the observed `anchor` (ids below
+    `min_id` excluded). Without an anchor the first token is uniform over `[min_id, V)`."""
+    cur = anchor.unsqueeze(0)
+    for _ in range(length):
+        if cur.shape[1] == 0:
+            nxt = torch.randint(min_id, model.vocab_size, (1, 1), device=anchor.device)
+        else:
+            probs = torch.softmax(model.forward(input_ids=cur)["logits"][:, -1, :].float(), dim=-1)
+            probs[:, :min_id] = 0.0
+            nxt = torch.multinomial(probs / probs.sum(-1, keepdim=True), 1)
+        cur = torch.cat([cur, nxt.to(cur.dtype)], dim=1)
+    return cur[0, anchor.numel() :]
+
+
+def _cmi_matrix_atomic(
+    model,
+    sequence: Tensor,
+    context_len: int,
+    n_particles: int,
+    max_pairs: int | None,
+    noise_min_id: int,
+) -> Tensor:
+    """Atomic CMI estimate (mediators observed), see `compute_cmi_matrix(score="cmi")`."""
+    seq_len = sequence.shape[-1]
+    lc = seq_len - context_len
+    prefix = sequence[:context_len].unsqueeze(0)
+    rest = sequence[context_len:].unsqueeze(0)
+
+    logits = model.forward(input_ids=sequence.unsqueeze(0))["logits"]
+    dtype = wide_dtype(logits)
+    # [Lc, V]: distribution of the token at every tested position given everything before it
+    log_prior = torch.log_softmax(logits[0, context_len - 1 : seq_len - 1, :].to(dtype), dim=-1)
+    # log P(observed token | past): the probability pi of the observed cause (rows) and the
+    # cause-present effect probability q1 (columns) are the same vector
+    log_obs = log_prior.gather(-1, rest[0].unsqueeze(-1)).squeeze(-1)  # [Lc]
+
+    # cause absent: X_j ~ P(X_j | x_<j, X_j != x_j), mediators observed
+    repl = model_sample_excluding_observed(
+        log_prior.exp().unsqueeze(0), rest, n_samples=n_particles, min_id=noise_min_id
+    )  # [1, N, Lc]
+    rows = do_interventions(
+        repl.to(sequence.dtype), rest, prefix, strategy="atomic", max_pairs=max_pairs
+    ).squeeze(0)  # [N, Lc(causes), L]
+    logp_do = _predicted_true_token_log_probs(model, rows, rest.squeeze(0), context_len)
+    log_q0 = logmeanexp(logp_do.to(dtype), dim=0)  # [Lc(causes), Lc(effects)]
+
+    log_pi = log_obs.unsqueeze(1).expand(lc, lc)
+    log_1m_pi = log1mexp(log_pi)
+    log_q1 = log_obs.unsqueeze(0).expand(lc, lc)
+    log_m = torch.logaddexp(log_pi + log_q1, log_1m_pi + log_q0)
+    cmi = log_pi.exp() * bernoulli_kl_from_log(log_q1, log_m) + log_1m_pi.exp() * bernoulli_kl_from_log(
+        log_q0, log_m
+    )
+    mask = torch.triu(torch.ones(lc, lc, dtype=torch.bool, device=cmi.device), diagonal=1)
+    # a mixture of two KLs is >= 0; clamp float rounding (~1e-18) of exactly-zero effects
+    return torch.where(mask, cmi.clamp_min(0.0), torch.zeros_like(cmi)).to(torch.float32)
+
+
+@torch.no_grad()
 def compute_cmi_matrix(
     model,
     sequence: Tensor,
@@ -379,6 +502,9 @@ def compute_cmi_matrix(
     kl_mode: str = DEFAULT_KL_MODE,
     stats: dict | None = None,
     noise_min_id: int = 0,
+    score: str = "info_gain",
+    prepend_len: int = 0,
+    n_pasts: int = 1,
 ) -> Tensor:
     """Computes the per-(cause, effect) Conditional Mutual Information matrix
     for a single sequence, using a single do-intervention `strategy`.
@@ -423,11 +549,30 @@ def compute_cmi_matrix(
             ids (PAD/BOS/EOS/UNK) so no counterfactual places one of them
             mid-sequence (see `sampling.uniform_sample`). `0` = the whole
             id range, specials included (pre-0.1.10 behaviour).
+        score: `"info_gain"` (default, the original TRACE score): KL between the
+            effect probability with the observed cause and its mean over uniform
+            replacements; not bounded. `"cmi"` (requires `strategy="atomic"`): the
+            conditional mutual information `I(E_t'; E_t | X_<t)`,
+            `pi KL(q1 || m) + (1 - pi) KL(q0 || m)` with `pi` the model probability of
+            the observed cause, `q1`/`q0` the effect probability with the cause
+            present/replaced by a draw from the model's `P(X_t | x_<t, X_t != x_t)`,
+            and `m = pi q1 + (1 - pi) q0`; between 0 and log 2. Always computed in
+            log space (`kl_mode` and `stats` only apply to `"info_gain"`); see
+            `ground_truth_cmi_matrix` for its exact value on a `NonlinearSCM`.
+        prepend_len: number of tokens sampled from the model and placed *between*
+            the observed context (`sequence[:context_len]`, e.g. a CLS token, may be
+            empty) and the tested tokens, so the first tested tokens also get a past
+            without losing any observed token. `0` (default): no sampled past.
+            Recommended: `context_len` = number of special leading tokens (0 or 1) and
+            `prepend_len` >= the expected causal memory.
+        n_pasts: with `prepend_len > 0`, number of independently sampled pasts whose
+            score matrices are averaged (default 1).
 
     Returns:
         `[L - context_len, L - context_len]` CMI matrix; `[j, q]` is the
         estimated causal strength of candidate cause `j` on candidate
-        effect `q`.
+        effect `q` (positions `context_len + j` and `context_len + q` of
+        `sequence`, also with `prepend_len > 0`).
     """
     check_kl_mode(kl_mode)
     if strategy not in ("full", "atomic"):
@@ -436,6 +581,38 @@ def compute_cmi_matrix(
             "compare_intervention_strategies for 'windowed'/'independent_mediator'/"
             "'in_distribution_noise'."
         )
+    if score not in SCORES:
+        raise ValueError(f"score must be one of {SCORES}, got {score!r}")
+    if score == "cmi" and strategy != "atomic":
+        raise ValueError("score='cmi' requires strategy='atomic' (mediators observed)")
+    if prepend_len < 0 or n_pasts < 1:
+        raise ValueError(f"need prepend_len >= 0 and n_pasts >= 1, got {prepend_len}, {n_pasts}")
+    if context_len + prepend_len < 1:
+        raise ValueError("need context_len + prepend_len >= 1: the first tested token needs a past")
+
+    if prepend_len > 0:
+        anchor, tested = sequence[:context_len], sequence[context_len:]
+        total = None
+        for _ in range(n_pasts):
+            past = _sample_past(model, anchor, prepend_len, noise_min_id)
+            mat = compute_cmi_matrix(
+                model,
+                torch.cat([anchor, past, tested]),
+                context_len + prepend_len,
+                n_particles=n_particles,
+                strategy=strategy,
+                max_pairs=max_pairs,
+                kl_mode=kl_mode,
+                stats=stats,
+                noise_min_id=noise_min_id,
+                score=score,
+            )
+            total = mat if total is None else total + mat
+        return total / n_pasts
+
+    if score == "cmi":
+        return _cmi_matrix_atomic(model, sequence, context_len, n_particles, max_pairs, noise_min_id)
+
     device = sequence.device
     seq_len = sequence.shape[-1]
     lc = seq_len - context_len
@@ -703,6 +880,7 @@ def compare_intervention_strategies(
     unigram_freqs: Tensor | None = None,
     max_pairs: int | None = 20000,
     generator: torch.Generator | None = None,
+    include_cmi: bool = False,
 ) -> dict[str, StrategyResult]:
     """Runs "full", "atomic", "windowed", "independent_mediator", and
     "in-distribution-noise" (a "full" staircase using `unigram_sample`
@@ -726,6 +904,9 @@ def compare_intervention_strategies(
         max_pairs: forwarded to `do_interventions` as a guard for the
             O(L^2) strategies ("atomic", "windowed").
         generator: optional `torch.Generator` for reproducible noise draws.
+        include_cmi: also report `"atomic_cmi"`: the atomic construction scored by the
+            conditional mutual information (`compute_cmi_matrix(score="cmi")`), to be
+            compared with `ground_truth_cmi_matrix`.
 
     Returns:
         `{strategy_name: StrategyResult}`.
@@ -827,5 +1008,11 @@ def compare_intervention_strategies(
         rows_unigram = rows_unigram.squeeze(0)
         p_unigram = _predicted_true_token_probs(scm, rows_unigram, rest.squeeze(0), context_len)
         _finalize("in_distribution_noise", _cmi_matrix_from_staircase(p_unigram.mean(dim=0)))
+
+    if include_cmi:
+        _finalize(
+            "atomic_cmi",
+            _cmi_matrix_atomic(scm, sequence, context_len, n_particles, max_pairs, 0),
+        )
 
     return results
