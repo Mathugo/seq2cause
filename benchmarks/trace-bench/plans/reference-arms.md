@@ -248,3 +248,171 @@ Source: the co-author's review of 2026-10-19 (point 4: the paper's N = 128 again
   therefore printed with their probed count and reachable-recall ceiling beside the F1, and a
   fall at `c = 16` against `c = 8` is read as the smaller sample first, not as the context
   hurting; the expectation above is checked on F1 as registered.
+
+### 2026-10-31 — the context family: score × context on the full-staircase core probe, and the atomic CMI arm (seq2cause v0.3.1; before any context-family code or read)
+
+Source: the method author's mail of 2026-10-30 — keep TRACE as a baseline, name the configuration run, and
+re-run a score × context 2 x 2 at N = 8 on the frozen backbones under the same sweep-and-freeze protocol —
+and his v0.3.1 release of 2026-10-31, which puts the CMI score on the command-line path too; owner decisions
+of 2026-10-30 (the 2 x 2 on the core probe; N = 8; rungs; hop 0 on the root-cause axes) and 2026-10-31 (one
+atomic CMI arm, keep layout only; `none` at both grains after the P1 check below; both paths and both cuts on
+the atomic arm; both root-cause axes for it). The paper's results are frozen (2026-10-29): the family runs in
+the harness only and the paper decides later; nothing landed moves. Package: seq2cause v0.3.1 `280ed948`
+(merged 2026-10-30 / 10-31, D-SB-18 and D-SB-19; `constants.CONTEXT_FAMILY_VERSION`); every landed cell
+stays a v0.1.9 read.
+
+**§1 Arms.** Five arms in their own tuple `CONTEXT_ARMS` (family `context`; `REFERENCE_ARMS` and every
+landed table are untouched); class `reference`; cut `frozen`; the rung's τ grid.
+
+| arm | probe (forward-sharing unit) | statistic thresholded | context (request / session) | c grid (request / session) | g | paths | cuts |
+|---|---|---|---|---|---|---|---|
+| `trace/core-ig-overwrite` | `core` (the landed pass) | `calc_lag_info_gain` (as `trace/core`) | overwrite / overwrite | {1, 2, 3} / {2, 4, 8} | min(3, c) | `fixed-kl` | `frozen` |
+| `trace/core-cmi-overwrite` | `core` | `calc_lag_cmi` (v0.3.0) | overwrite / overwrite | {1, 2, 3} / {2, 4, 8} | min(3, c) | `fixed-kl` | `frozen` |
+| `trace/core-ig-keep` | `core-keep` (new: the core build with `context_mode = "none"`) | `calc_lag_info_gain` | none / none | {1} / {1} | 1 | `fixed-kl` | `frozen` |
+| `trace/core-cmi-keep` | `core-keep` | `calc_lag_cmi` | none / none | {1} / {1} | 1 | `fixed-kl` | `frozen` |
+| `trace/cli-atomic-cmi-keep` | `cli-atomic-cmi` (new: v0.3.1 `compute_cmi_matrix(score="cmi", strategy="atomic")` internals, real prefix) | the atomic CMI | `context_len 1, prepend_len 0` / the same | {1} / {1} | 1 (carried; the cli probes ignore g) | `fixed-kl`, `fixed` | `frozen`, `shipped` |
+
+The two overwrite arms are read from the landed `core` pass (every future `core` pass writes their two
+columns beside `trace/core`'s three and Granger's two; `trace-core-ig-overwrite__fixed-kl` is by
+construction the same column as `trace-core__fixed-kl` — identity check (ii)). The arm set is one atomic
+arm, not an atomic 2 x 2: on the cli-atomic path the keep layout is the landed `c = 1` cell, so "information
+gain, keep" at request already exists in the landed `trace/cli-atomic` sweeps and is read from them (§7).
+
+**§2 Scores.** *Information gain* — the landed statistic: the Bernoulli KL of the effect's probability with
+the observed cause against its mean over the cause-noised particles; unbounded. *CMI* — the author's
+`causal_strength = "CMI"` (v0.3.0 `calc_lag_cmi`, core class) and `score = "cmi"` (v0.3.1
+`compute_cmi_matrix`): `CMI = π · KL(q1 ‖ m) + (1 − π) · KL(q0 ‖ m)`, `m = π q1 + (1 − π) q0`, with π the
+model probability of the observed cause, q1 the effect's probability with the cause present and q0 with the
+cause absent; bounded by log 2; always in log space (its `fixed-kl` reading is v0.3.1's own default:
+log-space KL, noise over `[0, V)`; there is no `shipped`-algebra CMI, the author never released one). On the
+core probe the cause-absent branch is the staircase's uniform draw and the CMI is read from the same
+log-probabilities as the information gain of the same pass (per particle, then the mean, as
+`calc_lag_info_gain`). On the atomic probe the cause-absent branch is **a draw from the model**,
+`P(X_j | x_<j, X_j ≠ x_j)` (`model_sample_excluding_observed`, N particles, the log-mean over particles,
+then the KL — the cli path's order), with one unintervened forward giving π and q1 as the same vector: a new
+forward with its own draws, not a re-read of the landed atomic pass. The atomic arm's `fixed` path is the
+same construction with the specials excluded from the model draw (`min_id = 4`, a second forward), not a
+uniform draw over real ids; its `shipped` cut is the tool's own pooled-percentile rule with lag decay
+(`CLI_SHIPPED_RULE`) on the CMI scores, inheriting `(c, N)` from the frozen sibling, as for the landed cli arms.
+
+**§3 Context layouts and the P1 outcome.** *overwrite* (the landed layout): the first g observed tokens
+kept, positions g … c − 1 overwritten by tokens sampled from the model, positions c … L − 1 tested. *none*:
+the first g observed tokens kept, no sampled token, positions g … L − 1 tested; the family fixes `g = c = 1`
+(BOS only), so every observed token is tested and the window offset equals c as on every landed record.
+*prepend* (the author's suggestion for sessions: c sampled tokens placed before the full sequence) **is not
+run**, by the premise check P1 of 2026-10-30 / 31 (seed-0 backbones of the five rungs, the 200 longest
+validation sessions, N = 8, g = 1, v0.3.0's prepend construction; artefacts off the repository). The
+registered rule was: c enters the keep session grid iff the mean NLL of the observed tokens at model
+positions ≥ 66 (the backbone's position budget, `max_len + 2`) rises by ≤ 0.10 nats and the whole-sequence
+mean by ≤ 5 %. The positions past the budget are harmless everywhere (−0.047 … +0.080 nats), but the
+whole-sequence NLL rises by xs +18 / +38 / +68 %, s +9 / +15 / +20 %, m +6 / +16 / +31 %, l +3 / +3 / +6 %,
+xl +2 / +3 / +6 % at c = 2 / 4 / 8 — only l and xl at c ≤ 4 pass. By observed index the damage sits on the
+first tokens (t = 1: +4.5 … +5.5 nats on every rung) and decays, at m with c = 8 still +2.3 nats at t = 6–10.
+The cause is structural: the benchmark's sessions are head-truncated (`encode_sequence` keeps `ids[:max_len]`),
+so every session the backbone saw starts at its true beginning, and a sampled past before it is a
+construction the backbone never saw; the author's prepend presumes windows cut from a longer stream. The
+in-distribution way to keep every observed token is `none`, which the request grain used already (the landed
+`trace/core` request freezes chose c = 1 on every s and m seed). Owner decision 2026-10-31: `none` at both
+grains. At the session grain c = 1 is a new cell for every arm (the landed session grid is {2, 4, 8}).
+
+**§4 Grids.** N = 8 (the author's recommendation: N = 8 against N = 128 moves his AP by < 0.01; the landed
+H-sat band agrees); c as the §1 table; τ the rung's registered grid (§3 above and the addenda of 2026-10-05);
+the shipped rule `CLI_SHIPPED_RULE`; `--max-len 64`, `--max-lag 63`, `--probe-amp none`,
+`--memory-cap-gb 20`; the validation sample of `plans/caps.md` per rung, `head` order; the request-grain
+note of 2026-10-05 (from l up every request cell freezes at the bottom of its τ grid; the "every observed
+pair" reference line printed beside each headline) travels with every table of the family.
+
+**§5 Protocol.** The frozen backbones of the landed freezes are reused, hash-asserted (no pretrain). Per rung
+and seed, the validation sweeps: `core` overwrite (request c 1 2 3; session c 2 4 8), `core-keep` none
+(c 1 both grains), `cli-atomic-cmi` (c 1 both grains, noises `all` and `real`), all N = 8, staged by
+`--prior-rung-record` as the landed sweeps; `scoresweep --arms` names the five arms (the `trace/core`,
+Granger and shipped-path columns of the new `core` pass are not re-scored into the family's tables; they
+serve identity check (i) in a scratch scoresweep); `freeze` derives the family `context` from the arms
+(mixing refused, as `floor`), applies the registered rule — the argmax of validation directed F1 at the
+floor 0.05 over (c, N = 8, τ); ties → smaller N, smaller c, larger τ; τ < 0 set aside — over the family's
+grid only (`n_rows_outside_family_grid` recorded), and writes `freezes/<date>-<rung>-latent-s<k>-context.json`
+(`freeze@3` plus `context_mode` and `window_offset` per cell); the test reads, `annotate`, `seqscore` and
+the root-cause reads bind to it as every landed cell does (`freezecheck` compares `context_mode`). Rungs:
+xs, s, m on every axis (type level, per sequence, root cause); l and xl on the type-level and per-sequence
+axes only. Records land under `results-context/<rung>/latent/seed=<k>/` (cells, `freeze/`, `val-sweep/`,
+`test-read/`, `test-score/`; score arrays off the repository), ledger entries added as the landed ones,
+`report --results-dir results-context` with a reasons file marking the required reference and floor cells
+"not in this family" → `tables/<rung>-latent-context/`, and a tracked `contexttable.py` →
+`tables/context-latent/` (per rung and grain the 2 x 2 of the core family, the atomic arm beside the landed
+`trace/cli-atomic/fixed-kl/frozen` and `/shipped/frozen`, paired differences against the landed
+`trace/core/fixed-kl/frozen`, τ drift). Findings in `findings/context-latent.md`.
+
+**§6 Caveats.** (a) `calc_lag_cmi` fills no corrupted-cell statistics: the core CMI rows carry the
+information-gain `fixed-kl` counts of the same pass (`counts_source: ig-same-pass`); the atomic CMI arm has no
+counts at all (`counts_source: none`; v0.3.1's `score = "cmi"` branch reads neither `kl_mode` nor `stats`) —
+H-hazard is not scored for the family. (b) The CMI is bounded by log 2 ≈ 0.69, so τ ≥ 1 of the grid is
+empty for it (harmless) and the bottom of the grid may bind more often; `at_grid_edge` records it, a grid
+extension downward is a dated addendum plus a CPU re-score (the 2026-10-05 precedent). (c) The keep cells
+coincide with the overwrite cells at c = 1 on the information gain (identity check (iii)); at request the
+family's keep rows are therefore the landed c = 1 cells re-read at N = 8, and the context effect of the
+family is a session-grain effect. (d) The atomic arm's two paths are two forwards per sequence; its
+per-trace root-cause replica is its own layout (its draws differ from the landed `trace/cli-atomic`
+forward; no dedup).
+
+**§7 Identity checks (landing checks; a failure blocks the landing).** (i) The new `core` overwrite pass's
+`trace/core` `fixed-kl` and `shipped` rows at the landed (c, N = 8, τ) reproduce the landed validation-table
+rows of the same seed (F1, precision, recall, `n_edges`) — a scratch scoresweep over those columns.
+(ii) `trace-core-ig-overwrite__fixed-kl == trace-core__fixed-kl` bit for bit in every score file of the pass.
+(iii) `trace/core-ig-keep` at (c = 1, N = 8) equals `trace/core-ig-overwrite` at (c = 1, N = 8) bit for bit
+at request (`none` with g = c = 1 and `overwrite` with g = c = 1 build the same tensors). (iv) The atomic
+arm's `fixed-kl` column equals v0.3.1 `compute_cmi_matrix(score="cmi", strategy="atomic", context_len=1,
+prepend_len=0, noise_min_id=0)` bit for bit on the fixture under one seed, and its `shipped` cut equals the
+v0.3.1 CLI's (`--score cmi --strategy atomic --context-len 1`) — the parity tests of D-SB-2 extended.
+
+**§8 Hypotheses (scored in `findings/context-latent.md` after each rung's test read; paired over the five
+seeds with `report.paired_table`'s test; "p" is its p-value).**
+- **H-ctx-cmi-f1.** |CMI − information gain| in directed F1 at the floor 0.05 is ≤ 0.01 at matched context
+  and grain (`trace/core-cmi-overwrite` vs `trace/core-ig-overwrite`; `trace/core-cmi-keep` vs
+  `trace/core-ig-keep`), five-seed mean of the paired difference. *Fail:* |Δ| > 0.01 with p < 0.05.
+- **H-ctx-cmi-tau.** The τ drift `log10(τ*_test / τ_frozen)`, with τ*_test the test-side argmax recomputed
+  by `contexttable.py` through the benchmark's scorer (at l and xl, where the test score arrays are not
+  re-swept, the F1 drift `F1_test(τ_frozen) − F1_val(τ_frozen)` only): the CMI arm's mean |drift| ≤ the
+  information-gain arm's at matched context and grain (the author's claim: the best threshold drifts about
+  half as much). *Fail:* CMI exceeds information gain by more than one grid step (half a decade), or at
+  l / xl its F1 drift is larger by > 0.01.
+- **H-ctx-keep-perseq.** At the session grain the keep arm's per-sequence pooled directed F1 ≥ the
+  overwrite arm's at matched score (every observed token is a candidate; nothing dropped). *Fail:* keep below
+  overwrite by > 0.01 with p < 0.05.
+- **H-ctx-keep-context-share.** On the per-trace root-cause axis `n_rc_unreachable_context / n_rc = 0` for
+  every keep arm (c = 1 reaches every position), and the hop-0 hit@1 of `rca/trace-ig-keep` ≥ that of
+  `rca/trace-ig-overwrite` on xs, s and m. *Fail:* a keep arm with a context-unreachable root-cause position,
+  or keep < overwrite on any rung.
+- **H-atomic-cmi-f1.** `trace/cli-atomic-cmi-keep/fixed-kl/frozen` directed F1 at the floor 0.05 ≥ the
+  landed `trace/cli-atomic/fixed-kl/frozen` on both grains (the author's claim: AP 0.72 → 0.81 on his
+  synthetic benchmarks with atomic mediators). *Fail:* below by > 0.01 with p < 0.05.
+- **H-atomic-cmi-tau.** The atomic CMI arm's τ drift (as H-ctx-cmi-tau) ≤ the landed `trace/cli-atomic`'s.
+  *Fail:* as H-ctx-cmi-tau.
+- **H-atomic-cmi-shipped.** `trace/cli-atomic-cmi-keep/fixed-kl/shipped` is non-empty on every seed and its
+  directed F1 ≥ the landed `trace/cli-atomic/fixed-kl/shipped`'s. *Fail:* an empty cut on any seed, or
+  below the landed shipped cut by > 0.01 with p < 0.05.
+Descriptive, not hypotheses: the absolute levels; `fixed` vs `fixed-kl` on the atomic arm (the model draw
+with and without the specials); the share of CMI scores at the bottom of the grid.
+
+**§9 Premise checks.** *P1* (prepend at session) — run 2026-10-30 / 31, numbers in §3; closed by the
+owner's decision. *P3* (label side, seed 0 of xs / s / m, before this registration, no model read): of the
+per-trace axis's scored traces C (the 2026-10-31 selection, reproduced exactly: 623 / 48, 1,844 / 1,442 /
+7,754, 2,565 / 30 / 889 / 305 / 1,058 traces per case), the share whose root-cause positions are **exactly
+{window index 0}** under c = 1 — the earliest-ending span of the end-ordered trace, which the full-staircase
+core probe never tests as a cause at any c (the shipped staircase's first row is untested) and which only the
+hop-0 reading can name — is xs 8 % / 10 %, s 5 % / 9 % / 5 %, m 11 % / 0 % / 10 % / 24 % / 0 % (the m crash
+and edge-service faults: none); the share with **any** root-cause position at index 0 is xs 39 % / 50 %,
+s 14 % / 34 % / 74 %, m 39 % / 0 % / 35 % / 30 % / 0 %. The atomic probe tests cause 0, the core probe does
+not; the per-trace rows print both shares beside H-ctx-keep-context-share. *Before the first job:* **P1′**
+identity check (iii) on the seed-0 backbone over 50 validation sequences per grain on the CPU; **P2** the
+parity tests of §7 (iv) and the core CMI parity against `SampleLevelCausalDiscovery.run(causal_strength="CMI")`
+on the fixture, CMI ∈ [0, log 2], `nan_to_num` never firing on the core path; **P4′** the D-SB-12 memory
+estimate for `cli-atomic-cmi` and `core-keep` at N = 8, c = 1, L = 66 on the xl vocabulary (the same tensors
+as the landed probes; under the 20 GiB cap), and the CPU cost per trace of the atomic layout at m, which
+sizes the per-trace replica. Results as a dated note under this addendum.
+
+**§10 Deviations (RUN.md).** D-SB-19 (the v0.3.1 merge, recorded 2026-10-31); **D-SB-20** the `core-keep`
+probe and the `none` layout, `context_mode` and `window_offset` on every discover record and frozen cell,
+the two extra columns of every future `core` pass (tracked pre-change scripts replay at their commit);
+**D-SB-21** `scoresweep --arms`, the derived family `context`, the `-context` freeze name, `results-context/`;
+**D-SB-22** the CMI corrupted-cell counts (§6 a); **D-SB-23** the `cli-atomic-cmi` probe (two forwards, the
+model draw, `fixed` = the specials excluded from the model draw, both cuts).

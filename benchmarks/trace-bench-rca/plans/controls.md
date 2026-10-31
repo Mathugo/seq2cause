@@ -77,3 +77,16 @@ before any ranking is read:
   alerting services per case.
 - **Code path.** A stage of `tracebenchrca.rank` (`--arm control/rule`), on the same export, staging
   and score path as `rca/baro`; no third-party code (`code: None`).
+
+### 2026-10-31 — §3 `control/trace-earliest`, the earliest-error control (the method author's proposal of 2026-10-30; before any such code or run)
+
+The trivial per-trace ranker beside the call-tree floor: "the first thing that failed". Defined in
+`plans/rca-arms.md`, addendum "2026-10-31, later" (the context family's root-cause arms): per selected
+trace the non-client services ordered by the start time of their earliest non-OK span (`start_ns +
+offset` of the raw view; non-OK = 5xx / err / slow), the remaining services appended in name order; case
+level: a service's score = the number of selected traces in which it holds the trace's earliest non-OK span,
+ties by the export's service order, every deployed service ranked; scored by `tracebench.score_rca` (case
+level) and through `scoretrace`'s mode `arm` (per trace). Model-free, label-free, method-side as
+`control/rule` (it reads the view through the method accessor; never the labels, never `parent_pos`).
+Not chosen: the latest non-OK span (the outermost failure, which the client span usually is); a count of
+non-OK spans per service (that is `control/rule`'s spirit on traces); a time-weighted score.

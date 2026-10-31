@@ -1084,3 +1084,109 @@ which nothing read before this date. Scorer: `tracebench.score_rca_trace` (bench
   on the same arm and stage (`rank-trace`); `scoretrace` (every row of the axis, B = 2000, seed 0);
   `reporttrace` (five seeds or nothing; `tables/rca-trace/`); the findings in `findings/rca-trace.md`.
   Paper placement is the paper's decision; nothing here depends on it.
+
+### 2026-10-31, later — the context family's root-cause arms `rca/trace-ig-overwrite`, `rca/trace-cmi-overwrite`, `rca/trace-ig-keep`, `rca/trace-cmi-keep`, `rca/trace-atomic-cmi-keep`; the hop-0 and source readings; the pre-fault subtraction; the control `control/trace-earliest` (the method author's proposals of 2026-10-30; owner decisions 2026-10-30 / 31; before any such code or read)
+
+The method author's mail of 2026-10-30 on the root-cause rule: the current rule "counts every upstream
+ancestor of a non-OK token, healthy ones included, and with hop ≥ 1 a failing service can never credit
+itself"; the hop-0 numbers "look like the natural reading"; he proposes to score only the **sources** of the
+non-OK subgraph, to **subtract** the same count on traces from a pre-fault window, to add an **"earliest
+error in the trace" control** beside the call-tree floor, and to call the current rule the
+**upstream-closure rule** rather than "the author's rule" ("since we did not design it. If you want an
+author's rule, the source rule is the one we would sign"). From this addendum on, the rule registered on
+2026-10-30 is the **upstream-closure rule** (reading `hop1`: a service is credited when it is upstream,
+hop ≥ 1, of a non-OK position); the earlier name stays in the dated texts above as written. Owner
+decisions: hop 0 is the **primary** reading on both root-cause axes, hop ≥ 1 reported beside it; the three
+proposals are registered here with their definitions and run as new rows; the family's arms are the
+reference harness's context family (`benchmarks/trace-bench/plans/reference-arms.md`, addendum of
+2026-10-31; seq2cause v0.3.1 `280ed948`). Nothing landed moves: the landed `rca/trace` and `rca/trace-core`
+rows stand as landed and gain new rows beside them.
+
+- **Arms.** Five new arms, class `root-cause`, inputs `views, window, services` (declared, read and bounded
+  exactly as `rca/trace`, 2026-10-30), axes `ranking` and `trace`, each reading one frozen request cell of the
+  seed's committed **context freeze** (`freezes/<date>-<rung>-latent-s<k>-context.json`): `rca/trace-ig-overwrite`
+  → `trace/core-ig-overwrite/fixed-kl/frozen/request`; `rca/trace-cmi-overwrite` →
+  `trace/core-cmi-overwrite/fixed-kl/frozen/request`; `rca/trace-ig-keep` → `trace/core-ig-keep/fixed-kl/frozen/request`;
+  `rca/trace-cmi-keep` → `trace/core-cmi-keep/fixed-kl/frozen/request`; `rca/trace-atomic-cmi-keep` →
+  `trace/cli-atomic-cmi-keep/fixed-kl/frozen/request`. The family reads the `fixed-kl` path (the author's
+  released default for the CMI, log-space KL; the landed `rca/trace` rows read the `shipped` path, the one
+  path the paper reports — the difference is stated with every table). Code: the author's `Mathugo/seq2cause`
+  at v0.3.1, commit `280ed948` (`CONTEXT_FAMILY_SEQ2CAUSE_COMMIT`, the full sha in `constants.py`), through
+  the reference harness's engine adapter as every landed TRACE cell (the frozen `(c, N, g, τ)`,
+  `context_mode` and `window_offset` of the cell; the backbone hash asserted against the freeze; one probe
+  pass per trace; the per-trace seed stream of 2026-10-30; the keep arms at `c = 1` test every position,
+  `n_nonok_in_context = 0` by construction). The information-gain and CMI cells of one core layout share
+  one forward (the runner probes a trace once per layout and cuts both score matrices at their own τ; the
+  work file carries both cuts; recorded `cells`); the atomic CMI arm is its own forward. xs, s, m × seeds 0–4.
+- **Readings (every TRACE arm, both axes; `--reading` required on `ranktrace`).** `hop1` — the
+  upstream-closure rule as registered on 2026-10-30 (the landed reading). `hop0` — the same closure plus the
+  non-OK position's own service at hop 0 (the reading the per-trace axis reports since 2026-10-31, lifted to
+  the case count: a service's case score = the number of probed traces in which it is upstream, hop ≥ 0, of
+  a non-OK position; ties by the mean smallest hop, then `services.json` order). **`hop0` is the primary
+  row on both axes from this date; `hop1` is reported beside it.** `source` — the author's source rule: a
+  non-OK position is a **source** when none of its parents in the cut sample graph (`{j < q : S[j, q] > τ}`)
+  is a non-OK position (an isolated non-OK position, with no parents at all, is a source); a service's case
+  score = the number of probed traces in which it holds at least one source; ties by the number of sources
+  held (more first), then `services.json` order; per trace the source services ranked the same way, the rest
+  appended in name order. Recorded per case: `n_sources`, `n_sources_isolated`. The landed `rca/trace` and
+  `rca/trace-core` get case-level `hop0` and `source` rows **re-ranked from their landed 2026-10-30 work
+  files** (`ranktrace --from-work-dir`, the files' sha256 recorded against the landed `rank` records; no
+  re-probe) if those files still exist, else from a CPU re-probe of the landed selection at the cap of 500,
+  disclosed; their per-trace rows keep `hop1` / `hop0` as landed (`source` per trace for the new arms only).
+- **Pre-fault subtraction (case level only; the author's proposal, defined here and flagged to him).**
+  Per case a **pre-fault stretch** `[pre_start, inject_time)`, with `pre_start` the preceding case's
+  `end_time` in injection order, or the corpus start (0 s) for the first case of a corpus (`pre_source`
+  recorded as `previous-fault-end` or `corpus-start`; the two window fields enter through the case door as
+  `window.json` does, `cases.json` gaining `pre_start_time`). The runner's phase `pre` selects the stretch's
+  traces by the case rule of 2026-10-30 (start inside the stretch, all splits), ordered by `start_ns`
+  **descending** from the injection (the traces nearest the fault) and capped at 500 as the post selection is,
+  probes them under the same cell, cap, seed stream and device (the index in the pre list seeds the trace),
+  and records `n_traces_pre`, `n_traces_pre_probed`. `ranktrace --subtract pre`: a service's score =
+  `count_post / n_post_probed − count_pre / n_pre_probed` under the same reading (the per-trace credit rates;
+  both counts and both denominators recorded); ties by the post rate, then `services.json` order; a case
+  whose pre stretch holds no probed trace keeps the post score with `n_pre_probed = 0` and is counted
+  (`n_cases_no_pre`). Rows `…/<reading>-subpre/` for the five new arms (not for the landed arms: no pre
+  probe exists for them; reason recorded). Alternatives not chosen, so the choice is not re-made on
+  outcomes: a ratio of rates, a floor at zero, a subtraction at the per-trace level (undefined per trace), an
+  uncapped pre selection. The definition is flagged to the author with this addendum; a different text from
+  him enters by a dated addendum and a re-run.
+- **`control/trace-earliest` — the earliest-error control (model-free, label-free, method-side as
+  `control/rule`; `plans/controls.md` §3).** Per selected trace (the trace axis's rule R; the case axis's
+  window selection at the cap of 500) the non-client services ordered by the start time of their earliest
+  non-OK span (`start_ns + offset`, the raw view), the remaining services appended in name order; positions
+  likewise (the ops indices in that order; under c = 1 the window position is the ops index). Case level: a
+  service's score = the number of selected traces in which it holds the trace's earliest non-OK span (ties
+  within a trace: every tied service), ties by `services.json` order → `ranking-positional.json`, scored by
+  `tracebench.score_rca` as every case ranking; per trace → the mode `arm` of `tracebench.score_rca_trace`
+  through `scoretrace` (an `arm_only` row path, so the floor and broadcast rows are not duplicated). No
+  dataset-repository change. The control answers the author's question whether the sample graph adds
+  anything over "the first thing that failed".
+- **Row set (bounded).** Case level: the five new arms × readings {`hop1`, `hop0`, `source`} × {post,
+  post − pre}; the landed two arms × {`hop0`, `source`} re-ranked; `control/trace-earliest`. Per trace: the
+  five new arms × {`hop1`, `hop0`, `source`}; the landed two as landed; `control/trace-earliest` beside
+  `floor/trace-topology`. The `hop0` row is the primary row and the first printed; the pre-fault rows and
+  the l / xl rungs (which have no root-cause arm) are untouched by this addendum. `reporttrace`'s shared-row
+  check extends to the new cells; the landed RCA tables are regenerated and asserted byte-equal.
+- **Hypotheses (mechanical in `report` / `reporttrace`; Avg@5 at case level, hit@1 per trace, the
+  registered bootstrap B = 2000, seed 0).** **H-rca-hop0**: for every TRACE arm (landed and new) the `hop0`
+  reading's Avg@5 ≥ the `hop1` reading's on every rung; *fail:* any arm and rung where `hop0` < `hop1`.
+  **H-rca-ctx-rule**: each new arm's `hop0` Avg@5 ≥ `control/rule`'s on every rung; **H-rca-ctx-rcd**: ≥
+  `rca/rcd`'s (the best published arm); *fail:* otherwise on any rung. **H-rca-source**: `source` ≥ `hop1`
+  for every TRACE arm and rung; *fail:* otherwise. **H-rca-presub**: post − pre ≥ post under the `hop0`
+  reading for every new arm and rung; *fail:* otherwise. **H-rca-atomic-cmi**: `rca/trace-atomic-cmi-keep`'s
+  `hop0` Avg@5 ≥ `rca/trace`'s `hop0` (its landed sibling on the same construction) on every rung; *fail:*
+  otherwise. **H-trace-earliest**: each TRACE arm's `hop0` hit@1 per trace ≥ `control/trace-earliest`'s on
+  every rung; *fail:* otherwise. Descriptive gaps for the findings: keep − overwrite and CMI − information
+  gain per reading and axis; `source` − `hop0`; the context-unreachable share (0 for the keep arms by
+  construction; the P3 shares of the reference harness's addendum printed beside it).
+- **Environment, cost, staging.** As 2026-10-30 / 31: the case-level probes on the CPU (`ranktrace` per arm
+  and reading; the per-layout dedup above; xs → s → m by `--prior-rung-record`); the per-trace probes on the
+  GPU replica of D-TBR-15 (three layouts: core overwrite, core keep, atomic CMI keep; ≈ 1.1 M traces per core
+  layout; the atomic layout measured first on the CPU at m, P4′ of the reference harness's addendum), the
+  tolerance check of D-TBR-15 not applicable (no landed CPU row of these cells; the replica is disclosed as
+  such); `score` / `scoretrace` (B = 2000, seed 0); five seeds or nothing; the random expectation,
+  `control/rule` and `control/trace-earliest` beside every row. Paper placement is the paper's decision.
+- **Deviations (RUN.md).** **D-TBR-16** the five arms on v0.3.1 cells of the context freeze, the `fixed-kl`
+  path, the second code pin, the per-layout dedup; **D-TBR-17** the readings (`hop0` primary, `source`; the
+  landed arms' `hop0` / `source` rows re-ranked from their work files); **D-TBR-18** the pre-fault phase and
+  subtraction; **D-TBR-19** the earliest-error control scored through the per-trace scorer's mode `arm`.
