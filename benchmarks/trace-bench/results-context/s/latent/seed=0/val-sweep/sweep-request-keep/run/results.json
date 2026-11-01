@@ -1,0 +1,161 @@
+{
+ "cells": [
+  {
+   "N": 8,
+   "c": 1,
+   "columns": [
+    "trace-core-cmi-keep__fixed-kl",
+    "trace-core-ig-keep__fixed-kl"
+   ],
+   "context_mode": "none",
+   "counts": {
+    "fixed-kl": {
+     "n_cell_collapsed": 0,
+     "n_cell_saturated": 0,
+     "n_cells": 109427,
+     "n_particle_collapsed": 0,
+     "n_particle_saturated": 0
+    }
+   },
+   "counts_source": {
+    "trace/core-cmi-keep": "ig-same-pass"
+   },
+   "file": "scores-core-keep-all-c1-N8-request.npz",
+   "g": 1,
+   "grain": "request",
+   "n_cells": 107776,
+   "n_pairs": 5879,
+   "n_probed": 10000,
+   "n_sequences": 10000,
+   "n_skipped_short": 0,
+   "noise": "all",
+   "probe": "core-keep",
+   "tok_pos": 3505229,
+   "tok_pos_per_s": 26614.32693045005,
+   "wall_clock_s": 131.705,
+   "window_offset": 1
+  },
+  {
+   "N": 8,
+   "c": 1,
+   "columns": [
+    "trace-cli-atomic-cmi-keep__fixed-kl"
+   ],
+   "context_mode": null,
+   "counts": {
+    "fixed-kl": {}
+   },
+   "counts_source": {
+    "trace/cli-atomic-cmi-keep": "none"
+   },
+   "file": "scores-cli-atomic-cmi-all-c1-N8-request.npz",
+   "g": 1,
+   "grain": "request",
+   "n_cells": 107776,
+   "n_pairs": 5879,
+   "n_probed": 10000,
+   "n_sequences": 10000,
+   "n_skipped_short": 0,
+   "noise": "all",
+   "probe": "cli-atomic-cmi",
+   "shipped_cut": {
+    "trace/cli-atomic-cmi-keep/fixed-kl": {
+     "n_edges": 193,
+     "threshold_finite": true
+    }
+   },
+   "tok_pos": 3505229,
+   "tok_pos_per_s": 26577.880279103632,
+   "wall_clock_s": 131.885,
+   "window_offset": 1
+  },
+  {
+   "N": 8,
+   "c": 1,
+   "columns": [
+    "trace-cli-atomic-cmi-keep__fixed"
+   ],
+   "context_mode": null,
+   "counts": {
+    "fixed": {}
+   },
+   "counts_source": {
+    "trace/cli-atomic-cmi-keep": "none"
+   },
+   "file": "scores-cli-atomic-cmi-real-c1-N8-request.npz",
+   "g": 1,
+   "grain": "request",
+   "n_cells": 107776,
+   "n_pairs": 5879,
+   "n_probed": 10000,
+   "n_sequences": 10000,
+   "n_skipped_short": 0,
+   "noise": "real",
+   "probe": "cli-atomic-cmi",
+   "shipped_cut": {
+    "trace/cli-atomic-cmi-keep/fixed": {
+     "n_edges": 192,
+     "threshold_finite": true
+    }
+   },
+   "tok_pos": 3505229,
+   "tok_pos_per_s": 26832.209108825387,
+   "wall_clock_s": 130.635,
+   "window_offset": 1
+  }
+ ],
+ "contexts": [
+  1
+ ],
+ "grains": [
+  "request"
+ ],
+ "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+ "n_cells": 3,
+ "noises": [
+  "all",
+  "real"
+ ],
+ "particles_grid": [
+  8
+ ],
+ "probe_wall_clock_s": 394.225,
+ "probes": [
+  "core-keep",
+  "cli-atomic-cmi"
+ ],
+ "rung": "s",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "val",
+ "stage": "sweep",
+ "staging": {
+  "entry": {
+   "added": "2026-10-31",
+   "grain": "request",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "n_cells": 3,
+   "note": "context family (plans/reference-arms.md, addendum 2026-10-31 §5): the `sweep-request-keep` pass (core-keep + cli-atomic-cmi; N = 8; c 1) on the landed seed-0 backbone, a validation sweep without pretrain; frozen in freezes/2026-11-01-xs-latent-s0-context.json (family context); the s context sweep of this seed and grain names this sha256 through --prior-rung-record",
+   "results_sha256": "54872cc1ed679ff94c2667bbd8abae4032ea54caed77c61a76341847d6c037b4",
+   "run": "xs-latent-s0-ctx-val-26-10-31",
+   "rung": "xs",
+   "seed": 0,
+   "stage": "sweep",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "54872cc1ed679ff94c2667bbd8abae4032ea54caed77c61a76341847d6c037b4",
+  "rung": "s"
+ },
+ "status": "ok",
+ "tok_pos_per_s": 26674.328112118714
+}
