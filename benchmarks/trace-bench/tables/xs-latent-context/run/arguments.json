@@ -1,0 +1,40 @@
+{
+ "arguments": {
+  "output_folder": "tables/xs-latent-context",
+  "pairs": [
+   "trace/core-cmi-overwrite/fixed-kl/frozen:trace/core-ig-overwrite/fixed-kl/frozen",
+   "trace/core-cmi-keep/fixed-kl/frozen:trace/core-ig-keep/fixed-kl/frozen",
+   "trace/core-ig-keep/fixed-kl/frozen:trace/core-ig-overwrite/fixed-kl/frozen",
+   "trace/core-cmi-keep/fixed-kl/frozen:trace/core-cmi-overwrite/fixed-kl/frozen",
+   "trace/cli-atomic-cmi-keep/fixed/frozen:trace/cli-atomic-cmi-keep/fixed-kl/frozen",
+   "trace/cli-atomic-cmi-keep/fixed-kl/shipped:trace/cli-atomic-cmi-keep/fixed-kl/frozen",
+   "trace/cli-atomic-cmi-keep/fixed-kl/frozen:trace/core-cmi-keep/fixed-kl/frozen"
+  ],
+  "reasons": "tables/reasons-context-family.json",
+  "results_dir": "results-context",
+  "rung": "xs",
+  "variant": "latent"
+ },
+ "argv": [
+  "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/benchmarks/trace-bench/src/seq2causebench/report.py",
+  "--results-dir",
+  "results-context",
+  "--rung",
+  "xs",
+  "--variant",
+  "latent",
+  "--pairs",
+  "trace/core-cmi-overwrite/fixed-kl/frozen:trace/core-ig-overwrite/fixed-kl/frozen",
+  "trace/core-cmi-keep/fixed-kl/frozen:trace/core-ig-keep/fixed-kl/frozen",
+  "trace/core-ig-keep/fixed-kl/frozen:trace/core-ig-overwrite/fixed-kl/frozen",
+  "trace/core-cmi-keep/fixed-kl/frozen:trace/core-cmi-overwrite/fixed-kl/frozen",
+  "trace/cli-atomic-cmi-keep/fixed/frozen:trace/cli-atomic-cmi-keep/fixed-kl/frozen",
+  "trace/cli-atomic-cmi-keep/fixed-kl/shipped:trace/cli-atomic-cmi-keep/fixed-kl/frozen",
+  "trace/cli-atomic-cmi-keep/fixed-kl/frozen:trace/core-cmi-keep/fixed-kl/frozen",
+  "--reasons",
+  "tables/reasons-context-family.json",
+  "--output-folder",
+  "tables/xs-latent-context"
+ ],
+ "command": "report"
+}
