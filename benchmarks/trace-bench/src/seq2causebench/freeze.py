@@ -248,7 +248,10 @@ def freeze_name(date, rung, variant, seed, family, ordering):
 
 
 def merge_tables(tables):
-    """One table from the per-grain tables of one corpus; refuses mixed corpora, models or grids."""
+    """One table from the val tables of one corpus; refuses mixed corpora, models or grids.
+    A grain may come from several tables when their swept rows and coverage keys are disjoint
+    (the context family scores one sweep directory per table, two per grain — D-SB-24); a row
+    or coverage key present in two tables is refused."""
     first = tables[0]
     for t in tables[1:]:
         for k in (
@@ -265,17 +268,36 @@ def merge_tables(tables):
             if t.get(k) != first.get(k):
                 raise FreezeRefusal(f"val tables disagree on {k}: {first.get(k)!r} vs {t.get(k)!r}")
     grains = []
-    for t in tables:
+    cells = []
+    coverage = {}
+    seen = {}
+    for i, t in enumerate(tables):
         for g in t.get("grains", []):
-            if g in grains:
-                raise FreezeRefusal(f"grain {g} appears in more than one val table")
-            grains.append(g)
-    return {
-        **first,
-        "grains": grains,
-        "cells": [c for t in tables for c in t["cells"]],
-        "coverage": {k: v for t in tables for k, v in t.get("coverage", {}).items()},
-    }
+            if g not in grains:
+                grains.append(g)
+        for row in t["cells"]:
+            key = (
+                row["arm"],
+                row["path"],
+                row["cut"],
+                row["grain"],
+                row["c"],
+                row["N"],
+                row.get("tau"),
+            )
+            if key in seen:
+                raise FreezeRefusal(
+                    f"cell {row['arm']}/{row['path']}/{row['cut']}/{row['grain']} at c = {row['c']}, "
+                    f"N = {row['N']}, τ = {row.get('tau')} appears in val tables {seen[key]} and {i} "
+                    "(one swept row per cell; D-SB-24)"
+                )
+            seen[key] = i
+            cells.append(row)
+        for k, v in t.get("coverage", {}).items():
+            if k in coverage:
+                raise FreezeRefusal(f"coverage of {k} appears in more than one val table (D-SB-24)")
+            coverage[k] = v
+    return {**first, "grains": grains, "cells": cells, "coverage": coverage}
 
 
 PRETRAIN_FACTS = (
@@ -423,7 +445,8 @@ def build_parser():
         "--val-tables",
         required=True,
         nargs="+",
-        help="one val-table.json per grain of one corpus, swept on the pretrain record's model",
+        help="the val tables of one corpus, swept on the pretrain record's model: one per grain, "
+        "or several per grain with disjoint swept rows (D-SB-24)",
     )
     p.add_argument(
         "--pretrain-results",
