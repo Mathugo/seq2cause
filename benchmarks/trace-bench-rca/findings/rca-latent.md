@@ -468,3 +468,91 @@ xs 0.28 / 0.84; s 0.20 / 0.00 / 0.72; m 0.00 / 0.12 / 0.30 / 0.00.
   `n_traces_with_upstream`, `n_edges`, `n_client_positions_dropped`, `n_services_reached`, the per-service
   `counts` and `mean_hops`, `self_counts`, the miss reason), the cell's `(c, N, g, tau)`, the model and
   freeze hashes, both environments' `pip freeze` and the runner's import paths and commit.
+
+
+## The context family's root-cause rows, landed 2026-11-02: `rca/trace-{ig,cmi}-{overwrite,keep}`, `rca/trace-atomic-cmi-keep`, the `hop0` / `source` readings, the pre-fault subtraction, `control/trace-earliest` (xs × five seeds; case level)
+
+Registered by `plans/rca-arms.md`, addendum "2026-10-31, later" (owner decisions 2026-10-30 / 31; D-TBR-16 … 19).
+The five arms read the request cells of the committed context freezes (`freezes/2026-11-01-xs-latent-s<k>-context.json`
+of the reference harness; seq2cause v0.3.1, the `fixed-kl` path) with the same case rule as `rca/trace` (the window
+traces of the end-ordered request view, the first 500 by start time, all splits; 995–1,000 probed per corpus): one
+forward per layout (the information-gain and CMI cells of the core overwrite layout share a probe, as do the two keep
+cells; the atomic CMI arm is its own forward), re-ranked under the three readings. `hop0` is the primary reading
+(the failed position's own service credited at hop 0); `hop1` the upstream-closure rule as landed; `source` the
+author's rule (only the sources of the non-OK subgraph). The post − pre rows subtract the per-trace credit rate on the
+pre-fault stretch (`[pre_start, inject_time)`: the corpus start for the first case of a corpus, the preceding case's
+end for the second; 997–1,000 traces probed, nearest the fault first; every case has a pre stretch, `n_cases_no_pre`
+0). The landed `rca/trace` and `rca/trace-core` gain `hop0` and `source` rows from a **CPU re-probe of the landed
+selection** (their 2026-10-30 work files were purged before the re-rank — the addendum's disclosed fallback; the same
+cells, selection, cap and seed stream; their `hop1` rows stand as landed). `control/trace-earliest` ranks the service
+holding each selected trace's earliest non-OK span. Code `8052ecc9`; the probe in `seq2cause-trace-bench` (torch 2.15,
+CPU); records `dirty: true` (the reads' own untracked outputs). xs only: the s and m case-level rows and the per-trace
+axis (the GPU replica of the three layouts) follow; `report` requires the family's `hop0` row on every rung it is
+asked for, so the all-arm table is `tables/rca-latent-context-xs/` and the landed `tables/rca-latent/` (regenerated,
+48 of 48 landed pooled files byte-identical) carries only the landed arms' new `hop0` / `source` xs rows beside them.
+
+| arm (xs, 10 cases) | hop1 | **hop0** | source | hop1 − pre | **hop0 − pre** | source − pre |
+|---|---|---|---|---|---|---|
+| `rca/trace-ig-overwrite` (c 2, τ 0.001) | 0.540 [0.360, 0.720] | **0.500 [0.340, 0.660]** | 0.640 [0.440, 0.840] | 0.800 [0.620, 0.940] | **0.840 [0.660, 0.980]** | 0.880 [0.740, 0.980] |
+| `rca/trace-cmi-overwrite` (c 2, τ 0.001) | 0.520 [0.360, 0.680] | **0.500 [0.340, 0.660]** | 0.660 [0.460, 0.840] | 0.800 [0.620, 0.940] | **0.820 [0.620, 0.980]** | 0.880 [0.740, 0.980] |
+| `rca/trace-ig-keep` (c 1, τ 0.0003) | 0.600 [0.420, 0.800] | **0.560 [0.380, 0.740]** | 0.680 [0.480, 0.880] | 0.800 [0.620, 0.940] | **0.820 [0.620, 0.980]** | 0.880 [0.740, 0.980] |
+| `rca/trace-cmi-keep` (c 1, τ 0.0003) | 0.580 [0.400, 0.760] | **0.540 [0.360, 0.720]** | 0.700 [0.500, 0.880] | 0.800 [0.620, 0.940] | **0.820 [0.620, 0.980]** | 0.880 [0.740, 0.980] |
+| `rca/trace-atomic-cmi-keep` (c 1, τ 1e-7) | 0.600 [0.440, 0.740] | **0.540 [0.380, 0.700]** | 0.700 [0.520, 0.880] | 0.780 [0.560, 0.940] | **0.780 [0.560, 0.940]** | 0.880 [0.740, 0.980] |
+| `rca/trace` (landed; hop0 / source re-probed) | 0.540 [0.360, 0.720] | 0.460 [0.320, 0.620] | 0.580 [0.380, 0.780] | — | — | — |
+| `rca/trace-core` (landed; hop0 / source re-probed) | 0.560 [0.380, 0.740] | 0.540 [0.360, 0.720] | 0.640 [0.440, 0.840] | — | — | — |
+| `control/trace-earliest` | 0.440 [0.340, 0.540] | | | | | |
+| `control/rule` · `rca/rcd` · random (5 services) | 0.640 · 0.818 · 0.600 | | | | | |
+
+Avg@5 with the bootstrap 95 % interval (B = 2000, seed 0); the frozen (c, τ) are those of seed 0 (τ varies by seed:
+1e-5 … 1e-3 on the core cells; the atomic arm froze at the grid bottom 1e-7 on seeds 0 and 2). Per seed, `hop0`:
+ig-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 0.4, cmi-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 0.4, ig-keep 0.5 / 0.5 / 0.5 / 0.7 /
+0.6, cmi-keep 0.5 / 0.5 / 0.5 / 0.6 / 0.6, atomic 0.5 / 0.5 / 0.5 / 0.6 / 0.6; `source`: 0.6 / 0.6 / 0.5 / 0.8 /
+0.7, 0.6 / 0.7 / 0.5 / 0.8 / 0.7, 0.7 / 0.6 / 0.5 / 0.9 / 0.7, 0.7 / 0.7 / 0.5 / 0.9 / 0.7, 0.7 / 0.6 / 0.6 / 0.9 /
+0.7; `hop0 − pre`: 0.8 / 1.0 / 0.6 / 0.9 / 0.9 (ig-overwrite), 0.7 / 1.0 / 0.6 / 0.9 / 0.9 (the other core arms),
+0.5 / 0.9 / 0.6 / 0.9 / 1.0 (atomic); `source − pre`: 0.9 / 1.0 / 0.7 / 0.9 / 0.9 on every arm.
+
+### Hypotheses (`plans/rca-arms.md`, addendum "2026-10-31, later"; mechanical in `report`)
+
+| hypothesis | verdict (xs) | the numbers |
+|---|---|---|
+| **H-rca-hop0** — `hop0` ≥ `hop1` for every TRACE arm | **fail** (all seven arms) | hop0 − hop1: −0.04 / −0.02 / −0.04 / −0.04 / −0.06 (the five), −0.08 (`rca/trace`), −0.02 (`rca/trace-core`) |
+| **H-rca-ctx-rule** — each new arm's `hop0` ≥ `control/rule` | **fail** (all five) | −0.14 / −0.14 / −0.08 / −0.10 / −0.10 |
+| **H-rca-ctx-rcd** — each new arm's `hop0` ≥ `rca/rcd` | **fail** (all five) | −0.32 / −0.32 / −0.26 / −0.28 / −0.28 |
+| **H-rca-source** — `source` ≥ `hop1` for every TRACE arm | **pass** (all seven) | +0.10 / +0.14 / +0.08 / +0.12 / +0.10; +0.04 (`rca/trace`), +0.08 (`rca/trace-core`) |
+| **H-rca-presub** — post − pre ≥ post under `hop0` for every new arm | **pass** (all five) | +0.34 / +0.32 / +0.26 / +0.28 / +0.24 |
+| **H-rca-atomic-cmi** — the atomic CMI arm's `hop0` ≥ `rca/trace`'s `hop0` | **pass** | 0.54 vs 0.46 (+0.08) |
+| H-trace-earliest (per trace, hit@1) | not computed | the per-trace axis of the family is the GPU replica; at case level `control/trace-earliest` 0.44 sits under every TRACE `hop0` row (0.46–0.56) |
+| the per-arm random / rule hypotheses on the `hop0` rows | **fail** (all five) | interval lows 0.34–0.38 vs random 0.60; arm − rule −0.08 … −0.14 |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **Hop 0 costs at xs.** Crediting the failed position's own service lowers Avg@5 on every arm (−0.02 … −0.08):
+  at xs the non-OK token sits in the client-facing or edge service, which hop 0 then ranks above the upstream
+  cause; `rca/trace`'s crash cases fall from 0.28 to 0.24 on the fault-kind split, its degrade cases from 0.80 to
+  0.68. The author's intuition that hop 0 is "the natural reading" does not hold on this rung; the `source` rule he
+  would sign does — it is the best post-only reading on all seven arms (0.58–0.70) and lifts the degrade cases to
+  0.88–0.92 and the top-1 rate to 0.2–0.4.
+- **The pre-fault subtraction is the large effect.** Subtracting the pre-fault credit rate raises every arm by
+  0.24–0.34 under `hop0` (to 0.78–0.84, around `rca/rcd`'s 0.82) and to 0.88 under `source` on every arm — above
+  `control/rule` (0.64) and `rca/rcd` (0.82), with AC@1 0.5–0.6 against 0.0–0.1 for the post-only rows. The pre stretch holds as many probed
+  traces as the window (997–1,000 at the cap), its credit rates run at a quarter to a half of the post rates on the
+  services the post rows over-credit (seed 0 case-00: `tb-limle` 0.40 post / 0.20 pre, `tb-edge` 0.24 / 0.08,
+  `tb-kamko` 0.29 / 0.06), and the subtraction promotes the service whose rate rose most. The intervals of the
+  post − pre rows still overlap `rca/rcd`'s. Alternatives were fixed before any read (addendum); the definition is
+  flagged to the author.
+- **Score and context do not separate at case level.** Information gain vs CMI at matched layout and reading:
+  0.00 … +0.02 (`hop0`), −0.02 … +0.02 (`source`), 0.00 … +0.02 (`hop0 − pre`); keep vs overwrite: +0.04 … +0.06
+  (`hop0`, `hop1`, `source`), −0.02 … 0.00 (post − pre) — every pair of intervals overlaps. The atomic CMI arm reads
+  as the keep arms do (0.54 / 0.70 / 0.78 / 0.88); against its landed sibling `rca/trace` it is +0.06 at `hop1`
+  and +0.08 at `hop0` (H-rca-atomic-cmi passes), +0.12 at `source`.
+- **The earliest-error control** (0.44) ranks below every TRACE reading at case level and below random: at xs the
+  earliest non-OK span of a window trace is mostly the edge or client-facing service, which the control places first
+  on every case; the sample graphs add 0.06–0.26 over "the first thing that failed" at `hop0` and `source`, more
+  with the subtraction.
+- **The landed arms' re-probe.** `rca/trace` probed 851 / 980 / 1,000 / 766 / 755 traces (the c = 3 cell skips the
+  short traces as landed; the counts equal the landed records'), `rca/trace-core` 995 / 1,000 × 4; a `hop1` re-rank
+  of the re-probed work files is not landed (the landed `hop1` rows stand); the device's draws differ from the
+  landed CPU run's only by the torch version (2.15 against 2.14.1), undisclosed in magnitude — the P4 tolerance
+  check of 2026-11-01 (GPU vs CPU, Jaccard 0.79–0.98) bounds the kind of drift.
+- **Cost.** Probe ≤ 1 min per layout and phase per corpus (eight probes per seed), rank and score seconds; the
+  five seeds in ≈ 25 min of wall clock. Pull 5–8 s and export ≤ 1 s per corpus.
