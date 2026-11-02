@@ -291,8 +291,7 @@ H-atomic-cmi-shipped passes).
 `l-latent-s{k}-ctx-val-26-11-01` (N = 8 on the landed seed-k l backbones, the 10k / 5k sample;
 43–47 min each on a g5.2xlarge): every registered check passes on 5 / 5 seeds — identity checks (ii)
 and (iii) bit-equal on every seed; identity (i) (the re-scored `trace/core` and Granger rows against
-the landed l tables) passes on the seeds whose l corpus is pulled locally (seed 0: 432 / 432 rows;
-the remaining seeds are run as disk space allows — see RUN.md). 0 corrupted cells. Frozen in
+the landed l tables) exact on every seed (2,160 / 2,160 landed N = 8 rows). 0 corrupted cells. Frozen in
 `freezes/2026-11-02-l-latent-s{k}-context.json`. **Every CMI request cell froze at the bottom of the
 τ grid (1e-7) on every seed** (`at_grid_edge`: the three CMI arms at request, 20 cells of 80) — the
 caveat of §6 (b) realised at l, where the request grain is ceiling-bound (reference line 0.093–0.100;
