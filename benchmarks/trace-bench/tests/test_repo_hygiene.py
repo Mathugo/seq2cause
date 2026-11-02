@@ -104,5 +104,12 @@ def test_gitignore_covers_generated_data():
 
 
 def test_no_tracked_file_is_large():
-    big = [(str(p), p.stat().st_size) for p in _scoped_files() if p.stat().st_size > 1_000_000]
+    # the staging ledger (plans/staging-ledger.json) is the one append-only register that grows with every landed
+    # read; it passed 1 MB with the context family's root-cause rows (2026-11-02, D-SB-25 / D-TBR-20) and is
+    # capped at 8 MB instead
+    big = [
+        (str(p), p.stat().st_size)
+        for p in _scoped_files()
+        if p.stat().st_size > (8_000_000 if p.name == "staging-ledger.json" else 1_000_000)
+    ]
     assert not big, big

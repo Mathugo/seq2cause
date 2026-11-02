@@ -1,0 +1,396 @@
+{
+ "arm": "rca/trace-cmi-overwrite",
+ "axis": "ranking",
+ "cap": 500,
+ "cases": [
+  {
+   "case_dir": "case-00",
+   "counts": {
+    "ext-zorto": 38,
+    "tb-bozotel": 22,
+    "tb-edge": 6,
+    "tb-ninga": 121,
+    "tb-vepe": 124
+   },
+   "hop0": true,
+   "mean_hops": {
+    "ext-zorto": 0.0,
+    "tb-bozotel": 0.0,
+    "tb-edge": 0.0,
+    "tb-ninga": 0.0,
+    "tb-vepe": 0.0
+   },
+   "miss": null,
+   "n_client_positions_dropped": 3,
+   "n_edges": 4202,
+   "n_filled": 0,
+   "n_folded": 0,
+   "n_nonok_positions": 1089,
+   "n_services_reached": 5,
+   "n_skipped_short": 0,
+   "n_sources": 374,
+   "n_sources_isolated": 294,
+   "n_traces_probed": 500,
+   "n_traces_selected": 500,
+   "n_traces_window": 2138,
+   "n_traces_with_nonok": 254,
+   "n_traces_with_upstream": 253,
+   "n_truncated": 0,
+   "probe_wall_clock_s": 13.197,
+   "rule": "source",
+   "self_counts": {},
+   "services": [
+    "tb-ninga",
+    "tb-vepe",
+    "ext-zorto",
+    "tb-bozotel",
+    "tb-edge"
+   ],
+   "source_counts": {
+    "ext-zorto": 38,
+    "tb-bozotel": 28,
+    "tb-edge": 6,
+    "tb-ninga": 157,
+    "tb-vepe": 142
+   },
+   "subtraction": {
+    "n_post_probed": 500,
+    "n_pre_probed": 500,
+    "no_pre": false,
+    "post_rate": {
+     "ext-zorto": 0.076,
+     "tb-bozotel": 0.044,
+     "tb-edge": 0.012,
+     "tb-ninga": 0.242,
+     "tb-vepe": 0.248
+    },
+    "pre_rate": {
+     "ext-zorto": 0.078,
+     "tb-bozotel": 0.046,
+     "tb-edge": 0.198,
+     "tb-ninga": 0.034,
+     "tb-vepe": 0.206
+    },
+    "scores": {
+     "ext-zorto": -0.0020000000000000018,
+     "tb-bozotel": -0.0020000000000000018,
+     "tb-edge": -0.186,
+     "tb-ninga": 0.208,
+     "tb-vepe": 0.04200000000000001
+    },
+    "services": [
+     "tb-ninga",
+     "tb-vepe",
+     "ext-zorto",
+     "tb-bozotel",
+     "tb-edge"
+    ]
+   },
+   "tok_pos": 196337
+  },
+  {
+   "case_dir": "case-01",
+   "counts": {
+    "ext-zorto": 32,
+    "tb-edge": 190,
+    "tb-ninga": 7,
+    "tb-vepe": 50
+   },
+   "hop0": true,
+   "mean_hops": {
+    "ext-zorto": 0.0,
+    "tb-edge": 0.0,
+    "tb-ninga": 0.0,
+    "tb-vepe": 0.0
+   },
+   "miss": null,
+   "n_client_positions_dropped": 38,
+   "n_edges": 2495,
+   "n_filled": 0,
+   "n_folded": 3,
+   "n_nonok_positions": 463,
+   "n_services_reached": 4,
+   "n_skipped_short": 0,
+   "n_sources": 317,
+   "n_sources_isolated": 85,
+   "n_traces_probed": 500,
+   "n_traces_selected": 500,
+   "n_traces_window": 1048,
+   "n_traces_with_nonok": 265,
+   "n_traces_with_upstream": 252,
+   "n_truncated": 0,
+   "probe_wall_clock_s": 12.271,
+   "rule": "source",
+   "self_counts": {},
+   "services": [
+    "tb-edge",
+    "ext-zorto",
+    "tb-ninga",
+    "tb-bozotel",
+    "tb-vepe"
+   ],
+   "source_counts": {
+    "ext-zorto": 32,
+    "tb-edge": 190,
+    "tb-ninga": 7,
+    "tb-vepe": 50
+   },
+   "subtraction": {
+    "n_post_probed": 500,
+    "n_pre_probed": 500,
+    "no_pre": false,
+    "post_rate": {
+     "ext-zorto": 0.064,
+     "tb-bozotel": 0.0,
+     "tb-edge": 0.38,
+     "tb-ninga": 0.014,
+     "tb-vepe": 0.1
+    },
+    "pre_rate": {
+     "ext-zorto": 0.066,
+     "tb-bozotel": 0.004,
+     "tb-edge": 0.008,
+     "tb-ninga": 0.018,
+     "tb-vepe": 0.118
+    },
+    "scores": {
+     "ext-zorto": -0.0020000000000000018,
+     "tb-bozotel": -0.004,
+     "tb-edge": 0.372,
+     "tb-ninga": -0.003999999999999998,
+     "tb-vepe": -0.017999999999999988
+    },
+    "services": [
+     "tb-edge",
+     "ext-zorto",
+     "tb-ninga",
+     "tb-bozotel",
+     "tb-vepe"
+    ]
+   },
+   "tok_pos": 151314
+  }
+ ],
+ "code": {
+  "cell": "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+  "cells": [
+   "trace/core-ig-overwrite/fixed-kl/frozen/request",
+   "trace/core-cmi-overwrite/fixed-kl/frozen/request"
+  ],
+  "commit": "280ed948a2407baaf929ac16e6a113318d0848fb",
+  "entry": "as rca/trace-ig-overwrite with trace/core-cmi-overwrite/fixed-kl/frozen/request (v0.3.0 calc_lag_cmi)",
+  "repo": "Mathugo/seq2cause",
+  "runner": "trace_runner.py",
+  "runner_commit": null
+ },
+ "corpus_id": "xs/latent/seed=2",
+ "device": "cpu",
+ "export_record_sha256": "e716e25b4c7fd366b8bf4ed53693b4679c613ef63cedbc50fd8cb086bc22c732",
+ "freeze": {
+  "path": "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/benchmarks/trace-bench-rca/../trace-bench/freezes/2026-11-01-xs-latent-s2-context.json",
+  "sha256": "4426d991af975ea31dbe99b1c3c7bbfc1611b20127b16cb76f496f60d01714a5"
+ },
+ "layout": {
+  "N": 8,
+  "c": 1,
+  "context_mode": "overwrite",
+  "g": 1,
+  "noise": "all",
+  "probe": "core"
+ },
+ "max_len": 64,
+ "misses_by_reason": {},
+ "model_dir": "/private/tmp/claude-501/-Users-chadyuk-Dropbox-Code-agent-causal/a75dbed8-873f-4bff-98ff-45cca6c84cc9/scratchpad/models/xs-s2",
+ "n_cases": 2,
+ "n_cases_no_pre": 0,
+ "n_empty_rankings": 0,
+ "n_filled_cells": 0,
+ "n_metrics_lt_min_pre": 0,
+ "n_traces_probed": 1000,
+ "n_traces_window": 3186,
+ "n_unranked_cases": 0,
+ "nonok_outcomes": [
+  "5xx",
+  "err",
+  "slow"
+ ],
+ "phase": "post",
+ "pinned_environment": {
+  "pip_freeze": [
+   "-e git+https://github.com/Mathugo/seq2cause.git@8052ecc97b7d834b0819e8f8929aaaffbc922663#egg=seq2cause",
+   "-e git+https://github.com/Mathugo/seq2cause.git@8052ecc97b7d834b0819e8f8929aaaffbc922663#egg=seq2cause_trace_bench&subdirectory=benchmarks/trace-bench",
+   "Jinja2==3.1.6",
+   "MarkupSafe==3.0.4",
+   "PyYAML==6.0.3",
+   "Pygments @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pygments_1786995678/work",
+   "accelerate==1.15.0",
+   "aiohappyeyeballs==2.7.1",
+   "aiohttp==3.14.5",
+   "aiosignal==1.4.0",
+   "annotated-doc==0.0.5",
+   "annotated-types==0.8.0",
+   "anyio==4.15.1",
+   "attrs==26.1.0",
+   "captum==0.9.0",
+   "click==8.5.0",
+   "colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1733218098505/work",
+   "contourpy==1.3.3",
+   "cycler==0.12.1",
+   "datasets==5.1.0",
+   "dill==0.4.1",
+   "exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1763918002538/work",
+   "filelock==4.1.0",
+   "fonttools==4.66.1",
+   "frozenlist==1.8.0",
+   "fsspec==2026.7.0",
+   "gadjid==0.1.0",
+   "h11==0.16.0",
+   "hf-xet==1.7.0",
+   "httpcore2==2.13.1",
+   "httpx2==2.13.1",
+   "huggingface_hub==2.2.0",
+   "idna==3.20",
+   "iniconfig @ file:///home/conda/feedstock_root/build_artifacts/iniconfig_1791588459171/work",
+   "jaxtyping==0.3.11",
+   "kiwisolver==1.5.1",
+   "markdown-it-py==4.2.0",
+   "matplotlib==3.11.2",
+   "mdurl==0.1.2",
+   "mpmath==1.3.0",
+   "multidict==7.1.0",
+   "multiprocess==0.70.19",
+   "networkx==3.6.1",
+   "numpy==2.4.6",
+   "packaging @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_packaging_1785888127/work",
+   "pandas==3.0.6",
+   "pillow==12.3.0",
+   "pluggy @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pluggy_1764896838/work",
+   "propcache==0.5.4",
+   "psutil==7.2.2",
+   "pyarrow==25.0.1",
+   "pydantic==2.14.0",
+   "pydantic_core==2.50.0",
+   "pyparsing==3.3.3",
+   "pytest @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pytest_1782127176/work",
+   "python-dateutil==2.9.0.post0",
+   "regex==2026.9.29",
+   "rich==15.0.0",
+   "safetensors==0.8.0",
+   "scipy==1.17.1",
+   "seaborn==0.13.2",
+   "shellingham==1.5.4",
+   "six==1.17.0",
+   "sympy==1.14.0",
+   "tokenizers==0.23.3",
+   "tomli @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_tomli_1791394576/work",
+   "torch==2.14.1",
+   "tqdm==4.70.1",
+   "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@a3eb104ed0dc7d5934da2b4c80e136dbedb23018",
+   "transformers==5.19.0",
+   "truststore==0.10.4",
+   "typer==0.27.3",
+   "typing-inspection==0.4.4",
+   "typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_typing_extensions_1783002732/work",
+   "wadler_lindig==0.1.7",
+   "xxhash==4.0.1",
+   "yarl==1.25.1"
+  ],
+  "python": "/opt/miniconda3/envs/seq2cause-trace-bench/bin/python",
+  "pythonpath": [
+   "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/benchmarks/trace-bench/src",
+   "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/src"
+  ]
+ },
+ "pre_record": {
+  "path": "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-cmi-overwrite/source-subpre/pre/rank",
+  "sha256": "8e97dd4a138e4c475a83299a29807d7acacf114e554eec8b738ca0120b7df333"
+ },
+ "pre_starts": {
+  "case-00": {
+   "pre_source": "corpus-start",
+   "pre_start_time": 0
+  },
+  "case-01": {
+   "pre_source": "previous-fault-end",
+   "pre_start_time": 1767605400
+  }
+ },
+ "probe_arms": [
+  "rca/trace-ig-overwrite",
+  "rca/trace-cmi-overwrite"
+ ],
+ "ranking_file": "ranking-positional.json",
+ "ranking_sha256": "f3978d7ea03146c19706b2ddcbbb0d45181e2316a790af791d1ff9fbf4a82b4b",
+ "reading": "source",
+ "rung": "xs",
+ "runner": {
+  "N": 8,
+  "arm": "trace/core-ig-overwrite",
+  "c": 1,
+  "cap": 500,
+  "cell": "trace/core-ig-overwrite/fixed-kl/frozen/request",
+  "cells": [
+   "trace/core-ig-overwrite/fixed-kl/frozen/request",
+   "trace/core-cmi-overwrite/fixed-kl/frozen/request"
+  ],
+  "column": "trace-core-ig-overwrite__fixed-kl",
+  "corpus_id": "xs/latent/seed=2",
+  "device": "cpu",
+  "freeze_corpus_id": "xs/latent/seed=2",
+  "freeze_sha256": "4426d991af975ea31dbe99b1c3c7bbfc1611b20127b16cb76f496f60d01714a5",
+  "g": 1,
+  "machine": "arm64",
+  "max_len": 64,
+  "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+  "n_rows_read": 12521,
+  "n_traces_candidates": 3186,
+  "n_traces_probed": 1000,
+  "n_traces_window": 3186,
+  "noise": "all",
+  "numpy": "2.4.6",
+  "path": "fixed-kl",
+  "phase": "post",
+  "probe": "core",
+  "probe_wall_clock_s": 25.467906456440687,
+  "python": "3.11.17",
+  "seed": 2,
+  "seed_stream": 3,
+  "select": "window",
+  "seq2cause_file": "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/src/seq2cause/__init__.py",
+  "seq2cause_version": "0.3.1",
+  "seq2causebench_commit": {
+   "dirty": true,
+   "sha": "8052ecc97b7d834b0819e8f8929aaaffbc922663"
+  },
+  "seq2causebench_file": "/Users/chadyuk/Dropbox/Code/agent-causal/algos/trace-math-2026/seq2cause/benchmarks/trace-bench/src/seq2causebench/__init__.py",
+  "tau": 3e-05,
+  "taus": {
+   "trace/core-cmi-overwrite/fixed-kl/frozen/request": 3e-07,
+   "trace/core-ig-overwrite/fixed-kl/frozen/request": 3e-05
+  },
+  "tok_pos": 347651,
+  "torch": "2.14.1",
+  "vocab_size": 76,
+  "wall_clock_s": 25.568
+ },
+ "runner_reused": true,
+ "seed": 2,
+ "select": "window",
+ "stage": "rank",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs"
+ },
+ "status": "ok",
+ "subtract": "pre",
+ "wall_clock_s": {
+  "runner": 0.0,
+  "stage": 0.5
+ },
+ "work_files_sha256": {
+  "case-00.json": "e3bc5d4f1415a284269176b4362c9b9f83f1c694dafb0e8549cde89aa4eaab7c",
+  "case-01.json": "863efca3126bc60a181a8799b43e473575343eab6bcb1e0d7e050d4699e6317f",
+  "summary.json": "bd53b36e0d9cddb65665ea2d2ba46a194c61372f0a69b9adb96947369aa95591"
+ }
+}

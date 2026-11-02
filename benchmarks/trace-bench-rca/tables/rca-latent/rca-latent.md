@@ -33,9 +33,13 @@
 | xs | `rca/trace` | 10 | 0.000 | 0.600 | 1.000 | 0.540 [0.360, 0.720] | 0.600 | 0 |
 | s | `rca/trace` | 15 | 0.133 | 0.267 | 0.600 | 0.333 [0.160, 0.520] | 0.250 | 0 |
 | m | `rca/trace` | 25 | 0.000 | 0.040 | 0.200 | 0.080 [0.016, 0.160] | 0.058 | 0 |
+| xs | `rca/trace` (hop0) | 10 | 0.000 | 0.500 | 1.000 | 0.460 [0.320, 0.620] | 0.600 | 0 |
+| xs | `rca/trace` (source) | 10 | 0.200 | 0.600 | 1.000 | 0.580 [0.380, 0.780] | 0.600 | 0 |
 | xs | `rca/trace-core` | 10 | 0.100 | 0.600 | 1.000 | 0.560 [0.380, 0.740] | 0.600 | 0 |
 | s | `rca/trace-core` | 15 | 0.133 | 0.267 | 0.467 | 0.307 [0.120, 0.507] | 0.250 | 0 |
 | m | `rca/trace-core` | 25 | 0.000 | 0.200 | 0.240 | 0.144 [0.048, 0.256] | 0.058 | 0 |
+| xs | `rca/trace-core` (hop0) | 10 | 0.100 | 0.600 | 1.000 | 0.540 [0.360, 0.720] | 0.600 | 0 |
+| xs | `rca/trace-core` (source) | 10 | 0.300 | 0.600 | 1.000 | 0.640 [0.440, 0.840] | 0.600 | 0 |
 
 | rung | arm | graph edges per case, mean [min, max] |
 |---|---|---|
@@ -51,9 +55,13 @@
 | xs | `rca/trace` | 2101.0 [814, 4272] |
 | s | `rca/trace` | 2854.3 [2048, 3642] |
 | m | `rca/trace` | 4274.6 [3342, 5845] |
+| xs | `rca/trace` | 2101.0 [814, 4272] |
+| xs | `rca/trace` | 2101.0 [814, 4272] |
 | xs | `rca/trace-core` | 2016.4 [874, 4243] |
 | s | `rca/trace-core` | 2134.1 [1630, 2856] |
 | m | `rca/trace-core` | 2829.7 [1893, 5044] |
+| xs | `rca/trace-core` | 2016.4 [874, 4243] |
+| xs | `rca/trace-core` | 2016.4 [874, 4243] |
 
 | rung | arm | alerting services per case, mean [min, max] |
 |---|---|---|
@@ -66,9 +74,13 @@
 | xs | `rca/trace` | 1589 [1046, 2144] | 435 [333, 500] | 5.0 |
 | s | `rca/trace` | 26019 [17429, 43836] | 498 [486, 500] | 12.0 |
 | m | `rca/trace` | 20935 [10722, 32016] | 500 [500, 500] | 51.2 |
+| xs | `rca/trace` | 1589 [1046, 2144] | 435 [333, 500] | 5.0 |
+| xs | `rca/trace` | 1589 [1046, 2144] | 435 [333, 500] | 4.9 |
 | xs | `rca/trace-core` | 1589 [1046, 2144] | 500 [495, 500] | 5.0 |
 | s | `rca/trace-core` | 26019 [17429, 43836] | 500 [500, 500] | 12.0 |
 | m | `rca/trace-core` | 20935 [10722, 32016] | 500 [500, 500] | 51.0 |
+| xs | `rca/trace-core` | 1589 [1046, 2144] | 500 [495, 500] | 5.0 |
+| xs | `rca/trace-core` | 1589 [1046, 2144] | 500 [495, 500] | 4.9 |
 
 Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation split. Mean over the test cases.
 
@@ -103,3 +115,9 @@ Graph axis — four test seeds (1–4); seed 0 is the graph axis's validation sp
 | H-rca-trace-core-rule | fail |
 | H-circa-topology-gain | fail |
 | H-graph-topology | pass |
+| H-rca-hop0 | fail |
+| H-rca-ctx-rule | not run |
+| H-rca-ctx-rcd | not run |
+| H-rca-source | pass |
+| H-rca-presub | not run |
+| H-rca-atomic-cmi | not run |
