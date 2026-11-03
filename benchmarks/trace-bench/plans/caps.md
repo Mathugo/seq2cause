@@ -434,3 +434,15 @@ the same seed's scoresweep peak (seed 0: 70.2 / 41.2 = 1.70×), so the `l` ancho
 2× rule 81.3 GiB asks for ≥ 163 GiB — the 256 GiB class was the right one (a 128 GiB host would
 have been 1.6×), and the projection of 75 – 85 GiB covered every seed. `--args-diff` clean on every
 record of the ten runs; package `45ccf30` on every box; freezes bound at `1595ea4`.
+
+**2026-11-03 — the context family measured at `l` (test) and `xl` (validation); `xl` context Job T sized.**
+`l` context Job T, one g5.2xlarge per seed, cap 24 h: 112 – 129 min of stage wall clock (projected 3 – 4 h);
+8 discover reads 159 – 300 s each, peak device 1.5 – 1.6 GiB; annotate + seqscore 82 – 97 min for 16 + 16 cells, peak
+resident **15.2 – 18.0 GiB**, so the 32 GB host held at 1.8×, short of the 2× rule's headroom and above the 16.0 GB anchor
+of the landed `l` scoring half. `xl` context validation, two instances per seed, caps 24 h: GPU half (g5.2xlarge)
+34 – 35 min, peak device 3.2 – 4.1 GiB, peak host ≤ 3.6 GiB; CPU half (r7i.4xlarge) 45 – 52 min, peak
+**41.2 – 47.5 GiB**, the landed `xl` scoresweep peaks with nine cells against 60, so the scoresweep peak is
+universe-bound at `xl` too. **`xl` context Job T: two instances**, as the landed one. Discover half (g5.2xlarge,
+root 200 GB, cap 24 h): 8 reads, about 45 – 60 min projected. Scoring half (r7i.8xlarge, 256 GiB, root 200 GB, cap 48 h): the
+per-cell measurements of 2026-10-07 are flat across arms, so 16 + 16 cells project at 6.5 – 8.5 h; 81.3 GiB
+is the peak to expect (a 128 GiB host would give only 1.6× of the 2× the rule asks).
