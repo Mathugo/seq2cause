@@ -37,7 +37,9 @@ SIBLING = (
 )
 
 # --- the method under test ---------------------------------------------------------------
-SHIPPED_VERSION = "0.1.9"  # the seq2cause release every landed cell and "as shipped" claim refers to
+SHIPPED_VERSION = (
+    "0.1.9"  # the seq2cause release every landed cell and "as shipped" claim refers to
+)
 SHIPPED_COMMIT = "67416a2"  # its commit on the author's main line
 # the releases merged on 2026-10-30 (v0.3.0 `b63b4328`, RUN.md D-SB-18: `calc_lag_cmi` and the
 # `prepend` / `none` context modes of the core class) and 2026-10-31 (v0.3.1 `280ed948`, D-SB-19:
@@ -205,6 +207,22 @@ MODEL_NONE = "none"  # the model hash of every model-free record (RUN.md D-SB-16
 FLOOR_STAGE = "floors"
 FAMILY_MODEL = "model"  # a freeze of model-bound cells (the arms)
 FAMILY_FLOOR = "floor"  # a freeze of floor cells only (`…-floors.json`)
+# the external family (plans/cascade.md, 2026-11-03; D-SB-27, D-SB-28): a published method outside
+# seq2cause run by the harness as a subprocess, model-free in the harness's binding (model hash
+# `none`, its own `method_sha256` recorded), its one swept setting carried in the `N` slot
+ARM_CASCADE_TOPOLOGY = "cascade/topology"  # CASCADE constrained to the topology floor's token pairs
+ARM_CASCADE_NONE = "cascade/none"  # CASCADE with no prior (xs only)
+PROBE_CASCADE_TOPOLOGY = "cascade-topology"  # the pass word of its score tables
+PROBE_CASCADE_NONE = "cascade-none"
+EXTERNAL_PROBES = (PROBE_CASCADE_TOPOLOGY, PROBE_CASCADE_NONE)
+EXTERNAL_STAGE = "cascade"
+FAMILY_EXTERNAL = "external"  # a freeze of external cells only (`…-external.json`)
+CASCADE_MAX_DELAYS_MS = (
+    1000,
+    10000,
+    60000,
+)  # the settings grid, plans/cascade.md §3 (the `N` slot)
+CASCADE_PRECISION = 2  # the published default
 ARMS = {
     ARM_CORE: {
         "class": "reference",
@@ -299,6 +317,21 @@ ARMS = {
         "paths": (PATH_FIXED_KL, PATH_FIXED),
         "cuts": (CUT_FROZEN, CUT_SHIPPED),
     },
+    # the external family: every edge of the DAG the method returns is scored 1.0
+    ARM_CASCADE_TOPOLOGY: {
+        "class": "external",
+        "probe": PROBE_CASCADE_TOPOLOGY,
+        "statistic": "cascade_dag",
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CASCADE_NONE: {
+        "class": "external",
+        "probe": PROBE_CASCADE_NONE,
+        "statistic": "cascade_dag",
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
 }
 REFERENCE_ARMS = (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)  # the landed reference arms; never extended
 CONTEXT_ARMS = (  # the context family of 2026-10-31: its own freeze family, its own results tree
@@ -325,6 +358,14 @@ FLOOR_ARM_OF_PROBE = {
     PROBE_FLOOR_TOPOLOGY: ARM_FLOOR_TOPOLOGY,
     PROBE_FLOOR_BIGRAM: ARM_FLOOR_BIGRAM,
 }
+EXTERNAL_ARMS = (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE)  # plans/cascade.md; D-SB-27, D-SB-28
+EXTERNAL_ARM_OF_PROBE = {
+    PROBE_CASCADE_TOPOLOGY: ARM_CASCADE_TOPOLOGY,
+    PROBE_CASCADE_NONE: ARM_CASCADE_NONE,
+}
+MODEL_FREE_ARMS = FLOOR_ARMS + EXTERNAL_ARMS  # model hash `none`; their own token list; floor_taus
+MODEL_FREE_PROBES = FLOOR_PROBES + EXTERNAL_PROBES
+MODEL_FREE_ARM_OF_PROBE = {**FLOOR_ARM_OF_PROBE, **EXTERNAL_ARM_OF_PROBE}
 AGGREGATIONS = ("max",)  # the type-level score of a pair is the max over occurrences;
 # mean and count are recorded columns, never sub-arms
 SEQUENCE_SAMPLES = ("head", "uniform")  # --sequence-sample

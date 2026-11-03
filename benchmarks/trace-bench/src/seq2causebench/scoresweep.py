@@ -42,10 +42,10 @@ from .constants import (
     ARMS,
     CUT_FROZEN,
     CUT_SHIPPED,
-    FLOOR_ARMS,
-    FLOOR_PROBES,
     GRAINS,
     MANIFEST_JSON,
+    MODEL_FREE_ARMS,
+    MODEL_FREE_PROBES,
     TAU_GRID_ARMS,
     VAL_TABLE_JSON,
 )
@@ -144,7 +144,7 @@ def taus_for(arm, scores, col, args):
         return _grid(arm, args.taus, "--taus")
     if arm == ARM_GRANGER:
         return _grid(arm, args.granger_taus, "--granger-taus")
-    if arm in FLOOR_ARMS:
+    if arm in MODEL_FREE_ARMS:  # the floors and the external family (plans/cascade.md §3)
         return _grid(arm, args.floor_taus, "--floor-taus")
     if arm in (ARM_SALIENCY, ARM_SHAPLEY):
         if not args.quantiles:
@@ -186,8 +186,8 @@ def run_scoresweep(args, rec):
                 raise ValueError(
                     f"{f.name}: mixed view orderings in one sweep ({ordering} vs {sweep_ordering})"
                 )
-            if probe in FLOOR_PROBES:
-                vocab = TokenTable(scores["tokens"])  # the floor's own token list
+            if probe in MODEL_FREE_PROBES:
+                vocab = TokenTable(scores["tokens"])  # the floor's / external arm's own token list
                 columns = floor_columns(probe)
             else:
                 vocab = Vocab.from_model_vocab(Corpus(args.corpus, ordering, grain).vocab_json())

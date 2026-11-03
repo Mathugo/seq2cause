@@ -28,6 +28,8 @@ METHOD_MODULES = (
     "discover",
     "sweep",
     "floors",  # the bigram floor's read; the topology floor's reader is the score-side floorprior
+    "cascadearm",  # the external family's read (plans/cascade.md); its mask comes from floorprior
+    "cascade_runner",  # the subprocess that runs the method in its own environment
 )
 FORBIDDEN = re.compile(
     r"graphs/|labels/|oracle/|topology/|manifest\.json|alphabet\.json|scoring-target|instantiation\.json"

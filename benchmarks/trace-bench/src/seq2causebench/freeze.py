@@ -48,10 +48,13 @@ from .constants import (
     CONTEXT_MODE_OF_PROBE,
     CUT_FROZEN,
     CUT_SHIPPED,
+    EXTERNAL_ARMS,
     FAMILY_CONTEXT,
+    FAMILY_EXTERNAL,
     FAMILY_FLOOR,
     FAMILY_MODEL,
     FLOOR_ARMS,
+    MODEL_FREE_ARMS,
     MODEL_NONE,
     RUNGS,
     SEEDS,
@@ -82,7 +85,7 @@ def grid_of(arm, tau_source):
         return "quantiles"
     if tau_source != "grid":
         return None
-    if arm in FLOOR_ARMS:
+    if arm in MODEL_FREE_ARMS:  # the floors and the external family (plans/cascade.md §3)
         return "floor_taus"
     if arm in TAU_GRID_ARMS:  # the reference arms and the context family (addendum 2026-10-31)
         return "taus"
@@ -225,6 +228,12 @@ def family_of(cells):
             f"floor cells {sorted(floors)} cannot be frozen together with model-bound cells "
             f"{sorted(arms - floors)} (D-SB-16)"
         )
+    external = {a for a in arms if a in EXTERNAL_ARMS}
+    if external and external != arms:
+        raise FreezeRefusal(
+            f"external-family cells {sorted(external)} cannot be frozen together with other cells "
+            f"{sorted(arms - external)} (D-SB-27)"
+        )
     context = {a for a in arms if a in CONTEXT_ARMS}
     if context and context != arms:
         raise FreezeRefusal(
@@ -233,6 +242,8 @@ def family_of(cells):
         )
     if floors:
         return FAMILY_FLOOR
+    if external:
+        return FAMILY_EXTERNAL
     return FAMILY_CONTEXT if context else FAMILY_MODEL
 
 
@@ -240,6 +251,8 @@ def freeze_name(date, rung, variant, seed, family, ordering):
     name = f"{date}-{rung}-{variant}-s{seed}"
     if family == FAMILY_FLOOR:
         name += "-floors"
+    if family == FAMILY_EXTERNAL:
+        name += "-external"
     if family == FAMILY_CONTEXT:
         name += "-context"
     if ordering == "start":
@@ -366,9 +379,9 @@ def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
     cells = select_cells(table, CONTEXT_FAMILY_GRID if family == FAMILY_CONTEXT else None)
     if family_of(cells) != family:
         raise FreezeRefusal("the selected cells do not form the table's family")
-    if (family == FAMILY_FLOOR) != (table.get("model_sha256") == MODEL_NONE):
+    if (family in (FAMILY_FLOOR, FAMILY_EXTERNAL)) != (table.get("model_sha256") == MODEL_NONE):
         raise FreezeRefusal(
-            f"a {family} table carries model hash {table.get('model_sha256')!r} (D-SB-16)"
+            f"a {family} table carries model hash {table.get('model_sha256')!r} (D-SB-16, D-SB-27)"
         )
     return {
         "schema": FREEZE_SCHEMA,
