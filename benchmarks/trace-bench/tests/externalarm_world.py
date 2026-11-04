@@ -1,5 +1,5 @@
 """A shared builder for the external family's per-method tests (plans/cascade.md addendum
-2026-11-04, D-SB-29): one method's topology arm on the fixture corpus end to end through a stub
+2026-11-03 (later), D-SB-29): one method's topology arm on the fixture corpus end to end through a stub
 of the method placed under `--method-src` — validation read (every setting of the grid) →
 `scoresweep` on the floor grid → the method's own external freeze in a git repository → the test
 read under it (one arm, the frozen setting) → `annotate`. Each `tests/test_externalarm_<method>.py`

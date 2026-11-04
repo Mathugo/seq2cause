@@ -8,7 +8,7 @@ own interpreter (the `cascade` conda environment), never imported by the harness
 `pairs.npy` is an int64 array of shape (k, 2) of allowed (cause, effect) type ids, or the word
 `none` for no mask. Writes the 0/1 adjacency (row = cause) as int8 and a sidecar JSON with the
 wall clock, the edge count and `method_env` (the `pip freeze` lines of this interpreter, carried
-into the read's `run_meta.json`; addendum 2026-11-04). Standard library, numpy and pandas only.
+into the read's `run_meta.json`; addendum 2026-11-03 (later)). Standard library, numpy and pandas only.
 """
 
 from __future__ import annotations

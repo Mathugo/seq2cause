@@ -30,7 +30,7 @@ METHOD_MODULES = (
     "floors",  # the bigram floor's read; the topology floor's reader is the score-side floorprior
     "cascadearm",  # the external family's read (plans/cascade.md); its mask comes from floorprior
     "cascade_runner",  # the subprocess that runs the method in its own environment
-    "externalarm",  # the family's generic read (addendum 2026-11-04, D-SB-29)
+    "externalarm",  # the family's generic read (addendum 2026-11-03 (later), D-SB-29)
     "thp_runner",
     "lmt_runner",
     "causalnet_runner",

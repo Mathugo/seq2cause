@@ -216,7 +216,7 @@ PROBE_CASCADE_TOPOLOGY = "cascade-topology"  # the pass word of its score tables
 PROBE_CASCADE_NONE = "cascade-none"
 FAMILY_EXTERNAL = "external"  # a freeze of external cells only (`…-external[-<method>].json`)
 CASCADE_PRECISION = 2  # the published default
-# the family generalised (plans/cascade.md addendum 2026-11-04; plans/{thp,lmt,causalnet}.md; D-SB-29):
+# the family generalised (plans/cascade.md addendum 2026-11-03 (later); plans/{thp,lmt,causalnet}.md; D-SB-29):
 # one entry per published method — its ledger stage, the suffix of its own freeze file (one freeze per
 # method, never mixed), the runner module the harness drives under the method's interpreter, the
 # statistic its score tables carry, the registered meaning of the `N` slot and its grid, its arms, how
@@ -409,7 +409,7 @@ ARMS = {
         "paths": (PATH_NONE,),
         "cuts": (CUT_FROZEN,),
     },
-    # the topology-prior methods of the 2026-11-04 addendum: one topology-informed arm each
+    # the topology-prior methods of the 2026-11-03 (later) addendum: one topology-informed arm each
     ARM_THP_TOPOLOGY: {
         "class": "external",
         "probe": PROBE_THP_TOPOLOGY,

@@ -22,7 +22,7 @@ dense type ids; the view is read through `Corpus` only. On `--split test` the re
 committed external freeze (family, the one cell, τ, the frozen setting, the corpus, the
 ordering) and writes the prediction and ranking files for `annotate`; one arm per test read.
 
-Since the family's generalisation (addendum 2026-11-04, D-SB-29) this module is CASCADE's front
+Since the family's generalisation (addendum 2026-11-03 (later), D-SB-29) this module is CASCADE's front
 end on `externalarm`: its command line, record keys and work-directory file names are unchanged;
 the read itself, the events, the mask and the score table are the generic module's.
 """

@@ -179,7 +179,7 @@ corpus and seed, not a model — D-SB-15):
 - CASCADE's own Network Alarms result (142 / 147 edges, no spurious edges, device topology as a
   hard constraint; its Appendix B.4) is the published precedent for the masked configuration.
 
-## Addendum 2026-11-04 — the family generalised: one registry, one freeze per method (D-SB-29)
+## Addendum 2026-11-03 (later) — the family generalised: one registry, one freeze per method (D-SB-29)
 
 Dated before any read of a second method. The `external` family of §1 now holds one entry per
 published method in `constants.EXTERNAL_METHODS` (CASCADE first, unchanged): its ledger stage, the
@@ -190,7 +190,7 @@ how an edge outside the topology mask is handled on read-out, whether its output
 `TTPM`, `plans/thp.md`), **LMT** (`plans/lmt.md`) and **CausalNET** (`plans/causalnet.md`); each has
 one arm, `<method>/topology`, declared topology-informed as `cascade/topology` is, and its own plan
 file with grids, fixed settings, sample, gate and hypotheses. Owner decisions (publication PRD
-Decision Log, 2026-11-04): a method of this addendum enters the CLeaR 2027 submission with **xs and s
+Decision Log, 2026-11-03 (later)): a method of this addendum enters the CLeaR 2027 submission with **xs and s
 at five seeds each**; **m is reported where it lands by the Phase A gate (Monday 10 November)** and the
 paper says so where it does not; no `none` (unmasked) configuration is run for these methods
 (CASCADE's `cascade/none` at xs, §1, stands as the family's unmasked precedent; an unmasked xs fit of

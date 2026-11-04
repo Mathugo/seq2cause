@@ -1,4 +1,4 @@
-"""The external family generalised (plans/cascade.md addendum 2026-11-04; D-SB-29): the generic
+"""The external family generalised (plans/cascade.md addendum 2026-11-03 (later); D-SB-29): the generic
 read's contracts that do not need a method — the events' dense ops and node topology, the score
 table's two mask modes, the method identity, one freeze per method, the parser. The per-method
 chains run in `test_externalarm_<method>.py` through `externalarm_world`; CASCADE's own front end

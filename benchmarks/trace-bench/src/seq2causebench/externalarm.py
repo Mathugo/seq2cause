@@ -1,4 +1,4 @@
-"""The external arm family's generic read (plans/cascade.md and its addendum of 2026-11-04;
+"""The external arm family's generic read (plans/cascade.md and its addendum of 2026-11-03 (later);
 plans/{thp,lmt,causalnet}.md; D-SB-27 … D-SB-29): a published discovery method outside seq2cause —
 registered in `constants.EXTERNAL_METHODS` with its ledger stage, its own freeze suffix, its runner
 module and the meaning of its `N` slot — fitted on the sampled sequences of one corpus, grain,
