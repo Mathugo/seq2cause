@@ -1,0 +1,15 @@
+# The CausalNET method environment for the seq2cause-bench external arm (plans/causalnet.md §2;
+# algos/causalnet-zhu-2024/RUN.md). The clone's own requirements.txt pins torch 1.13.1 / numpy 1.21.6
+# (D-CN-6: run here on torch 2.x); gcastle is in the clone's list but imported by no module under
+# model/, so it is not installed (no `castle` dependency). The local reads use the conda env
+# `causalnet` (python 3.11, torch 2.15.0 / numpy 2.4.6 / omegaconf 2.4.0 / pandas 3.1.0, recorded
+# as method_env in every read's run_meta.json); a GPU box installs this file with the cu12 wheel
+# index (scripts/envs/causalnet-env.sh).
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.5.1
+numpy>=1.26,<3
+pandas>=2.2
+omegaconf>=2.3
+tqdm>=4.66
+scikit-learn>=1.4
+matplotlib>=3.8

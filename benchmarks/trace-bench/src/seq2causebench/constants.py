@@ -295,7 +295,7 @@ EXTERNAL_METHODS = {
         "hard_output": False,
         "needs_nodes": True,
         "hash_globs": ("model/*.py", "model/*/*.py", "model/configs/*.yaml"),
-        "hash_extras": (),
+        "hash_extras": ("0001-collapse-decay", "0002-drivable-entry"),  # scripts/envs/causalnet/ (D-CN-1, D-CN-2)
     },
 }
 EXTERNAL_STAGE = EXTERNAL_METHODS[METHOD_CASCADE]["stage"]  # CASCADE's stage (the family's first)

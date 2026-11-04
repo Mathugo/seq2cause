@@ -66,6 +66,8 @@ def external(
 ):
     return ext.main(
         [
+            "--corpus",
+            str(corpus),
             "--method",
             method,
             "--arms",

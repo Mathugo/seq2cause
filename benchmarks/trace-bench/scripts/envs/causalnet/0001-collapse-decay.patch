@@ -1,0 +1,246 @@
+diff --git a/model/main.py b/model/main.py
+index f715361..62eab28 100644
+--- a/model/main.py
++++ b/model/main.py
+@@ -24,12 +24,39 @@ proj_dir = '/home/user_name/causalnet'
+ dataset_dir = '/home/user_name/causalnet/datasets/'
+ 
+ 
++def node_of_type_from_data(data, num_types):
++    """
++    The topological node of every event type when each type lives on exactly one node (the
++    condition under which the causal decay matrix collapses without loss; lab patch
++    0001-collapse-decay). Raises if a type occurs on two nodes.
++    """
++    node_of_type = np.full(num_types, -1, dtype=np.int64)
++    for seq in data:
++        for event in seq:
++            v, n = int(event['type_event']), int(event['topo'])
++            if node_of_type[v] == -1:
++                node_of_type[v] = n
++            elif node_of_type[v] != n:
++                raise ValueError(f'event type {v} occurs on nodes {node_of_type[v]} and {n}: the collapsed decay matrix needs one node per type')
++    if (node_of_type < 0).any():
++        raise ValueError('every event type must occur at least once to collapse the decay matrix')
++    return node_of_type
++
++
+ class CausalNET(object):
+-    def __init__(self, num_types, topology, prior_cm, args, log, device="cuda"):
++    def __init__(self, num_types, topology, prior_cm, args, log, device="cuda", node_of_type=None):
+         self.log: MyLogger = log
+         self.args = args
+         self.device = device
+         self.epochs = self.args.total_epoch
++        # theta_mode (lab patch 0001-collapse-decay): 'full' = the shipped
++        # (max_hop+1, n_topos, n_topos, n_nodes, n_nodes) tensor; 'collapsed' = (max_hop+1, n_nodes, n_nodes)
++        # indexed by the type pair alone, valid when every type lives on one node (node_of_type).
++        self.theta_mode = str(self.args.dataset.get('theta_mode', 'full'))
++        if self.theta_mode not in ('full', 'collapsed'):
++            raise ValueError(f'theta_mode must be full or collapsed, got {self.theta_mode!r}')
++        if self.theta_mode == 'collapsed' and node_of_type is None:
++            raise ValueError('theta_mode collapsed needs node_of_type')
+         
+         self.pred_model = Transformer(
+             d_model=self.args.data_pred.d_model,
+@@ -80,7 +107,10 @@ class CausalNET(object):
+         topology = torch.from_numpy(topology).float().to(self.device)
+         max_hop = self.args.dataset.max_hop
+         ##
+-        self.theta = nn.Parameter(torch.ones([max_hop+1, self.args.dataset.n_topos, self.args.dataset.n_topos, self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * 0)
++        if self.theta_mode == 'collapsed':
++            self.theta = nn.Parameter(torch.ones([max_hop+1, self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * 0)
++        else:
++            self.theta = nn.Parameter(torch.ones([max_hop+1, self.args.dataset.n_topos, self.args.dataset.n_topos, self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * 0)
+         self.A = []
+         for k in range(0, max_hop+1):  # k-hop
+             A_k = torch.matrix_power(topology, k)
+@@ -88,6 +118,13 @@ class CausalNET(object):
+             if k > 0:
+                 torch.diagonal(A_k).fill_(1)
+             self.A.append(A_k)
++        ## the type-level hop adjacency A_types[k][i, j] = A[k][node_of_type[i], node_of_type[j]] (collapsed mode)
++        self.node_of_type = None
++        self.A_types = None
++        if self.theta_mode == 'collapsed':
++            self.node_of_type = torch.as_tensor(np.asarray(node_of_type), dtype=torch.int64).to(self.device)
++            self.A_types = [A_k[self.node_of_type][:, self.node_of_type] for A_k in self.A]
++        self.A_eff = self.A_types if self.theta_mode == 'collapsed' else self.A
+         ##
+         self.decay_optimizer = torch.optim.Adam([self.theta], lr=self.args.graph_discov.lr_decay_start)
+         gamma = (self.args.graph_discov.lr_decay_end / self.args.graph_discov.lr_decay_start) ** (1 / self.epochs)
+@@ -120,7 +157,7 @@ class CausalNET(object):
+         bs = event_num.shape[0]
+         sampled_graph = sample_graph(self.graph, bs)
+             
+-        enc_out, prediction = self.pred_model(event_num, event_type, event_time, event_topo, sampled_graph, self.theta, self.A)  #  batch*max_seq_len, including PAD
++        enc_out, prediction = self.pred_model(event_num, event_type, event_time, event_topo, sampled_graph, self.theta, self.A_eff)  #  batch*max_seq_len, including PAD
+ 
+         # indices of events to be predicted
+         bs, max_seq_len = enc_out.shape[0], enc_out.shape[1] - 1
+@@ -169,7 +206,7 @@ class CausalNET(object):
+         sampled_graph = sigmoid_gumbel_sample(self.graph, self.args.batch_size, tau=self.gumbel_tau)
+         
+         # pass through Transformer
+-        enc_out, prediction = self.pred_model(event_num, event_type, event_time, event_topo, sampled_graph, self.theta, self.A)  #  batch*max_seq_len, including PAD
++        enc_out, prediction = self.pred_model(event_num, event_type, event_time, event_topo, sampled_graph, self.theta, self.A_eff)  #  batch*max_seq_len, including PAD
+         
+         # indices of events to be predicted
+         bs, max_seq_len = enc_out.shape[0], enc_out.shape[1] - 1
+@@ -282,22 +319,7 @@ class CausalNET(object):
+             # self.lambda_d *= self.lambda_gamma_d  # for DAG ness
+             
+             # Transform graph & theta => final graph            
+-            ##   a.  
+-            prob_mat = torch.sigmoid(self.graph.detach())
+-            ##   b.
+-            adjacency = torch.stack(self.A)  # (max_hop,n_topo,n_topo)
+-            decay = self.theta.detach().permute(3,4,0,1,2)  # (max_hop,n_topo,n_topo,n_type,n_type) -> (n_type,n_type,max_hop,n_topo,n_topo)
+-            decay_adj = decay * adjacency
+-            prob_decay = torch.sigmoid(decay_adj)
+-            prob_decay = prob_decay.permute(2,3,4,0,1)  # (n_type,n_type,max_hop,n_topo,n_topo) -> (max_hop,n_topo,n_topo,n_type,n_type)
+-            prob_mat_decayed = prob_mat * prob_decay
+-            prob_mat_decayed = prob_mat_decayed.permute(3,4,0,1,2)  # (max_hop,n_topo,n_topo,n_type,n_type) -> (n_type,n_type,max_hop,n_topo,n_topo)
+-            ##   c.
+-            prob_mat_decayed_adj = prob_mat_decayed * adjacency.ne(0).float()
+-            ##   d.
+-            prob_mat_decayed_adj_max = prob_mat_decayed_adj + torch.zeros_like(prob_mat_decayed_adj)
+-            for _ in range(3):
+-                prob_mat_decayed_adj_max, _ = torch.max(prob_mat_decayed_adj_max, dim=-1)
++            prob_mat_decayed_adj_max = self.final_prob()
+             ##   e.  Prior
+             # prob_mat_decayed_adj_max[torch.where(self.prior_cm==0)] = 0
+             # prob_mat_decayed_adj_max[torch.where(self.prior_cm==1)] = 1
+@@ -340,6 +362,49 @@ class CausalNET(object):
+                 save_graph_or_decay(dir_path=dir_path, file_name=dataset, data_type='decay', data_mat=data_mat)                
+ 
+ 
++    def final_prob(self):
++        """
++        The shipped read-out (steps a-d of the training loop, saved as dags/final_prob): for every
++        type pair (i, j), p_ij = sigmoid(graph[i, j]) times the maximum over every (k, u, v) slot
++        with A[k][u, v] != 0 of sigmoid(theta[k, u, v, i, j] * A[k][u, v]). In the full tensor the
++        only slot that is ever trained for (i, j) is (node_of_type[i], node_of_type[j]) (when each
++        type lives on one node); every other slot keeps its initial value 0 and contributes
++        sigmoid(0) = 0.5. The collapsed mode reproduces that maximum exactly [lab patch
++        0001-collapse-decay]: max(gated, 0.5 * other), gated = max_k A_types[k][i, j] *
++        sigmoid(theta[k, i, j]), other = 1 iff some k has a nonzero A[k] slot outside (node_of_type[i],
++        node_of_type[j]). The read-out `gated` (config `readout: gated`) returns p_ij * gated
++        instead (the paper's Eq. 16 over the trained slots only); `shipped` is the default.
++        """
++        with torch.no_grad():
++            prob_mat = torch.sigmoid(self.graph.detach())
++            if self.theta_mode == 'collapsed':
++                sig = torch.stack([torch.sigmoid(self.theta.detach()[k]) * self.A_types[k].ne(0).float() for k in range(len(self.A))])
++                gated, _ = torch.max(sig, dim=0)  # (n_type, n_type)
++                readout = str(self.args.get('readout', 'shipped'))
++                if readout == 'gated':
++                    return prob_mat * gated
++                other = torch.zeros_like(gated)
++                for k in range(len(self.A)):
++                    nnz = self.A[k].ne(0).float().sum()
++                    other = torch.maximum(other, (nnz - self.A_types[k].ne(0).float()).gt(0).float())
++                return prob_mat * torch.maximum(gated, 0.5 * other)
++            ##   b.
++            adjacency = torch.stack(self.A)  # (max_hop,n_topo,n_topo)
++            decay = self.theta.detach().permute(3,4,0,1,2)  # (max_hop,n_topo,n_topo,n_type,n_type) -> (n_type,n_type,max_hop,n_topo,n_topo)
++            decay_adj = decay * adjacency
++            prob_decay = torch.sigmoid(decay_adj)
++            prob_decay = prob_decay.permute(2,3,4,0,1)  # (n_type,n_type,max_hop,n_topo,n_topo) -> (max_hop,n_topo,n_topo,n_type,n_type)
++            prob_mat_decayed = prob_mat * prob_decay
++            prob_mat_decayed = prob_mat_decayed.permute(3,4,0,1,2)  # (max_hop,n_topo,n_topo,n_type,n_type) -> (n_type,n_type,max_hop,n_topo,n_topo)
++            ##   c.
++            prob_mat_decayed_adj = prob_mat_decayed * adjacency.ne(0).float()
++            ##   d.
++            prob_mat_decayed_adj_max = prob_mat_decayed_adj + torch.zeros_like(prob_mat_decayed_adj)
++            for _ in range(3):
++                prob_mat_decayed_adj_max, _ = torch.max(prob_mat_decayed_adj_max, dim=-1)
++            return prob_mat_decayed_adj_max
++
++
+ def preprocess_data(data, topology, opt):
+     """
+     Preprocess the raw dataset to obtain the training data required for each epoch.
+@@ -408,6 +473,9 @@ def main(opt, device="cuda"):
+     data, topology, true_cm, prior_cm, num_types = load_formated_data(opt.dataset)
+     opt.model.dataset.n_nodes = true_cm.shape[0]
+     opt.model.dataset.n_topos = topology.shape[0]
++    node_of_type = None
++    if str(opt.model.dataset.get('theta_mode', 'full')) == 'collapsed':
++        node_of_type = node_of_type_from_data(data, num_types)
+     
+     # preprocess
+     preprocess_data(data, topology, opt)
+@@ -418,7 +486,7 @@ def main(opt, device="cuda"):
+         log.log_figures(name="True Graph", figure=sub_cg, iters=0)
+     
+     # training
+-    model = CausalNET(num_types, topology, prior_cm, opt.model, log, device=device)
++    model = CausalNET(num_types, topology, prior_cm, opt.model, log, device=device, node_of_type=node_of_type)
+     model.train(opt.dataset, data, topology, true_cm)
+     
+ 
+diff --git a/model/transformer/Models.py b/model/transformer/Models.py
+index b6db051..40d48b1 100644
+--- a/model/transformer/Models.py
++++ b/model/transformer/Models.py
+@@ -43,6 +43,15 @@ def get_subsequent_mask(seq):
+     return subsequent_mask
+ 
+ 
++def _target_index(event_num, seq):
++    """
++    seq[b, event_num[b] - 1] for every sequence b of the batch (the predicted event's value),
++    vectorised; the same values as the shipped per-sequence .item() loop [lab patch].
++    """
++    idx = (event_num.to(torch.int64) - 1).unsqueeze(1)
++    return seq.gather(1, idx).squeeze(1)
++
++
+ def get_attn_causal_mask(event_num, event_type, causal_graph):
+     """ 
+     Only attention to the (causal) parents of the predicted event is allowed.
+@@ -77,10 +86,43 @@ def get_attn_causal_mask(event_num, event_type, causal_graph):
+     return causal_mask
+ 
+ 
++def get_causal_decay_coef_collapsed(event_num, event_type, theta, A_types):
++    """
++    The decay coefficient with the causal decay matrix collapsed to (max_hop+1, n_type, n_type)
++    [lab patch 0001-collapse-decay]. When every event type lives on exactly one topological node
++    (node = node_of_type[type]), the full tensor theta[k, u, v, i, j] is only ever read, and only
++    ever receives gradient, at (u, v) = (node_of_type[i], node_of_type[j]); this function reads
++    theta[k, i, j] with the type-level hop adjacency A_types[k][i, j] = A[k][node_of_type[i],
++    node_of_type[j]] and returns the same (sz_b, len_q, len_k) coefficient as
++    get_causal_decay_coef does with the full tensor (see the equality check in RUN.md, D-CN-1).
++    """
++    n_node = theta.shape[1]
++    sz_b, len_s = event_type.size()
++    len_q, len_k = len_s, len_s
++    device = event_type.device
++
++    # the event type of each predicted event
++    event_type = event_type - 1  # -1 because 0 means PAD
++    target_types = _target_index(event_num, event_type).to(torch.int64)
++
++    # parents_t[b, i] = sum_k A_types[k][i, type_b] * sigmoid(theta[k, i, type_b])
++    parents_t = torch.zeros(sz_b, n_node, device=device)
++    max_hop = len(theta) - 1
++    for k in range(0, max_hop+1):
++        sig_theta_k = torch.sigmoid(theta[k]) * A_types[k].ne(0).float()  # (n_node, n_node)
++        parents_t += sig_theta_k[:, target_types].transpose(0, 1)  # (sz_b, n_node)
++
++    causal_decay_coef = parents_t[torch.arange(sz_b, device=device)[:, None].expand(-1, len_k), event_type.to(torch.int64)]  # (sz_b, len_k)
++    causal_decay_coef = causal_decay_coef.unsqueeze(1).expand(-1, len_q, -1)  # (sz_b, len_q, len_k)
++    return causal_decay_coef
++
++
+ def get_causal_decay_coef(event_num, event_type, event_topo, theta, A, causal_graph):
+     """ 
+     Causal decay among topological nodes
+     """
++    if theta.dim() == 3:  # the collapsed decay matrix (lab patch 0001-collapse-decay)
++        return get_causal_decay_coef_collapsed(event_num, event_type, theta, A)
+     n_node = causal_graph.shape[1]
+     n_topo = A[0].shape[0]
+     sz_b, len_s = event_topo.size()
