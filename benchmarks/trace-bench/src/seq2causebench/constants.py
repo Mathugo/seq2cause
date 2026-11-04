@@ -214,15 +214,92 @@ ARM_CASCADE_TOPOLOGY = "cascade/topology"  # CASCADE constrained to the topology
 ARM_CASCADE_NONE = "cascade/none"  # CASCADE with no prior (xs only)
 PROBE_CASCADE_TOPOLOGY = "cascade-topology"  # the pass word of its score tables
 PROBE_CASCADE_NONE = "cascade-none"
-EXTERNAL_PROBES = (PROBE_CASCADE_TOPOLOGY, PROBE_CASCADE_NONE)
-EXTERNAL_STAGE = "cascade"
-FAMILY_EXTERNAL = "external"  # a freeze of external cells only (`…-external.json`)
-CASCADE_MAX_DELAYS_MS = (
-    1000,
-    10000,
-    60000,
-)  # the settings grid, plans/cascade.md §3 (the `N` slot)
+FAMILY_EXTERNAL = "external"  # a freeze of external cells only (`…-external[-<method>].json`)
 CASCADE_PRECISION = 2  # the published default
+# the family generalised (plans/cascade.md addendum 2026-11-04; plans/{thp,lmt,causalnet}.md; D-SB-29):
+# one entry per published method — its ledger stage, the suffix of its own freeze file (one freeze per
+# method, never mixed), the runner module the harness drives under the method's interpreter, the
+# statistic its score tables carry, the registered meaning of the `N` slot and its grid, its arms, how
+# an edge outside the topology mask is handled on read-out (`refuse`: the method received the mask and
+# may not return one; `count`: a soft-prior method may, and the edge is kept and counted), whether the
+# output is hard (0/1, so the τ sweep is degenerate and AUROC is reported, never compared), whether the
+# runner needs a node per event and the op-level topology, and what `method_sha256` hashes
+METHOD_CASCADE = "cascade"
+METHOD_THP = "thp"  # topological Hawkes process, gCastle `TTPM` (Cai et al. 2024; `thps-cai-2024`)
+METHOD_LMT = "lmt"  # Hawkes likelihood + Bernoulli log-prior over a q-matrix (Xiao et al. 2026)
+METHOD_CAUSALNET = "causalnet"  # topology-informed causal attention (Zhu et al. 2024)
+ARM_THP_TOPOLOGY = "thp/topology"
+ARM_LMT_TOPOLOGY = "lmt/topology"
+ARM_CAUSALNET_TOPOLOGY = "causalnet/topology"
+PROBE_THP_TOPOLOGY = "thp-topology"
+PROBE_LMT_TOPOLOGY = "lmt-topology"
+PROBE_CAUSALNET_TOPOLOGY = "causalnet-topology"
+MASK_REFUSE = "refuse"
+MASK_COUNT = "count"
+MASK_MODES = (MASK_REFUSE, MASK_COUNT)
+EXTERNAL_METHODS = {
+    METHOD_CASCADE: {
+        "stage": "cascade",
+        "freeze_suffix": "external",
+        "runner": "cascade_runner",
+        "statistic": "cascade_dag",
+        "setting": "max_delay_ms",  # CASCADE's max_delay in milliseconds (plans/cascade.md §3)
+        "grid": (1000, 10000, 60000),
+        "arms": (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE),
+        "mask_mode": MASK_REFUSE,
+        "hard_output": True,
+        "needs_nodes": False,
+        "hash_globs": ("src/*.py",),
+        "hash_extras": ("0001-allowed-pairs",),
+    },
+    METHOD_THP: {
+        "stage": "thp",
+        "freeze_suffix": "external-thp",
+        "runner": "thp_runner",
+        "statistic": "ttpm_bic_edge",
+        "setting": "decay_ms",  # 1/δ of TTPM's exponential kernel, in milliseconds (plans/thp.md §3)
+        "grid": (100, 1000, 10000),
+        "arms": (ARM_THP_TOPOLOGY,),
+        "mask_mode": MASK_REFUSE,
+        "hard_output": True,
+        "needs_nodes": True,
+        "hash_globs": ("castle/algorithms/ttpm/*.py", "castle/common/priori_knowledge.py"),
+        "hash_extras": (),
+    },
+    METHOD_LMT: {
+        "stage": "lmt",
+        "freeze_suffix": "external-lmt",
+        "runner": "lmt_runner",
+        "statistic": "lmt_edge_prob",
+        "setting": "prior_weight_milli",  # the log-prior's weight × 1000 (plans/lmt.md §3)
+        "grid": (1000, 10000, 100000),
+        "arms": (ARM_LMT_TOPOLOGY,),
+        "mask_mode": MASK_COUNT,
+        "hard_output": False,
+        "needs_nodes": False,
+        "hash_globs": (
+            "chemical_1000_event_repro/temporal_hawkes_pure_map.py",
+            "chemical_1000_event_repro/text_causal/*.py",
+        ),
+        "hash_extras": (),
+    },
+    METHOD_CAUSALNET: {
+        "stage": "causalnet",
+        "freeze_suffix": "external-causalnet",
+        "runner": "causalnet_runner",
+        "statistic": "causalnet_edge_score",
+        "setting": "window_ms",  # ξ, the causal-attention time window, in milliseconds (plans/causalnet.md §3)
+        "grid": (1000, 10000, 60000),
+        "arms": (ARM_CAUSALNET_TOPOLOGY,),
+        "mask_mode": MASK_COUNT,
+        "hard_output": False,
+        "needs_nodes": True,
+        "hash_globs": ("model/*.py", "model/*/*.py", "model/configs/*.yaml"),
+        "hash_extras": (),
+    },
+}
+EXTERNAL_STAGE = EXTERNAL_METHODS[METHOD_CASCADE]["stage"]  # CASCADE's stage (the family's first)
+CASCADE_MAX_DELAYS_MS = EXTERNAL_METHODS[METHOD_CASCADE]["grid"]  # plans/cascade.md §3 (the `N` slot)
 ARMS = {
     ARM_CORE: {
         "class": "reference",
@@ -332,6 +409,28 @@ ARMS = {
         "paths": (PATH_NONE,),
         "cuts": (CUT_FROZEN,),
     },
+    # the topology-prior methods of the 2026-11-04 addendum: one topology-informed arm each
+    ARM_THP_TOPOLOGY: {
+        "class": "external",
+        "probe": PROBE_THP_TOPOLOGY,
+        "statistic": EXTERNAL_METHODS[METHOD_THP]["statistic"],
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_LMT_TOPOLOGY: {
+        "class": "external",
+        "probe": PROBE_LMT_TOPOLOGY,
+        "statistic": EXTERNAL_METHODS[METHOD_LMT]["statistic"],
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
+    ARM_CAUSALNET_TOPOLOGY: {
+        "class": "external",
+        "probe": PROBE_CAUSALNET_TOPOLOGY,
+        "statistic": EXTERNAL_METHODS[METHOD_CAUSALNET]["statistic"],
+        "paths": (PATH_NONE,),
+        "cuts": (CUT_FROZEN,),
+    },
 }
 REFERENCE_ARMS = (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)  # the landed reference arms; never extended
 CONTEXT_ARMS = (  # the context family of 2026-10-31: its own freeze family, its own results tree
@@ -358,11 +457,10 @@ FLOOR_ARM_OF_PROBE = {
     PROBE_FLOOR_TOPOLOGY: ARM_FLOOR_TOPOLOGY,
     PROBE_FLOOR_BIGRAM: ARM_FLOOR_BIGRAM,
 }
-EXTERNAL_ARMS = (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE)  # plans/cascade.md; D-SB-27, D-SB-28
-EXTERNAL_ARM_OF_PROBE = {
-    PROBE_CASCADE_TOPOLOGY: ARM_CASCADE_TOPOLOGY,
-    PROBE_CASCADE_NONE: ARM_CASCADE_NONE,
-}
+EXTERNAL_METHOD_OF_ARM = {a: m for m, spec in EXTERNAL_METHODS.items() for a in spec["arms"]}
+EXTERNAL_ARMS = tuple(EXTERNAL_METHOD_OF_ARM)  # plans/cascade.md and its addendum; D-SB-27 … 29
+EXTERNAL_PROBES = tuple(ARMS[a]["probe"] for a in EXTERNAL_ARMS)
+EXTERNAL_ARM_OF_PROBE = {ARMS[a]["probe"]: a for a in EXTERNAL_ARMS}
 MODEL_FREE_ARMS = FLOOR_ARMS + EXTERNAL_ARMS  # model hash `none`; their own token list; floor_taus
 MODEL_FREE_PROBES = FLOOR_PROBES + EXTERNAL_PROBES
 MODEL_FREE_ARM_OF_PROBE = {**FLOOR_ARM_OF_PROBE, **EXTERNAL_ARM_OF_PROBE}

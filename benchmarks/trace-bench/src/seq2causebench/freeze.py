@@ -49,6 +49,8 @@ from .constants import (
     CUT_FROZEN,
     CUT_SHIPPED,
     EXTERNAL_ARMS,
+    EXTERNAL_METHOD_OF_ARM,
+    EXTERNAL_METHODS,
     FAMILY_CONTEXT,
     FAMILY_EXTERNAL,
     FAMILY_FLOOR,
@@ -234,6 +236,12 @@ def family_of(cells):
             f"external-family cells {sorted(external)} cannot be frozen together with other cells "
             f"{sorted(arms - external)} (D-SB-27)"
         )
+    methods = {EXTERNAL_METHOD_OF_ARM[a] for a in external}
+    if len(methods) > 1:
+        raise FreezeRefusal(
+            f"external arms of two methods {sorted(methods)} cannot share a freeze: one freeze file "
+            f"per method (D-SB-29)"
+        )
     context = {a for a in arms if a in CONTEXT_ARMS}
     if context and context != arms:
         raise FreezeRefusal(
@@ -247,12 +255,22 @@ def family_of(cells):
     return FAMILY_CONTEXT if context else FAMILY_MODEL
 
 
-def freeze_name(date, rung, variant, seed, family, ordering):
+def external_method_of(cells):
+    """The one method of an external family's cells (D-SB-29), `None` for any other family."""
+    methods = {EXTERNAL_METHOD_OF_ARM[a] for a in {parse_cell_key(k)[0] for k in cells} if a in EXTERNAL_ARMS}
+    if len(methods) > 1:
+        raise FreezeRefusal(f"external arms of two methods {sorted(methods)} in one freeze (D-SB-29)")
+    return next(iter(methods), None)
+
+
+def freeze_name(date, rung, variant, seed, family, ordering, method=None):
+    """`method` names the external method whose freeze suffix applies (D-SB-29); CASCADE's, the
+    family's first, keeps the bare `-external`."""
     name = f"{date}-{rung}-{variant}-s{seed}"
     if family == FAMILY_FLOOR:
         name += "-floors"
     if family == FAMILY_EXTERNAL:
-        name += "-external"
+        name += "-" + (EXTERNAL_METHODS[method]["freeze_suffix"] if method else "external")
     if family == FAMILY_CONTEXT:
         name += "-context"
     if ordering == "start":
@@ -270,6 +288,7 @@ def merge_tables(tables):
         for k in (
             "corpus_id",
             "model_sha256",
+            "method_sha256",
             "tool_version",
             "config_hash",
             "taus",
@@ -386,6 +405,9 @@ def build_freeze(table, val_table_paths, pretrain, rung, variant, seed):
     return {
         "schema": FREEZE_SCHEMA,
         "family": family,
+        "method": external_method_of(cells),  # the external method (D-SB-29); None otherwise
+        "method_sha256": table.get("method_sha256"),
+        "method_commit": table.get("method_commit"),
         "ordering": table.get("ordering"),
         "rung": rung,
         "variant": variant,
@@ -422,7 +444,13 @@ def run_freeze(args, rec):
     freeze = build_freeze(table, args.val_tables, pretrain, args.rung, args.variant, args.seed)
     date = dt.datetime.now(dt.UTC).date().isoformat()
     path = Path(args.freezes_dir) / freeze_name(
-        date, args.rung, args.variant, args.seed, freeze["family"], freeze.get("ordering")
+        date,
+        args.rung,
+        args.variant,
+        args.seed,
+        freeze["family"],
+        freeze.get("ordering"),
+        freeze.get("method"),
     )
     if path.exists():
         raise FreezeExists(
