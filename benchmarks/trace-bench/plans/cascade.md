@@ -230,3 +230,34 @@ CASCADE itself had not finished after four CPU-hours on 2026-11-03).
   (`H-<method>-topology-request`, `H-<method>-topology-session`, `H-<method>-vs-core`).
 - **D-SB-29** — one freeze per external method, the per-method registry, `mask_mode`,
   `method_commit`, `method_env` (RUN.md row).
+
+## Addendum 2026-11-04 — the CASCADE line is stopped for the CLeaR 2027 submission; no read landed (owner decision, evening of 2026-11-03)
+
+Dated after the family's generalisation above; it concerns CASCADE's two arms only. THP, LMT and
+CausalNET continue under the addendum of 2026-11-03 (later) and their own plan files.
+
+- **What ran.** One validation read of xs seed 0 at the request grain (`cascade --split val`, both
+  arms, the three settings; local, replica `local-cascade-xs-s0`), interrupted before the
+  `cascade/none` fits finished; no record, no freeze, no test read, no ledger entry. The three
+  `cascade/topology` fits completed (5,699 events, 77 types, 551 allowed pairs; 23 / 4 / 1 s of
+  wall clock) and were scored in a scratch `scoresweep` (the floor at 0.05): **53 / 14 / 3 edges
+  at `max_delay` 1 / 10 / 60 s — directed precision 0.792 / 0.929 / 1.000, recall 0.093 / 0.029 /
+  0.007, F1 0.166 / 0.056 / 0.013** against 453 truth edges, every prediction inside the universe.
+  The topology floor's xs request F1 is 0.82 ± 0.07 (`findings/floors-latent.md`). These are
+  probe numbers, not results: no freeze governs them and they come from one seed and one grain.
+- **Why stopped.** (1) At the registered sample (~74 events per type at xs; ~155 at s) the
+  method's MDL score accepts a tenth of the truth: H-cascade-topology-request and -session would
+  fail at every rung by the registered margins. (2) The shipped model evaluates its description
+  length by iterating an N × N Python object array with a full scan of every event per edge,
+  twice per candidate test (`model.py`, `__compute_length`, `__add_edge`); at m (2,650 types, 7
+  million cells) one fit is days with or without the mask, and a probe fit on the xs train
+  split (49,682 events) ran past ten minutes — so m cannot land five seeds by the gate, and under
+  the owner's rule (§4: xs, s and m or absent) the arm cannot enter. The timing gate of §4 was
+  therefore decided on 2026-11-03, before the s read.
+- **What stays.** This plan, D-SB-27 / D-SB-28, the `external` family in the harness (generalised
+  by D-SB-29; CASCADE stays its first registry entry), `cascadearm`, `cascade_runner`,
+  `tests/test_cascadearm.py`, and the pinned, patched, verified clone under
+  `algos/cascade-cuppers-2024/` with its RUN.md. A future CASCADE line changes two things before
+  any read: a train-split fit with a registered cap (dated addendum here), and an incremental
+  description length in the method's model — or another matching learner with the same contract.
+  The hypotheses of §7 are unscored for CASCADE; `findings/cascade-latent.md` is not written.
