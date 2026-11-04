@@ -1,0 +1,127 @@
+{
+ "N": 8,
+ "c": 1,
+ "cells": {
+  "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 90666,
+   "n_pairs": 90666,
+   "per_lag_files": 8,
+   "tau": 0.0
+  },
+  "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request": {
+   "cut": "shipped",
+   "n_dropped_special": 3539,
+   "n_edges": 655,
+   "n_sequences_pooled": 20000,
+   "n_within_op": 104,
+   "tau": null,
+   "tau_by_lag": {
+    "1": 0.17132322490215302,
+    "10": 0.027494801146614296,
+    "11": 0.02480903549030108,
+    "12": 0.022819371355623064,
+    "13": 0.021345391911616662,
+    "14": 0.02025344108258641,
+    "15": 0.019444504012352294,
+    "16": 0.018845228691337975,
+    "17": 0.01840127461432568,
+    "18": 0.01807238534492904,
+    "19": 0.01782873818157331,
+    "2": 0.1313597524603354,
+    "3": 0.1017540839137252,
+    "4": 0.07982166521893276,
+    "5": 0.06357372982621015,
+    "6": 0.051536963238821884,
+    "7": 0.04261990723279176,
+    "8": 0.036013989668685284,
+    "9": 0.03112020557287383
+   },
+   "threshold_finite": true
+  }
+ },
+ "columns": [
+  "trace-cli-atomic-cmi-keep__fixed-kl"
+ ],
+ "context_mode": null,
+ "corpus_id": "xl/latent/seed=2",
+ "corrupted_cells": {
+  "fixed-kl": {}
+ },
+ "counts_source": {
+  "trace/cli-atomic-cmi-keep": "none"
+ },
+ "files": {
+  "matrices": "matrices-cli-atomic-cmi-all-request.npz",
+  "scores": "scores-cli-atomic-cmi-all-request.npz",
+  "sequences": "sequences-request.json"
+ },
+ "freeze": {
+  "committed_at": "2026-11-03T07:46:57-05:00",
+  "path": "freezes/2026-11-03-xl-latent-s2-context.json",
+  "sha": "b373d248f339a8fd6f2156058bf8662199fc9c7a"
+ },
+ "g": 1,
+ "grain": "request",
+ "memory": {
+  "N": 8,
+  "c": 1,
+  "cap_bytes": 21474836480,
+  "cap_gb": 20.0,
+  "harness_estimate": 537275136,
+  "max_seq_len": 21,
+  "probe": "cli-atomic-cmi",
+  "shipped_estimate": 211424640
+ },
+ "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+ "n_cells": 268415,
+ "n_pairs": 90666,
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "n_stored": 20000,
+ "noise": "all",
+ "probe": "cli-atomic-cmi",
+ "probe_amp": "none",
+ "probe_wall_clock_s": 268.575,
+ "rung": "xl",
+ "shipped_rule": {
+  "decay": true,
+  "decay_rate": 0.3,
+  "decay_type": "exponential",
+  "exponent": 0.5,
+  "floor": null,
+  "method": "percentile",
+  "min_group_size": 8,
+  "per_lag": false
+ },
+ "split": "test",
+ "stage": "discover",
+ "staging": {
+  "entry": {
+   "added": "2026-11-02",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "grain": "request",
+   "model_sha256": "799793076bf61ecb85646a5c32ffb03642dc3f8218590cc603afcf0c7185308c",
+   "note": "context family Job T (test read) under freezes/2026-11-02-l-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the m context test read b582221f640b); the xl context discover of this seed, grain and probe names this sha256 through --prior-rung-record",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "results_sha256": "f8bd75860a02f98392aca20aeebd3e1218ea11ebcecaccaae6e33ca49077cd9e",
+   "run": "l-latent-s2-ctx-test-26-11-02",
+   "rung": "l",
+   "seed": 2,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "l",
+  "results_sha256": "f8bd75860a02f98392aca20aeebd3e1218ea11ebcecaccaae6e33ca49077cd9e",
+  "rung": "xl"
+ },
+ "status": "ok",
+ "tok_pos": 8121443,
+ "tok_pos_per_s": 30239.038421864498,
+ "window_offset": 1
+}

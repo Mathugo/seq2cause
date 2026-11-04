@@ -446,3 +446,13 @@ universe-bound at `xl` too. **`xl` context Job T: two instances**, as the landed
 root 200 GB, cap 24 h): 8 reads, about 45 – 60 min projected. Scoring half (r7i.8xlarge, 256 GiB, root 200 GB, cap 48 h): the
 per-cell measurements of 2026-10-07 are flat across arms, so 16 + 16 cells project at 6.5 – 8.5 h; 81.3 GiB
 is the peak to expect (a 128 GiB host would give only 1.6× of the 2× the rule asks).
+
+**2026-11-04 — the context family's `xl` Job T measured, both halves, five seeds.** Discover halves
+(g5.2xlarge, cap 24 h): 31 – 33 min of stage wall clock per seed (projected 45 – 60 min); 8 reads of
+175 – 304 s each (request reads 264 – 304 s on 20k sequences, session reads 175 – 198 s on 10k), peak
+device 3.9 – 4.1 GiB. Scoring halves (r7i.8xlarge, 256 GiB, cap 48 h): 6.9 – 8.5 h of stage wall clock
+per seed (projected 6.5 – 8.5 h); per cell, annotate request 11.5 – 17.1 min at 30.4 – 35.9 GiB and session
+14.5 – 19.6 min at 69.9 – 81.7 GiB; seqscore request 6.1 – 7.8 min at 26.1 – 30.3 GiB and session
+16.5 – 21.5 min at 69.6 – 80.1 GiB — the per-cell figures of the landed `xl` Job T (2026-10-07) to within
+a minute and a gibibyte, on the family's arms and on N = 8: the scoring-side footprint is the universe
+and the truth set, not the arm, the cut or N. The 256 GiB class held at 3.1× the peak. No further rung.
