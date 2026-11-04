@@ -15,7 +15,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PIN=aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1
 REPO=https://github.com/CGCL-codes/CausalNET.git
 
+# the prefix is made absolute: the script cd's into the clone below, and a relative prefix (the
+# replicas pass `envs/causalnet`) would no longer resolve from there (the 2026-11-04 box failure:
+# "line 40: envs/causalnet/venv/bin/python: No such file or directory" after a clean build)
 mkdir -p "$PREFIX"
+PREFIX="$(cd "$PREFIX" && pwd)"
 if [ ! -x "$PREFIX/venv/bin/python" ]; then
   python3 -m venv "$PREFIX/venv"
 fi
