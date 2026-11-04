@@ -365,6 +365,16 @@ rather than the score. The verdict stands as registered: the l grid was fixed be
 re-opened here. The xl grid reaches τ = 0 and shows what the extension does on validation (xl section).
 The session cells are interior on every seed and carry no such caveat.
 
+**Post hoc (2026-11-03, not a registered run; the owner's decision to record it).** The landed l test
+request read of the core overwrite pass was re-swept locally with the xl grid (τ down to 0; the benchmark's
+scorer, the same score file; the registered cells reproduce on 5 / 5). With the CMI cell at τ = 0 the
+difference to the frozen information-gain cell is −0.0016 / −0.0086 / −0.0040 / −0.0083 / −0.0073, mean
+−0.0059 — inside the band — against the registered −0.0119 at 1e-7: about half of the l request gap is the
+grid floor. At τ = 0 the CMI and the information-gain columns give the same F1 and the same edge count on
+every seed (49,321 … 65,536 edges): on this read a pair has a positive CMI exactly when it has a positive
+information gain, so a τ = 0 comparison carries no score content, and the xl request grain (below) is read
+the same way. The registered l verdict stands; this paragraph is its context, not a re-selection.
+
 **H-atomic-cmi-f1 passes at request and fails at session.** The request difference is inside the band
 (−0.009 / −0.004 / −0.012 / −0.009 / −0.006) with the same floor caveat on the atomic CMI cells; the
 session difference is −0.024 / −0.025 / −0.023 / −0.033 / −0.030. The landed arm's N differs by seed at
@@ -392,9 +402,9 @@ author's claim on threshold stability; the τ-drift readings at xs, s and m are 
   sequences skipped on seed 0) and 0.897 for the keep cells. Pooled AUROC 0.654 / 0.833 (information gain),
   0.635 / 0.802 (CMI), 0.699 / 0.832 (atomic CMI).
 
-## xl (validation frozen 2026-11-03; test reads pending)
+## xl (test reads `xl-latent-s{0..4}-ctx-test-26-11-03` + `…-ctx-annotate-26-11-03` under `freezes/2026-11-03-xl-latent-s{k}-context.json`)
 
-`xl-latent-s{k}-ctx-val-26-11-02` + `xl-latent-s{k}-ctx-val-score-26-11-02` (N = 8 on the landed seed-k xl
+Validation sweeps `xl-latent-s{k}-ctx-val-26-11-02` + `xl-latent-s{k}-ctx-val-score-26-11-02` (N = 8 on the landed seed-k xl
 backbones, the 10k / 5k sample; two instances per seed, as the landed xl Job V): the GPU half took 34–35
 min on a g5.2xlarge (peak device 3.2–4.1 GiB, host ≤ 3.6 GiB), the CPU half 45–52 min on an r7i.4xlarge
 (scoresweeps 341–438 s at request, 899–1,122 s at session; peak 41.2–47.5 GiB, the landed xl peaks, so the
@@ -430,13 +440,124 @@ and lead the CMI overwrite cells (τ = 1e-9 … 3e-6) by 0.007–0.010 on every 
 above the reference line (0.0002 on seed 1), the information-gain cells 0.0083–0.0174. One further grid edge:
 `trace/core-cmi-keep` at session on seed 1 freezes at τ = 0. So 21 of 80 cells sit at an edge.
 
-Job-T scripts are tracked as two halves per seed, as the landed xl Job T:
-`scripts/jobs/seq2cause-bench-26-11-03-xl-latent-s{k}-ctx-test.sh` (8 reads on the 20k / 10k test sample, staged
-on the l context test reads) and `…-ctx-annotate.sh` (16 annotate + 16 seqscore on a CPU host).
+Test reads as two instances per seed, as the landed xl Job T: the discover half (`…-ctx-test-26-11-03`,
+g5.2xlarge, 8 reads on the 20k / 10k test sample staged on the l context test reads, 31–33 min of stage
+wall clock, peak device 3.9–4.1 GiB) and the scoring half (`…-ctx-annotate-26-11-03`, r7i.8xlarge, 16
+annotate + 16 seqscore, 6.9–8.5 h, peak 69.9–81.7 GiB on the session cells — the landed xl per-cell
+figures). Every registered check passes on 5 / 5 seeds: every stage `ok` on box commit `48c13535`, freeze
+bound at `b373d248` (#82), both manifests verified, `--args-diff` clean on all 43 records per seed, 16 / 16
+frozen cells read exactly once at their (c, N, g, τ) and `context_mode`, 20,000 request / 8,603–10,000
+session sequences probed, 0 corrupted cells on the information-gain paths. The sample-size note applies:
+every frozen cell reads above its validation F1 (80 / 80 per-seed cells; five-seed means +0.018 … +0.031).
+
+### Type-level directed F1 at the frozen cells (test; five-seed mean ± sd)
+
+| cell (`fixed-kl` path unless stated) | request | session |
+|---|---|---|
+| `trace/core-ig-overwrite` (c = 1 at request; c = 2 at session, every seed) | 0.088 ± 0.002 | 0.096 ± 0.008 |
+| `trace/core-cmi-overwrite` (c = 1, τ = 0; c = 2) | 0.088 ± 0.002 | 0.077 ± 0.010 |
+| `trace/core-ig-keep` (c = 1, `none`) | 0.088 ± 0.002 | 0.097 ± 0.009 |
+| `trace/core-cmi-keep` (c = 1, `none`; τ = 0 at request) | 0.088 ± 0.002 | 0.076 ± 0.012 |
+| `trace/cli-atomic-cmi-keep` fixed-kl (τ = 0 at request) | 0.089 ± 0.002 | 0.079 ± 0.008 |
+| `trace/cli-atomic-cmi-keep` fixed | 0.089 ± 0.002 | 0.079 ± 0.008 |
+| `trace/cli-atomic-cmi-keep` fixed-kl, shipped cut | 0.002 ± 0.001 | 0.001 ± 0.001 |
+| landed `trace/core` fixed-kl (c = 1, N 8 / 8 / 16 / 8 / 16 at request; c = 2, N = 16 at session) | 0.088 ± 0.002 | 0.097 ± 0.009 |
+| landed `trace/cli-atomic` fixed-kl (c = 1, N 8 / 16 / 8 / 2 / 2; c = 2, N 16 / 16 / 16 / 8 / 16) | 0.089 ± 0.002 | 0.088 ± 0.010 |
+| landed `trace/cli-atomic` fixed-kl, shipped cut | 0.002 ± 0.001 | 0.001 ± 0.001 |
+
+Per seed (request / session), information gain overwrite: 0.090 / 0.099, 0.085 / 0.085, 0.089 / 0.104,
+0.089 / 0.102, 0.089 / 0.090; CMI overwrite: 0.090 / 0.075, 0.085 / 0.066, 0.089 / 0.089, 0.089 / 0.086,
+0.089 / 0.070; information gain keep at session 0.100 / 0.085 / 0.107 / 0.103 / 0.090; CMI keep at session
+0.077 / 0.061 / 0.090 / 0.086 / 0.069; atomic CMI (fixed-kl): 0.090 / 0.080, 0.086 / 0.069, 0.089 / 0.088,
+0.089 / 0.084, 0.090 / 0.072; landed `trace/cli-atomic`: 0.090 / 0.088, 0.086 / 0.076, 0.089 / 0.099,
+0.090 / 0.098, 0.090 / 0.080.
+
+### Hypotheses (paired per-seed differences, five-seed mean, paired t-test)
+
+| hypothesis | request | session | verdict |
+|---|---|---|---|
+| **H-ctx-cmi-f1** (\|CMI − IG\| ≤ 0.01 at matched context) | overwrite −0.0001 (p 0.36); keep −0.0001 (p 0.36) — degenerate, see below | overwrite **−0.019 (p < 0.001)**; keep **−0.020 (p < 0.001)** | **pass at request (degenerate), fail at session** |
+| **H-ctx-cmi-tau** (F1-drift basis at xl) | overwrite 0.031 vs 0.031; keep 0.031 vs 0.031 | overwrite 0.019 vs 0.029; keep 0.018 vs 0.029 | **pass** |
+| **H-ctx-keep-perseq** (keep's per-sequence pooled F1 ≥ overwrite's at session) | not applicable | IG −0.0001 (p 0.99); CMI −0.007 (p 0.075) — neither below by > 0.01 | **pass** |
+| **H-atomic-cmi-f1** (atomic CMI ≥ landed `trace/cli-atomic` fixed-kl) | −0.0001 (p 0.13) — degenerate | −0.009 (p 0.002), inside the band | **pass** (session by the band) |
+| **H-atomic-cmi-tau** (F1-drift basis) | 0.029 vs 0.029 | 0.019 vs 0.025 | **pass** |
+| **H-atomic-cmi-shipped** (shipped cut non-empty, F1 ≥ the landed shipped cut) | +0.00004 (p 0.58), non-empty 5 / 5 | −0.00001 (p 0.84), non-empty 5 / 5 | **pass** |
+| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not computed (xl has no root-cause row) |
+
+**The request grain is degenerate at xl, as the validation sweeps said it would be.** Every CMI request
+cell froze at τ = 0 and every information-gain cell at 1e-8 … 1e-6; on the test read the two cuts keep
+64,182–70,319 (information gain) against 65,336–70,579 (CMI) edges and read the same F1 within 0.0004 on
+every seed, the same precision, recall and orientation accuracy (0.95). The passes of H-ctx-cmi-f1 and
+H-atomic-cmi-f1 at request say that the τ = 0 cut of a bounded score and the near-floor cut of an
+unbounded one keep nearly the same pairs — not that the scores agree (the l post hoc note: a pair has a
+positive CMI exactly when it has a positive information gain). They are recorded as passes because the
+registered clause passes; they carry no weight in the reading of the family.
+
+**H-ctx-cmi-f1 fails at session at xl, the fifth rung of five.** The CMI cell sits under the
+information-gain cell on every seed (overwrite −0.024 / −0.020 / −0.014 / −0.017 / −0.021; keep −0.023 /
+−0.023 / −0.018 / −0.018 / −0.021). The gap is precision again — 0.086 against 0.129 (per seed 0.076 /
+0.058 / 0.124 / 0.108 / 0.062 against 0.142 / 0.100 / 0.147 / 0.148 / 0.105) at recall 0.074 against
+0.078 — and orientation (0.675 against 0.728, lower on every seed); the CMI cells keep 1.0–1.9× the
+edges of the information-gain cells (110,773–257,062 against 104,088–148,705) and their skeleton F1 is
+the higher one (0.084 against 0.069). The relative gap is −19.8 % (overwrite) / −21.1 % (keep), as at l.
+
+**H-atomic-cmi-f1 passes at session by the band:** −0.0074 / −0.0068 / −0.0115 / −0.0137 / −0.0076, mean
+−0.009, p 0.002, every seed negative; the landed arm reads N = 16 (seed 3: 8) at c = 2 against the
+family's registered N = 8 at c = 1. The atomic CMI arm matches the core CMI cells at session (0.079
+against 0.077) and leads them per sequence (pooled F1 0.182 against 0.181 / 0.173). The shipped cuts are
+small (145–588 edges at request, 90–2,945 at session) and equal the landed shipped cuts within 0.0004.
+
+### Descriptive (not hypotheses)
+
+- **Keep vs overwrite at matched score.** Request: identical cells. Session: information gain +0.001
+  (per seed +0.0006 / −0.0006 / +0.0034 / +0.0010 / −0.0007), CMI −0.0007; per sequence the keep cells
+  read −0.0001 (information gain) and −0.007 (CMI, p 0.075) under the overwrite cells, with scoreable
+  fractions 0.822 against 0.850 (the overwrite reads at c = 2 skip 1,308–1,397 short sessions; the keep
+  reads skip none, but the per-sequence rule scores fewer of theirs).
+- **Against the landed `trace/core` cell:** the family's information-gain overwrite cell reads within 0.0002
+  at request and −0.001 at session (per seed −0.0004 / +0.0003 / −0.0029 / 0.0000 / −0.0018; the landed
+  cell reads N = 16 at session).
+- **The atomic arm's two paths** agree within 0.0001 on every seed and grain.
+- **Per-sequence axis** (`tables/xl-latent-context/xl-latent-perseq.md`): pooled directed F1 at request
+  0.380 (information gain), 0.379 (CMI), 0.367 (atomic CMI, recall 1.000); at session 0.241 (information
+  gain, both layouts), 0.181 / 0.173 (CMI overwrite / keep), 0.182 (atomic CMI). Pooled AUROC 0.638 / 0.613
+  / 0.650 at request, 0.820 / 0.774 / 0.803 at session. Scoreable fraction 0.911 at request.
+- **Drift:** every per-seed frozen cell reads above its validation F1 (80 / 80); mean F1 drift 0.029–0.031
+  at request on every arm, 0.018–0.019 (CMI arms) and 0.029–0.030 (information-gain arms) at session.
+
+## Across the rungs (type-level, five seeds per rung; the family's test reads)
+
+| | xs | s | m | l | xl |
+|---|---|---|---|---|---|
+| information gain overwrite, request / session | 0.317 / 0.354 | 0.290 / 0.334 | 0.204 / 0.268 | 0.135 / 0.158 | 0.088 / 0.096 |
+| CMI − information gain, request (overwrite) | −0.004 (pass) | −0.027 (**fail**) | −0.021 (**fail**) | −0.012 (**fail**; grid floor) | −0.0001 (pass; degenerate) |
+| CMI − information gain, session (overwrite / keep) | −0.016 / −0.017 (**fail**) | −0.031 / −0.036 (**fail**) | −0.044 / −0.045 (**fail**) | −0.032 / −0.034 (**fail**) | −0.019 / −0.020 (**fail**) |
+| the session gap relative to the information-gain cell | −4.4 % | −9.3 % | −16.4 % | −20.2 % | −19.8 % |
+| atomic CMI − landed `trace/cli-atomic`, request / session | −0.003 / −0.017 (pass / pass) | −0.024 / −0.035 (**fail** / **fail**) | −0.017 / −0.041 (**fail** / **fail**) | −0.008 / −0.027 (pass / **fail**) | −0.0001 / −0.009 (pass / pass) |
+| H-ctx-cmi-tau, H-atomic-cmi-tau | pass (τ-drift basis) | pass (τ-drift) | pass (τ-drift) | pass (F1-drift basis) | pass (F1-drift) |
+| H-atomic-cmi-shipped | pass | fail at request | pass | pass | pass |
+| H-ctx-keep-perseq | pass | pass | pass | pass | pass |
+
+**Reading.** (1) At the session grain the bounded CMI score is below the information gain on every seed
+of every rung, by 0.016–0.045 absolute and by a relative gap that grows from 4 % at xs to about 20 % at l
+and xl; the loss is precision and orientation, never recall or the skeleton. The author's claim that the
+two scores agree within 0.01 does not hold on trace-bench. (2) At the request grain the comparison is
+informative only where the τ grid is interior to both scores: s and m (fail by 0.02–0.03); at xs the
+gap is inside the band; at l the CMI cells sit on the grid floor and about half the gap is the floor;
+at xl, with the grid reaching 0, both scores keep nearly every scored pair and the pass is empty.
+(3) The atomic CMI arm does not beat the landed atomic information-gain arm anywhere; it is below it
+on s, m and l at session and within the band on xs and xl. (4) The keep layout (every observed token a
+candidate, c = 1) is a free choice: it matches the overwrite layout within 0.002 at the type level and
+within 0.01 per sequence on every rung. (5) The drift hypotheses pass everywhere, but on the F1-drift
+basis of l and xl they say little (the lower-F1 arm drifts less by construction); the τ-drift readings
+of xs, s and m are the test, and there the CMI's drift is the larger of the two at m (within the
+registered half-decade). The root-cause axes of the family are in `benchmarks/trace-bench-rca/findings/`
+(xs landed; s, m pending).
+
 
 ### Not landed here
 
 The xs case-level root-cause rows of the family are landed (`benchmarks/trace-bench-rca/findings/rca-latent.md`,
 section of 2026-11-02: H-rca-hop0 fails, H-rca-source and H-rca-presub pass, the family's hop0 rows
-under `control/rule`); the s / m case-level rows, the per-trace axis (the GPU replica) and the xl test
-reads (type-level and per-sequence axes only) follow.
+under `control/rule`); the s / m case-level rows and the per-trace axis (the GPU replica) follow. The
+type-level and per-sequence axes are complete on xs … xl.

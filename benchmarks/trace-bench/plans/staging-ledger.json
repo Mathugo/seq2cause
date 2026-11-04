@@ -23218,6 +23218,686 @@
    "n_cells": 3,
    "added": "2026-11-02",
    "note": "context family (plans/reference-arms.md, addendum 2026-10-31 §5): the `sweep-session-keep` pass (core-keep + cli-atomic-cmi; N = 8; c 1; 10k / 5k validation sample) on the landed seed-4 xl backbone, staged on the l context sweep 622c0f5df9ab; frozen in freezes/2026-11-03-xl-latent-s4-context.json (family context); scored on the CPU half on the xl grids of 2026-10-05"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "f49ede0623cab8411c5ac052d940d1494fb817343bb264a1327413c768ab03a5",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read dd492ef90597); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "9ac7d075ba4e6caefefc1b98032f30a77a5dff980f6b85815d6cf2bc304f2624",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read dd492ef90597); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "read": "discover-request-core-all-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "f99dcdae61130b97d13a386a8045cc2ef2cf28a5ac74916e7f64370688103980",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    "trace/core-ig-overwrite/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 1, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read e396560423be); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "7867ad1d45a50ad3e57297fb5906173244e8685c44be4e8a57c7c004b073d4fb",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 7e498ea99bfa); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "1c16e1d5f6522d8d8b3e172bb66e6605fb4b393000d6d0bac8b66dafd25edb85",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read e7aaa53e9cf8); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "235655b6ac8526d658cdbe6b305bda790cd64bfa9ea686593f37ae3753fb1a74",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read e7aaa53e9cf8); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "read": "discover-session-core-all-c2-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "5d5166400fd45af86b4482c0f7c0ed336a07984f1b610b512c5b0c805c69b6e7",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/session",
+    "trace/core-ig-overwrite/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 2, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read e12ebfcf7e5d); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "read": "discover-session-core-keep-all-c1-N8",
+   "run": "xl-latent-s0-ctx-test-26-11-03",
+   "results_sha256": "ed7e211a1cb112324c89a0a372b498ab999988cfbcd4409c186527f576b25751",
+   "model_sha256": "6530b9e85527fa84dea550e7067768be123e1c2c0c0b433049a2c25637fecb33",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/session",
+    "trace/core-ig-keep/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read a539fad36ad6); scored by the CPU half xl-latent-s0-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "a368feddb79986425e2d7b2b4f606d77800a93440d9288c35072000611b34efd",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 0aa30856d0b0); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "b25c218ee2dba5bec2185488131065ab9256ec3f04f29f717834883f447a3184",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 0aa30856d0b0); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "read": "discover-request-core-all-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "40d3ab2cdf529b5978b6070a6ace41a42e54d30ea9288f5f37265fc6b68d9459",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    "trace/core-ig-overwrite/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 1, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read 3f3be587ec07); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "4a08d900099545593d0b81dcdb2fbcdb5bb1e72bbe25d37b08bd81cc24031a65",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 6003ddc76b2e); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "fa7799352b70562b8be8ceb4dc33b6d47b526c1214a31819ac7ec4fb501638cc",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 9aac4c2c6f46); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "f8a60d9e721350a5b65e450eec22ddfec60828c6578fa666ca96ef0ca50626a2",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 9aac4c2c6f46); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "read": "discover-session-core-all-c2-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "5b1c9c14b6563e8a66c36fc6713955b742466c819ac617ead29aca4de8a8e149",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/session",
+    "trace/core-ig-overwrite/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 2, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read 1dfd62d39cc7); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "read": "discover-session-core-keep-all-c1-N8",
+   "run": "xl-latent-s1-ctx-test-26-11-03",
+   "results_sha256": "54afa7f89f8ed471c2f8315fb5448dc93c21cee915593489f4870c02f33b59a5",
+   "model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/session",
+    "trace/core-ig-keep/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s1-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 8a5229ad0b5f); scored by the CPU half xl-latent-s1-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "385fe1c2444e6dce82f7d20b898dd68f0f437ec8f05b67a57a3207eae1e8438a",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read f8bd75860a02); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "a2b78fcbc9f76dc4100578f753a754fb57866134190be68c4d25e01169dc3593",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read f8bd75860a02); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "read": "discover-request-core-all-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "c8d0fcce78baa92eb3214a35f6e8996489d8b6e3f5f690ec6da186627a782c86",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    "trace/core-ig-overwrite/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 1, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read 5ed8e6de4b9c); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "f3ec8db30a8caa8f3b45f722f4787bcb9e9ca741fbbbd6bd5aa23f795857cb46",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 21406b90f786); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "99fe10e24d589766e27b307e888fc54c74091603ca696cf78299f7921bb9c74b",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read ebb577013c6a); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "ff38c74cf3c98d20211cb4efc7985163c20c04e800d5f77454d555d5eaa7fa29",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read ebb577013c6a); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "read": "discover-session-core-all-c2-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "363946d22444fffb6340f0a0c3411304ee15bf12eb350f826cb6fb321c4b877e",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/session",
+    "trace/core-ig-overwrite/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 2, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read dffef189a4d2); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "read": "discover-session-core-keep-all-c1-N8",
+   "run": "xl-latent-s2-ctx-test-26-11-03",
+   "results_sha256": "f7287ad381fd520803177a4c9e535ebee456896ed045003e39f9dc151eae776b",
+   "model_sha256": "553553d0dab8f6871879aec354eaee12d2a383270fbe8a47eaddfffb07f3e23a",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/session",
+    "trace/core-ig-keep/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s2-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 4e0a1a0510dc); scored by the CPU half xl-latent-s2-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "77d5a66a45ecdd5b926fd5dc7b4c2ed7f7b68209bde35f1bab8421f59aa2afbc",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read b8cf2841bd41); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "400ebd7dd229348bd6eda5c6a4d9cfda5ec6a8d6b0295d8371eede5d858ae6ec",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read b8cf2841bd41); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "read": "discover-request-core-all-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "ee15b827393aca5aa52b6e8d8cfd35970a24923a6e86df9e00130a58c5effa82",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    "trace/core-ig-overwrite/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 1, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read da63d0da971c); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "06fab94075ef2b1f912a1937576e953428a531bf969761823c7574d6aca1817b",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 8842b59c7826); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "7cb5a3a0627c87c30df22eb97dbca3df6ed428c4ad1fb223267c85f68df0a661",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read ccd98c04d1dc); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "88726d0710a9077169bc9214934b5fa7cf99a030ebd85eab3f9eb67b235fd56a",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read ccd98c04d1dc); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "read": "discover-session-core-all-c2-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "7150087e19275827c57c6aae1a76f109fdf0015b30f0c9f3dd5e8bf685e463a7",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/session",
+    "trace/core-ig-overwrite/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 2, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read 70d40e62ea0b); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "read": "discover-session-core-keep-all-c1-N8",
+   "run": "xl-latent-s3-ctx-test-26-11-03",
+   "results_sha256": "38a26f60b33f16d24ae7912c2c6d8d57c9675046be063ab6191d3106f631e41f",
+   "model_sha256": "f395070f74fd4523988e104a88a363d789f1a544f22e14211d31e8b5f79bcc4e",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/session",
+    "trace/core-ig-keep/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read ebf0c2e543a3); scored by the CPU half xl-latent-s3-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "4d673fb3b7fddacbfb3cfca7e0b7c7d02a8386477b9d793c1329f83155f22ebc",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 913aeee5ddfc); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "read": "discover-request-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "762eefeb64cb85198ded20b1aa7ca320da221a1287915d9594ca240237237f8e",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/request",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 913aeee5ddfc); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "read": "discover-request-core-all-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "9cb02719f363a9e61ed150c83501b3707792b131eb8d360d910b8a29a5986414",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/request",
+    "trace/core-ig-overwrite/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 1, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read bd1daff26415); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "cbd28b7e26d7afef0945149626dbcdb53d0f8e037e2743ed3eca400672d24186",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 170a90c68f63); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-all-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "b6d878fe10ba05e3c2bf9e4c3d862d747dbfa949b7cfa921233c4deb26c59188",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed-kl/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed-kl/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise all, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 9059177f9bdd); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "read": "discover-session-cli-atomic-cmi-real-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "77c6ce5c5df243f4cb103852701699fca4f0d9f61b924c54df66942cd2629fc9",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/cli-atomic-cmi-keep/fixed/frozen/session",
+    "trace/cli-atomic-cmi-keep/fixed/shipped/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe cli-atomic-cmi, noise real, c 1, N 8, context_mode None; the 20k / 10k test sample, staged on the l context test read 9059177f9bdd); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "read": "discover-session-core-all-c2-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "4b380a616813b536f790b00826d52509cde9202ef67e7aec85a84581ed1f47af",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/core-cmi-overwrite/fixed-kl/frozen/session",
+    "trace/core-ig-overwrite/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core, noise all, c 2, N 8, context_mode overwrite; the 20k / 10k test sample, staged on the l context test read 7126e729b191); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
+  },
+  {
+   "stage": "discover",
+   "rung": "xl",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "read": "discover-session-core-keep-all-c1-N8",
+   "run": "xl-latent-s4-ctx-test-26-11-03",
+   "results_sha256": "859bd36c30355a0d43f97def70bdc3167a0d794d3b7a17cd21123b3c6ff214c3",
+   "model_sha256": "98e9fe3493d2195258407a2a24242e18222ac0ef00ab3a9957ea6668ae106e3e",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/session",
+    "trace/core-ig-keep/fixed-kl/frozen/session"
+   ],
+   "added": "2026-11-04",
+   "note": "context family Job T (test read, the discover half) under freezes/2026-11-03-xl-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none; the 20k / 10k test sample, staged on the l context test read 270bebe78096); scored by the CPU half xl-latent-s4-ctx-annotate-26-11-03; no further rung"
   }
  ]
 }
