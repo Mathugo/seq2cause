@@ -1,0 +1,226 @@
+--- a/castle/algorithms/ttpm/ttpm.py
++++ b/castle/algorithms/ttpm/ttpm.py
+@@ -206,8 +206,204 @@
+                                  event_names)))
+ 
+     def _hill_climb(self):
++        """
++        Search the best causal graph, then generate the causal matrix (DAG).
++
++        [0001-decomposable-score] The shipped search (kept below as
++        `_hill_climb_shipped`) refits the EM over every event type for every
++        ordered pair of types in every sweep. Its score is decomposable: `_em`
++        fits each type from its own column of the adjacency alone and sums the
++        per-type likelihoods in index order, and the penalty depends only on
++        the edge count. This search computes the same numbers -- `_em_type` is
++        the loop body of `_em` run on arrays of the same layout, a candidate's
++        score is the same ordered sum of the same per-type values minus the
++        same penalty expression -- and accepts the same move per sweep (the
++        first candidate in `product` order at the strict maximum), so its
++        output is the shipped output. It differs in cost only: per-type values
++        are cached by (type, parent set); a move changes at most two columns,
++        so at most two fits are new per candidate and, across sweeps, only the
++        candidates touching the last move's columns need a fit; pairs the
++        prior fixes (forbidden, required, the diagonal) and cyclic candidates
++        are not fitted (the shipped code fits them and never accepts them).
++        The shipped function stays the reference: the final graph is refitted
++        by `_em` and its score must equal the search's, or the search raises.
++
++        Returns
++        -------
++        result: tuple, (likelihood, alpha matrix, events vector)
++        edge_mat: np.ndarray
++            Causal matrix.
++        """
++        self._get_effect_tensor_decays()
++        N = self._N
++        K = self._max_hop
++        pk = self.priori_knowledge
++        edge_mat = np.eye(N, N)
++        edge_mat[pk.matrix == 1] = 1  # only add the required edges to edge_mat
++        if not nx.is_directed_acyclic_graph(nx.DiGraph((edge_mat - np.eye(N, N)))):
++            return self._hill_climb_shipped()  # a cyclic start: the shipped search's case
++        self._alpha_scratch = np.ones([K + 1, N, N])
++        self._mu_scratch = np.ones(N)
++        cache = {}
++        log_s = np.log(self.tensor['times'].sum())
++
++        def li_of(i, parents):
++            key = (i, tuple(sorted(int(p) for p in parents)))
++            li = cache.get(key)
++            if li is None:
++                col = np.zeros(N)
++                col[list(key[1])] = 1
++                li = cache[key] = self._em_type(i, col)
++            return li
++
++        def penalty(e):
++            if self._penalty == 'AIC':
++                return N + self._epsilon * e * (K + 1)
++            elif self._penalty == 'BIC':
++                return (N + self._epsilon * e * (K + 1)) * log_s / 2
++            else:
++                raise ValueError("The penalty's value should be BIC or AIC.")
++
++        # the candidates, in the shipped `product` order, less the pairs no move touches
++        cand = [(j, i) for j in range(N) for i in range(N)
++                if j != i and not pk.is_required(j, i) and not pk.is_forbidden(j, i)]
++        cj = np.array([j for j, _ in cand], dtype=np.int64)
++        ci = np.array([i for _, i in cand], dtype=np.int64)
++        pa = [set(np.where(edge_mat[:, i] == 1)[0].tolist()) for i in range(N)]
++        base = np.array([li_of(i, pa[i]) for i in range(N)])
++        E = edge_mat.sum()
++        l_ret = np.add.accumulate(base)[-1] - penalty(E)
++        self.moves_ = []
++        stop_tag = True
++        num_iter = -1
++        for num_iter in range(self._max_iter):
++
++            logging.info('[iter {}]: likelihood_score = {}'.format(num_iter, l_ret))
++
++            stop_tag = True
++            G = edge_mat.astype(bool)
++            np.fill_diagonal(G, False)
++            R = self._reachability(G)
++            GR = G.astype(np.int64) @ R.astype(np.int64)
++            present = G[cj, ci]
++            reverse = ~present & G[ci, cj]
++            valid = np.ones(len(cand), dtype=bool)
++            valid[~present & ~reverse & R[ci, cj]] = False  # an added edge that closes a cycle
++            valid[reverse & (GR[ci, cj] != 1)] = False  # a reversal with another path i -> j
++            d_e = np.where(present, -1.0, np.where(reverse, 0.0, 1.0))
++            L = np.tile(base, (len(cand), 1))
++            touched = []
++            for c, (j, i) in enumerate(cand):
++                if not valid[c]:
++                    touched.append(None)
++                    continue
++                if present[c]:
++                    new_i = pa[i] - {j}
++                    new_j = None
++                elif pk.is_required(i, j):
++                    valid[c] = False
++                    touched.append(None)
++                    continue
++                else:
++                    new_i = pa[i] | {j}
++                    new_j = (pa[j] - {i}) if reverse[c] else None
++                L[c, i] = li_of(i, new_i)
++                if new_j is not None:
++                    L[c, j] = li_of(j, new_j)
++                touched.append((new_i, new_j))
++            scores = np.add.accumulate(L, axis=1)[:, -1] - penalty(E + d_e)
++            scores[~valid] = -np.inf
++            best = scores.max()
++            if best > l_ret:
++                c = int(np.flatnonzero(scores == best)[0])
++                j, i = cand[c]
++                new_i, new_j = touched[c]
++                if present[c]:
++                    edge_mat[j, i] = 0
++                else:
++                    edge_mat[j, i] = 1
++                    edge_mat[i, j] = 0
++                pa[i] = new_i
++                base[i] = L[c, i]
++                if new_j is not None:
++                    pa[j] = new_j
++                    base[j] = L[c, j]
++                E = E + d_e[c]
++                l_ret = best
++                stop_tag = False
++                self.moves_.append((num_iter, int(j), int(i),
++                                    'delete' if present[c] else ('reverse' if reverse[c] else 'add')))
++
++            if stop_tag:
++                break
++
++        self.n_sweeps_ = num_iter + 1
++        self.converged_ = stop_tag
++        result = self._em(edge_mat)  # the shipped fit of the final graph: the reference score
++        if result[0] != l_ret:
++            raise RuntimeError('decomposable score {} != _em score {}'.format(l_ret, result[0]))
++        return result, edge_mat
++
++    @staticmethod
++    def _reachability(G):
++        """[0001-decomposable-score] Reflexive reachability of a DAG by squaring."""
++        R = G | np.eye(len(G), dtype=bool)
++        while True:
++            R2 = R | ((R.astype(np.int64) @ R.astype(np.int64)) > 0)
++            if np.array_equal(R2, R):
++                return R
++            R = R2
++
++    def _em_type(self, i, col):
++        """[0001-decomposable-score] The per-type fit of `_em`: its loop body for
++        the one event type `i` whose adjacency column is `col`, on scratch arrays
++        of the shipped layout (alpha (K+1, N, N), mu (N,)); returns `li`."""
++        alpha = self._alpha_scratch
++        mu = self._mu_scratch
++        alpha[:, :, i] = col
++        mu[i] = 1
++        pa_i = set(np.where(col == 1)[0])
++        li = -100000000000
++        ind = np.where(self._event_indexes == i)
++        x_i = self.tensor['times'].values[ind]
++        while 1:
++            # Calculate the first part of the likelihood
++            lambda_i_sum = (self._decay_effects
++                            * alpha[:, :, i].T).sum() + mu[i] * self._T
++
++            # Calculate the second part of the likelihood
++            lambda_for_i = np.zeros(len(self.tensor)) + mu[i]
++            for k in range(self._max_hop+1):
++                lambda_for_i += np.matmul(
++                    self._effect_tensor_decays[k, :],
++                    alpha[k, :, i].T)
++            lambda_for_i = lambda_for_i[ind]
++            x_log_lambda = (x_i * np.log(lambda_for_i)).sum()
++            new_li = -lambda_i_sum + x_log_lambda
++
++            # Iteration termination condition
++            delta = new_li - li
++            if delta < 0.1:
++                return new_li
++            li = new_li
++            # update mu
++            mu[i] = ((mu[i] / lambda_for_i) * x_i).sum() / self._T
++            # update alpha
++            for j in pa_i:
++                for k in range(self._max_hop+1):
++                    upper = ((alpha[k, j, i] * (
++                        self._effect_tensor_decays[k, :, j])[ind]
++                              / lambda_for_i) * x_i).sum()
++                    lower = self._decay_effects[j, k]
++                    if lower == 0:
++                        alpha[k, j, i] = 0
++                        continue
++                    alpha[k, j, i] = upper / lower
++
++    def _hill_climb_shipped(self):
+         """
+         Search the best causal graph, then generate the causal matrix (DAG).
++        [0001-decomposable-score] The shipped search, unchanged; the reference.
+ 
+         Returns
+         -------
+@@ -393,9 +589,15 @@
+ 
+     def _one_step_change_iterator(self, edge_mat):
+ 
+-        return map(lambda e: self._one_step_change(edge_mat, e, self.priori_knowledge),
+-                   product(range(len(self._event_names)),
+-                           range(len(self._event_names))))
++        # [0001-decomposable-score] A pair on the diagonal or fixed by the prior
++        # (forbidden / required) is not a move: `_one_step_change` hands back
++        # `edge_mat` unchanged and the shipped search would refit the EM on it
++        # (deterministic, so never an improvement). Skip those pairs here.
++        pk = self.priori_knowledge
++        pairs = (e for e in product(range(len(self._event_names)),
++                                    range(len(self._event_names)))
++                 if e[0] != e[1] and not pk.is_required(*e) and not pk.is_forbidden(*e))
++        return map(lambda e: self._one_step_change(edge_mat, e, pk), pairs)
+ 
+     @staticmethod
+     def _one_step_change(edge_mat, e, priori_knowledge):

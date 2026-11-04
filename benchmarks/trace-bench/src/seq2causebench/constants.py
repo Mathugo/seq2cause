@@ -264,7 +264,7 @@ EXTERNAL_METHODS = {
         "hard_output": True,
         "needs_nodes": True,
         "hash_globs": ("castle/algorithms/ttpm/*.py", "castle/common/priori_knowledge.py"),
-        "hash_extras": (),
+        "hash_extras": ("0001-decomposable-score",),  # scripts/envs/thp/ (D-TH-7: output-identical search)
     },
     METHOD_LMT: {
         "stage": "lmt",
