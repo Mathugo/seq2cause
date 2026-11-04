@@ -164,6 +164,7 @@ def run_scoresweep(args, rec):
     facts = manifest_facts(args.corpus)
     rows, coverage = [], {}
     model_sha = corpus_id = sweep_ordering = None
+    method_sha = method_commit = None  # an external method's identity, carried into the table (D-SB-29)
     for grain in args.grains:
         target, alphabet, context = load_target(args.corpus, grain)
         floor = float(target["default_floor"])
@@ -181,6 +182,13 @@ def run_scoresweep(args, rec):
                 raise ValueError(
                     f"{f.name}: mixed models in one sweep ({scores['model_sha256']} vs {model_sha})"
                 )
+            if "method_sha256" in scores:
+                msha, mcommit = str(scores["method_sha256"]), str(scores.get("method_commit", ""))
+                method_sha, method_commit = method_sha or msha, method_commit or mcommit
+                if msha != method_sha:
+                    raise ValueError(
+                        f"{f.name}: mixed external methods in one sweep ({msha} vs {method_sha})"
+                    )
             sweep_ordering = sweep_ordering or ordering
             if ordering != sweep_ordering:
                 raise ValueError(
@@ -264,6 +272,8 @@ def run_scoresweep(args, rec):
         "schema": VAL_TABLE_SCHEMA,
         "corpus_id": corpus_id,
         "model_sha256": model_sha,
+        "method_sha256": method_sha,
+        "method_commit": method_commit,
         **facts,
         "sweep_dir_name": Path(args.sweep_dir).name,
         "ordering": sweep_ordering,

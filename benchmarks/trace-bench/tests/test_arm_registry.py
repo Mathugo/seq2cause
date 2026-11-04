@@ -31,7 +31,10 @@ from seq2causebench.constants import (
     CUT_SHIPPED,
     EXTERNAL_ARM_OF_PROBE,
     EXTERNAL_ARMS,
+    EXTERNAL_METHOD_OF_ARM,
+    EXTERNAL_METHODS,
     EXTERNAL_PROBES,
+    MASK_MODES,
     FLOOR_ARM_OF_PROBE,
     FLOOR_ARMS,
     FLOOR_PROBES,
@@ -55,7 +58,7 @@ from seq2causebench.constants import (
 )
 
 
-def test_fifteen_arms_three_reference_three_baseline_two_floor_five_context_two_external():
+def test_eighteen_arms_three_reference_three_baseline_two_floor_five_context_five_external():
     assert set(ARMS) == (
         set(REFERENCE_ARMS)
         | set(BASELINE_ARMS)
@@ -63,8 +66,8 @@ def test_fifteen_arms_three_reference_three_baseline_two_floor_five_context_two_
         | set(CONTEXT_ARMS)
         | set(EXTERNAL_ARMS)
     )
-    assert len(ARMS) == 15 and len(FLOOR_ARMS) == 2 and len(CONTEXT_ARMS) == 5
-    assert len(EXTERNAL_ARMS) == 2
+    assert len(ARMS) == 18 and len(FLOOR_ARMS) == 2 and len(CONTEXT_ARMS) == 5
+    assert len(EXTERNAL_ARMS) == 5
     assert REFERENCE_ARMS == (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)  # the landed arms, never extended
     assert all(ARMS[a]["class"] == "reference" for a in REFERENCE_ARMS)
     assert all(ARMS[a]["class"] == "reference" for a in CONTEXT_ARMS)
@@ -75,13 +78,31 @@ def test_fifteen_arms_three_reference_three_baseline_two_floor_five_context_two_
 
 
 def test_external_family_is_model_free_single_cut_own_probes():
-    """plans/cascade.md (D-SB-27, D-SB-28): two external arms, the floors' binding, the N slot."""
-    assert EXTERNAL_ARMS == (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE)
+    """plans/cascade.md (D-SB-27, D-SB-28) and its addendum (D-SB-29): CASCADE's two arms plus one
+    topology arm per method of the registry, the floors' binding, the N slot."""
+    assert EXTERNAL_ARMS[:2] == (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE)
+    assert EXTERNAL_ARMS[2:] == ("thp/topology", "lmt/topology", "causalnet/topology")
+    assert tuple(EXTERNAL_METHODS) == ("cascade", "thp", "lmt", "causalnet")
     for arm in EXTERNAL_ARMS:
         assert ARMS[arm]["paths"] == (PATH_NONE,) and ARMS[arm]["cuts"] == (CUT_FROZEN,)
         assert arms.is_external(arm) and arms.is_model_free(arm) and not arms.is_floor(arm)
-        assert ARMS[arm]["probe"] in EXTERNAL_PROBES and ARMS[arm]["statistic"] == "cascade_dag"
+        assert ARMS[arm]["probe"] in EXTERNAL_PROBES
+        assert ARMS[arm]["statistic"] == EXTERNAL_METHODS[arms.external_method(arm)]["statistic"]
         assert len(arms.allowed_cells(arm)) == len(GRAINS)
+    for method, spec in EXTERNAL_METHODS.items():
+        assert spec["stage"] == method and spec["runner"] == f"{method}_runner"
+        assert spec["mask_mode"] in MASK_MODES and isinstance(spec["hard_output"], bool)
+        assert spec["grid"] and all(isinstance(n, int) and n > 0 for n in spec["grid"])
+        assert spec["setting"] and spec["hash_globs"]
+        assert all(EXTERNAL_METHOD_OF_ARM[a] == method for a in spec["arms"])
+        assert all(a.endswith("/topology") or method == "cascade" for a in spec["arms"])
+    suffixes = [s["freeze_suffix"] for s in EXTERNAL_METHODS.values()]
+    assert len(set(suffixes)) == len(suffixes) and suffixes[0] == "external"
+    assert EXTERNAL_METHODS["cascade"]["mask_mode"] == EXTERNAL_METHODS["thp"]["mask_mode"] == "refuse"
+    assert EXTERNAL_METHODS["lmt"]["mask_mode"] == EXTERNAL_METHODS["causalnet"]["mask_mode"] == "count"
+    assert ARMS[ARM_CASCADE_TOPOLOGY]["statistic"] == "cascade_dag"
+    with pytest.raises(ValueError):
+        arms.external_method(ARM_FLOOR_TOPOLOGY)
     assert {EXTERNAL_ARM_OF_PROBE[p] for p in EXTERNAL_PROBES} == set(EXTERNAL_ARMS)
     assert MODEL_FREE_ARMS == FLOOR_ARMS + EXTERNAL_ARMS
     assert set(MODEL_FREE_PROBES) == set(FLOOR_PROBES) | set(EXTERNAL_PROBES)

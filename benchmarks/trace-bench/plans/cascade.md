@@ -178,3 +178,55 @@ corpus and seed, not a model — D-SB-15):
   +0.09) and adding adjacent pairs did not help.
 - CASCADE's own Network Alarms result (142 / 147 edges, no spurious edges, device topology as a
   hard constraint; its Appendix B.4) is the published precedent for the masked configuration.
+
+## Addendum 2026-11-03 (later) — the family generalised: one registry, one freeze per method (D-SB-29)
+
+Dated before any read of a second method. The `external` family of §1 now holds one entry per
+published method in `constants.EXTERNAL_METHODS` (CASCADE first, unchanged): its ledger stage, the
+suffix of its own freeze file, the runner module the harness drives under the method's interpreter,
+the statistic its score tables carry, the registered meaning of the `N` slot and its grid, its arms,
+how an edge outside the topology mask is handled on read-out, whether its output is hard, and what
+`method_sha256` hashes. The three members registered with this addendum are **THP** (gCastle
+`TTPM`, `plans/thp.md`), **LMT** (`plans/lmt.md`) and **CausalNET** (`plans/causalnet.md`); each has
+one arm, `<method>/topology`, declared topology-informed as `cascade/topology` is, and its own plan
+file with grids, fixed settings, sample, gate and hypotheses. Owner decisions (publication PRD
+Decision Log, 2026-11-03 (later)): a method of this addendum enters the CLeaR 2027 submission with **xs and s
+at five seeds each**; **m is reported where it lands by the Phase A gate (Monday 10 November)** and the
+paper says so where it does not; no `none` (unmasked) configuration is run for these methods
+(CASCADE's `cascade/none` at xs, §1, stands as the family's unmasked precedent; an unmasked xs fit of
+CASCADE itself had not finished after four CPU-hours on 2026-11-03).
+
+- **The read.** `seq2causebench.externalarm --method <m>` is the generic read (`cascadearm` is now
+  CASCADE's front end on it; CASCADE's command line, record keys, score files and freeze name are
+  unchanged). Events, sample, token space, end-time rule and mask are §2's. New in `events.npz`
+  for a method that `needs_nodes`: `node` (the dense op id of every event — **node = op**), `n_ops`
+  and `op_topology`, the undirected op-level adjacency the allowed pairs span (`A[op(a), op(b)] =
+  A[op(b), op(a)] = 1` for every allowed `(a, b)`); no new reader, the same `floorprior` pair set.
+- **Read-out.** The runner returns a float32 `(n_types, n_types)` score matrix in [0, 1] (row =
+  cause; diagonal ignored); every positive entry is an edge at its score, within-op pairs dropped
+  (D-SB-10). A method registered `mask_mode = refuse` (CASCADE, THP: the method received the mask
+  as a hard constraint) may return no edge outside it — the read refuses. A method registered
+  `mask_mode = count` (LMT, CausalNET: the topology enters as a *soft* prior) may; the edge is kept,
+  scored and counted (`n_edges_outside_mask` in every record) — the session-grain journey and retry
+  edges lie outside the topology, and whether a soft-prior method finds them is part of what is
+  measured. A `hard_output` method's τ sweep is degenerate as §3 says; a soft-output method's τ is
+  a real selection on `floor_taus`.
+- **Identity.** `method_sha256` = sha256 over the method's registered files under `--method-src`
+  (relative name + bytes), its pinned commit (`git rev-parse HEAD` of a clone; for a pip install
+  from a git URL the `commit_id` of `<dist>.dist-info/direct_url.json`), the registered extras
+  (patch names) and the runner's own bytes; `method_commit` is recorded beside it in every score
+  file, val table, freeze and ledger entry. The method's `pip freeze` (`method_env` in the runner's
+  sidecar) is carried into the read's `run_meta.json`, so the hygiene test greps it on landing.
+- **Freezes.** One freeze file per method and corpus: `…-s<k>-external.json` stays CASCADE's,
+  `…-s<k>-external-<method>.json` for the others; the freeze records `method`, `method_sha256`,
+  `method_commit`; cells of two methods in one freeze are refused (D-SB-29), as are val tables that
+  disagree on `method_sha256`.
+- **Landing.** `results/<rung>/latent/seed=<k>/<method>/topology/none/frozen/<grain>/`, the read's
+  records under `test-read/<method>-topology-<grain>/` and `<method>-val-sweep/`; ledger stage
+  `<method>`; staging as §4.
+- **Report pairs and hypotheses.** Each method's plan repeats §6's pairs for its arm
+  (`<method>/topology/none/frozen` against `floor/topology`, `floor/bigram`, `trace/core/shipped/frozen`,
+  `baseline/granger/shipped/frozen`) and §7's first three hypotheses with its own name
+  (`H-<method>-topology-request`, `H-<method>-topology-session`, `H-<method>-vs-core`).
+- **D-SB-29** — one freeze per external method, the per-method registry, `mask_mode`,
+  `method_commit`, `method_env` (RUN.md row).

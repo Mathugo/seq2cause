@@ -13,6 +13,7 @@ from __future__ import annotations
 from .constants import (
     ARMS,
     CUTS,
+    EXTERNAL_METHOD_OF_ARM,
     GRAINS,
     MODEL_FREE_ARM_OF_PROBE,
     MODEL_FREE_PROBES,
@@ -91,6 +92,13 @@ def is_external(name):
     return arm_spec(name)["class"] == "external"
 
 
+def external_method(name):
+    """The published method an external arm belongs to (`constants.EXTERNAL_METHODS`; D-SB-29)."""
+    if not is_external(name):
+        raise ValueError(f"{name!r} is not an external arm")
+    return EXTERNAL_METHOD_OF_ARM[name]
+
+
 def is_model_free(name):
     """A floor or an external arm: model hash `none`, its own token list, the `floor_taus` grid."""
     return is_floor(name) or is_external(name)
@@ -124,6 +132,7 @@ __all__ = [
     "allowed_cells",
     "is_floor",
     "is_external",
+    "external_method",
     "is_model_free",
     "floor_columns",
 ]

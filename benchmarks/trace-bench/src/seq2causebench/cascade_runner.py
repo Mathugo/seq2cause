@@ -7,15 +7,27 @@ own interpreter (the `cascade` conda environment), never imported by the harness
 `events.npz` holds `event` (dense type ids, int64) and `timestamp` (integer milliseconds, sorted);
 `pairs.npy` is an int64 array of shape (k, 2) of allowed (cause, effect) type ids, or the word
 `none` for no mask. Writes the 0/1 adjacency (row = cause) as int8 and a sidecar JSON with the
-wall clock and the edge count. Standard library, numpy and pandas only.
+wall clock, the edge count and `method_env` (the `pip freeze` lines of this interpreter, carried
+into the read's `run_meta.json`; addendum 2026-11-03 (later)). Standard library, numpy and pandas only.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import time
+
+
+def pip_freeze():
+    try:
+        out = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"], check=True, capture_output=True, text=True, timeout=120
+        ).stdout
+        return [ln for ln in out.splitlines() if ln.strip()] or ["<empty pip freeze>"]
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+        return [f"<pip freeze unavailable: {type(e).__name__}>"]
 
 
 def main(argv=None):
@@ -71,6 +83,7 @@ def main(argv=None):
                 "allow_instant": bool(args.instant),
                 "n_edges": int(graph.sum()),
                 "wall_seconds": wall,
+                "method_env": pip_freeze(),
             },
             f,
             indent=1,
