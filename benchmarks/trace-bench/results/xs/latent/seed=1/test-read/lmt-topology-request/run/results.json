@@ -1,0 +1,152 @@
+{
+ "N": 100000,
+ "arms": [
+  "lmt/topology"
+ ],
+ "c": 0,
+ "cells": {
+  "lmt/topology/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 438,
+   "n_pairs": 5172,
+   "per_lag_files": 0,
+   "tau": 0.01
+  }
+ },
+ "corpus_id": "xs/latent/seed=1",
+ "corrupted_cells": {},
+ "facts": {
+  "lmt/topology": {
+   "fits": {
+    "100000": {
+     "a_init": -2.0,
+     "device": "cpu",
+     "dtype": "float64",
+     "epoch_seconds_max": 0.19574784200000295,
+     "epoch_seconds_mean": 0.0751696815850005,
+     "epochs": 200,
+     "file": "scores-lmt-topology-none-request.npz",
+     "final_h": 0.00013746467367070636,
+     "final_log_prior": -477.8707975680036,
+     "final_loglike": -11353.04569811108,
+     "final_sparsity_sum": 48.81907425934343,
+     "finite": true,
+     "init_log_mu": -3.6686767156567335,
+     "loss_first": 377813.9991332468,
+     "loss_last": 59216.264077967644,
+     "mask_mode": "count",
+     "method_args": {
+      "a_init": -2.0,
+      "beta_dag": 0.1,
+      "chunk_events": 0,
+      "device": "cpu",
+      "dtype": "float64",
+      "epochs": 200,
+      "fit": "torch",
+      "init_std": 0.35,
+      "lambda_e": 0.1,
+      "lr": 0.05,
+      "param_dtype": "float64",
+      "q_default": 0.5,
+      "q_in": 0.5,
+      "q_out": 0.01,
+      "seed": 0
+     },
+     "method_version": "6f4143dc0668187f69505bc206e87ae2084d47d3",
+     "n_above_half": 0,
+     "n_above_half_outside_mask": 0,
+     "n_allowed_pairs": 488,
+     "n_edges_outside_mask": 4914,
+     "n_edges_returned": 5402,
+     "n_events": 6806,
+     "n_nonzero": 5402,
+     "n_pairs": 5172,
+     "n_types": 74,
+     "n_within_op_dropped": 230,
+     "param_dtype": "float64",
+     "prior_weight": 100.0,
+     "setting": 100000,
+     "span_seconds": 3649.685,
+     "time_unit": "seconds (integer milliseconds / 1000; D-LM-2)",
+     "torch_version": "2.15.0+cu132",
+     "wall_seconds": 15.844619588,
+     "wall_seconds_subprocess": 17.544963818000042
+    }
+   },
+   "n_allowed_pairs": 488,
+   "n_events": 6806,
+   "n_ops": 20,
+   "n_prior_pairs": 600,
+   "n_prior_pairs_outside_sample": 112,
+   "n_sequences": 1304,
+   "n_skipped_short": 29,
+   "n_tokens": 74,
+   "span_ms": 3649685
+  }
+ },
+ "files": {
+  "lmt/topology": [
+   "scores-lmt-topology-none-request.npz"
+  ]
+ },
+ "freeze": {
+  "committed_at": "2026-11-04T06:37:38-05:00",
+  "path": "freezes/2026-11-04-xs-latent-s1-external-lmt.json",
+  "sha": "61c817a6c48469a013a44c7a9d46cf3449aeb935"
+ },
+ "g": 0,
+ "grain": "request",
+ "hard_output": false,
+ "inputs": {
+  "lmt/topology": [
+   "views/end-request/sequences/split=test",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "count",
+ "max_len": 64,
+ "memory": null,
+ "method": "lmt",
+ "method_args": {
+  "a_init": "-2",
+  "beta_dag": "0.1",
+  "chunk_events": "0",
+  "device": "cpu",
+  "dtype": "float64",
+  "epochs": "200",
+  "init_std": "0.35",
+  "lambda_e": "0.1",
+  "lr": "0.05",
+  "param_dtype": "float64",
+  "q_in": "0.5",
+  "q_out": "0.01",
+  "seed": "0"
+ },
+ "method_commit": "6f4143dc0668187f69505bc206e87ae2084d47d3",
+ "method_python": "envs/lmt/bin/python",
+ "method_sha256": "5232ff6aeb20d6f2fb0d8b010fdec4c52e8cc53e3013203c0462d504aa14b572",
+ "method_src": "envs/lmt/LMT",
+ "model_sha256": "none",
+ "n_probed": 1304,
+ "n_sequences": 1304,
+ "n_skipped_short": 29,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "lmt-topology",
+ "probe_amp": null,
+ "rung": "xs",
+ "setting_name": "prior_weight_milli",
+ "settings": [
+  100000
+ ],
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "lmt",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}
