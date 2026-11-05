@@ -1,0 +1,177 @@
+{
+ "N": null,
+ "arms": [
+  "thp/topology"
+ ],
+ "c": 0,
+ "cells": {},
+ "corpus_id": "xs/latent/seed=2",
+ "corrupted_cells": {},
+ "facts": {
+  "thp/topology": {
+   "fits": {
+    "100": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.01,
+     "file": "scores-thp-topology-none-c0-N100-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 478,
+     "n_edges": 111,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 111,
+     "n_events": 6054,
+     "n_forbidden_pairs": 4634,
+     "n_nonzero": 111,
+     "n_ops": 20,
+     "n_pairs": 111,
+     "n_rows": 6054,
+     "n_sweeps_run": 112,
+     "n_topology_edges": 23,
+     "n_types": 72,
+     "n_within_op_dropped": 0,
+     "setting": 100,
+     "wall_seconds": 2.9423389940000106,
+     "wall_seconds_subprocess": 5.8462189649999345
+    },
+    "1000": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.001,
+     "file": "scores-thp-topology-none-c0-N1000-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 478,
+     "n_edges": 88,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 88,
+     "n_events": 6054,
+     "n_forbidden_pairs": 4634,
+     "n_nonzero": 88,
+     "n_ops": 20,
+     "n_pairs": 88,
+     "n_rows": 6054,
+     "n_sweeps_run": 91,
+     "n_topology_edges": 23,
+     "n_types": 72,
+     "n_within_op_dropped": 0,
+     "setting": 1000,
+     "wall_seconds": 3.0011019679999436,
+     "wall_seconds_subprocess": 5.968782805000046
+    },
+    "10000": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.0001,
+     "file": "scores-thp-topology-none-c0-N10000-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 478,
+     "n_edges": 47,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 47,
+     "n_events": 6054,
+     "n_forbidden_pairs": 4634,
+     "n_nonzero": 47,
+     "n_ops": 20,
+     "n_pairs": 47,
+     "n_rows": 6054,
+     "n_sweeps_run": 50,
+     "n_topology_edges": 23,
+     "n_types": 72,
+     "n_within_op_dropped": 0,
+     "setting": 10000,
+     "wall_seconds": 2.4577184209999814,
+     "wall_seconds_subprocess": 5.336869282999942
+    }
+   },
+   "n_allowed_pairs": 478,
+   "n_events": 6054,
+   "n_ops": 20,
+   "n_prior_pairs": 575,
+   "n_prior_pairs_outside_sample": 97,
+   "n_sequences": 1229,
+   "n_skipped_short": 0,
+   "n_tokens": 72,
+   "span_ms": 3613116
+  }
+ },
+ "files": {
+  "thp/topology": [
+   "scores-thp-topology-none-c0-N100-request.npz",
+   "scores-thp-topology-none-c0-N1000-request.npz",
+   "scores-thp-topology-none-c0-N10000-request.npz"
+  ]
+ },
+ "freeze": null,
+ "g": 0,
+ "grain": "request",
+ "hard_output": true,
+ "inputs": {
+  "thp/topology": [
+   "views/end-request/sequences/split=val",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "refuse",
+ "max_len": 64,
+ "memory": null,
+ "method": "thp",
+ "method_args": {
+  "epsilon": "1",
+  "max_hop": "1",
+  "max_iter": "5000",
+  "penalty": "BIC"
+ },
+ "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+ "method_python": "envs/thp/venv/bin/python",
+ "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+ "method_src": "envs/thp/venv/lib/python3.11/site-packages",
+ "model_sha256": "none",
+ "n_probed": 1229,
+ "n_sequences": 1229,
+ "n_skipped_short": 0,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "thp-topology",
+ "probe_amp": null,
+ "rung": "xs",
+ "setting_name": "decay_ms",
+ "settings": [
+  100,
+  1000,
+  10000
+ ],
+ "shipped_rule": null,
+ "split": "val",
+ "stage": "thp",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs",
+  "stage_matched": "sweep"
+ },
+ "status": "ok"
+}

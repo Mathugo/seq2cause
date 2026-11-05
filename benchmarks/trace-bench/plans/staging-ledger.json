@@ -23218,6 +23218,386 @@
    "n_cells": 3,
    "added": "2026-11-02",
    "note": "context family (plans/reference-arms.md, addendum 2026-10-31 §5): the `sweep-session-keep` pass (core-keep + cli-atomic-cmi; N = 8; c 1; 10k / 5k validation sample) on the landed seed-4 xl backbone, staged on the l context sweep 622c0f5df9ab; frozen in freezes/2026-11-03-xl-latent-s4-context.json (family context); scored on the CPU half on the xl grids of 2026-10-05"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "val",
+   "read": "thp-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "37de06c5a89ca04cdca7e62f315f5413dc58d965ca0e19793189cc6d1aaa7a5f",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s0-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "val",
+   "read": "thp-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "06be4b1cd76c4455de85b532708b7af5b83778d8b038104dbe12240497a1d307",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s0-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "test",
+   "read": "thp-test-request",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "6f9009f5c5e4d6e49aaf10d4cbe40894de449ffe3d118b576904bf78b8c1b9db",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s0-external-thp.json, setting N 100, cells thp/topology/none/frozen/request=0.99, scored by annotate into results/xs/latent/seed=0/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "test",
+   "read": "thp-test-session",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "435e3080107143fa764bed580fac12470846cda7e80d751a81b279da1e220c1c",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s0-external-thp.json, setting N 100, cells thp/topology/none/frozen/session=0.99, scored by annotate into results/xs/latent/seed=0/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "val",
+   "read": "thp-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "6feab8488d0801a37c93b8c752276ac7d46574d9cdcfc067851d123c5eb639f4",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s1-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "val",
+   "read": "thp-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "88dfb39e7d92af79d61c2799d6f96a3c3b0a0dd44d82327c88824a9b8e3de735",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s1-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "test",
+   "read": "thp-test-request",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "f93d0ba6e6cfc22e664ac45ba35d23203cc6a85d5578cd650c7cd46619cee2cb",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s1-external-thp.json, setting N 100, cells thp/topology/none/frozen/request=0.99, scored by annotate into results/xs/latent/seed=1/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "test",
+   "read": "thp-test-session",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "6d12816e964150dfd57fe000ab0b44f26f6353e36d382bd025eb4e3c07d2ff0e",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s1-external-thp.json, setting N 100, cells thp/topology/none/frozen/session=0.99, scored by annotate into results/xs/latent/seed=1/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "val",
+   "read": "thp-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "c3883b384660f934a68268021a8974f7234c31efabda61395f0ca3d20f6c0e1a",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s2-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "val",
+   "read": "thp-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "ba84daabd98ee9c3c6a35af31526f5783ac64b4276ec5af43307001243540f69",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s2-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "test",
+   "read": "thp-test-request",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "e0b913acaabb6f41e1beed09d65d8d41160729fb7cca486ec7d6ea36baffb2f9",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s2-external-thp.json, setting N 100, cells thp/topology/none/frozen/request=0.99, scored by annotate into results/xs/latent/seed=2/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "test",
+   "read": "thp-test-session",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "f885b1e9d2e6c9adfa754618d8fc4bd513a1a6da3385a5f4f317b3db69ff6bf0",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s2-external-thp.json, setting N 100, cells thp/topology/none/frozen/session=0.99, scored by annotate into results/xs/latent/seed=2/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "val",
+   "read": "thp-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "63bbc80e87624bdce5cb6d9a00e339f487d2c7b52ebca24a61a1b140996d4a0a",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s3-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "val",
+   "read": "thp-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "4efef5e9bbb1317b571bac49c8bd4cf53456b20e46a80a541ffe9938aa6ff458",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s3-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "test",
+   "read": "thp-test-request",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "0ec0060acba75278d1e188f613d6d62f71c342500e6cf0edd16073e8645fb1e4",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s3-external-thp.json, setting N 100, cells thp/topology/none/frozen/request=0.99, scored by annotate into results/xs/latent/seed=3/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "test",
+   "read": "thp-test-session",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "4af45883a2da4889b5b3ffc0072407c6b735d531ce63a4c91977c8ac4f2b4600",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s3-external-thp.json, setting N 100, cells thp/topology/none/frozen/session=0.99, scored by annotate into results/xs/latent/seed=3/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "val",
+   "read": "thp-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "5cf64f88ca29b8b4ffe8516e1d87c27584c8319b5ade635a50a67e304cf61d63",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s4-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "val",
+   "read": "thp-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-thp-s01234-val",
+   "results_sha256": "135a0c69a454096378144a055235a89d9b5af31f7e96918e58d2e44b5b8911a8",
+   "model_sha256": "none",
+   "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+   "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "validation read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-thp-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-04-xs-latent-s4-external-thp.json; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "test",
+   "read": "thp-test-request",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "a6358eaaa18b8bbb017994720599278baba65e48262422de780009598a43b08f",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/request"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s4-external-thp.json, setting N 100, cells thp/topology/none/frozen/request=0.99, scored by annotate into results/xs/latent/seed=4/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "thp",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "test",
+   "read": "thp-test-session",
+   "run": "seq2cause-bench-26-11-04-xs-thp-s01234-test",
+   "results_sha256": "f7a2944c4c4ead3d9ff13a222aff6b2e3b19e3da8d65a24e001dec72e9b51036",
+   "model_sha256": "none",
+   "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+   "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+   "cells": [
+    "thp/topology/none/frozen/session"
+   ],
+   "added": "2026-11-05",
+   "note": "test read of thp/topology on an EC2 replica (plans/thp.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-xs-thp-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-04-xs-latent-s4-external-thp.json, setting N 100, cells thp/topology/none/frozen/session=0.99, scored by annotate into results/xs/latent/seed=4/thp/; method-args max_hop=1 penalty=BIC max_iter=5000 epsilon=1; the next rung's thp reads name the arms' entries, not this one"
   }
  ]
 }
