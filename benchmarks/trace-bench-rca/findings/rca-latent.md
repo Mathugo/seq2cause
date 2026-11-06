@@ -556,3 +556,94 @@ ig-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 0.4, cmi-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 
   check of 2026-11-01 (GPU vs CPU, Jaccard 0.79–0.98) bounds the kind of drift.
 - **Cost.** Probe ≤ 1 min per layout and phase per corpus (eight probes per seed), rank and score seconds; the
   five seeds in ≈ 25 min of wall clock. Pull 5–8 s and export ≤ 1 s per corpus.
+
+## The context family's root-cause rows, landed 2026-11-06: s and m (case level, five seeds each; the family on xs / s / m complete)
+
+The s and m case-level rows of the five context arms, the landed arms' `hop0` / `source` re-read and `control/trace-earliest`
+(`plans/rca-arms.md`, addendum "2026-10-31, later"; D-TBR-16 … 19), run on one EC2 replica (`seq2cause-bench-26-11-06-rca-ctx-s-m.tfvars`,
+g5.xlarge; job script `scripts/jobs/rca-ctx-s-m-26-11-06.sh`; code `36eefab3`) with the probes on the A10G (`--device cuda`; the xs rows of
+2026-11-02 ran on the CPU). Same case rule as xs: the window traces of the end-ordered request view, the first 500 by start time per case
+(1,495–1,500 probed per s corpus, 3 cases; 2,500 per m corpus, 5 cases), the pre-fault stretch under the same cells; one probe per layout
+and phase, re-ranked under `hop1` / `hop0` / `source` (`runner_reused`); the probe layouts come from each seed's context freeze — on s seeds
+2 and 4 the two overwrite arms froze at different request contexts (c = 1 and c = 2) and were probed separately, elsewhere the information-gain
+and CMI cells of a layout share one forward. Every s row stages on the xs row of the same seed, arm and series (ledger), every m row on the s
+row made earlier in the same chain. A first replica (2026-11-05) ran s seeds 0 and 1 and was refused at s seed 2 on that layout split; its
+records are not landed, and the re-run reproduced its s0 / s1 rankings on all 100 rows. The landed `rca/trace` and `rca/trace-core` gain
+`hop0` / `source` rows from a re-probe of the landed selection at the cap (as at xs; the landed `hop1` rows stand). Scored locally (B = 2000,
+seed 0). `tables/rca-latent/` regenerated: 52 / 52 landed pooled files byte-identical, the four cross-rung files of the landed arms' `hop0` /
+`source` series now pooling xs + s + m instead of xs alone; `tables/rca-latent-context/` holds every arm on xs / s / m (141 rows) and
+supersedes the xs-only table of 2026-11-02 (kept).
+
+| arm (s, 15 cases) | hop1 | **hop0** | source | hop1 − pre | **hop0 − pre** | source − pre |
+|---|---|---|---|---|---|---|
+| `rca/trace-ig-overwrite` (c 1) | 0.31 [0.12, 0.51] | **0.24 [0.07, 0.44]** | 0.47 [0.28, 0.64] | 0.53 [0.33, 0.71] | **0.51 [0.31, 0.69]** | 0.76 [0.60, 0.89] |
+| `rca/trace-cmi-overwrite` (c 1; c 2 on seeds 2, 4) | 0.27 [0.11, 0.45] | **0.24 [0.08, 0.43]** | 0.48 [0.29, 0.65] | 0.47 [0.28, 0.65] | **0.55 [0.33, 0.73]** | 0.77 [0.61, 0.91] |
+| `rca/trace-ig-keep` (c 1) | 0.31 [0.12, 0.51] | **0.24 [0.07, 0.44]** | 0.47 [0.28, 0.64] | 0.53 [0.33, 0.71] | **0.51 [0.31, 0.69]** | 0.76 [0.60, 0.89] |
+| `rca/trace-cmi-keep` (c 1) | 0.25 [0.09, 0.44] | **0.24 [0.07, 0.44]** | 0.47 [0.28, 0.64] | 0.48 [0.29, 0.65] | **0.49 [0.27, 0.71]** | 0.77 [0.61, 0.91] |
+| `rca/trace-atomic-cmi-keep` (c 1) | 0.24 [0.08, 0.43] | **0.24 [0.07, 0.43]** | 0.49 [0.31, 0.67] | 0.37 [0.16, 0.59] | **0.53 [0.32, 0.73]** | 0.80 [0.61, 0.95] |
+| `rca/trace` (landed hop1; hop0 / source re-probed) | 0.33 [0.16, 0.52] | 0.23 [0.05, 0.43] | 0.53 [0.35, 0.71] | — | — | — |
+| `rca/trace-core` (landed hop1; hop0 / source re-probed) | 0.31 [0.12, 0.51] | 0.23 [0.07, 0.43] | 0.47 [0.28, 0.64] | — | — | — |
+| `control/trace-earliest` | 0.27 [0.11, 0.44] | | | | | |
+| `control/rule` · `rca/rcd` · random (3 cases × 5 services) | 0.68 · 0.90 · 0.25 | | | | | |
+
+| arm (m, 25 cases) | hop1 | **hop0** | source | hop1 − pre | **hop0 − pre** | source − pre |
+|---|---|---|---|---|---|---|
+| `rca/trace-ig-overwrite` (c 1) | 0.14 [0.05, 0.24] | **0.22 [0.08, 0.39]** | 0.28 [0.14, 0.43] | 0.15 [0.05, 0.27] | **0.20 [0.08, 0.35]** | 0.42 [0.26, 0.59] |
+| `rca/trace-cmi-overwrite` (c 1) | 0.14 [0.05, 0.26] | **0.23 [0.09, 0.40]** | 0.25 [0.11, 0.40] | 0.16 [0.06, 0.28] | **0.23 [0.10, 0.38]** | 0.41 [0.26, 0.56] |
+| `rca/trace-ig-keep` (c 1) | 0.14 [0.05, 0.24] | **0.22 [0.08, 0.39]** | 0.28 [0.14, 0.43] | 0.15 [0.05, 0.27] | **0.20 [0.08, 0.35]** | 0.42 [0.26, 0.59] |
+| `rca/trace-cmi-keep` (c 1) | 0.14 [0.05, 0.26] | **0.23 [0.09, 0.40]** | 0.25 [0.11, 0.40] | 0.16 [0.06, 0.28] | **0.23 [0.10, 0.38]** | 0.41 [0.26, 0.56] |
+| `rca/trace-atomic-cmi-keep` (c 1) | 0.10 [0.03, 0.19] | **0.23 [0.09, 0.40]** | 0.25 [0.11, 0.39] | 0.14 [0.04, 0.25] | **0.20 [0.07, 0.35]** | 0.41 [0.25, 0.57] |
+| `rca/trace` (landed hop1; hop0 / source re-probed) | 0.08 [0.02, 0.16] | 0.21 [0.07, 0.38] | 0.26 [0.12, 0.40] | — | — | — |
+| `rca/trace-core` (landed hop1; hop0 / source re-probed) | 0.14 [0.05, 0.26] | 0.23 [0.09, 0.40] | 0.28 [0.14, 0.43] | — | — | — |
+| `control/trace-earliest` | 0.23 [0.09, 0.40] | | | | | |
+| `control/rule` · `rca/rcd` · random (5 cases × 5 services) | 0.27 · 0.52 · 0.06 | | | | | |
+
+Avg@5 with the bootstrap 95 % interval (B = 2000, seed 0). Per seed, `hop0` at s: 0.33 / 0.13 / 0.33 / 0.20 / 0.20 on each of the four core
+arms (identical), atomic 0.33 / 0.20 / 0.33 / 0.20 / 0.13; `source` (ig-overwrite) 0.47 / 0.67 / 0.40 / 0.33 / 0.47; `hop0 − pre` 0.60 / 0.47 /
+0.40 / 0.53 / 0.53. At m: `hop0` 0.24 / 0.20 / 0.20 / 0.28 / 0.20 (information gain), 0.24 / 0.20 / 0.20 / 0.32 / 0.20 (CMI and atomic);
+`source` 0.32 / 0.24 / 0.28 / 0.36 / 0.20; `hop0 − pre` 0.40 / 0.20 / 0.12 / 0.20 / 0.08. AC@1 at s: 0.13 under `hop0` and `source`
+(atomic 0.20), 0.27 after the subtraction; at m 0.20 / 0.16 / 0.12.
+
+### Hypotheses (`plans/rca-arms.md`, addendum "2026-10-31, later"; mechanical in `report` over xs, s, m)
+
+| hypothesis | verdict | xs | s | m |
+|---|---|---|---|---|
+| **H-rca-hop0** — `hop0` ≥ `hop1` for every TRACE arm | **fail** | −0.02 … −0.08 (all seven) | −0.11 … 0.00 (six below, one equal) | **+0.09 … +0.13 (all seven above)** |
+| **H-rca-source** — `source` ≥ `hop1` for every TRACE arm | **pass** | +0.04 … +0.14 | +0.16 … +0.25 | +0.10 … +0.18 |
+| **H-rca-presub** — post − pre ≥ post under `hop0` for every new arm | **fail** | +0.24 … +0.34 | +0.25 … +0.31 | **−0.03 … 0.00** |
+| **H-rca-atomic-cmi** — the atomic CMI arm's `hop0` ≥ `rca/trace`'s | **pass** | +0.08 | +0.01 | +0.02 |
+| **H-rca-ctx-rule** — each new arm's `hop0` ≥ `control/rule` | **fail** | −0.08 … −0.14 | −0.44 | −0.04 … −0.05 |
+| **H-rca-ctx-rcd** — each new arm's `hop0` ≥ `rca/rcd` | **fail** | −0.26 … −0.32 | −0.66 | −0.29 |
+| H-ctx-keep-context-share (per-trace axis) | not computed | — | — | — |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **The readings decay with the rung faster than the controls.** `hop0` reads 0.50 / 0.24 / 0.22 and `source` 0.64 / 0.47 / 0.28 on
+  xs / s / m, against `rca/rcd` 0.82 / 0.90 / 0.52, `control/rule` 0.64 / 0.68 / 0.27 and random 0.60 / 0.25 / 0.06. Over random the
+  sample graphs add nothing at xs (`hop0` −0.10, `source` +0.04), +0.22 at s under `source` (−0.01 under `hop0`) and +0.16 / +0.22 at m;
+  the gap to `rca/rcd` is 0.3–0.7 on every rung and to the rule 0.04–0.44. At s the rule and RCD are at their best (0.68, 0.90) while
+  every TRACE reading is at 0.24–0.53; at m everything falls, the controls most.
+- **Hop 0 costs at xs and s and helps at m** (+0.09 … +0.13 over `hop1` on all seven arms; `rca/trace` 0.08 → 0.21). The fault-kind split
+  says why: at m the degrade cases carry the reading (`hop0` 0.52 against `hop1` 0.28 on them; crash 0.08, cache-flush and
+  pool-exhaust 0.00), consistent with the failed position sitting in the injected service itself at those faults. At s the pool-exhaust cases carry
+  every reading (`hop0` 0.52, `source` 0.84, `hop0 − pre` 0.96) while the degrade cases read 0.00 under `hop0` and `hop1` (0.16 under
+  `source`, 0.44 after the subtraction). The hypothesis as registered (every arm, every rung) fails; the direction reverses with the rung.
+- **The source rule is the best post-only reading on every rung** (H-rca-source passes 21 / 21): +0.23 … +0.25 over `hop0` at s
+  (0.47–0.49), +0.03 … +0.06 at m (0.25–0.28). It is the reading the author would sign.
+- **The pre-fault subtraction stops working at m.** It adds +0.25 … +0.31 under `hop0` at s (to 0.49–0.55; the pool-exhaust cases to
+  0.96, the degrade cases 0.00 → 0.44) and +0.29 … +0.33 under `source` (to 0.76–0.80, still under `rca/rcd` 0.90), but at m it costs
+  0.00–0.03 under `hop0` (the degrade cases 0.52 → 0.34; the pool-exhaust cases 0.00 → 0.24) while it still adds +0.14 … +0.17 under
+  `source` (to 0.41–0.42). Why it turns is not established here (the pre stretches shorten with five cases per corpus; the per-service pre
+  rates were not read). H-rca-presub fails as registered (m); the `source − pre` row remains the family's best row on every rung (0.88 / 0.76–0.80 /
+  0.41–0.42) and is the only row at or near `rca/rcd` anywhere (xs only).
+- **Score and context do not separate on any rung.** At s the four core arms read the same `hop0` on every seed (0.33 / 0.13 / 0.33 / 0.20 /
+  0.20) and the same `source` within 0.01; at m information gain against CMI is −0.01 (`hop0`) and +0.03 (`source`), keep = overwrite exactly
+  (every request cell froze at c = 1, so the layouts coincide; on s seeds 2 and 4 the CMI overwrite cell at c = 2 reads as the c = 1 cells do).
+  The atomic CMI arm reads as the core arms (`hop0` 0.24 / 0.23) and 0.01–0.02 above `rca/trace` (H-rca-atomic-cmi passes, by less than at xs).
+- **The earliest-error control** sits at the TRACE `hop0` level at s (0.27 against 0.24) and m (0.23 against 0.22), above random on both; at
+  xs it was below every reading. On the larger corpora "the first service that failed" is as good a case-level guess as hop 0 of the sample graph.
+- **The landed arms' re-probe on cuda** reproduces the landed selection (1,495–1,500 / 2,500 probed); `rca/trace` probed 1,500 / 1,500 / 1,495 / 1,468 / 1,500 at s (its c = 3 cell skips
+  short traces, as landed) and 2,500 × 5 at m, `rca/trace-core` every selected trace; `rca/trace` reads `hop0` 0.23 / 0.21 and `source`
+  0.53 / 0.26, `rca/trace-core` 0.23 / 0.23 and 0.47 / 0.28; their landed `hop1` rows (0.33 / 0.08; 0.31 / 0.14) stand.
+- **Cost.** 8 min per s corpus and 8–9 min per m corpus on the g5.xlarge (pull 21–75 s, export 61–115 s, 8–10 probes of 20–35 s, re-ranks
+  seconds); the ten corpora in 1 h 37 min of chain; scoring locally 1.5 min per corpus.
