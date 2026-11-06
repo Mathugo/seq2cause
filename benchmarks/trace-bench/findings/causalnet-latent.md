@@ -2,8 +2,10 @@
 
 The hypotheses of `plans/causalnet.md` §7 are scored here per rung on the five-seed mean of the paired
 per-seed difference (same corpus and seed; `report`'s paired t-test, five pairs, low power — the
-effect size is the primary readout). Tables: `tables/<rung>-latent-prior-arms/` (`report` over
-`results/` with the fourteen pairs of `plans/{thp,lmt,causalnet}.md` §6). Source records:
+effect size is the primary readout). Tables: `tables/<rung>-latent-causalnet/` (`report` over
+`results/` with the six pairs of `plans/causalnet.md` §6; the THP and LMT pairs are in
+`tables/<rung>-latent-prior-arms/` — two folders because one report of all fourteen pairs exceeds the
+repository's 1 MB tracked-file limit). Source records:
 `results/<rung>/latent/seed={0..4}/causalnet/topology/none/frozen/<grain>/` (annotate's `score.json`,
 `score-ranking.json`, `annotate.json`), `test-read/causalnet-topology-<grain>/`, `causalnet-val-sweep/`,
 `causalnet-freeze/`, under `freezes/2026-11-05-<rung>-latent-s<k>-external-causalnet.json` (`freeze@3`,
