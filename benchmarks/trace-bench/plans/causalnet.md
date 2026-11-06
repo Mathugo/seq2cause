@@ -257,3 +257,28 @@ landed on the rung, `: cascade/topology/none/frozen`, `: thp/topology/none/froze
   exponential and the one-hot tensors add < 10 %). Per seed at 50 epochs: s ≈ 3 × (40 + 67) min
   validation + 2 test fits ≈ 7 h of A10G; m ≈ 7.5 h. CPU hosts: §9's CPU measurement in the
   method's RUN.md.
+
+## Addendum 2026-11-06 — `batch_size = 64` at m (D-CN-9)
+
+Dated before any m read of the method lands; xs and s stand as read at the registered `batch_size
+512` (§3). Owner decision (2026-11-06): **at m the fixed method-args of §3 are `epochs=50 device=auto
+seed=42 max_hop=1 readout=shipped batch_size=64`**; every other knob keeps §3's value. Motivation
+(RUN.md rows of 2026-11-05 and 2026-11-06): the shipped stage-2 sampler (`sigmoid_gumbel_sample` →
+`gumbel_softmax`) materialises the sampled graph as a `batch × |V| × |V| × 2` float32 tensor and holds
+about four and a half such copies at its peak, while the predictor reads one column of it per batch
+element. At m the validation samples realise 1 498–1 597 types (request) and 1 702–1 803 (session), so
+one copy is 9.45 GiB at 512 × 1 574² and the peak exceeds 52 GiB: the first m fit ran out of GPU
+memory on the 24 GB class (stage 1, first backward) and on the 48 GB class (stage 2, first batch),
+and no single-GPU EC2 class is larger. Memory scales as `batch × |V|²`; at 64 the projected peak is
+≈ 8.6 GiB at 1 803 types, 2.6× under the 24 GB class (`plans/caps.md`'s headroom rule), so **m runs
+on the `g5.2xlarge` class of §4**, cap 72 h.
+
+What changes and what does not. The batch size enters the data generator (events per batch) and
+the sampler only; the losses, the read-out, the τ grid, the `N` grid, the freeze rule and the
+sample are §3's. The optimiser takes 8× the steps per epoch (m request ≈ 730–830 stage-2 steps per
+epoch, session ≈ 1 240–1 440, against 91–103 and 155–179 at 512) under the same `epochs=50`, so the m
+fits see ≈ 36 000–72 000 stage pairs where s saw 4 650–8 000 — a disclosed departure from the
+xs/s regime the paper reports beside every m number (§5), not re-tuned. The m test reads use the
+same args (the freeze binds them). The wall clock is unmeasured at 64; §9's extrapolation does not
+cover it, and the first synced m fit's per-epoch wall clock sizes the m test caps. D-CN-9 in the
+method's RUN.md records the deviation.
