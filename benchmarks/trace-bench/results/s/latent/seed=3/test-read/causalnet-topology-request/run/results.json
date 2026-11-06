@@ -1,0 +1,217 @@
+{
+ "N": 60000,
+ "arms": [
+  "causalnet/topology"
+ ],
+ "c": 0,
+ "cells": {
+  "causalnet/topology/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 3627,
+   "n_pairs": 95910,
+   "per_lag_files": 0,
+   "tau": 0.15
+  }
+ },
+ "corpus_id": "s/latent/seed=3",
+ "corrupted_cells": {},
+ "facts": {
+  "causalnet/topology": {
+   "fits": {
+    "60000": {
+     "device": "cuda",
+     "epoch_wall_seconds": [
+      112.436196145,
+      112.019291985,
+      112.14907898500007,
+      112.11862161599993,
+      112.25333357500006,
+      112.10192739600006,
+      112.14559267999994,
+      112.08514469800002,
+      112.10378822099983,
+      112.06908747800003,
+      112.09702661200004,
+      112.08736749100012,
+      112.12075556199989,
+      111.91602762000002,
+      112.00919102500006,
+      112.08881627300002,
+      112.15248397599998,
+      112.15364410599977,
+      112.12863581700003,
+      112.10306728400019,
+      112.10113530399985,
+      112.11699026199994,
+      112.1601484480002,
+      112.09415244000002,
+      112.12126864399988,
+      112.15175855999996,
+      112.12634206600023,
+      112.10576743399997,
+      112.13059064199979,
+      112.11585721000029,
+      112.14111865199993,
+      112.10872162999976,
+      112.11726107999993,
+      112.09044682100057,
+      112.12946085699969,
+      112.11338384099963,
+      112.06054814300023,
+      112.09649208399969,
+      112.09662712000045,
+      112.4128962929999,
+      112.38414710300003,
+      112.40473636099978,
+      112.36536250400059,
+      112.10141516199928,
+      112.13203181000063,
+      112.13926560599975,
+      112.11919806599963,
+      112.07137606800006,
+      112.51695842100071,
+      112.04796022399933
+     ],
+     "epochs_run": 50,
+     "file": "scores-causalnet-topology-none-request.npz",
+     "final_loss_terms": {
+      "graph_discov/dag_loss": 67923.0859375,
+      "graph_discov/data_loss": -16537.66015625,
+      "graph_discov/pred_acc": 0.837890625,
+      "graph_discov/sparsity_loss": 0.18643143773078918,
+      "graph_discov/total_loss": -9745.33203125,
+      "latent_data_pred/data_pred_loss": -16409.783203125,
+      "latent_data_pred/likelihood": -1731.455322265625,
+      "latent_data_pred/pred_acc": 0.751953125,
+      "latent_data_pred/time_loss": 2.377150058746338,
+      "latent_data_pred/type_loss": 902.3924560546875
+     },
+     "graph_init": "mask",
+     "mask_mode": "count",
+     "method_args": {
+      "batch_size": "512",
+      "device": "auto",
+      "epochs": "50",
+      "graph_init": "mask",
+      "max_hop": "1",
+      "readout": "shipped",
+      "seed": "42",
+      "time_scale": "auto"
+     },
+     "method_version": {
+      "commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+      "patches": [
+       "0001-collapse-decay",
+       "0002-drivable-entry"
+      ]
+     },
+     "n_allowed_pairs": 3177,
+     "n_batches_per_epoch": 190,
+     "n_edges_outside_mask": 93855,
+     "n_edges_returned": 97032,
+     "n_events": 97689,
+     "n_nonzero": 97032,
+     "n_ops": 73,
+     "n_pairs": 95910,
+     "n_types": 312,
+     "n_within_op_dropped": 1122,
+     "readout": "shipped",
+     "setting": 60000,
+     "theta_shape": [
+      2,
+      312,
+      312
+     ],
+     "time_scale": 30000.0,
+     "torch": "2.5.1+cu121",
+     "wall_seconds": 5611.88973912,
+     "wall_seconds_subprocess": 5613.0432453270005
+    }
+   },
+   "n_allowed_pairs": 3177,
+   "n_events": 97689,
+   "n_ops": 73,
+   "n_prior_pairs": 3450,
+   "n_prior_pairs_outside_sample": 273,
+   "n_sequences": 20000,
+   "n_skipped_short": 407,
+   "n_tokens": 312,
+   "span_ms": 11806756
+  }
+ },
+ "files": {
+  "causalnet/topology": [
+   "scores-causalnet-topology-none-request.npz"
+  ]
+ },
+ "freeze": {
+  "committed_at": "2026-11-05T12:59:32-05:00",
+  "path": "freezes/2026-11-05-s-latent-s3-external-causalnet.json",
+  "sha": "8065493df5cd91a2ae22cc9e169dc96c7be6883a"
+ },
+ "g": 0,
+ "grain": "request",
+ "hard_output": false,
+ "inputs": {
+  "causalnet/topology": [
+   "views/end-request/sequences/split=test",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "count",
+ "max_len": 64,
+ "memory": null,
+ "method": "causalnet",
+ "method_args": {
+  "device": "auto",
+  "epochs": "50",
+  "max_hop": "1",
+  "readout": "shipped",
+  "seed": "42"
+ },
+ "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+ "method_python": "envs/causalnet/venv/bin/python",
+ "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+ "method_src": "envs/causalnet/CausalNET",
+ "model_sha256": "none",
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 407,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "causalnet-topology",
+ "probe_amp": null,
+ "rung": "s",
+ "setting_name": "window_ms",
+ "settings": [
+  60000
+ ],
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "causalnet",
+ "staging": {
+  "entry": {
+   "added": "2026-11-01",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "grain": "request",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "note": "context family Job T (test read) under freezes/2026-11-01-xs-latent-s3-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none); the s context discover of this seed, grain and probe names this sha256 through --prior-rung-record",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "results_sha256": "7ee4c8cc0d536f1663185bfcf8593903026dc913eff4593218d68c118e531e74",
+   "run": "xs-latent-s3-ctx-test-26-10-31",
+   "rung": "xs",
+   "seed": 3,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "7ee4c8cc0d536f1663185bfcf8593903026dc913eff4593218d68c118e531e74",
+  "rung": "s",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}

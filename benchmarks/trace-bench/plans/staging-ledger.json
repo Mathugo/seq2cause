@@ -24738,6 +24738,766 @@
    ],
    "added": "2026-11-05",
    "note": "test read of lmt/topology on an EC2 replica (plans/lmt.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-04-s-lmt-s01234-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-4 session discover entry 2b07a2b706de of xs-latent-s4-ctx-test-26-10-31), under freezes/2026-11-04-s-latent-s4-external-lmt.json, setting N 100000, cells lmt/topology/none/frozen/session=0.01, scored by annotate into results/s/latent/seed=4/lmt/; method-args epochs=200 lr=0.05 beta_dag=0.1 lambda_e=0.1 init_std=0.35 a_init=-2 seed=0 device=cpu q_in=0.5 q_out=0.01 dtype=float64 param_dtype=float64 chunk_events=0; the next rung's lmt reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "6ac73f92941c268118936c1a24e2f451a9721870b29ae5e6074f501a79e46014",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s0-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "661d9a8323578d352b1e88e54086f645d900527f8fe1e2c327323ff553c11960",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s0-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "0715d21d2cad4886c2bc597941f5a6cf5ca880f0e8b43e87a5da656101988adb",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s0-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/request=0.07, scored by annotate into results/xs/latent/seed=0/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "4803088e28ae477a3afc51536c8b8ac10f475897105a4d1d568f15b803e2b20f",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s0-external-causalnet.json, setting N 1000, cells causalnet/topology/none/frozen/session=0.07, scored by annotate into results/xs/latent/seed=0/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "49d917ed34465086e276745c4bab8de542d83b1e9f4b75b4a4d14b49131dbb37",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s1-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "471b58b0bf650e504ae051ca4363ca520175a7687f17882f8874e7903e30577d",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s1-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "8b18ba824138c4000a2e3812ff4519760f5bb2cbb20b9e1a3e41730d99a66791",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s1-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/request=0.07, scored by annotate into results/xs/latent/seed=1/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "5d4b0689faf6ac1af795c95af56827c097cf800ec5fd7124d160ea90f329328c",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s1-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/session=0.07, scored by annotate into results/xs/latent/seed=1/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "cd271e37dd3729fec8d7c6fe3200f8452299cca058b4f1e360672fd57041d20a",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s2-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "7e88fccab3921f5f18e6840e6691374cbd9cb43e678ce068fabc9a6996e5f715",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s2-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "61a3f3b83037cb41779ada91a8efe08dd0d5702bca539c13fef679a7e7d10278",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s2-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/request=0.07, scored by annotate into results/xs/latent/seed=2/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "14b59829287bbbf88e9536415435775a509418c1fd15f6c8c445a16c03ffd8f6",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s2-external-causalnet.json, setting N 1000, cells causalnet/topology/none/frozen/session=0.07, scored by annotate into results/xs/latent/seed=2/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "ac01a29c719dc9ae005e3d02d54dbed5e8c7434b66b73df1bdd811bc57d33d6f",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s3-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "1b26d4ecdb802a8910749241256e39fdbdd68104affee81092641126f481dd98",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s3-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "c0ffc9f3f5ac6e8a20789f9f979ac5537a4f5b81243fb3905fa1f178bcb7c60e",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s3-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/request=0.07, scored by annotate into results/xs/latent/seed=3/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "582227d0c75e639eff5724eb7d0531ecc2e3f12d12e6e4ce4f9c25a94514401b",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s3-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/session=0.07, scored by annotate into results/xs/latent/seed=3/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "428375900a27d69f941338a2e363cf9120b0d2a66ba11cecda98f5dbee9d8d86",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s4-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-xs-causalnet-s01234-val",
+   "results_sha256": "c2746cdedea5169417141df4bcf19e035b3126e148a8650b941096386ff6a489",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-xs-causalnet-s01234-val.tfvars; whole split; prior-rung record smallest-rung), frozen in freezes/2026-11-05-xs-latent-s4-external-causalnet.json; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "8a025088de29bf6536c29364a9771b2886c1ccdf11c01744f480c3f3da95532b",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s4-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/request=0.07, scored by annotate into results/xs/latent/seed=4/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-xs-causalnet-s01234-test",
+   "results_sha256": "5ebf8e1990100eecd318ddd7ae8a32345fc80e444eaf034444cade788c863aaf",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-xs-causalnet-s01234-test.tfvars; whole split; prior-rung record smallest-rung), under freezes/2026-11-05-xs-latent-s4-external-causalnet.json, setting N 1000, cells causalnet/topology/none/frozen/session=0.07, scored by annotate into results/xs/latent/seed=4/causalnet/; method-args epochs=200 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s0-val",
+   "results_sha256": "cf42879dba0e9374d3cdab7520892a981725ff01bd325854ee4dbc56a6c9bef8",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s0-val.tfvars; 10k head sample; prior-rung record = the arms' xs seed-0 request sweep entry 54872cc1ed67 of xs-latent-s0-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s0-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s0-val",
+   "results_sha256": "789e730d2e9077393e11629e39493e19309c39c9f92a45d113e0226b27df9435",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s0-val.tfvars; 5k head sample; prior-rung record = the arms' xs seed-0 session sweep entry 5692a18360a0 of xs-latent-s0-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s0-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s0-test",
+   "results_sha256": "bfb7ff589cc6cd774301956115699789842ccb961d0b624eafb99390306b09b5",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s0-test.tfvars; 20k head sample; prior-rung record = the arms' xs seed-0 request discover entry 402ddf68e6d4 of xs-latent-s0-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s0-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/request=0.15, scored by annotate into results/s/latent/seed=0/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s0-test",
+   "results_sha256": "bb14ef8a98857d5b5fb08739d1a18a1d8f3d143e33ae130b5769a6fb5afc26de",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s0-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-0 session discover entry afd5649c2f38 of xs-latent-s0-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s0-external-causalnet.json, setting N 10000, cells causalnet/topology/none/frozen/session=0.15, scored by annotate into results/s/latent/seed=0/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s1-val",
+   "results_sha256": "162c6ff5a7ec3c2df10b3846b33f98c2ec3daf364c07b61b8edc3e8ce2493973",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s1-val.tfvars; 10k head sample; prior-rung record = the arms' xs seed-1 request sweep entry cef2b36aeb96 of xs-latent-s1-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s1-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s1-val",
+   "results_sha256": "3a49fa544babfbc38da8bb66eebadb293db263ac517fa6463d3d8c7c328aea31",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s1-val.tfvars; 5k head sample; prior-rung record = the arms' xs seed-1 session sweep entry 3417f1352fe7 of xs-latent-s1-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s1-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s1-test",
+   "results_sha256": "b8901b1659b141e451abc3b5c387d495c11a71f31cc3e93f9a1769e9df310937",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s1-test.tfvars; 20k head sample; prior-rung record = the arms' xs seed-1 request discover entry 156f4c9ec440 of xs-latent-s1-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s1-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/request=0.15, scored by annotate into results/s/latent/seed=1/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s1-test",
+   "results_sha256": "c12a0199d1739aafd8fb6d976c02d7124cd85a1700e3213da87e48be3eeecb03",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s1-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-1 session discover entry c71e9c9c698d of xs-latent-s1-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s1-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/session=0.15, scored by annotate into results/s/latent/seed=1/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s2-val",
+   "results_sha256": "ae70de5b39fa70a9aa9ed9aa60b782bfe9f997e646af72eeb4e0574a11830b04",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s2-val.tfvars; 10k head sample; prior-rung record = the arms' xs seed-2 request sweep entry 94f183853548 of xs-latent-s2-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s2-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s2-val",
+   "results_sha256": "3d9e086b848d508274c0a8d6782b918918e02783be1deb98b5f77969a74953ff",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s2-val.tfvars; 5k head sample; prior-rung record = the arms' xs seed-2 session sweep entry 75dd76555dc0 of xs-latent-s2-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s2-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s2-test",
+   "results_sha256": "7ea1db177927732285dd6ac6bcf7de3e8dfd0540e716db48de08f8f968a98356",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s2-test.tfvars; 20k head sample; prior-rung record = the arms' xs seed-2 request discover entry 9a1a9886f3f8 of xs-latent-s2-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s2-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/request=0.15, scored by annotate into results/s/latent/seed=2/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s2-test",
+   "results_sha256": "51d8ffbbfa00f0022925c4a21c0fd0cbb683963ef6ba585fb8e17dc11cd42b6e",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s2-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-2 session discover entry 77d9e0c3371c of xs-latent-s2-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s2-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/session=0.15, scored by annotate into results/s/latent/seed=2/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s3-val",
+   "results_sha256": "ae8d92fa0b038a7e88047be3de49c6be80a57e1eee0b4636c2993d93be6789d0",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s3-val.tfvars; 10k head sample; prior-rung record = the arms' xs seed-3 request sweep entry b5546fface6b of xs-latent-s3-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s3-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s3-val",
+   "results_sha256": "574319d1e9be822595a626166e4f6bf750ad17643c9941e24c9aa43d57404f66",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s3-val.tfvars; 5k head sample; prior-rung record = the arms' xs seed-3 session sweep entry e18f18ec62a2 of xs-latent-s3-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s3-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s3-test",
+   "results_sha256": "8669fe314873f796177d497b10d74f13a9bccd3e75ac0c30e24f86e8897ea18e",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s3-test.tfvars; 20k head sample; prior-rung record = the arms' xs seed-3 request discover entry 7ee4c8cc0d53 of xs-latent-s3-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s3-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/request=0.15, scored by annotate into results/s/latent/seed=3/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s3-test",
+   "results_sha256": "f8402ee9af5e0cb3ba2c3fc22f246cd5f19bf4876b8e8db72fb4e2e6a176d1c5",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s3-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-3 session discover entry 7ec9c96b7d54 of xs-latent-s3-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s3-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/session=0.15, scored by annotate into results/s/latent/seed=3/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "val",
+   "read": "causalnet-val-request",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s4-val",
+   "results_sha256": "539d54d08a7612c60ff0d98caab31cb1094cb8301b6f31c2559270937a505654",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s4-val.tfvars; 10k head sample; prior-rung record = the arms' xs seed-4 request sweep entry 5e67440522a0 of xs-latent-s4-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s4-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "val",
+   "read": "causalnet-val-session",
+   "run": "seq2cause-bench-26-11-03-s-causalnet-s4-val",
+   "results_sha256": "d914767d611f08e813cb62a7b3c3378968c28f7b3a2739e702c64586490bfce4",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "validation read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-03-s-causalnet-s4-val.tfvars; 5k head sample; prior-rung record = the arms' xs seed-4 session sweep entry 6e2f318965a5 of xs-latent-s4-ctx-val-26-10-31), frozen in freezes/2026-11-05-s-latent-s4-external-causalnet.json; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "test",
+   "read": "causalnet-test-request",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s4-test",
+   "results_sha256": "9336f1ba8fc1f8ebe1683c56ce61b7c6ba6cac6352d7fc724465831cc00b142f",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/request"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s4-test.tfvars; 20k head sample; prior-rung record = the arms' xs seed-4 request discover entry 9a876e616dc7 of xs-latent-s4-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s4-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/request=0.15, scored by annotate into results/s/latent/seed=4/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
+  },
+  {
+   "stage": "causalnet",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "session",
+   "split": "test",
+   "read": "causalnet-test-session",
+   "run": "seq2cause-bench-26-11-05-s-causalnet-s4-test",
+   "results_sha256": "597450e79a2ab8a7b27c8c1d78510abb1463133c4f1285afb26237d3bdeb3a23",
+   "model_sha256": "none",
+   "method_sha256": "68018a597f0fc4532bad906a4e352ea2822fc9137f26e31d7ca715b7d49d1094",
+   "method_commit": "aaccce6dbd25eb4baa3711c250405aa1d8d6e7b1",
+   "cells": [
+    "causalnet/topology/none/frozen/session"
+   ],
+   "added": "2026-11-06",
+   "note": "test read of causalnet/topology on an EC2 replica (plans/causalnet.md section 4; plans/cascade.md addendum 2026-11-03 (later), D-SB-29; replica seq2cause-bench-26-11-05-s-causalnet-s4-test.tfvars; 10k head sample; prior-rung record = the arms' xs seed-4 session discover entry 2b07a2b706de of xs-latent-s4-ctx-test-26-10-31), under freezes/2026-11-05-s-latent-s4-external-causalnet.json, setting N 60000, cells causalnet/topology/none/frozen/session=0.15, scored by annotate into results/s/latent/seed=4/causalnet/; method-args epochs=50 device=auto seed=42 max_hop=1 readout=shipped; the next rung's causalnet reads name the arms' entries, not this one"
   }
  ]
 }
