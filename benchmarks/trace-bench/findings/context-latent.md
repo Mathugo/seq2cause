@@ -558,6 +558,7 @@ registered half-decade). The root-cause axes of the family are in `benchmarks/tr
 ### Not landed here
 
 The xs case-level root-cause rows of the family are landed (`benchmarks/trace-bench-rca/findings/rca-latent.md`,
-section of 2026-11-02: H-rca-hop0 fails, H-rca-source and H-rca-presub pass, the family's hop0 rows
-under `control/rule`); the s / m case-level rows and the per-trace axis (the GPU replica) follow. The
-type-level and per-sequence axes are complete on xs … xl.
+sections of 2026-11-02 and 2026-11-06, xs / s / m: H-rca-source passes on every rung, H-rca-hop0 fails
+(hop 0 costs at xs and s, leads at m), H-rca-presub fails (the pre-fault subtraction helps at xs and s, not at m),
+the family's hop0 rows under `control/rule` and `rca/rcd` everywhere); the per-trace axis (the GPU replica) follows.
+The type-level and per-sequence axes are complete on xs … xl, the case-level root-cause axis on xs … m.
