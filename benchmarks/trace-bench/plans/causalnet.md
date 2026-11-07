@@ -282,3 +282,54 @@ xs/s regime the paper reports beside every m number (§5), not re-tuned. The m t
 same args (the freeze binds them). The wall clock is unmeasured at 64; §9's extrapolation does not
 cover it, and the first synced m fit's per-epoch wall clock sizes the m test caps. D-CN-9 in the
 method's RUN.md records the deviation.
+
+## Addendum 2026-11-07 — the improved configuration: `init_off` (D-CN-10) and `readout=gated` (D-CN-11); one verification run first
+
+Dated before any m read of the method lands (nothing is frozen at m). Owner decision (2026-11-07):
+register two improvements to the arm's stability and its target F1, verify them on ONE replica and
+ONE seed (m, seed 0, the validation job) before any further seed, and decide the arm's final
+configuration from that run. Every new knob defaults to the behaviour xs and s were read with, so
+the landed records stay reproducible from their recorded `method_args`; the patch and runner edits
+change `method_sha256` for every later read (the xs/s records keep the old hash — expected, said so
+in their rows).
+
+- **D-CN-10 — `init_off`, the off-mask logit at the mask init (D-CN-4), as a method-arg; default
+  `−1` = the landed value; `−4` in the improved configuration.** Mechanism: the acyclicity penalty
+  `h = tr(exp(A∘A)) − d` (float32) at init has largest eigenvalue ≈ σ(init_off)² · |V| plus a small
+  on-mask part; the b64 runs of 2026-11-06 died on it (RUN.md row). Pre-flight on the ten m
+  validation masks (every seed, both grains; the masks the runner writes, in float64): at `−1`
+  λ_max = 109.8–132.1 (float32 overflows past 88.7), at `−2` 23.1–28.0, **at `−4` 1.62–2.11**
+  — no overflow and a penalty that no longer dwarfs the data loss at the start. The knob is
+  `graph_init_off` in the clone's config (patch `0003-init-off`, applied by `causalnet-env.sh`
+  after 0002), `init_off` in the runner (`DEFAULTS`, recorded in `method_args` and in every fit's
+  facts). A disclosed tuning step of the same kind as LMT's `a_init` (`plans/lmt.md` addendum
+  2026-11-03, D-LM-5): the start is sparser than the paper's init; the paper reports it beside
+  every number read under it.
+- **D-CN-11 — `readout=gated` in the improved configuration (the knob of §2, there "not used under
+  this plan"; this addendum lifts that for the improved configuration only).** `p_ij · max_k Ã_k[i, j]
+  σ(θ̃_k[i, j])`, the paper's Eq. 16 over the trained slots: pairs whose ops are not adjacent in the
+  undirected topology score exactly 0, the `≥ 0.5 · p` floor of §2 disappears and the in-mask
+  scores become a graded product rather than a staircase. Motivation (s, landed): the arm's test F1
+  0.765 / 0.538 against the floor's 0.839 / 0.740 is lost in precision (0.65 vs 0.72 at request); at
+  s seed 2 request 89 701 of the 92 720 scored pairs lie outside the topology's 3 019; the 20-τ sweep
+  yields 7 distinct F1 values and the frozen τ 0.15 sits on a step that three seeds' session test
+  fits land on the other side of (std 0.16). Under `gated` `n_edges_outside_mask` is 0 by
+  construction and H-causalnet-outside-mask (§7) is moot for that configuration; `mask_mode` stays
+  `count` (no code change); recall becomes bounded by the undirected adjacency span, as the
+  hard-mask arms'. **Open for the owner after the verification run:** whether the improved
+  configuration is m-only (the paper then reports two configurations of one arm) or whether xs and s
+  are re-read under the same args for one comparable method (recommended if adopted), and whether
+  `gated` replaces `shipped` in the §6 pairs or sits beside it.
+- **Not registered:** the penalty in float64 (a numerics change to the method, unnecessary once
+  λ_max is ≈ 2), `nan_to_num`, gradient clipping (the loss itself is infinite), or another
+  acyclicity characterisation (method redesigns, for the authors).
+- **The verification run.** m, seed 0, validation job, `g5.2xlarge`, cap 72 h (measured chain at
+  batch 64 ≈ 23 h → 3×), args **`epochs=50 device=auto seed=42 max_hop=1 readout=gated batch_size=64
+  init_off=-4`** (§3 + addendum 2026-11-06 + this one); run name `…-m-causalnet-v2-s0-val`.
+  Acceptance read on sync: (a) every epoch summary finite on all six fits; (b) per-epoch wall clock
+  and batches per epoch (the caps of the remaining seeds and of the test job); (c) argmax validation
+  directed F1 at the default floor per grain against the m seed-0 topology floor's validation F1;
+  (d) the number of distinct F1 values over the 20 τ (s had 7); (e) `n_edges_outside_mask` (0 under
+  `gated`), `n_nonzero`, `n_edges_returned`. **No freeze from the verification run** until the owner
+  declares the configuration final (a committed freeze binds the test read and the family's
+  one-freeze-per-method rule, D-SB-29).

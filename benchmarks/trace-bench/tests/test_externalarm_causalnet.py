@@ -83,7 +83,12 @@ def test_events_carry_the_nodes_and_the_op_topology(world):
         assert (
             side["method_args"]["epochs"] == "200" and side["method_args"]["readout"] == "shipped"
         )
-        assert side["method_version"]["patches"] == ["0001-collapse-decay", "0002-drivable-entry"]
+        assert side["method_version"]["patches"] == [
+            "0001-collapse-decay",
+            "0002-drivable-entry",
+            "0003-init-off",
+        ]
+        assert side["method_args"]["init_off"] == "-1"  # the landed default, filled (D-CN-10)
         assert side["n_allowed_pairs"] == len(allowed) and side["n_nonzero"] == len(allowed) + 1
 
 
@@ -149,3 +154,30 @@ def test_test_read_keeps_the_outside_edge_through_annotate(world):
     edges = {(e["src"], e["dst"]) for e in pred["directed"]}
     assert edges & prior, "the masked pairs reach the prediction"
     assert edges - prior, "the edge outside the mask survives into the prediction (mask_mode count)"
+
+
+def test_init_off_is_a_recorded_knob_with_the_landed_default():
+    """plans/causalnet.md addendum 2026-11-07 (D-CN-10): the off-mask init logit is a method-arg that
+    defaults to the value xs and s were read with (−1, D-CN-4), travels through the runner's parser
+    like every other knob, and is carried by patch 0003 (hashed into `method_sha256`)."""
+    from pathlib import Path
+
+    from seq2causebench import causalnet_runner as cr
+
+    assert cr.DEFAULTS["init_off"] == "-1" and cr.DEFAULTS["readout"] == "shipped"
+    assert cr.PATCHES == ("0001-collapse-decay", "0002-drivable-entry", "0003-init-off")
+    assert EXTERNAL_METHODS[METHOD]["hash_extras"] == cr.PATCHES
+    parsed = cr.parse_method_args(["init_off=-4", "readout=gated", "batch_size=64"])
+    assert parsed["init_off"] == "-4" and parsed["readout"] == "gated"
+    assert parsed["batch_size"] == "64"
+    assert parsed["epochs"] == cr.DEFAULTS["epochs"] and parsed["graph_init"] == "mask"
+    assert float(parsed["init_off"]) == -4.0
+    with pytest.raises(ValueError):
+        cr.parse_method_args(["init_logit=-4"])
+    here = Path(__file__).resolve().parents[1] / "scripts" / "envs" / "causalnet"
+    for name in cr.PATCHES:
+        assert (here / f"{name}.patch").is_file(), name
+    text = (here / "0003-init-off.patch").read_text(encoding="utf-8")
+    assert "graph_init_off" in text and "-1.0" in text
+    env = (here.parent / "causalnet-env.sh").read_text(encoding="utf-8")
+    assert env.count("0003-init-off.patch") == 2

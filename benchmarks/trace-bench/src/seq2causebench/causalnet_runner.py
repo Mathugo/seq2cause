@@ -2,7 +2,7 @@
 own interpreter (the `causalnet` conda environment: torch 2.x, omegaconf, pandas), never imported
 by the harness; it puts `<method-src>/model` at the head of `sys.path` and imports the pinned,
 patched clone from there (`algos/causalnet-zhu-2024/CausalNET` at `aaccce6` with the lab's patches
-`0001-collapse-decay` and `0002-drivable-entry`, recorded in that directory's RUN.md):
+`0001-collapse-decay`, `0002-drivable-entry` and `0003-init-off`, recorded in that directory's RUN.md):
 
     <causalnet python> -I causalnet_runner.py --method-src <clone> --events <events.npz> \\
         --allowed <pairs.npy | none> --setting <window_ms> --method-args k=v ... --out <scores.npy>
@@ -27,7 +27,8 @@ Method-args (`k=v`, every default recorded): `epochs` (200, the shipped `total_e
 (`shipped` = the saved `final_prob`; `gated` = the paper's Eq. 16 over the trained slots only),
 `time_scale` (`auto` = setting / 2: the shipped 120 s window reached the model as 120 / 60 = 2
 encoded units, and a window of ξ ms reaches it as the same 2 units), `graph_init` (`mask`; `zero`
-= the shipped init), `batch_size` (512).
+= the shipped init), `batch_size` (512), `init_off` (−1: the logit of every off-mask pair at the
+mask init, D-CN-4; the on-mask logit is 0; `plans/causalnet.md` addendum 2026-11-07, D-CN-10).
 
 Test-only stub path: when `<method-src>/model/STUB_RUNNER.py` exists the runner imports it instead
 of the clone and returns `fit(events, allowed, setting, method_args)`; the harness's own tests use
@@ -45,7 +46,7 @@ import sys
 import time
 from pathlib import Path
 
-PATCHES = ("0001-collapse-decay", "0002-drivable-entry")
+PATCHES = ("0001-collapse-decay", "0002-drivable-entry", "0003-init-off")
 STUB_FILE = "STUB_RUNNER.py"
 DEFAULTS = {
     "epochs": "200",
@@ -56,6 +57,7 @@ DEFAULTS = {
     "time_scale": "auto",
     "graph_init": "mask",
     "batch_size": "512",
+    "init_off": "-1",
 }
 
 
@@ -171,6 +173,7 @@ def fit_real(method_src, events, allowed, setting, margs, out):
     opt.model.dataset.theta_mode = "collapsed"
     opt.model.graph_init = margs["graph_init"] if allowed is not None else "zero"
     opt.model.readout = margs["readout"]
+    opt.model.graph_init_off = float(margs["init_off"])
     opt.model.batch_size = int(margs["batch_size"])
     opt.model.total_epoch = epochs
     opt.model.show_graph_every = 0
@@ -220,6 +223,7 @@ def fit_real(method_src, events, allowed, setting, margs, out):
         "theta_shape": list(model.theta.shape),
         "graph_init": str(opt.model.graph_init),
         "readout": str(opt.model.readout),
+        "init_off": float(opt.model.graph_init_off),
     }
     return scores, facts
 

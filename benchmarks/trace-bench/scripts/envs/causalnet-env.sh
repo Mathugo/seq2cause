@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the CausalNET method environment on a GPU box for the seq2cause-bench external arm
 # (plans/causalnet.md §4; algos/causalnet-zhu-2024/RUN.md): a venv with the cu12 torch pin, the
-# pinned clone of github.com/CGCL-codes/CausalNET at aaccce6 and the lab's two patches applied to
+# pinned clone of github.com/CGCL-codes/CausalNET at aaccce6 and the lab's three patches applied to
 # its working tree (uncommitted, as CASCADE's patch is handled: RUN.md D-CA-1 there, D-CN-1/2 here).
 #
 #   bash scripts/envs/causalnet-env.sh /opt/causalnet
@@ -38,7 +38,9 @@ git apply --check "$HERE/causalnet/0001-collapse-decay.patch"
 git apply "$HERE/causalnet/0001-collapse-decay.patch"
 git apply --check "$HERE/causalnet/0002-drivable-entry.patch"
 git apply "$HERE/causalnet/0002-drivable-entry.patch"
-echo "CausalNET at $(git rev-parse HEAD) with patches: 0001-collapse-decay 0002-drivable-entry"
+git apply --check "$HERE/causalnet/0003-init-off.patch"
+git apply "$HERE/causalnet/0003-init-off.patch"
+echo "CausalNET at $(git rev-parse HEAD) with patches: 0001-collapse-decay 0002-drivable-entry 0003-init-off"
 git status --short
 
 "$PREFIX/venv/bin/python" - <<'PY'
