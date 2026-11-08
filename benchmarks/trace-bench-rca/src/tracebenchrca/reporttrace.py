@@ -20,7 +20,9 @@ Hypotheses (mechanical): **H-trace-perseq-random** — on every rung the hit@1 i
 row at reading hop1 lies above the per-trace random expectation; **H-trace-perseq-topology** — on every rung
 the floor's hit@1 >= each TRACE row's at the same reading; **H-trace-perseq-broadcast** — on every rung each
 TRACE row's hit@1 (hop1) >= every broadcast row's; **H-trace-perseq-self** — the hop0 reading changes the
-sign of (TRACE − the best broadcast row) on no rung.
+sign of (TRACE − the best broadcast row) on no rung. Since 2026-11-08 (the l rung; `l_hypotheses`): **H-l-top3**,
+**H-l-over-free**, **H-l-hold**, **H-l-vs-rcd**, **H-l-ig-ge-cmi**, **H-l-no-blind-kind**, **H-l-floor-gap** — per trace at
+reading hop0 on the keep arms, "not run" unless l is named (H-l-hold also needs m).
 """
 
 from __future__ import annotations
@@ -36,6 +38,15 @@ from .constants import (
     ARM_CONTROL_TRACE_EARLIEST,
     ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TRACE_TOPOLOGY,
+    ARM_RCD,
+    L_BLIND_KIND_FACTOR,
+    L_FLOOR_GAP,
+    L_HOLD_GAP,
+    L_HOLD_RUNG,
+    L_HYPOTHESIS_ARMS,
+    L_OVER_FREE_MARGIN,
+    L_RUNG,
+    L_TOP3_HIT3,
     RESULTS_JSON,
     RUN_DIR,
     RUNGS,
@@ -58,6 +69,10 @@ TRACE_ARMS = TRACE_ARMS_ALL
 REPORT_ARMS = TRACE_ARMS + (ARM_CONTROL_TRACE_EARLIEST,)  # the control's cell carries its own rows only
 EARLIEST_ROW = f"{ARM_CONTROL_TRACE_EARLIEST}/{TRACE_READING_EARLIEST}"
 S1 = "s@1"
+S3 = "s@3"
+RANDOM_ROW = ARM_CONTROL_TRACE_RANDOM
+CALLEES_HOP0_ROW = f"{ARM_CONTROL_TRACE_CALLEES}/{HOP0}"
+RCD_BROADCAST_ROW = f"broadcast/{ARM_RCD}"
 METRIC_KEYS = ("s@1", "s@3", "p@1", "p@3", "exact", "mean_set_size")
 SHARED_PREFIXES = (ARM_FLOOR_TRACE_TOPOLOGY, ARM_CONTROL_TRACE_RANDOM, ARM_CONTROL_TRACE_CALLEES, "broadcast/")
 # the fields of a score row in the window's coordinates (a position p = i − c + 1), which follow the cell's c
@@ -222,6 +237,139 @@ def hypotheses(rows, rungs, arms):
         if per
         else {"verdict": "not run", "reason": f"needs {EARLIEST_ROW} and a hop0 row on a named rung"}
     )
+    out.update(l_hypotheses(by, rungs, arms))
+    return out
+
+
+def _not_run(reason):
+    return {"verdict": "not run", "reason": reason}
+
+
+def l_hypotheses(by, rungs, arms):
+    """The seven hypotheses of the addendum of 2026-11-08 (the l rung; `plans/rca-arms.md`): per trace, reading hop0, hit@1 /
+    hit@3, each on the arms of `L_HYPOTHESIS_ARMS` that are named. Every entry is "not run" with its reason unless l is a named
+    rung and the rows it reads exist; H-l-hold also needs the m rows (`L_HOLD_RUNG`), so the registered l call names m and l."""
+    out = {}
+    arms = [a for a in arms if a in L_HYPOTHESIS_ARMS]
+    if L_RUNG not in rungs or not arms:
+        reason = f"needs rung {L_RUNG!r} and an arm of {L_HYPOTHESIS_ARMS}"
+        for h in (
+            "H-l-top3",
+            "H-l-over-free",
+            "H-l-hold",
+            "H-l-vs-rcd",
+            "H-l-ig-ge-cmi",
+            "H-l-no-blind-kind",
+            "H-l-floor-gap",
+        ):
+            out[h] = _not_run(reason)
+        return out
+    g = L_RUNG
+    rows = {a: by.get((g, f"{a}/{HOP0}")) for a in arms}
+    missing = [a for a, r in rows.items() if r is None]
+    if missing:
+        reason = f"no hop0 row at {g} for {missing}"
+        for h in (
+            "H-l-top3",
+            "H-l-over-free",
+            "H-l-hold",
+            "H-l-vs-rcd",
+            "H-l-ig-ge-cmi",
+            "H-l-no-blind-kind",
+            "H-l-floor-gap",
+        ):
+            out[h] = _not_run(reason)
+        return out
+    # H-l-top3: hop0 hit@3 >= L_TOP3_HIT3
+    hit3 = {a: rows[a]["metrics"][S3] for a in arms}
+    out["H-l-top3"] = {
+        "hit3": hit3,
+        "threshold": L_TOP3_HIT3,
+        "verdict": "pass" if all(v >= L_TOP3_HIT3 for v in hit3.values()) else "fail",
+    }
+    # H-l-over-free: hop0 hit@1 >= max(earliest, callees hop0, random) + L_OVER_FREE_MARGIN
+    free = {
+        EARLIEST_ROW: by.get((g, EARLIEST_ROW)),
+        CALLEES_HOP0_ROW: by.get((g, CALLEES_HOP0_ROW)),
+        RANDOM_ROW: by.get((g, RANDOM_ROW)),
+    }
+    if any(r is None for r in free.values()):
+        out["H-l-over-free"] = _not_run(f"needs {[k for k, r in free.items() if r is None]} at {g}")
+    else:
+        best_name, best = max(((k, r["metrics"][S1]) for k, r in free.items()), key=lambda kv: kv[1])
+        gaps = {a: rows[a]["metrics"][S1] - best for a in arms}
+        out["H-l-over-free"] = {
+            "best_free_baseline": {"row": best_name, S1: best},
+            "free_baselines": {k: r["metrics"][S1] for k, r in free.items()},
+            "gap_arm_minus_best_free_hit1": gaps,
+            "margin": L_OVER_FREE_MARGIN,
+            "verdict": "pass" if all(v >= L_OVER_FREE_MARGIN for v in gaps.values()) else "fail",
+        }
+    # H-l-hold: |l - m| <= L_HOLD_GAP on hit@1 and hit@3 at hop0
+    m_rows = {a: by.get((L_HOLD_RUNG, f"{a}/{HOP0}")) for a in arms}
+    if any(r is None for r in m_rows.values()):
+        out["H-l-hold"] = _not_run(f"needs the hop0 rows at {L_HOLD_RUNG!r} (name the rungs {L_HOLD_RUNG} {L_RUNG})")
+    else:
+        diffs = {
+            a: {
+                S1: rows[a]["metrics"][S1] - m_rows[a]["metrics"][S1],
+                S3: rows[a]["metrics"][S3] - m_rows[a]["metrics"][S3],
+            }
+            for a in arms
+        }
+        out["H-l-hold"] = {
+            "l_minus_m": diffs,
+            "max_gap": L_HOLD_GAP,
+            "verdict": "pass" if all(abs(v) <= L_HOLD_GAP for d in diffs.values() for v in d.values()) else "fail",
+        }
+    # H-l-vs-rcd: hop0 hit@1 and hit@3 >= RCD's broadcast row
+    rcd = by.get((g, RCD_BROADCAST_ROW))
+    if rcd is None:
+        out["H-l-vs-rcd"] = _not_run(f"needs {RCD_BROADCAST_ROW} at {g}")
+    else:
+        gaps = {a: {k: rows[a]["metrics"][k] - rcd["metrics"][k] for k in (S1, S3)} for a in arms}
+        out["H-l-vs-rcd"] = {
+            "rcd": {k: rcd["metrics"][k] for k in (S1, S3)},
+            "gap_arm_minus_rcd": gaps,
+            "verdict": "pass" if all(v >= 0 for d in gaps.values() for v in d.values()) else "fail",
+        }
+    # H-l-ig-ge-cmi: the information-gain arm's hop0 hit@1 and hit@3 >= the CMI arm's
+    ig, cmi = L_HYPOTHESIS_ARMS
+    if ig in rows and cmi in rows:
+        gaps = {k: rows[ig]["metrics"][k] - rows[cmi]["metrics"][k] for k in (S1, S3)}
+        out["H-l-ig-ge-cmi"] = {
+            "gap_ig_minus_cmi": gaps,
+            "verdict": "pass" if all(v >= 0 for v in gaps.values()) else "fail",
+        }
+    else:
+        out["H-l-ig-ge-cmi"] = _not_run(f"needs both {ig} and {cmi}")
+    # H-l-no-blind-kind: every fault kind's hop0 hit@1 >= L_BLIND_KIND_FACTOR x the rung's per-trace random hit@1
+    per = {}
+    for a in arms:
+        floor_random = rows[a]["random"][S1] * L_BLIND_KIND_FACTOR
+        for kind, v in sorted(rows[a].get("by_fault_kind", {}).items()):
+            per[f"{a} {kind}"] = {S1: v[S1], "bound": floor_random, "ok": v[S1] >= floor_random}
+    out["H-l-no-blind-kind"] = (
+        {
+            "factor": L_BLIND_KIND_FACTOR,
+            "per_arm_and_kind": per,
+            "verdict": "pass" if all(x["ok"] for x in per.values()) else "fail",
+        }
+        if per
+        else _not_run("needs by_fault_kind on the hop0 rows")
+    )
+    # H-l-floor-gap: hop0 hit@1 >= the call-tree floor's hop0 hit@1 - L_FLOOR_GAP
+    floor = by.get((g, f"{ARM_FLOOR_TRACE_TOPOLOGY}/{HOP0}"))
+    if floor is None:
+        out["H-l-floor-gap"] = _not_run(f"needs {ARM_FLOOR_TRACE_TOPOLOGY}/{HOP0} at {g}")
+    else:
+        gaps = {a: rows[a]["metrics"][S1] - floor["metrics"][S1] for a in arms}
+        out["H-l-floor-gap"] = {
+            "floor_hit1": floor["metrics"][S1],
+            "gap_arm_minus_floor_hit1": gaps,
+            "max_gap": L_FLOOR_GAP,
+            "verdict": "pass" if all(v >= -L_FLOOR_GAP for v in gaps.values()) else "fail",
+        }
     return out
 
 

@@ -31,7 +31,16 @@ HARNESS = "benchmarks/trace-bench (seq2cause-trace-bench) at trace-bench-harness
 DATASET_REPO = "chadyuk/trace-bench"  # dataset host id (public)
 BENCHMARK_TAG = "v0.3.0"  # the release tag whose corpora the paper scores
 BENCHMARK_TOOL_VERSION = "0.3.0"  # manifest.tool_version every scored corpus must carry
-RUNGS = ("xs", "s", "m")  # the registered rungs of the root-cause arms (plans/rca-arms.md §1)
+RUNGS = (
+    "xs",
+    "s",
+    "m",
+    "l",
+)  # the registered rungs of the root-cause arms (plans/rca-arms.md §1; l by the addendum of 2026-11-08)
+SCALE_RUNGS = (
+    "xs",
+    "m",
+)  # H-rca-scale compares these two (§6); fixed when l joined RUNGS so the landed verdict keeps its meaning
 SEEDS = (0, 1, 2, 3, 4)
 VARIANT = "latent"  # the only variant the root-cause arms run on
 
@@ -59,7 +68,14 @@ BIN_WIDTH_S = {
     "xs": 30,
     "s": 15,
     "m": 60,
-}  # the registered rule's values (plans/rca-arms.md §3); equal to the exporter's table
+    "l": 180,  # the relaxed rule of the addendum of 2026-11-08 (N = 5, three boundaries floored; D-TBR-21)
+}  # the registered rule's values (plans/rca-arms.md §3 + addendum 2026-11-08); equal to the exporter's table
+SHORTEST_FAULT_S = {
+    "xs": 300,
+    "s": 900,
+    "m": 900,
+    "l": 900,
+}  # the shortest shipped fault per rung (the >= 5 bins bound)
 MIN_PRE_BINS = 4  # RobustScorer's minimum pre-fault length
 MIN_POST_BINS = 5  # the rule's fault-resolution bound
 
@@ -528,6 +544,25 @@ TRACE_BROADCAST_ARMS = (
     ARM_TRACERCA,
     ARM_RCD,
 )
+# the l rung broadcasts three case rankings only (addendum 2026-11-08; D-TBR-23): the PC-based arms, BOCPD, TraceRCA and
+# CausalRCA are not run at 152 services
+TRACE_BROADCAST_ARMS_L = (ARM_CONTROL_RULE, ARM_BARO, ARM_RCD)
+TRACE_BROADCAST_ARMS_BY_RUNG = {
+    "xs": TRACE_BROADCAST_ARMS,
+    "s": TRACE_BROADCAST_ARMS,
+    "m": TRACE_BROADCAST_ARMS,
+    "l": TRACE_BROADCAST_ARMS_L,
+}
+# the l hypotheses of the addendum of 2026-11-08 (reporttrace.l_hypotheses): the arms they name, the rung they compare with
+# (H-l-hold) and their registered thresholds
+L_RUNG = "l"
+L_HOLD_RUNG = "m"
+L_HYPOTHESIS_ARMS = (ARM_TRACE_IG_KEEP, ARM_TRACE_CMI_KEEP)
+L_TOP3_HIT3 = 0.80  # H-l-top3: hop0 hit@3 at least this
+L_OVER_FREE_MARGIN = 0.15  # H-l-over-free: hop0 hit@1 at least the best free baseline + this
+L_HOLD_GAP = 0.10  # H-l-hold: |l - m| at most this on hit@1 and hit@3
+L_BLIND_KIND_FACTOR = 2.0  # H-l-no-blind-kind: every fault kind's hop0 hit@1 at least this x the rung's random hit@1
+L_FLOOR_GAP = 0.15  # H-l-floor-gap: hop0 hit@1 at least the call-tree floor's hop0 hit@1 - this
 TRACE_CELLS = {  # the frozen cell each TRACE arm reads, by the reference harness's four-slot key (addendum 2026-10-30)
     ARM_TRACE: "trace/cli-atomic/shipped/frozen/request",
     ARM_TRACE_CORE: "trace/core/shipped/frozen/request",

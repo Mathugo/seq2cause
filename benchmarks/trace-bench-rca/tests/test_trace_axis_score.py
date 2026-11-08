@@ -36,11 +36,14 @@ from tracebenchrca.constants import (
     ARM_BARO,
     ARM_CAUSALRCA,
     ARM_CONTROL_TRACE_CALLEES,
+    ARM_CONTROL_TRACE_EARLIEST,
     ARM_CONTROL_TRACE_RANDOM,
     ARM_FLOOR_TRACE_TOPOLOGY,
     ARM_RCD,
     ARM_TRACE,
+    ARM_TRACE_CMI_KEEP,
     ARM_TRACE_CORE,
+    ARM_TRACE_IG_KEEP,
     CAUSALRCA_SERIES,
     RANKING_JSON,
     RANKING_TRACE_JSON,
@@ -52,11 +55,23 @@ from tracebenchrca.constants import (
     STAGE_SCORE_TRACE,
     TRACE_AXIS_DIR,
     TRACE_BROADCAST_ARMS,
+    TRACE_BROADCAST_ARMS_BY_RUNG,
     TRACE_CELLS,
+    TRACE_READING_EARLIEST,
     TRACE_READINGS,
     TRACE_SELECT_POST_NONOK,
 )
 from tracebenchrca.record import read_json, sha256_file, write_json
+
+L_HYPOTHESES = (
+    "H-l-top3",
+    "H-l-over-free",
+    "H-l-hold",
+    "H-l-vs-rcd",
+    "H-l-ig-ge-cmi",
+    "H-l-no-blind-kind",
+    "H-l-floor-gap",
+)
 
 # --- the benchmark test's hand corpus (tests/test_score_rca_trace.py §8, copied so this file is self-contained) ------
 
@@ -678,9 +693,13 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
         "H-trace-perseq-broadcast",
         "H-trace-perseq-self",
         "H-trace-earliest",
+        *L_HYPOTHESES,  # the l rung's seven (addendum 2026-11-08): "not run" unless l is named
     }
     assert hyp["H-trace-earliest"]["verdict"] == "not run"  # no control/trace-earliest cell in this tree
-    assert all(h["verdict"] in ("pass", "fail") for k, h in hyp.items() if k != "H-trace-earliest")
+    assert all(
+        h["verdict"] in ("pass", "fail") for k, h in hyp.items() if k != "H-trace-earliest" and k not in L_HYPOTHESES
+    )
+    assert all(hyp[k]["verdict"] == "not run" for k in L_HYPOTHESES)
     # random: the hit@1 of every trace-reading row (0.25, 0.0, 0.25) is below the random expectation 5/12; no interval
     # can lie above it -> fail; the per-entry booleans are low > random
     rnd = hyp["H-trace-perseq-random"]
@@ -823,13 +842,14 @@ def test_reporttrace_hypotheses_by_hand():
         _row(rule, 0.4),
     ]
     hyp = reporttrace.hypotheses(rows, (RUNG,), ARMS2)
-    assert [h["verdict"] for h in hyp.values()] == ["pass"] * 4 + ["not run"]
+    assert [h["verdict"] for h in hyp.values()] == ["pass"] * 4 + ["not run"] * 8
     assert list(hyp) == [
         "H-trace-perseq-random",
         "H-trace-perseq-topology",
         "H-trace-perseq-broadcast",
         "H-trace-perseq-self",
         "H-trace-earliest",  # not run without the control's row (addendum "2026-10-31, later")
+        *L_HYPOTHESES,  # not run without the l rung (addendum 2026-11-08)
     ]
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"] == {
         f"xs {ARM_TRACE}/hop1": True,
@@ -865,7 +885,7 @@ def test_reporttrace_hypotheses_by_hand():
         _row(rule, 0.4),
     ]
     hyp = reporttrace.hypotheses(rows, (RUNG,), ARMS2)
-    assert [h["verdict"] for h in hyp.values()] == ["fail"] * 4 + ["not run"]
+    assert [h["verdict"] for h in hyp.values()] == ["fail"] * 4 + ["not run"] * 8
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"][f"xs {ARM_TRACE}/hop1"] is False
     assert hyp["H-trace-perseq-random"]["per_rung_and_row"][f"xs {ARM_TRACE_CORE}/hop1"] is True
     assert hyp["H-trace-perseq-topology"]["per_rung_and_row"] == {
@@ -906,6 +926,120 @@ def test_reporttrace_hypotheses_by_hand():
     }
     # without the rows a hypothesis needs it cannot pass
     empty = reporttrace.hypotheses([], (RUNG,), ARMS2)
-    assert all(h["verdict"] == "fail" for k, h in empty.items() if k != "H-trace-earliest")
+    assert all(h["verdict"] == "fail" for k, h in empty.items() if k != "H-trace-earliest" and k not in L_HYPOTHESES)
     assert empty["H-trace-earliest"]["verdict"] == "not run"
     assert reporttrace._sign(0.0) == 0 and reporttrace._sign(-0.2) == -1 and reporttrace._sign(1e-9) == 1
+
+
+def _lrow(rung, row_id, s1, s3, random=0.2, kinds=None):
+    return {
+        "rung": rung,
+        "row": row_id,
+        "metrics": {"s@1": s1, "s@3": s3},
+        "bootstrap": {"intervals": {"s@1": {"low": s1 - 0.05, "high": s1 + 0.05}}},
+        "random": {"s@1": random, "s@3": min(1.0, 3 * random)},
+        **({"by_fault_kind": {k: {"s@1": v} for k, v in kinds.items()}} if kinds else {}),
+    }
+
+
+def test_l_hypotheses_by_hand():
+    """The seven hypotheses of the addendum of 2026-11-08 on built rows: every one passes on a hand set, then one failure each
+    by moving one number; "not run" without the l rung or without the m rows for H-l-hold."""
+    ig, cmi = ARM_TRACE_IG_KEEP, ARM_TRACE_CMI_KEEP
+    kinds = {"crash": 0.6, "degrade": 0.7, "pool_exhaust": 0.8, "cache_flush": 0.5}
+    good = [
+        _lrow("l", f"{ig}/hop0", 0.66, 0.90, kinds=kinds),
+        _lrow("l", f"{cmi}/hop0", 0.62, 0.85, kinds=kinds),
+        _lrow("l", f"{ARM_CONTROL_TRACE_EARLIEST}/{TRACE_READING_EARLIEST}", 0.40, 0.80),
+        _lrow("l", f"{ARM_CONTROL_TRACE_CALLEES}/hop0", 0.35, 0.70),
+        _lrow("l", ARM_CONTROL_TRACE_RANDOM, 0.20, 0.55),
+        _lrow("l", f"{ARM_FLOOR_TRACE_TOPOLOGY}/hop0", 0.70, 0.95),
+        _lrow("l", f"broadcast/{ARM_RCD}", 0.48, 0.75),
+        _lrow("l", "broadcast/control/rule", 0.40, 0.70),
+        _lrow("m", f"{ig}/hop0", 0.659, 0.904),
+        _lrow("m", f"{cmi}/hop0", 0.627, 0.856),
+    ]
+    by = {(r["rung"], r["row"]): r for r in good}
+    hyp = reporttrace.l_hypotheses(by, ("m", "l"), [ig, cmi])
+    assert list(hyp) == list(L_HYPOTHESES)
+    assert {k: h["verdict"] for k, h in hyp.items()} == dict.fromkeys(L_HYPOTHESES, "pass")
+    assert hyp["H-l-over-free"]["best_free_baseline"] == {
+        "row": f"{ARM_CONTROL_TRACE_EARLIEST}/{TRACE_READING_EARLIEST}",
+        "s@1": 0.40,
+    }
+    assert hyp["H-l-over-free"]["gap_arm_minus_best_free_hit1"][ig] == pytest.approx(0.26)
+    assert hyp["H-l-hold"]["l_minus_m"][ig]["s@1"] == pytest.approx(0.001)
+    assert hyp["H-l-vs-rcd"]["gap_arm_minus_rcd"][cmi]["s@3"] == pytest.approx(0.10)
+    assert hyp["H-l-ig-ge-cmi"]["gap_ig_minus_cmi"] == {"s@1": pytest.approx(0.04), "s@3": pytest.approx(0.05)}
+    assert hyp["H-l-no-blind-kind"]["per_arm_and_kind"][f"{ig} cache_flush"]["bound"] == pytest.approx(0.4)
+    assert hyp["H-l-floor-gap"]["gap_arm_minus_floor_hit1"][cmi] == pytest.approx(-0.08)
+
+    # one failure each
+    def with_(row_id, rung="l", **metrics):
+        rows = {k: dict(v) for k, v in by.items()}
+        rows[(rung, row_id)] = {**rows[(rung, row_id)], "metrics": {**rows[(rung, row_id)]["metrics"], **metrics}}
+        return rows
+
+    assert (
+        reporttrace.l_hypotheses(with_(f"{cmi}/hop0", **{"s@3": 0.79}), ("m", "l"), [ig, cmi])["H-l-top3"]["verdict"]
+        == "fail"
+    )
+    assert (
+        reporttrace.l_hypotheses(
+            with_(f"{ARM_CONTROL_TRACE_EARLIEST}/{TRACE_READING_EARLIEST}", **{"s@1": 0.52}), ("m", "l"), [ig, cmi]
+        )["H-l-over-free"]["verdict"]
+        == "fail"
+    )
+    assert (
+        reporttrace.l_hypotheses(with_(f"{ig}/hop0", rung="m", **{"s@1": 0.80}), ("m", "l"), [ig, cmi])["H-l-hold"][
+            "verdict"
+        ]
+        == "fail"
+    )
+    assert (
+        reporttrace.l_hypotheses(with_(f"broadcast/{ARM_RCD}", **{"s@1": 0.63}), ("m", "l"), [ig, cmi])["H-l-vs-rcd"][
+            "verdict"
+        ]
+        == "fail"
+    )
+    assert (
+        reporttrace.l_hypotheses(with_(f"{cmi}/hop0", **{"s@1": 0.67}), ("m", "l"), [ig, cmi])["H-l-ig-ge-cmi"][
+            "verdict"
+        ]
+        == "fail"
+    )
+    blind = {k: dict(v) for k, v in by.items()}
+    blind[("l", f"{ig}/hop0")] = {
+        **blind[("l", f"{ig}/hop0")],
+        "by_fault_kind": {**blind[("l", f"{ig}/hop0")]["by_fault_kind"], "crash": {"s@1": 0.39}},
+    }
+    assert reporttrace.l_hypotheses(blind, ("m", "l"), [ig, cmi])["H-l-no-blind-kind"]["verdict"] == "fail"
+    assert (
+        reporttrace.l_hypotheses(with_(f"{ARM_FLOOR_TRACE_TOPOLOGY}/hop0", **{"s@1": 0.78}), ("m", "l"), [ig, cmi])[
+            "H-l-floor-gap"
+        ]["verdict"]
+        == "fail"
+    )
+    # not run: without l; without m (H-l-hold only); without the arms
+    assert all(h["verdict"] == "not run" for h in reporttrace.l_hypotheses(by, ("m",), [ig, cmi]).values())
+    only_l = {k: v for k, v in by.items() if k[0] == "l"}
+    hl = reporttrace.l_hypotheses(only_l, ("l",), [ig, cmi])
+    assert hl["H-l-hold"]["verdict"] == "not run" and hl["H-l-top3"]["verdict"] == "pass"
+    assert all(h["verdict"] == "not run" for h in reporttrace.l_hypotheses(by, ("m", "l"), [ARM_TRACE]).values())
+
+
+def test_broadcast_sources_by_rung(tmp_path):
+    """The broadcast rows read the rung's registered case rankings: nine on xs / s / m, three on l (D-TBR-23); a missing one
+    is refused, never skipped."""
+    from tracebenchrca.scoretrace import broadcast_sources
+
+    results = tmp_path / "results"
+    for arm in TRACE_BROADCAST_ARMS_BY_RUNG["l"]:
+        d = results / "l" / "latent" / "seed=0" / arm_slug(arm)
+        d.mkdir(parents=True)
+        (d / RANKING_JSON).write_text("{}")
+    rows = broadcast_sources(results, "l", 0)
+    assert [r for r, _ in rows] == ["broadcast/control/rule", f"broadcast/{ARM_BARO}", f"broadcast/{ARM_RCD}"]
+    with pytest.raises(FileNotFoundError):
+        broadcast_sources(results, "xs", 0)  # xs reads nine; none is present
+    assert len(TRACE_BROADCAST_ARMS_BY_RUNG["xs"]) == 9

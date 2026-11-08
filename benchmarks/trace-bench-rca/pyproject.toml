@@ -18,8 +18,10 @@ dependencies = [
     # the benchmark: the publication branch's score-side commit. The reference harness beside this
     # directory pins a3eb104 (tag v0.3.0-score3); this directory pins fcb7ddb3, the `clear-2027`
     # merge of PR #14 that carries `tracebench.export_rca` with its extras `topology` and `spans`
-    # (RUN.md D-TBR-1, moved 2026-10-19 to ace384b4; D-TBR-11, moved 2026-10-26 to fcb7ddb3).
-    "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@df4a345f5d8953d906c1029cd4f97e61da3b111c",
+    # (RUN.md D-TBR-1, moved 2026-10-19 to ace384b4; D-TBR-11, moved 2026-10-26 to fcb7ddb3; D-TBR-14, moved to df4a345f,
+    # the merge carrying `score_rca_trace`; D-TBR-22, moved 2026-11-08 to f49e9a30, the exporter's l width under the
+    # relaxed rule with floored boundaries — trace-bench PR #16 on `clear-2027`).
+    "trace-bench @ git+https://github.com/alex-chadyuk/trace-bench@f49e9a30ebac3b3abfe62051ed860ea29f91210e",
 ]
 
 [project.optional-dependencies]

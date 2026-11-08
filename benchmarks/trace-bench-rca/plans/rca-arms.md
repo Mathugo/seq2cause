@@ -1190,3 +1190,72 @@ rows stand as landed and gain new rows beside them.
   path, the second code pin, the per-layout dedup; **D-TBR-17** the readings (`hop0` primary, `source`; the
   landed arms' `hop0` / `source` rows re-ranked from their work files); **D-TBR-18** the pre-fault phase and
   subtraction; **D-TBR-19** the earliest-error control scored through the per-trace scorer's mode `arm`.
+
+### 2026-11-08 — the l rung: `rca/rcd`, `rca/baro`, `control/rule` at case level as broadcast sources, the context family's keep arms `rca/trace-ig-keep` / `rca/trace-cmi-keep` and `control/trace-earliest` per failed request, under a relaxed bin rule (owner decisions 2026-11-08; reopens the outcome of 2026-10-26 for the harness; before any l ranking or score)
+
+The owner asked on 2026-11-08 for RCD and the information-gain and CMI arms at hop 0 against baselines on l with hit@1 / hit@3,
+with hypotheses aimed at the real-world value of root-cause discovery. The paper's outcome of 2026-10-26 ("no root-cause arm runs
+at l at this submission", appendix A5.3) stands as the paper's; this addendum registers a **harness run** and its disclosed departure.
+
+- **Why the rule is relaxed, and on what.** §3's rule (N = 10, p10 ≥ 1, ≥ 5 bins in the shortest fault, a width dividing every
+  fault boundary) has no solution at l (addendum "2026-10-26, later (2)": sparsest medians 0 / 0 / 0 / 1 / 2 / 3 / 5 / 9 at
+  5 … 300 s). The width below is chosen on those **traffic** numbers — no l ranking, score or hit rate of any arm has been read —
+  and is a disclosed departure (**D-TBR-21**): **l 180 s**, **N = 5** (the sparsest candidate service's pre-fault median 5, p10 2,
+  empty-bin share 0.02, minimum over the five seeds), ≥ 5 bins in the shortest fault (the 900 s crash: exactly 5), and the three l
+  fault boundaries that are not on the 180 s grid (49 020 s = 60 s past an edge, 62 220 s = 120 s, 76 020 s = 60 s) **floored to
+  the bin containing them** by the exporter, which records the offsets per case (`boundary_misalignment_s`; 0 on every xs / s / m
+  boundary, which stay refused if off-grid). Rejected: 60 s (median 2, p10 0, 19 % empty bins — the only aligned width with ≥ 5
+  crash bins), 300 s (3 crash bins; eight boundaries off-grid). Exporter: trace-bench PR #16 on `clear-2027`
+  (`export_rca.FLOORED_RUNGS`, `RULE["relaxed"]`); the benchmark pin moves to that commit (**D-TBR-22**). `constants.RUNGS` gains
+  `l`; H-rca-scale is pinned to xs against m (`SCALE_RUNGS`) so its landed verdict keeps its meaning; the landed tables are re-run
+  and asserted byte-equal at the l landing.
+- **Arms, axes, row set (bounded).** Per trace (`ranktrace --axis trace --select post-nonok --cap 0`, rule R, GPU; the l context
+  freezes `freezes/2026-11-02-l-latent-s<k>-context.json`, `fixed-kl` request cells — every seed has both keep cells at c = 1,
+  N = 8, g = 1, so the two arms share one forward: the information-gain arm probes with `--probe-arms` both, the CMI arm re-ranks
+  the shared work directory): `rca/trace-ig-keep`, `rca/trace-cmi-keep`, readings `hop1` / `hop0` / `source` written per trace,
+  **`hop0` the primary**; `control/trace-earliest` per trace (D-TBR-19). The rows of `scoretrace --rows all` at l: the arm's three
+  readings, `floor/trace-topology` (hop1 / hop0), `control/trace-random`, `control/trace-callees` (hop1 / hop0), and the broadcasts
+  of **`control/rule`, `rca/baro`, `rca/rcd` only** (`TRACE_BROADCAST_ARMS_BY_RUNG`; **D-TBR-23**: CIRCA, PC-PageRank, BOCPD,
+  TraceRCA and CausalRCA are not run at 152 services — the PC searches and CausalRCA's acyclicity term, ≈ 73× m, unmeasured there;
+  their l rows are absent, not failed). Case level: `rca/rcd` (10 runs per case, the pinned env; D-TBR-7), `rca/baro`,
+  `control/rule` run on the 180 s export and are scored (`score` / `scorercd`, B = 2000, seed 0) because their `ranking.json` is the
+  broadcast source and their case rows are recorded; **no case-level table and no case-level hypothesis at l** (owner,
+  2026-11-08). The overwrite and atomic arms, the pre-fault subtraction and the landed `rca/trace` / `rca/trace-core` do not run at
+  l (not asked). Rungs named by the report: `--rungs m l` (the m rows for H-l-hold; the m rows re-pool identically).
+- **Hypotheses (mechanical in `reporttrace`, `l_hypotheses`; per trace at l, reading `hop0`, pooled over five seeds, the arms A =
+  {`rca/trace-ig-keep`, `rca/trace-cmi-keep`}; hit@1 = `s@1`, hit@3 = `s@3`; the registered thresholds are `constants.L_*`).**
+  **H-l-top3** — each arm in A: hit@3 ≥ 0.80 (an operator who checks the three named services finds the fault in four failed
+  requests of five; m read 0.90 / 0.86); *fail:* any arm below. **H-l-over-free** — each arm in A: hit@1 ≥ the best of
+  `control/trace-earliest`, `control/trace-callees/hop0`, `control/trace-random` + 0.15 (the model beats the heuristics an operator
+  already has by a usable margin; m gaps +0.20 … +0.23 over the earliest control); *fail:* any arm within 0.15 of the best free
+  baseline. **H-l-hold** — each arm in A: |hit@1(l) − hit@1(m)| ≤ 0.10 and |hit@3(l) − hit@3(m)| ≤ 0.10 (three times the services,
+  no collapse; a rise is reported as such and does not pass by itself); *fail:* any gap > 0.10 in either direction.
+  **H-l-vs-rcd** — each arm in A: hit@1 ≥ `broadcast/rca/rcd`'s and hit@3 ≥ its hit@3 (per failed request the per-trace reading
+  beats the best case-level method's ranking applied to the request; m 0.63–0.66 against 0.48); *fail:* any arm below RCD on either
+  metric. **H-l-ig-ge-cmi** — `rca/trace-ig-keep`'s hit@1 ≥ `rca/trace-cmi-keep`'s and hit@3 likewise (the score separation seen
+  at s and m, predicted before the l read); *fail:* the CMI arm above on either metric. **H-l-no-blind-kind** — each arm in A and
+  each fault kind present at l: the kind's hit@1 (`by_fault_kind`) ≥ 2 × the rung's per-trace random hit@1 (no fault class the tool
+  is blind to; the plan of 2026-11-08 said "that kind's traces", the score rows carry the rung's random expectation only — the
+  rung's is the registered bound); *fail:* any (arm, kind) below. **H-l-floor-gap** — each arm in A: hit@1 ≥
+  `floor/trace-topology/hop0`'s − 0.15 (the price of learning the graph rather than instrumenting the call tree; m −0.04 … −0.08);
+  *fail:* any arm more than 0.15 under the floor. Every entry is "not run" with its reason unless l is named and its rows exist.
+  Descriptive, not hypotheses: BARO's and the rule's broadcast rows beside RCD; `hop1` and `source` beside `hop0`; position hit@1 /
+  hit@3; `by_split`; the floored boundaries' effect on RCD's post sample (5–14 bins); the landed axis's four hypotheses on the l rows.
+- **Premise checks (2026-11-08, l seed 0, local Mac, 4 workers; before this text was committed; no ranking read).** Pull tier rca
+  133 s (288 shards, 3.4 GB gz access logs). Export at 180 s through the modified exporter: 51 s, 1.16 GB peak (the sibling stage
+  43 s); 16 870 268 access lines, 13 087 541 binned, 999 outside the window; per case 72 / 86 / 91 / 73 / 63 pre-fault bins and
+  10 / 5 / 8 / 14 / 7 fault bins, offsets exactly {case-02 end 60 s, case-03 inject 120 s, case-04 inject 60 s}, 1 / 2 / 1 / 5 / 38
+  empty cells. `rankrcd` 50 runs: 83 s, 0 failed runs (608 columns); `rank rca/baro` 3 s; `rank control/rule` 0.3 s. Rule R on the
+  end-request view (2 825 547 traces): **38 771** failed POST traces inside the five windows — 13 992 / 9 618 / 6 840 / 5 537 /
+  2 784 per case (window traces 24 041 / 12 163 / 17 874 / 17 247 / 8 008) — and **C = 645** traces in which the fault took
+  (321 / 14 / 137 / 4 / 169: the crash and the cache flush took in few requests at l's lower error multiplier), 5.09 non-client
+  services per R trace. Sizing: the probe at the per-trace replica's 13–15 ms per trace ≈ 9–10 min per corpus; one box per seed
+  ≈ 45 min of chain after ≈ 25 min of environment builds (three envs); cap 12 h.
+- **Environment, cost, staging.** Five g5.xlarge boxes, one per seed (`infra/algos/seq2cause-bench-26-11-08-rca-l-s<k>.tfvars`;
+  job scripts `scripts/jobs/rca-l-s<k>-26-11-08.sh`): pull rca → export → rankrcd → rank baro, rule → ranktrace (IG probes, CMI
+  re-ranks) → earliest → rm raw; manifest last. Every l row stages on the m ledger entry of the same arm and stage (form ledger).
+  The probes are a disclosed GPU replica of the frozen cells (D-TBR-15's class; no CPU row). Scoring and the landing run locally;
+  `reporttrace --rungs m l` → `tables/rca-trace-l/`; the landed `tables/rca-trace/`, `tables/rca-trace-context/` and
+  `tables/rca-latent/` re-run byte-equal (asserted).
+- **Deviations (RUN.md).** **D-TBR-21** the l width under the relaxed rule and the floored boundaries; **D-TBR-22** the pin move;
+  **D-TBR-23** the l broadcast set.
