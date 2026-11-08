@@ -1,0 +1,213 @@
+{
+ "rows": {
+  "control/trace-earliest/earliest": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.44777209642074506,
+      "low": 0.08061552595314653
+     },
+     "p@3": {
+      "high": 1.0,
+      "low": 0.46830500689021587
+     },
+     "s@1": {
+      "high": 0.18445121951219512,
+      "low": 0.05512172714745062
+     },
+     "s@3": {
+      "high": 1.0,
+      "low": 0.43155718879191546
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 6.638422205989774,
+     "n_cases": 1,
+     "n_traces": 1369,
+     "p@1": 0.44777209642074506,
+     "p@3": 1.0,
+     "s@1": 0.1804236669101534,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": 0.0,
+     "mean_set_size": 6.992420762517225,
+     "n_cases": 1,
+     "n_traces": 4354,
+     "p@1": 0.08061552595314653,
+     "p@3": 0.46830500689021587,
+     "s@1": 0.05512172714745062,
+     "s@3": 0.43155718879191546
+    },
+    "pool_exhaust": {
+     "exact": 0.0,
+     "mean_set_size": 6.675813008130081,
+     "n_cases": 1,
+     "n_traces": 1968,
+     "p@1": 0.241869918699187,
+     "p@3": 0.8861788617886179,
+     "s@1": 0.18445121951219512,
+     "s@3": 0.8902439024390244
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.0,
+     "mean_set_size": 6.837727864583333,
+     "n_cases": 3,
+     "n_traces": 6144,
+     "p@1": 0.18798828125,
+     "p@3": 0.6715494791666666,
+     "s@1": 0.11295572916666667,
+     "s@3": 0.6536458333333334
+    },
+    "val+test": {
+     "exact": 0.0,
+     "mean_set_size": 6.890756302521009,
+     "n_cases": 3,
+     "n_traces": 1547,
+     "p@1": 0.18422753716871365,
+     "p@3": 0.6632191338073691,
+     "s@1": 0.10084033613445378,
+     "s@3": 0.6360698125404007
+    }
+   },
+   "c": 1,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "s_tb-migo_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.08061552595314653,
+      "p@3": 0.46830500689021587,
+      "s@1": 0.05512172714745062,
+      "s@3": 0.43155718879191546
+     },
+     "mean_set_size": 6.992420762517225,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 30576,
+     "n_skipped": 0,
+     "n_took_4xx_only": 10,
+     "n_traces": 4354,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.20182361974186971,
+      "p@3": 0.5301355701934117,
+      "s@1": 0.1493702031138871,
+      "s@3": 0.44811060934166125
+     },
+     "root_cause_component": "tb-migo"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "s_tb-matitso_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.44777209642074506,
+      "p@3": 1.0,
+      "s@1": 0.1804236669101534,
+      "s@3": 1.0
+     },
+     "mean_set_size": 6.638422205989774,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 14386,
+     "n_skipped": 0,
+     "n_took_4xx_only": 1,
+     "n_traces": 1369,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.19344340371764854,
+      "p@3": 0.5175139264765656,
+      "s@1": 0.15938143303008168,
+      "s@3": 0.4781442990902451
+     },
+     "root_cause_component": "tb-matitso"
+    },
+    {
+     "case_dir": "case-02",
+     "case_id": "s_tb-pazi_pool_exhaust_2",
+     "fault_kind": "pool_exhaust",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.241869918699187,
+      "p@3": 0.8861788617886179,
+      "s@1": 0.18445121951219512,
+      "s@3": 0.8902439024390244
+     },
+     "mean_set_size": 6.675813008130081,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 10553,
+     "n_skipped": 0,
+     "n_took_4xx_only": 4,
+     "n_traces": 1968,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.22101446683696505,
+      "p@3": 0.5736399453109461,
+      "s@1": 0.1597318092363824,
+      "s@3": 0.47919542770914725
+     },
+     "root_cause_component": "tb-pazi"
+    }
+   ],
+   "corpus_dir_name": "seed=1",
+   "counts": {
+    "mean_n_services": 6.848394227018593,
+    "n_candidates": 7691,
+    "n_rc_unreachable_context": 0,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 55515,
+    "n_took_4xx_only": 15,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.0,
+    "mean_set_size": 6.7688853255456936,
+    "n_cases": 3,
+    "n_traces": 7691,
+    "p@1": 0.2567525136910262,
+    "p@3": 0.784827956226278,
+    "s@1": 0.13999887118993307,
+    "s@3": 0.77393369707698
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.20542716343216108,
+    "p@3": 0.5404298139936411,
+    "s@1": 0.15616114846011706,
+    "s@3": 0.4684834453803512
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.0,
+    "mean_set_size": 6.848394227018593,
+    "n_cases": 3,
+    "n_traces": 7691,
+    "p@1": 0.18723182941099986,
+    "p@3": 0.6698738785593551,
+    "s@1": 0.11051878819399298,
+    "s@3": 0.650110518788194
+   }
+  }
+ }
+}

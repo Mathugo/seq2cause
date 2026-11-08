@@ -521,7 +521,7 @@ ig-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 0.4, cmi-overwrite 0.5 / 0.5 / 0.5 / 0.6 / 
 | **H-rca-source** — `source` ≥ `hop1` for every TRACE arm | **pass** (all seven) | +0.10 / +0.14 / +0.08 / +0.12 / +0.10; +0.04 (`rca/trace`), +0.08 (`rca/trace-core`) |
 | **H-rca-presub** — post − pre ≥ post under `hop0` for every new arm | **pass** (all five) | +0.34 / +0.32 / +0.26 / +0.28 / +0.24 |
 | **H-rca-atomic-cmi** — the atomic CMI arm's `hop0` ≥ `rca/trace`'s `hop0` | **pass** | 0.54 vs 0.46 (+0.08) |
-| H-trace-earliest (per trace, hit@1) | not computed | the per-trace axis of the family is the GPU replica; at case level `control/trace-earliest` 0.44 sits under every TRACE `hop0` row (0.46–0.56) |
+| H-trace-earliest (per trace, hit@1) | **pass** (landed 2026-11-08, 15 / 15; `findings/rca-trace.md`) | the per-trace axis of the family is the GPU replica; at case level `control/trace-earliest` 0.44 sits under every TRACE `hop0` row (0.46–0.56); per trace it reads 0.21 / 0.13 / 0.43 against the arms' `hop0` 0.49–0.74 |
 | the per-arm random / rule hypotheses on the `hop0` rows | **fail** (all five) | interval lows 0.34–0.38 vs random 0.60; arm − rule −0.08 … −0.14 |
 
 ### Reading notes (descriptive, not re-tuned)
@@ -614,7 +614,7 @@ arms (identical), atomic 0.33 / 0.20 / 0.33 / 0.20 / 0.13; `source` (ig-overwrit
 | **H-rca-atomic-cmi** — the atomic CMI arm's `hop0` ≥ `rca/trace`'s | **pass** | +0.08 | +0.01 | +0.02 |
 | **H-rca-ctx-rule** — each new arm's `hop0` ≥ `control/rule` | **fail** | −0.08 … −0.14 | −0.44 | −0.04 … −0.05 |
 | **H-rca-ctx-rcd** — each new arm's `hop0` ≥ `rca/rcd` | **fail** | −0.26 … −0.32 | −0.66 | −0.29 |
-| H-ctx-keep-context-share (per-trace axis) | not computed | — | — | — |
+| H-ctx-keep-context-share (per-trace axis) | **pass** (landed 2026-11-08; `findings/rca-trace.md`) | 0 unreachable (keep); keep − overwrite hop0 +0.12 / +0.14 | 0; 0.00 / +0.016 | 0; 0.00 / 0.00 |
 
 ### Reading notes (descriptive, not re-tuned)
 
@@ -647,3 +647,10 @@ arms (identical), atomic 0.33 / 0.20 / 0.33 / 0.20 / 0.13; `source` (ig-overwrit
   0.53 / 0.26, `rca/trace-core` 0.23 / 0.23 and 0.47 / 0.28; their landed `hop1` rows (0.33 / 0.08; 0.31 / 0.14) stand.
 - **Cost.** 8 min per s corpus and 8–9 min per m corpus on the g5.xlarge (pull 21–75 s, export 61–115 s, 8–10 probes of 20–35 s, re-ranks
   seconds); the ten corpora in 1 h 37 min of chain; scoring locally 1.5 min per corpus.
+
+**Closing (2026-11-08).** The family's per-trace root-cause axis is landed (`findings/rca-trace.md`, section 2026-11-08): per failed
+request the five arms read `hop0` 0.49–0.63 / 0.63–0.74 / 0.61–0.66 and `source` 0.53–0.62 / 0.57–0.64 / 0.62–0.63 on xs / s / m —
+where the case level above read `hop0` 0.50 / 0.24 / 0.22 — above the earliest-error control on every rung and arm
+(H-trace-earliest passes 15 / 15), with 0 context-unreachable root causes for every keep arm (H-ctx-keep-context-share passes), and
+with the information gain above the CMI per trace at s and m (the one axis where score separates). The cross-axis reading is in
+`benchmarks/trace-bench/findings/context-latent.md`, "Across the axes".

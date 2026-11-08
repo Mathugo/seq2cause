@@ -154,3 +154,129 @@ Mechanical, `summary.json`; all four fail.
   as p50 and p95), and those ten are the rows scored — a miscount in the registration text, no row missing.
 - The per-trace rankings and per-trace score rows are not tracked (up to ≈ 60 MB per m run); their sha256 ride the
   `rank-trace` and `score-trace` records and the files live on the run's prefix and in the local scratch.
+
+
+## The context family on the per-trace axis, landed 2026-11-08: `rca/trace-{ig,cmi}-{overwrite,keep}`, `rca/trace-atomic-cmi-keep`, `control/trace-earliest` per failed request (xs, s, m × five seeds)
+
+The five context arms (`plans/rca-arms.md`, addendum "2026-10-31, later"; D-TBR-16 … 17) and the earliest-error control
+(D-TBR-19) on this axis, run on one EC2 replica (`seq2cause-bench-26-11-06-rca-ctx-trace.tfvars`, g5.xlarge; job script
+`scripts/jobs/rca-ctx-trace-26-11-06.sh`, PR #88; code `3bdba66f`; the chain 7.5 h, synced on the first attempt) with the probes
+on the A10G (`--device cuda`). Same selection as the landed axis — rule R, no cap: 8,005 / 267,487 / 271,081 failed POST traces
+per rung, the landed run's selections exactly (R is arm-independent); scored traces C = 3,641 / 50,979 / 16,758, as landed. The
+probes read the frozen request cells of the committed context freezes (`freezes/2026-11-01-<rung>-latent-s<k>-context.json`, the
+`fixed-kl` path; seq2cause v0.3.1) in the probe layouts of each seed's freeze: the information-gain and CMI cells of one core layout
+share one forward (`--probe-arms`; the second arm re-ranks the first arm's work files, `runner_reused`, their sha256 recorded), the
+two keep cells likewise, the atomic CMI cell its own — three probes per corpus, four on s seeds 2 and 4 where the CMI overwrite cell
+froze at c = 2 (47 probes, 28 re-ranks; 638–987 s per s probe, 711–892 s per m probe, 13–15 ms per trace). Every reading is written per trace
+(`ranking-trace@2`: `hop1`, `hop0`, the `source` rule; `hop0` the primary). The earliest control ranks the same traces by the start of
+each service's earliest non-OK span (one reading, `earliest`). Staging: xs smallest rung, then the previous rung's `rank-trace`
+record of the same arm made earlier in the chain. **No CPU row of these cells exists, so the tolerance check of D-TBR-15 is not
+applicable: the read is disclosed as a GPU replica of the frozen cells** (the per-trace seed stream of 2026-10-30; CPU and CUDA draw
+differently under one seed). Scored locally (`scoretrace`, B = 2000, bootstrap seed 0; `--rows all` for the arms, `arm-only` for the
+control); `reporttrace` → `tables/rca-trace-context/` (31 rows × 4 tables). The landed `tables/rca-trace/` are untouched — a re-run
+of their call reproduces all 76 pooled files byte-equal (its `summary.json` would gain only the `H-trace-earliest: not run` key the
+code acquired after that landing) — and the shared rows (floor, controls, broadcasts) of the five new cells equal the landed cells'
+on every service metric (same C). Cell = hit@1 [95 % interval over cases] / hit@3 / exact set (mean set size):
+
+| row | `xs` | `s` | `m` | pooled `xs`–`m` |
+|---|---|---|---|---|
+| `rca/trace-ig-overwrite/hop1` | 0.394 [0.283, 0.511] / 0.568 / 0.059 (2.00) | 0.459 [0.408, 0.502] / 0.729 / 0.098 (3.38) | 0.258 [0.188, 0.327] / 0.494 / 0.093 (3.05) | 0.345 [0.294, 0.397] / 0.579 / 0.088 (2.94) |
+| `rca/trace-ig-overwrite/hop0` | 0.492 [0.340, 0.603] / 0.834 / 0.075 (2.97) | 0.741 [0.696, 0.789] / 0.927 / 0.063 (4.55) | 0.659 [0.594, 0.709] / 0.904 / 0.149 (3.99) | 0.650 [0.598, 0.696] / 0.897 / 0.109 (3.95) |
+| `rca/trace-ig-overwrite/source` | 0.532 [0.356, 0.670] / 0.738 / 0.323 (1.50) | 0.571 [0.502, 0.644] / 0.954 / 0.299 (2.05) | 0.619 [0.559, 0.674] / 0.850 / 0.483 (1.56) | 0.587 [0.539, 0.635] / 0.858 / 0.396 (1.70) |
+| `rca/trace-cmi-overwrite/hop1` | 0.387 [0.285, 0.494] / 0.555 / 0.056 (2.00) | 0.323 [0.267, 0.374] / 0.605 / 0.065 (3.38) | 0.174 [0.115, 0.235] / 0.430 / 0.054 (3.34) | 0.261 [0.214, 0.310] / 0.507 / 0.058 (3.08) |
+| `rca/trace-cmi-overwrite/hop0` | 0.490 [0.344, 0.597] / 0.828 / 0.075 (2.98) | 0.659 [0.583, 0.728] / 0.862 / 0.060 (4.55) | 0.627 [0.555, 0.687] / 0.856 / 0.110 (4.27) | 0.609 [0.556, 0.655] / 0.852 / 0.088 (4.10) |
+| `rca/trace-cmi-overwrite/source` | 0.538 [0.362, 0.676] / 0.744 / 0.314 (1.48) | 0.635 [0.574, 0.703] / 0.894 / 0.359 (1.80) | 0.631 [0.570, 0.684] / 0.806 / 0.520 (1.43) | 0.613 [0.563, 0.659] / 0.820 / 0.430 (1.55) |
+| `rca/trace-ig-keep/hop1` | 0.499 [0.410, 0.587] / 0.732 / 0.088 (2.20) | 0.459 [0.408, 0.502] / 0.729 / 0.098 (3.38) | 0.258 [0.188, 0.327] / 0.494 / 0.093 (3.05) | 0.366 [0.315, 0.418] / 0.612 / 0.094 (2.98) |
+| `rca/trace-ig-keep/hop0` | 0.615 [0.446, 0.723] / 0.939 / 0.089 (3.07) | 0.741 [0.696, 0.789] / 0.927 / 0.063 (4.55) | 0.659 [0.594, 0.709] / 0.904 / 0.149 (3.99) | 0.675 [0.628, 0.717] / 0.918 / 0.111 (3.97) |
+| `rca/trace-ig-keep/source` | 0.617 [0.440, 0.744] / 0.772 / 0.443 (1.46) | 0.571 [0.502, 0.644] / 0.954 / 0.299 (2.05) | 0.619 [0.559, 0.674] / 0.850 / 0.483 (1.56) | 0.604 [0.558, 0.649] / 0.865 / 0.420 (1.69) |
+| `rca/trace-cmi-keep/hop1` | 0.512 [0.436, 0.584] / 0.745 / 0.087 (2.24) | 0.340 [0.283, 0.391] / 0.635 / 0.064 (3.55) | 0.174 [0.115, 0.235] / 0.430 / 0.054 (3.34) | 0.291 [0.242, 0.343] / 0.555 / 0.063 (3.18) |
+| `rca/trace-cmi-keep/hop0` | 0.628 [0.462, 0.734] / 0.930 / 0.088 (3.09) | 0.675 [0.609, 0.732] / 0.886 / 0.053 (4.71) | 0.627 [0.555, 0.687] / 0.856 / 0.110 (4.27) | 0.641 [0.592, 0.685] / 0.880 / 0.089 (4.16) |
+| `rca/trace-cmi-keep/source` | 0.623 [0.444, 0.746] / 0.774 / 0.441 (1.42) | 0.620 [0.559, 0.687] / 0.898 / 0.355 (1.83) | 0.631 [0.570, 0.684] / 0.806 / 0.520 (1.43) | 0.626 [0.580, 0.670] / 0.827 / 0.454 (1.55) |
+| `rca/trace-atomic-cmi-keep/hop1` | 0.496 [0.381, 0.606] / 0.878 / 0.083 (2.60) | 0.213 [0.155, 0.276] / 0.593 / 0.032 (3.69) | 0.117 [0.070, 0.169] / 0.377 / 0.021 (4.07) | 0.222 [0.170, 0.277] / 0.542 / 0.037 (3.66) |
+| `rca/trace-atomic-cmi-keep/hop0` | 0.627 [0.449, 0.750] / 0.963 / 0.064 (3.21) | 0.635 [0.576, 0.690] / 0.866 / 0.047 (4.92) | 0.614 [0.534, 0.676] / 0.821 / 0.071 (4.88) | 0.623 [0.574, 0.668] / 0.863 / 0.063 (4.55) |
+| `rca/trace-atomic-cmi-keep/source` | 0.622 [0.441, 0.750] / 0.684 / 0.558 (1.14) | 0.639 [0.583, 0.703] / 0.944 / 0.350 (1.91) | 0.624 [0.561, 0.677] / 0.780 / 0.528 (1.37) | 0.628 [0.582, 0.671] / 0.810 / 0.481 (1.48) |
+| `control/trace-earliest/earliest` | 0.206 [0.130, 0.281] / 0.809 / 0.000 (4.20) | 0.132 [0.090, 0.188] / 0.751 / 0.000 (6.13) | 0.428 [0.310, 0.557] / 0.881 / 0.008 (5.92) | 0.295 [0.224, 0.374] / 0.827 / 0.004 (5.64) |
+| `floor/trace-topology/hop1` | 0.589 [0.471, 0.706] / 0.830 / 0.146 (2.14) | 0.446 [0.286, 0.604] / 0.738 / 0.093 (3.71) | 0.191 [0.092, 0.301] / 0.390 / 0.052 (3.34) | 0.347 [0.263, 0.434] / 0.582 / 0.083 (3.21) |
+| `floor/trace-topology/hop0` | 0.817 [0.755, 0.880] / 1.000 / 0.126 (3.17) | 0.808 [0.739, 0.866] / 0.982 / 0.066 (4.91) | 0.695 [0.629, 0.755] / 0.956 / 0.133 (4.46) | 0.753 [0.710, 0.798] / 0.972 / 0.112 (4.34) |
+| `control/trace-random` | 0.246 [0.229, 0.263] / 0.737 / n/a | 0.175 [0.162, 0.189] / 0.523 / n/a | 0.199 [0.177, 0.225] / 0.569 / n/a | 0.201 [0.186, 0.217] / 0.589 / n/a |
+| `control/trace-callees/hop1` | 0.407 [0.351, 0.459] / 0.790 / n/a | 0.296 [0.243, 0.345] / 0.635 / n/a | 0.174 [0.120, 0.229] / 0.384 / n/a | 0.257 [0.217, 0.298] / 0.540 / n/a |
+| `control/trace-callees/hop0` | 0.402 [0.345, 0.462] / 0.868 / n/a | 0.283 [0.252, 0.318] / 0.667 / n/a | 0.351 [0.312, 0.387] / 0.723 / n/a | 0.341 [0.313, 0.368] / 0.735 / n/a |
+| `broadcast/control/rule` | 0.405 [0.137, 0.678] / 0.751 / n/a | 0.620 [0.408, 0.818] / 0.809 / n/a | 0.399 [0.246, 0.558] / 0.716 / n/a | 0.466 [0.343, 0.583] / 0.751 / n/a |
+| `broadcast/rca/rcd` | 0.665 [0.417, 0.897] / 0.884 / n/a | 0.820 [0.620, 1.000] / 0.945 / n/a | 0.477 [0.292, 0.661] / 0.732 / n/a | 0.617 [0.494, 0.743] / 0.826 / n/a |
+
+- The landed arms on this axis, for comparison (2026-11-01; `hop1` / `hop0` hit@1, xs / s / m): `rca/trace` 0.378 / 0.398, 0.401 /
+  0.678, 0.143 / 0.625; `rca/trace-core` 0.432 / 0.538, 0.451 / 0.740, 0.258 / 0.654. `rca/trace-ig-overwrite` reproduces
+  `rca/trace-core`'s `hop1` at m exactly (0.258) and is within 0.01 of it elsewhere: the same construction at c = 1 on the
+  `fixed-kl` path against the `shipped` path (P1′ of the reference harness: bit-identical matrices at equal cells; the two freeze at
+  different τ).
+- Position hit@1 / hit@3 in the arm's own window (`hop0`): information gain 0.52 / 0.79 (xs, overwrite; 0.64 / 0.90 keep), 0.76 /
+  0.91 (s), 0.66 / 0.87 (m); CMI 0.52 / 0.79 (0.64 / 0.90), 0.67 / 0.83, 0.63 / 0.82; atomic CMI 0.63 / 0.91, 0.62 / 0.83, 0.61 / 0.78.
+  Under `source` 0.61–0.63 / 0.68–0.76 (xs), 0.69–0.70 / 0.88–0.94 (s), 0.63 / 0.78–0.85 (m).
+- Per fault kind, pooled xs–m (hit@1): `rca/trace-ig-keep/hop0` cache-flush 0.58 · crash 0.63 · degrade 0.67 · pool-exhaust 0.80; `…/source`
+  cache-flush 0.58 · crash 0.52 · degrade 0.64 · pool-exhaust 0.67; the atomic CMI arm `hop0` cache-flush 0.57 · crash 0.57 · degrade 0.63 · pool-exhaust 0.72; the floor `hop0`
+  cache-flush 0.59 · crash 0.73 · degrade 0.76 · pool-exhaust 0.85; the earliest control cache-flush 0.42 · crash 0.19 · degrade 0.37 · pool-exhaust 0.25; broadcast RCD
+  cache-flush 0.00 · crash 0.38 · degrade 0.76 · pool-exhaust 1.00 (5 / 15 / 20 / 10 cases).
+- Per seed (`hop0` hit@1): `rca/trace-ig-keep` xs 0.72 / 0.67 / 0.34 / 0.76 / 0.58, s 0.79 / 0.70 / 0.75 / 0.77 / 0.69, m 0.71 / 0.73 / 0.58 / 0.69 / 0.59;
+  `rca/trace-cmi-keep` xs 0.71 / 0.64 / 0.34 / 0.77 / 0.68, s 0.74 / 0.53 / 0.71 / 0.71 / 0.68, m 0.69 / 0.71 / 0.52 / 0.66 / 0.55;
+  the earliest control xs 0.13 / 0.06 / 0.28 / 0.39 / 0.17, s 0.10 / 0.14 / 0.20 / 0.12 / 0.10, m 0.49 / 0.42 / 0.40 / 0.48 / 0.36.
+
+### Hypotheses (`plans/rca-arms.md`, addendum "2026-10-31, later" and 2026-10-31; mechanical in `reporttrace` except the context share, read from the score records)
+
+| hypothesis | verdict | xs | s | m |
+|---|---|---|---|---|
+| **H-trace-earliest** — each TRACE arm's `hop0` hit@1 ≥ `control/trace-earliest`'s | **pass** (15 / 15) | +0.28 … +0.42 | +0.50 … +0.61 | +0.19 … +0.23 |
+| **H-ctx-keep-context-share** — `n_rc_unreachable_context / n_rc = 0` for every keep arm; `rca/trace-ig-keep` `hop0` ≥ `rca/trace-ig-overwrite` | **pass** | 0 / 0 / 0 unreachable (keep); overwrite 988 of 3,641; keep − overwrite +0.123 (IG), +0.138 (CMI) | 0 / 0 / 0; CMI overwrite 4,362 of 50,979 (seeds 2, 4 at c = 2); +0.000 (IG), +0.016 (CMI) | 0 / 0 / 0; overwrite 0; 0.000 / 0.000 |
+| H-trace-perseq-random — every trace-reading row's `hop1` interval above random | **fail** | pass (all six rows) | fail (the atomic CMI arm 0.213 [0.155, 0.276] against 0.175) | fail (no row: 0.117–0.258 against 0.199, intervals reaching 0.07–0.19) |
+| H-trace-perseq-topology — the floor's hit@1 ≥ each TRACE row's at the same reading | **fail** (3 of 30 in the arm's favour) | pass (floor leads by 0.08–0.33) | fail: IG `hop1` +0.013 over the floor (both layouts); `hop0` −0.07 … −0.17 | fail: IG `hop1` +0.067; `hop0` −0.04 … −0.08 |
+| H-trace-perseq-broadcast — each TRACE row's `hop1` ≥ every broadcast row's | **fail** | RCD 0.665 above all (0.39–0.51) | RCD 0.820 above all (0.21–0.46) | RCD 0.477 above all (0.12–0.26) |
+| H-trace-perseq-self — `hop0` changes the sign of (TRACE − best broadcast) on no rung | **fail** (at m) | sign negative under both readings | negative under both | `hop1` below RCD, `hop0` above (0.61–0.66 against 0.477) |
+
+### Reading notes (descriptive, not re-tuned)
+
+- **Per trace, the family's own rule works where the case level did not.** At the case level the family read `hop0` 0.50 / 0.24 /
+  0.22 on xs / s / m (section 2026-11-06 of `rca-latent.md`); per failed request the same arms read `hop0` 0.49–0.63 / 0.63–0.74 /
+  0.61–0.66 and `source` 0.53–0.62 / 0.57–0.64 / 0.62–0.63, two to three times random (0.25 / 0.18 / 0.20) and 0.05–0.20 under the
+  call-tree floor at `hop0` (0.82 / 0.81 / 0.70). The decay with the rung that the case level showed is absent per trace. The source
+  rule names about one and a half services per trace (mean set size 1.4–2.1 against 3.0–4.9 under `hop0`) and gets the exact set right
+  on 30–56 % of traces (`hop0`: 5–15 %), at a hit@1 within 0.07 of `hop0` at s and above it at m (0.62–0.63 against 0.61–0.66 is a tie
+  at the interval width); it remains the reading the author would sign.
+- **The earliest-error control is the weakest row of the axis.** "The first thing that failed" names the root-cause service in 21 %
+  / 13 % / 43 % of traces — below random at hit@1 on xs and s (0.25 / 0.18; it ranks every service, so hit@3 is 0.75–0.88) and above it
+  only at m, where the `tb-edge` degrade and the other degrade cases make the root span the earliest failed span. The sample graph
+  adds 0.2–0.6 over it on every rung — the answer to the author's question is yes, per trace.
+- **Score separates per trace: information gain beats the CMI.** On the shared forward of a core layout the two scores differ only in
+  the cut, and per trace that cut matters: at s `hop0` 0.741 (IG) against 0.659 (CMI) and `hop1` 0.459 against 0.323; at m 0.659
+  against 0.627 and 0.258 against 0.174; at xs equal within 0.002. The CMI cells freeze at much smaller τ (3e-4 … 1e-4 against 0.03
+  at s) and admit more edges, which the upstream closure turns into larger reached sets (mean 4.6–4.7 against 4.5 at `hop0`; the
+  exact-set rate 0.06 against 0.06–0.10) and lower precision at the top. The case level, which pooled the per-trace credits into one
+  ranking per fault, did not show this (identical `hop0` per seed across the four core arms at s).
+- **Keep = overwrite where both froze at c = 1; keep wins where the overwrite cell froze at c = 2.** At s and m the keep arms
+  reproduce the overwrite arms' rows exactly (the same forward and cut; P1′) except the CMI arm at s (+0.016), whose overwrite cell
+  froze at c = 2 on seeds 2 and 4 and left 4,362 root-cause positions (8.6 %) inside the context. At xs the overwrite cells of seeds 0,
+  3 and 4 froze at c = 2 and 988 of 3,641 root-cause positions (27 %) are unreachable for them; the keep arms test every position and
+  read +0.12 (IG) / +0.14 (CMI) at `hop0`. The context share is the whole difference: this is what H-ctx-keep-context-share asked.
+- **The atomic CMI arm is the weakest TRACE row at hop ≥ 1 on s and m** (`hop1` 0.213 / 0.117, at or under random) and within 0.05 of
+  the core arms at `hop0` (0.635 / 0.614) and `source` (0.639 / 0.624): its per-position CMI matrix (every position a candidate, one
+  forward per position) places the failed position's own service first but orders the upstream services worse. Against the landed
+  `rca/trace` (atomic information gain, `shipped` path; c = 3 / 2 / 1 at xs / s / m) it reads `hop0` +0.23 / −0.04 / −0.01.
+- **Hop 0 is the primary reading on this axis as registered, and it leads `hop1` by 0.10–0.46 on every arm and rung** (the landed
+  arms: +0.02 … +0.48). At m every TRACE row at `hop1` sits at or below random while `hop0` reads 0.61–0.66: the m faults sit in
+  the failed service itself (the `tb-edge` degrade has no non-client caller), as the landed section found.
+- **Where the family stands against the landed arms per trace:** at `hop0` the core keep arms match or exceed `rca/trace-core`
+  (0.615–0.628 against 0.538 at xs; 0.675–0.741 against 0.740 at s; 0.627–0.659 against 0.654 at m) and the whole family exceeds
+  `rca/trace` at xs (+0.09 … +0.23) and matches it at s and m (±0.05); at `hop1` the keep arms lead `rca/trace-core` at xs by
+  +0.06 … +0.08. Nothing on this axis reaches the floor at `hop0` or RCD's case-level broadcast at s (0.82).
+
+### Disclosures that travel with the rows
+
+- The landed-axis disclosures (device, the training split, the context and truncation counts) hold here; the records carry
+  `by_split`. The per-trace rankings (`ranking-trace.json`) and the per-trace score rows (`score-trace-traces.json`) are not tracked
+  (sha256 in the `rank-trace` and `score-trace` records; the files live on the run's prefix and in the local `out/`); the 250 uncapped
+  per-case work documents (3.9 GB) stay on the prefix.
+- The box records name code `3bdba66f` with `dirty: true` (the job's untracked `input/` and `exports/`); the local score records name
+  the same commit with `dirty: true` (the landing's untracked result files, committed with them).
+- The pre-fault subtraction has no per-trace definition (addendum "2026-10-31, later") and no row here; the family's `…-subpre` rows
+  are case level only.
+- The ledger gained 90 `rank-trace` entries (75 arms, 15 control); `results/<rung>/latent/seed=<k>/pull-trace-ctx/` records the local
+  re-pull of the score-side tier (the corpora had been removed after the s / m landing); the box's pull and export records are
+  `pull-rca-ctx-trace/` and `export-ctx-trace/`.
