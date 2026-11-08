@@ -30198,6 +30198,1626 @@
    "arm": "control/trace-earliest",
    "added": "2026-11-06",
    "note": "trace-bench-rca earliest (the earliest-error control, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-s-m-26-11-06 (one g5 box, ten corpora), code 36eefab3; case level: window traces of the end-ordered request view, the first 500 by start time per case; 5 cases, 0 unranked; staged on the s row of this seed, arm and series made earlier in the same chain (4ee760ed3420b61a, record); scored locally by tracebenchrca.score into benchmarks/trace-bench-rca/results/m/latent/seed=4/control-trace-earliest/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "ad4f0aa3350e5eb2bfb409523a572e782d4ee4c30b27f1e0787dd37767e324a1",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s0-context.json, backbone ba7725c4f3d2f3aa, c 2 N 8 g 2 tau 0.001; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1886 candidates, 1886 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 8c3320e9fbc1b592 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=0/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "4df42a2c4968507861fd100cf232cb553256152cbfb9b737c504cf980a978d9d",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s0-context.json, backbone ba7725c4f3d2f3aa, c 2 N 8 g 2 tau 1e-05; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1886 candidates, 1886 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 085dfc4fbdeb6e08 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=0/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "da9fbc7b883feb4a4303555a51136c9d955f362b5f13b20cd9a5f0f9ed112a7f",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s0-context.json, backbone ba7725c4f3d2f3aa, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1886 candidates, 1886 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 ab15d437374d5889 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=0/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "7c3cea879175731d2290cfe3bde2559ea24bbdf432a48d533682a8783fe62ec9",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s0-context.json, backbone ba7725c4f3d2f3aa, c 1 N 8 g 1 tau 1e-05; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1886 candidates, 1886 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 2a490f35ebcb829c (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=0/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "ec0cf90062c996e89f6d8a42096f513eb38d91bdfcbfe5fe0028664fd6e9b229",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s0-context.json, backbone ba7725c4f3d2f3aa, c 1 N 8 g 1 tau 1e-07; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1886 candidates, 1886 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 0e0c367cc4a307cd (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=0/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-xs-s0-2026-11-07",
+   "results_sha256": "4fe1d5bdd81a05a698b0e8964e29733f09ceedaf8cc473dd1aea1f8591b919d7",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 2 cases, 1886 traces ranked; per-trace rankings in ranking-trace.json sha256 1a4a91c28821ab3e (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/xs/latent/seed=0/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "5eeb99b5ce366f78b83730a1af8bc31f76f028b410fdd1380170e8059ca50fd6",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s1-context.json, backbone 3d9aaef0e7dd08b4, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1512 candidates, 1512 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 64fb6355e27888f7 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=1/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "5332aa6b31d64ac8c8efbaf7a8ea8406daae6f22382800f456aad5754827b9e8",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s1-context.json, backbone 3d9aaef0e7dd08b4, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1512 candidates, 1512 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 d45891463d9e0cb1 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=1/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "acabfe8ac836ad980cc242f783322ca2b40cc3b676ffc7e7098c482995f0895e",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s1-context.json, backbone 3d9aaef0e7dd08b4, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1512 candidates, 1512 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 d9631eebf96f25ab (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=1/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "21052d2b197db18edaceb3f3db78093e3f2658efd47f64b062411e8eb666ebd8",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s1-context.json, backbone 3d9aaef0e7dd08b4, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1512 candidates, 1512 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 a46563998c2f9cae (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=1/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "f670dfe85aa18d4e0e5cd5d9760f20ecc0df046634ad7ccdfa5e0a2adfb0235f",
+   "model_sha256": "3d9aaef0e7dd08b47ec2e2485cdd82a69bf56dc2c4f8e5a2753b0c4bf69540be",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s1-context.json, backbone 3d9aaef0e7dd08b4, c 1 N 8 g 1 tau 1e-06; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1512 candidates, 1512 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 fd8067b1ec9d89a8 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=1/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-xs-s1-2026-11-07",
+   "results_sha256": "fe7840dabfd11b45cb4416a5c5a2c432ee1b363338a3cd81c3812855f7b5e00a",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 2 cases, 1512 traces ranked; per-trace rankings in ranking-trace.json sha256 63f5c60bba3c39d3 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/xs/latent/seed=1/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "ccc88c53a8c96301e1810c8b97235326f5797e66698f3fcd44a18a81ce7aa9af",
+   "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s2-context.json, backbone 7e39da00e3371b0c, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1584 candidates, 1584 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 cfdb10ace49052d2 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "61cf49ea8664f02a22d85ee193e82d0ca42effd5c54ac3d192234c6927ae4730",
+   "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s2-context.json, backbone 7e39da00e3371b0c, c 1 N 8 g 1 tau 3e-07; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1584 candidates, 1584 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 cf6752e2a70db070 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "d9dad466a2f03a585c87df8044bc16733aebb5c9b49f932ec79822f4e3e02a08",
+   "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s2-context.json, backbone 7e39da00e3371b0c, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1584 candidates, 1584 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 99203e93650d9ae8 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "9e2a213049fa4baf6de1165b5d96dda4fcc2df156e585d2daa256e5317278998",
+   "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s2-context.json, backbone 7e39da00e3371b0c, c 1 N 8 g 1 tau 3e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1584 candidates, 1584 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4df1cbd38d2ca44d (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "d2aeefdd6429d7e7e49f73de7b6a8dd5419be24f8293db71cfad6daf13fc4e5d",
+   "model_sha256": "7e39da00e3371b0cc7612349cf13ca3fb88e2638f0c0624f02143fd56eddd18d",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s2-context.json, backbone 7e39da00e3371b0c, c 1 N 8 g 1 tau 1e-07; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1584 candidates, 1584 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 624b3f59c354f0db (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=2/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-xs-s2-2026-11-07",
+   "results_sha256": "3af23c706995d87bdb9cc33ff24471192c470359f8d9d1a353f5818fa4111afa",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 2 cases, 1584 traces ranked; per-trace rankings in ranking-trace.json sha256 63f6ba9f6a555b44 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/xs/latent/seed=2/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "da092128e5b0c0337cee26107942aa64ffdda007edfb30a8e0db61719581e728",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s3-context.json, backbone 0c6345ca47c07e01, c 2 N 8 g 2 tau 0.0003; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1347 candidates, 1347 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 0768ddf122bb5593 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=3/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "9d407a7f0cfe9386a354f10a048833105c34504da4a6c11d9c510f12e2353b97",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s3-context.json, backbone 0c6345ca47c07e01, c 2 N 8 g 2 tau 1e-06; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1347 candidates, 1347 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 7c2b10f328bc4a4b (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=3/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "5a08ec01215c43b5c8f59349b49c0773e6a6aaa6f7f7a67e3bb12ad47bc443d9",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s3-context.json, backbone 0c6345ca47c07e01, c 1 N 8 g 1 tau 0.001; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1347 candidates, 1347 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 3d08cd8ef11200e9 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=3/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "ed6d3983bf53399de159f3d173eafb35760c1d5ce0e7baf0dc1fb5fedb89b9e4",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s3-context.json, backbone 0c6345ca47c07e01, c 1 N 8 g 1 tau 3e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1347 candidates, 1347 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 8ee3af12a6b47d50 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=3/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "ad9b3b408782a3c3bf1cb032ac98c51259635246e89da77d7c1de552d3ec1446",
+   "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s3-context.json, backbone 0c6345ca47c07e01, c 1 N 8 g 1 tau 3e-07; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1347 candidates, 1347 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4457912dd085647d (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=3/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-xs-s3-2026-11-07",
+   "results_sha256": "7762c8929ded8207460259a5b22ea169b3a4bb46844ab49083f9d4566c73dbd3",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 2 cases, 1347 traces ranked; per-trace rankings in ranking-trace.json sha256 ef99aef6ce29c355 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/xs/latent/seed=3/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "15c1845426a0c162ed0112905fd9320fb42594b11ff2afe0b35bf0567db751aa",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s4-context.json, backbone 3478a11160460707, c 2 N 8 g 2 tau 0.03; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1676 candidates, 1676 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 49ca6a4cea46259c (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=4/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "07789d9e3e6bf3b7f1dc8b46ae4a0d856a5487c3202041d3895df06263c3ff83",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-xs-latent-s4-context.json, backbone 3478a11160460707, c 2 N 8 g 2 tau 0.0003; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1676 candidates, 1676 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 047b146312d36eec (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=4/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "2f41a41f78a35d2c171219db44ae26bcd49f60aebcbd8616f780876279366432",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s4-context.json, backbone 3478a11160460707, c 1 N 8 g 1 tau 0.1; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1676 candidates, 1676 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 abbcc2012fdc8b5b (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=4/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "164ec2a3a45f1234a485d001271c5cfc299d0c1c524e38dce72014424874a890",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s4-context.json, backbone 3478a11160460707, c 1 N 8 g 1 tau 0.001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1676 candidates, 1676 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 572825fd785325b0 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=4/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "a302b633acc90e0803a3929897e757164c3c8f2e11c05f5e393861e2b9e6016f",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-xs-latent-s4-context.json, backbone 3478a11160460707, c 1 N 8 g 1 tau 0.0003; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 2 cases, 1676 candidates, 1676 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 bc9a70a08c424055 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/xs/latent/seed=4/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "xs",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-xs-s4-2026-11-07",
+   "results_sha256": "85553f32d23c7b6b0037dbedc7c1bc6de9846b7a0b9730e5dfc2ee3e3304c198",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 2 cases, 1676 traces ranked; per-trace rankings in ranking-trace.json sha256 1681e8a668886393 (untracked; bucket + local out/); prior-rung record = smallest rung; scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/xs/latent/seed=4/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "128bf1f3e8c6ac1eceb62f9ab70c6656bcfbfe6f8434b5c2108867b3bb8903aa",
+   "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s0-context.json, backbone e14f224e1847dc49, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 46669 candidates, 46669 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 f4c936e91c655f9b (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (ad4f0aa3350e5eb2, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=0/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "b73ba12869799c783c24c82b9565a768bb3fd73f5223b558655cc5098fb3edd6",
+   "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s0-context.json, backbone e14f224e1847dc49, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 46669 candidates, 46669 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 88090c9b70da45c4 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (4df42a2c49685078, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=0/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "f9869e3e5005bd563e56fd6ecfe12ed036eae28a309afb32cec67f4914e43d47",
+   "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s0-context.json, backbone e14f224e1847dc49, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 46669 candidates, 46669 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 471042bdecd22c30 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (da9fbc7b883feb4a, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=0/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "2def2e116ed9ba40e0bea8a15cd7a0a68fb3b2e6f5f520e6273f98a6f67f783b",
+   "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s0-context.json, backbone e14f224e1847dc49, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 46669 candidates, 46669 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 ba3f6af5743dd073 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (7c3cea879175731d, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=0/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "543684a9dd7978b80e2c44b94b2d42cd92be36beebd3d4955dc70d3197af1bf3",
+   "model_sha256": "e14f224e1847dc49d743e1bc9260dec5667c158f39c893a9c899ba77c61ef898",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s0-context.json, backbone e14f224e1847dc49, c 1 N 8 g 1 tau 0.001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 46669 candidates, 46669 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 b6f7f9b5cf4dbc15 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (ec0cf90062c996e8, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=0/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-s-s0-2026-11-07",
+   "results_sha256": "e3a4f2ba03928936cc3f2283a0c4c32fe291332683ea1cbad2b603d146053d14",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 3 cases, 46669 traces ranked; per-trace rankings in ranking-trace.json sha256 9b278e4706e63224 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (4fe1d5bdd81a05a6, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/s/latent/seed=0/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "b4e55b194296a36bdb90ba906de43e31aa6fec02108b76d9f7f7b12debf947bc",
+   "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s1-context.json, backbone 2282b96ebbc7f51d, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 55515 candidates, 55515 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4aedde651c5d9d95 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (5eeb99b5ce366f78, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=1/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "82feefcfe93a2bc4cbba9e18a3f6eb356c4c4a7cbd98f85f5c32d791cdf07985",
+   "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s1-context.json, backbone 2282b96ebbc7f51d, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 55515 candidates, 55515 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 5f2e0690f268141d (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (5332aa6b31d64ac8, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=1/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "aa091ae6cfd759480ed46019a342fd392e4626c98fe4302d25f064df52738edf",
+   "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s1-context.json, backbone 2282b96ebbc7f51d, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 55515 candidates, 55515 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 5a2834cdd54e394e (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (acabfe8ac836ad98, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=1/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "836bb65b00648c35d8fb735ad2c98cf2cf77dd765bc0979517d7b17ffe0dc74a",
+   "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s1-context.json, backbone 2282b96ebbc7f51d, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 55515 candidates, 55515 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 9860a9531921582a (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (21052d2b197db18e, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=1/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "ecfae70e7a393f3d75ed5bca3d80ecf64727250ac70019d9ec029abb1323c970",
+   "model_sha256": "2282b96ebbc7f51da7e89e3dda39e204060c67c1e771e2d008f7d458aa3e95fc",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s1-context.json, backbone 2282b96ebbc7f51d, c 1 N 8 g 1 tau 0.0003; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 55515 candidates, 55515 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 2fb64a8cfb5c432b (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (f670dfe85aa18d4e, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=1/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-s-s1-2026-11-07",
+   "results_sha256": "0a068c7fb60c542d09a0898dd7cb92478208aa4282afbad6bb4a06257f0e4584",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 3 cases, 55515 traces ranked; per-trace rankings in ranking-trace.json sha256 eb18185f8c53a891 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (fe7840dabfd11b45, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/s/latent/seed=1/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "36d4e58bf02bd87ea7a960da30be2e701e343191b65ebdea38a0f0ee7712ed48",
+   "model_sha256": "2f0aefadc045915d466c4917edb6c9537e8fd259b9cb3035ea54d4992d3c11f2",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s2-context.json, backbone 2f0aefadc045915d, c 1 N 8 g 1 tau 0.03; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 52377 candidates, 52377 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 55c225fe4c6981ce (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (ccc88c53a8c96301, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=2/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "c7550f10a45d453aa1d053ba18d07ad7f93cb433ab98c51173351d1a2ce68a8c",
+   "model_sha256": "2f0aefadc045915d466c4917edb6c9537e8fd259b9cb3035ea54d4992d3c11f2",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s2-context.json, backbone 2f0aefadc045915d, c 2 N 8 g 2 tau 0.0001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 52377 candidates, 52376 probed, 1 skipped short; per-trace rankings in ranking-trace.json sha256 93b2bb48b9de161c (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (61cf49ea8664f02a, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=2/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "0a4dfb3a5717766ddd4bed83241c8ab4dd6eb03e88e2defd286c90c7086fadb9",
+   "model_sha256": "2f0aefadc045915d466c4917edb6c9537e8fd259b9cb3035ea54d4992d3c11f2",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s2-context.json, backbone 2f0aefadc045915d, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 52377 candidates, 52377 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 002fb36cc979828b (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (d9dad466a2f03a58, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=2/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "f6454d23d79a13191ee50299c6c41e42a8dd0d3c8be2be0064a8deabcab629ed",
+   "model_sha256": "2f0aefadc045915d466c4917edb6c9537e8fd259b9cb3035ea54d4992d3c11f2",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s2-context.json, backbone 2f0aefadc045915d, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 52377 candidates, 52377 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 344ab4ec2123566a (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (9e2a213049fa4baf, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=2/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "83acd32b9208b604a868822a546b2750d8847979ff8fe5e739cbd001ec85513e",
+   "model_sha256": "2f0aefadc045915d466c4917edb6c9537e8fd259b9cb3035ea54d4992d3c11f2",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s2-context.json, backbone 2f0aefadc045915d, c 1 N 8 g 1 tau 0.001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 52377 candidates, 52377 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 a53f079f8bac28e0 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (d2aeefdd6429d7e7, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=2/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-s-s2-2026-11-07",
+   "results_sha256": "ea676ecb4407f0fcf9b471be135b48c6ef1e48e38a2dd1859da9d3834cd763f1",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 3 cases, 52377 traces ranked; per-trace rankings in ranking-trace.json sha256 f24a95bce5468050 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (3af23c706995d87b, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/s/latent/seed=2/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "45866e53c49481722efb559fdc98c697d086aea02ec6ddf4a1b5713b4223799d",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s3-context.json, backbone 5592943af91f1506, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 47046 candidates, 47046 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 b724734963e036a5 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (da092128e5b0c033, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=3/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "d3dd9e85a0fdfc1b55637fcef6b70f01323163ed39ae2c49e2ca58251c734f3b",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s3-context.json, backbone 5592943af91f1506, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 47046 candidates, 47046 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 920cae18f0aed6dd (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (9d407a7f0cfe9386, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=3/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "53b26863f49af6e7dc953fa0710fda51bdfaba28cd2c04ded7c3d95ed1f732e8",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s3-context.json, backbone 5592943af91f1506, c 1 N 8 g 1 tau 0.03; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 47046 candidates, 47046 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 17f3978afd643d48 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (5a08ec01215c43b5, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=3/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "55774cf07726eecee2cf0a451c5ff25211588434445ba3152c9ba9f1554179f6",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s3-context.json, backbone 5592943af91f1506, c 1 N 8 g 1 tau 0.0003; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 47046 candidates, 47046 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 021607ce59ddebf0 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (ed6d3983bf53399d, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=3/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "f7480ec42c84bdc848d7bc7dd9ff5bce03c84ed0cfe42654b53c0a26253ed9f4",
+   "model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s3-context.json, backbone 5592943af91f1506, c 1 N 8 g 1 tau 0.001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 47046 candidates, 47046 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 60673785a8dbef6e (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (ad9b3b408782a3c3, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=3/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-s-s3-2026-11-07",
+   "results_sha256": "945bfa348fd4967dabe9150c7962e0b2bdd3235b38468e51a8c8623adcf691f7",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 3 cases, 47046 traces ranked; per-trace rankings in ranking-trace.json sha256 f70d991be05d36e8 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (7762c8929ded8207, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/s/latent/seed=3/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "11a6d32a7a549739a8918ca080e703bd899000fed3a791ced1bdc096f3636df7",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s4-context.json, backbone e2f5d35d4c98e43d, c 1 N 8 g 1 tau 0.1; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 65880 candidates, 65880 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 e7df64c754666e25 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (15c1845426a0c162, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=4/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "b0ba4a700a9e3f437ead9c78023b6eeb4fee82db3a6529c9a0d4daf834fc2b18",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-s-latent-s4-context.json, backbone e2f5d35d4c98e43d, c 2 N 8 g 2 tau 0.001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 65880 candidates, 65880 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 dab6de1d377efc75 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (07789d9e3e6bf3b7, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=4/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "c93488cef3fc212fc0a2cc5ed00c5998e9bcbd5efaf6c8bd5e7ca8bfb7d3ee7f",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s4-context.json, backbone e2f5d35d4c98e43d, c 1 N 8 g 1 tau 0.1; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 65880 candidates, 65880 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 3229e397de679ea4 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (2f41a41f78a35d2c, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=4/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "5baa6ab16451c24b6f3538e00120294f24dcd5276f034168de23250cbbc6950c",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s4-context.json, backbone e2f5d35d4c98e43d, c 1 N 8 g 1 tau 0.001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 65880 candidates, 65880 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 1d11b62144a5b32e (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (164ec2a3a45f1234, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=4/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "ac7488b24a527996b687273f3a677e4e032c54c83b95e7e8c2d5c31091c3dccb",
+   "model_sha256": "e2f5d35d4c98e43d7279c2ac41113419211d5602ba1622bcd6712ec59a296c89",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-s-latent-s4-context.json, backbone e2f5d35d4c98e43d, c 1 N 8 g 1 tau 0.001; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 3 cases, 65880 candidates, 65880 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 0da6a1d8cf1f24c6 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (a302b633acc90e08, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/s/latent/seed=4/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "s",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-s-s4-2026-11-07",
+   "results_sha256": "fb5c38dbca166ddf6d8388a47da54565f6d243f139d0341e54b8d84500d81d98",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 3 cases, 65880 traces ranked; per-trace rankings in ranking-trace.json sha256 b2cf0a4f8522b466 (untracked; bucket + local out/); prior-rung record = the xs rank-trace record of the same arm made earlier in the same chain (85553f32d23c7b6b, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/s/latent/seed=4/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "47ad0003cc557ddb7d20213fa6bb5e8317dc43ebe3ab40e6f740c0c0fb735440",
+   "model_sha256": "1d6a5485fb5b8533771d7b675ac6e41a0427d47978b12becd05bf69a15fdd100",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s0-context.json, backbone 1d6a5485fb5b8533, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 50922 candidates, 50922 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 fbc1b3df327cb142 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (128bf1f3e8c6ac1e, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=0/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "20d613fe6cb5ffa143ebba4676570992e031d6b2336809838b5a93ed6ca54a52",
+   "model_sha256": "1d6a5485fb5b8533771d7b675ac6e41a0427d47978b12becd05bf69a15fdd100",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s0-context.json, backbone 1d6a5485fb5b8533, c 1 N 8 g 1 tau 1e-05; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 50922 candidates, 50922 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 647f2dd6427818fd (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (b73ba12869799c78, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=0/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "54282475c25d61b40e3a9701815dcda9e73d78210cd0371ac681a51a3cb7f1de",
+   "model_sha256": "1d6a5485fb5b8533771d7b675ac6e41a0427d47978b12becd05bf69a15fdd100",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s0-context.json, backbone 1d6a5485fb5b8533, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 50922 candidates, 50922 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 ee39f889425fcf13 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (f9869e3e5005bd56, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=0/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "edd03c14a5d1303a921afd06a75f5bce4364e70e8c88f09cadf09461dab25c45",
+   "model_sha256": "1d6a5485fb5b8533771d7b675ac6e41a0427d47978b12becd05bf69a15fdd100",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s0-context.json, backbone 1d6a5485fb5b8533, c 1 N 8 g 1 tau 1e-05; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 50922 candidates, 50922 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 beb10c99e62499f4 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (2def2e116ed9ba40, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=0/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "4f163feb87dc22ea51e24044fbe8b1e8c8131a4ce3320724df2f9bc3ca65b86e",
+   "model_sha256": "1d6a5485fb5b8533771d7b675ac6e41a0427d47978b12becd05bf69a15fdd100",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s0-context.json, backbone 1d6a5485fb5b8533, c 1 N 8 g 1 tau 1e-05; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 50922 candidates, 50922 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 0d6bc95e00bdb8e2 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (543684a9dd7978b8, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=0/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-m-s0-2026-11-07",
+   "results_sha256": "8064e4b7ae927dd0a5776fb189883e1c2fbb70abeb7a507ed5e0ff2cdc05061b",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 50922 traces ranked; per-trace rankings in ranking-trace.json sha256 7f07d8d02bd49604 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (e3a4f2ba03928936, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=0/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "95d72506603a8d92097bb398cb5e7ca416052bd0a5415d128c29ffa95557d413",
+   "model_sha256": "21aa215623924f10b1cb3d4ec2223be235970834bf8090d7b66052a41d191f33",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s1-context.json, backbone 21aa215623924f10, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 55960 candidates, 55960 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 c83a3bf73932e20c (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (b4e55b194296a36b, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=1/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "1d19fe2f1560d1d9e88b120923db43d02074c49b30597b2f8371a8c66dbb49c4",
+   "model_sha256": "21aa215623924f10b1cb3d4ec2223be235970834bf8090d7b66052a41d191f33",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s1-context.json, backbone 21aa215623924f10, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 55960 candidates, 55960 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4caacb1630b49401 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (82feefcfe93a2bc4, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=1/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "6dd99323769d41d272cec904e63e952a96146b8ddf72915bc7acc92c5b6c0689",
+   "model_sha256": "21aa215623924f10b1cb3d4ec2223be235970834bf8090d7b66052a41d191f33",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s1-context.json, backbone 21aa215623924f10, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 55960 candidates, 55960 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 6a6a9f01a5b5be36 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (aa091ae6cfd75948, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=1/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "d28517e3c0cfec36d8c417b00c84c6f8fa3f8cdf0897c9b2e1e929587f0295ef",
+   "model_sha256": "21aa215623924f10b1cb3d4ec2223be235970834bf8090d7b66052a41d191f33",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s1-context.json, backbone 21aa215623924f10, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 55960 candidates, 55960 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 be604bf4b12015d9 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (836bb65b00648c35, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=1/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "73be401fe333658c556f6bf4abd53292283bbcab8f3ea96866c3d95a1800c5ab",
+   "model_sha256": "21aa215623924f10b1cb3d4ec2223be235970834bf8090d7b66052a41d191f33",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s1-context.json, backbone 21aa215623924f10, c 1 N 8 g 1 tau 3e-05; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 55960 candidates, 55960 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 433dc7a72ea16d7f (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (ecfae70e7a393f3d, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=1/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-m-s1-2026-11-07",
+   "results_sha256": "cd16c70a43722c7bd526a587a48879cd4fc79d6135b7150c8c66e5eefc6f629c",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 55960 traces ranked; per-trace rankings in ranking-trace.json sha256 6f9d26fc0159dc0c (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (0a068c7fb60c542d, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=1/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "470f735451262f90a616bf64a5ca228e48443b846afa2661808fcf1182d8e8fe",
+   "model_sha256": "c3458234357a22d2cf50e11f1a5eb6fe05a56e21139b7110a7caebc8e9ab1d76",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s2-context.json, backbone c3458234357a22d2, c 1 N 8 g 1 tau 0.003; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 58437 candidates, 58437 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 900da34653e6c2a4 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (36d4e58bf02bd87e, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=2/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "46d628e1071a461d54067336450140dbff7cf18c79ceabd07f97e183f5e83eb0",
+   "model_sha256": "c3458234357a22d2cf50e11f1a5eb6fe05a56e21139b7110a7caebc8e9ab1d76",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s2-context.json, backbone c3458234357a22d2, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 58437 candidates, 58437 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4b43fba93696b8f8 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (c7550f10a45d453a, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=2/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "067e2e08e629f1904bbc63ebf0ef071e1294beee2d5e7c8ffb9dffda47f94c17",
+   "model_sha256": "c3458234357a22d2cf50e11f1a5eb6fe05a56e21139b7110a7caebc8e9ab1d76",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s2-context.json, backbone c3458234357a22d2, c 1 N 8 g 1 tau 0.003; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 58437 candidates, 58437 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 f1a93af746f1ad51 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (0a4dfb3a5717766d, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=2/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "d30289c6c51d8d83b961d0d885369334586e88730793ff7682009a33f62269e2",
+   "model_sha256": "c3458234357a22d2cf50e11f1a5eb6fe05a56e21139b7110a7caebc8e9ab1d76",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s2-context.json, backbone c3458234357a22d2, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 58437 candidates, 58437 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 8a4c94ead729a8ff (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (f6454d23d79a1319, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=2/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "c9730517cdd759aca4c80e547c9b6aff9cd758f8d7d4094312e955015e63c6f3",
+   "model_sha256": "c3458234357a22d2cf50e11f1a5eb6fe05a56e21139b7110a7caebc8e9ab1d76",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s2-context.json, backbone c3458234357a22d2, c 1 N 8 g 1 tau 3e-05; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 58437 candidates, 58437 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 6c90393dd54f721a (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (83acd32b9208b604, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=2/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-m-s2-2026-11-07",
+   "results_sha256": "d99d3397d6d3b072e44273c6937bce0580611b73897f73a83700bff224b16cec",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 58437 traces ranked; per-trace rankings in ranking-trace.json sha256 4376d84fd038e5d8 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (ea676ecb4407f0fc, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=2/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "712f953103f33a1ca2317a2bdcb0124225bceefeaaf6fc9448b8a64fa9dbde74",
+   "model_sha256": "8afdd21282963430221b7f4ee5715b3e949688a34d7140acff10ad6c0f218a7c",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s3-context.json, backbone 8afdd21282963430, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 53005 candidates, 53005 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 b95f28fbf08be94d (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (45866e53c4948172, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=3/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "53477470da737851c798136288096d4bc7c56c9c7c7299ba56805e2d4f8296f2",
+   "model_sha256": "8afdd21282963430221b7f4ee5715b3e949688a34d7140acff10ad6c0f218a7c",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s3-context.json, backbone 8afdd21282963430, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 53005 candidates, 53005 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 257a5595163f3e5e (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (d3dd9e85a0fdfc1b, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=3/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "9772ab7d90802b0eeac18285489623d34f0b09e22e1cbaa9e9f73ef280256940",
+   "model_sha256": "8afdd21282963430221b7f4ee5715b3e949688a34d7140acff10ad6c0f218a7c",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s3-context.json, backbone 8afdd21282963430, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 53005 candidates, 53005 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 d727b07b5812e7f3 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (53b26863f49af6e7, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=3/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "e832db8074940163e2695e29906fc41c980b57e8b857c12e11702f6be7dfe2f7",
+   "model_sha256": "8afdd21282963430221b7f4ee5715b3e949688a34d7140acff10ad6c0f218a7c",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s3-context.json, backbone 8afdd21282963430, c 1 N 8 g 1 tau 3e-05; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 53005 candidates, 53005 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4ba96487365f69f5 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (55774cf07726eece, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=3/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "6718c0f399b9f8c20576fe13c10070bd28fdd2a3dd3e68505ee2bfcc2f838f26",
+   "model_sha256": "8afdd21282963430221b7f4ee5715b3e949688a34d7140acff10ad6c0f218a7c",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s3-context.json, backbone 8afdd21282963430, c 1 N 8 g 1 tau 3e-05; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 53005 candidates, 53005 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4fb95e90d1a6c596 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (f7480ec42c84bdc8, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=3/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-m-s3-2026-11-07",
+   "results_sha256": "2b6f4d6856c7514955f31e69a82193cea39fa4447361533589c8db3d7c060fd1",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 53005 traces ranked; per-trace rankings in ranking-trace.json sha256 e4f70c10390328d5 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (945bfa348fd4967d, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=3/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "a47c2874c434d2a9199d8bb4a5a681eb8778bbc51c7f14369a68593ec48e87ca",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "cells": [
+    "rca/trace-ig-overwrite/trace"
+   ],
+   "arm": "rca/trace-ig-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s4-context.json, backbone aa52927454c37e12, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-overwrite (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 52757 candidates, 52757 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 792101add1804af7 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (11a6d32a7a549739, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=4/rca-trace-ig-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-overwrite",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "33b4f58f98e4d520fca916f870bd253401823da25666c73c8bffa92427051a48",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "cells": [
+    "rca/trace-cmi-overwrite/trace"
+   ],
+   "arm": "rca/trace-cmi-overwrite",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-overwrite/fixed-kl/frozen/request of 2026-11-01-m-latent-s4-context.json, backbone aa52927454c37e12, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-overwrite (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 52757 candidates, 52757 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 ec2979c03bc7b69a (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (b0ba4a700a9e3f43, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=4/rca-trace-cmi-overwrite/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "f41ecb6d62c1cd8cae6fd9de50c08f5e29f02c2210110aecfbb995a6b38d7c17",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s4-context.json, backbone aa52927454c37e12, c 1 N 8 g 1 tau 0.01; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 52757 candidates, 52757 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 4259f7628d30e49b (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (c93488cef3fc212f, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=4/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "196a9ab725e819d896ca46cc47317ee2855a288e0a709fb95196e3a1ab4f1853",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s4-context.json, backbone aa52927454c37e12, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 52757 candidates, 52757 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 721b8def9249cb29 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (5baa6ab16451c24b, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=4/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-atomic-cmi-keep",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "ac4911c80d8de49abfda990aa4d319d1e6bea9133d5f203f7cb63f186857b0c5",
+   "model_sha256": "aa52927454c37e12bb96dadccaa48422880c47579cfdf029afc174f9f70f845a",
+   "cells": [
+    "rca/trace-atomic-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-atomic-cmi-keep",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca ranktrace --axis trace, g5 replica (device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 3bdba66f (plans/rca-arms.md, addendum \"2026-10-31, later\"; D-TBR-16 … 17): the frozen cell trace/cli-atomic-cmi-keep/fixed-kl/frozen/request of 2026-11-01-m-latent-s4-context.json, backbone aa52927454c37e12, c 1 N 8 g 1 tau 1e-05; probe layout its own; selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 52757 candidates, 52757 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 73520b978a830df1 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (ac7488b24a527996, form record); scored by tracebenchrca.scoretrace into benchmarks/trace-bench-rca/results/m/latent/seed=4/rca-trace-atomic-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "m",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-ctx-trace-26-11-06-m-s4-2026-11-07",
+   "results_sha256": "15c7a14fa1b64e2c8817abcf34c05880061463f4b8440636600cf23c9da8701a",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-08",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 52757 traces ranked; per-trace rankings in ranking-trace.json sha256 9c8218dab6d96db3 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (fb5c38dbca166ddf, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=4/control-trace-earliest/trace/"
   }
  ]
 }

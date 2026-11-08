@@ -1,0 +1,213 @@
+{
+ "rows": {
+  "control/trace-earliest/earliest": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.46961577927260284,
+      "low": 0.09701492537313433
+     },
+     "p@3": {
+      "high": 0.9596397218105119,
+      "low": 0.5042643923240938
+     },
+     "s@1": {
+      "high": 0.4294835252536769,
+      "low": 0.08022388059701492
+     },
+     "s@3": {
+      "high": 0.9640861931364725,
+      "low": 0.49093816631130066
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 5.672566371681416,
+     "n_cases": 1,
+     "n_traces": 678,
+     "p@1": 0.12094395280235988,
+     "p@3": 0.6637168141592921,
+     "s@1": 0.09587020648967552,
+     "s@3": 0.7920353982300885
+    },
+    "degrade": {
+     "exact": 0.0,
+     "mean_set_size": 7.046908315565032,
+     "n_cases": 1,
+     "n_traces": 3752,
+     "p@1": 0.09701492537313433,
+     "p@3": 0.5042643923240938,
+     "s@1": 0.08022388059701492,
+     "s@3": 0.49093816631130066
+    },
+    "pool_exhaust": {
+     "exact": 0.0,
+     "mean_set_size": 5.942537909018356,
+     "n_cases": 1,
+     "n_traces": 8771,
+     "p@1": 0.4696157792726029,
+     "p@3": 0.9596397218105119,
+     "s@1": 0.4294835252536769,
+     "s@3": 0.9640861931364725
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.0,
+     "mean_set_size": 6.232610532244438,
+     "n_cases": 3,
+     "n_traces": 10653,
+     "p@1": 0.3412184361212804,
+     "p@3": 0.8138552520416784,
+     "s@1": 0.30920867361306675,
+     "s@3": 0.8196752088613536
+    },
+    "val+test": {
+     "exact": 0.0,
+     "mean_set_size": 6.28414442700157,
+     "n_cases": 3,
+     "n_traces": 2548,
+     "p@1": 0.3649921507064364,
+     "p@3": 0.8198587127158555,
+     "s@1": 0.3292778649921507,
+     "s@3": 0.8253532182103611
+    }
+   },
+   "c": 1,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "s_tb-bozotel_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.09701492537313433,
+      "p@3": 0.5042643923240938,
+      "s@1": 0.08022388059701492,
+      "s@3": 0.49093816631130066
+     },
+     "mean_set_size": 7.046908315565032,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 27277,
+     "n_skipped": 0,
+     "n_took_4xx_only": 15,
+     "n_traces": 3752,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.20228094532551144,
+      "p@3": 0.5334707921218026,
+      "s@1": 0.14769182265850708,
+      "s@3": 0.4430754679755213
+     },
+     "root_cause_component": "tb-bozotel"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "s_tb-pividu_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.12094395280235988,
+      "p@3": 0.6637168141592921,
+      "s@1": 0.09587020648967552,
+      "s@3": 0.7920353982300885
+     },
+     "mean_set_size": 5.672566371681416,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 13321,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 678,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.2600289281006561,
+      "p@3": 0.6458352888895507,
+      "s@1": 0.19649247425796096,
+      "s@3": 0.5762030864906971
+     },
+     "root_cause_component": "tb-pividu"
+    },
+    {
+     "case_dir": "case-02",
+     "case_id": "s_tb-zutare_pool_exhaust_2",
+     "fault_kind": "pool_exhaust",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.4696157792726029,
+      "p@3": 0.9596397218105119,
+      "s@1": 0.4294835252536769,
+      "s@3": 0.9640861931364725
+     },
+     "mean_set_size": 5.942537909018356,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 11779,
+     "n_skipped": 0,
+     "n_took_4xx_only": 8,
+     "n_traces": 8771,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.26182456691705086,
+      "p@3": 0.6611160421954013,
+      "s@1": 0.18234794728068013,
+      "s@3": 0.5451626424349033
+     },
+     "root_cause_component": "tb-zutare"
+    }
+   ],
+   "corpus_dir_name": "seed=2",
+   "counts": {
+    "mean_n_services": 6.242557382016514,
+    "n_candidates": 13201,
+    "n_rc_unreachable_context": 0,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 52377,
+    "n_took_4xx_only": 23,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.0,
+    "mean_set_size": 6.220670865421602,
+    "n_cases": 3,
+    "n_traces": 13201,
+    "p@1": 0.22919155248269904,
+    "p@3": 0.709206976097966,
+    "s@1": 0.2018592041134558,
+    "s@3": 0.7490199192259538
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.2413781467810728,
+    "p@3": 0.6134740410689182,
+    "s@1": 0.17551074806571607,
+    "s@3": 0.5214803989670406
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.0,
+    "mean_set_size": 6.242557382016514,
+    "n_cases": 3,
+    "n_traces": 13201,
+    "p@1": 0.34580713582304373,
+    "p@3": 0.8150140140898416,
+    "s@1": 0.3130823422467995,
+    "s@3": 0.8207711537004773
+   }
+  }
+ }
+}

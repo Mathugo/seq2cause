@@ -1,0 +1,176 @@
+{
+ "rows": {
+  "control/trace-earliest/earliest": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.3333333333333333,
+      "low": 0.24815724815724816
+     },
+     "p@3": {
+      "high": 0.7874692874692875,
+      "low": 0.6666666666666666
+     },
+     "s@1": {
+      "high": 0.3333333333333333,
+      "low": 0.22972972972972974
+     },
+     "s@3": {
+      "high": 0.9656019656019657,
+      "low": 0.6666666666666666
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 5.0,
+     "n_cases": 1,
+     "n_traces": 3,
+     "p@1": 0.3333333333333333,
+     "p@3": 0.6666666666666666,
+     "s@1": 0.3333333333333333,
+     "s@3": 0.6666666666666666
+    },
+    "degrade": {
+     "exact": 0.0,
+     "mean_set_size": 3.942260442260442,
+     "n_cases": 1,
+     "n_traces": 814,
+     "p@1": 0.24815724815724816,
+     "p@3": 0.7874692874692875,
+     "s@1": 0.22972972972972974,
+     "s@3": 0.9656019656019657
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.0,
+     "mean_set_size": 3.9294294294294296,
+     "n_cases": 2,
+     "n_traces": 666,
+     "p@1": 0.25675675675675674,
+     "p@3": 0.7927927927927928,
+     "s@1": 0.23723723723723725,
+     "s@3": 0.9669669669669669
+    },
+    "val+test": {
+     "exact": 0.0,
+     "mean_set_size": 4.0198675496688745,
+     "n_cases": 2,
+     "n_traces": 151,
+     "p@1": 0.2119205298013245,
+     "p@3": 0.7615894039735099,
+     "s@1": 0.1986754966887417,
+     "s@3": 0.9536423841059603
+    }
+   },
+   "c": 1,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xs_tb-ninga_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.24815724815724816,
+      "p@3": 0.7874692874692875,
+      "s@1": 0.22972972972972974,
+      "s@3": 0.9656019656019657
+     },
+     "mean_set_size": 3.942260442260442,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 1122,
+     "n_skipped": 0,
+     "n_took_4xx_only": 1,
+     "n_traces": 814,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.28887882865155595,
+      "p@3": 0.7129858163949073,
+      "s@1": 0.26132268632268635,
+      "s@3": 0.783968058968059
+     },
+     "root_cause_component": "tb-ninga"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xs_tb-bozotel_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.3333333333333333,
+      "p@3": 0.6666666666666666,
+      "s@1": 0.3333333333333333,
+      "s@3": 0.6666666666666666
+     },
+     "mean_set_size": 5.0,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 462,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 3,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.25,
+      "p@3": 0.6476190476190476,
+      "s@1": 0.20000000000000004,
+      "s@3": 0.6
+     },
+     "root_cause_component": "tb-bozotel"
+    }
+   ],
+   "corpus_dir_name": "seed=2",
+   "counts": {
+    "mean_n_services": 3.9461444308445532,
+    "n_candidates": 817,
+    "n_rc_unreachable_context": 0,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 1584,
+    "n_took_4xx_only": 1,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.0,
+    "mean_set_size": 4.471130221130221,
+    "n_cases": 2,
+    "n_traces": 817,
+    "p@1": 0.29074529074529076,
+    "p@3": 0.7270679770679771,
+    "s@1": 0.28153153153153154,
+    "s@3": 0.8161343161343162
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.269439414325778,
+    "p@3": 0.6803024320069775,
+    "s@1": 0.23066134316134318,
+    "s@3": 0.6919840294840295
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.0,
+    "mean_set_size": 3.9461444308445532,
+    "n_cases": 2,
+    "n_traces": 817,
+    "p@1": 0.2484700122399021,
+    "p@3": 0.7870257037943696,
+    "s@1": 0.23011015911872704,
+    "s@3": 0.9645042839657283
+   }
+  }
+ }
+}

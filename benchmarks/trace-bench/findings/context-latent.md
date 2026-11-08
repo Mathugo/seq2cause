@@ -64,7 +64,7 @@ cell froze at c = 1 (seeds 1 and 2: identity check (iii) on the test read, the s
 | **H-atomic-cmi-f1** (atomic CMI ≥ landed `trace/cli-atomic` fixed-kl) | −0.003 (p 0.76) | −0.017 (p 0.22) | **pass** (no significant deficit) |
 | **H-atomic-cmi-tau** (atomic CMI's τ drift ≤ the landed atomic arm's F1 drift) | 0.70 vs F1 drift −0.009 | 0.10 vs −0.013 | **pass** |
 | **H-atomic-cmi-shipped** (shipped cut non-empty, F1 ≥ the landed shipped cut) | +0.013 (p 0.50), non-empty on 5 / 5 | +0.005 (p 0.44), non-empty on 5 / 5 | **pass** |
-| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not computed (root-cause rows pending) |
+| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | **pass** (landed 2026-11-08, `benchmarks/trace-bench-rca/findings/rca-trace.md`: 0 context-unreachable root causes for every keep arm; keep − overwrite hop-0 hit@1 +0.12 (IG) / +0.14 (CMI) at xs, where the overwrite cells of seeds 0, 3, 4 froze at c = 2; 0.00 at s and m) |
 
 **H-ctx-cmi-f1 fails at the session grain on xs:** the CMI cell sits 0.016–0.017 under the
 information-gain cell at matched context on every seed (overwrite: −0.015 / −0.007 / −0.012 / −0.020
@@ -149,7 +149,7 @@ landed `trace/cli-atomic`: 0.306 / 0.335, 0.301 / 0.343, 0.275 / 0.306, 0.278 / 
 | **H-atomic-cmi-f1** (atomic CMI ≥ landed `trace/cli-atomic` fixed-kl) | **−0.024 (p 0.005)** | **−0.035 (p 0.011)** | **fail** on both grains |
 | **H-atomic-cmi-tau** (atomic CMI's drift ≤ the landed atomic arm's F1 drift) | F1 drift 0.014 vs 0.022 (τ drift 0.40 decade) | 0.014 vs 0.015 (0.30) | **pass** |
 | **H-atomic-cmi-shipped** (shipped cut non-empty, F1 ≥ the landed shipped cut) | **−0.013 (p < 0.001)**, non-empty 5 / 5 | −0.022 (p 0.19), non-empty 5 / 5 | request **fail**; session pass |
-| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not computed (root-cause rows pending) |
+| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | **pass** (landed 2026-11-08, `benchmarks/trace-bench-rca/findings/rca-trace.md`: 0 context-unreachable root causes for every keep arm; keep = overwrite at hop 0 for IG, +0.016 for CMI, whose overwrite cell froze at c = 2 on seeds 2, 4) |
 
 **H-ctx-cmi-f1 fails on both grains at s** (it failed at session only on xs): the CMI cell sits under
 the information-gain cell at matched context on every seed and grain (request: −0.021 / −0.031 /
@@ -243,7 +243,7 @@ session 0.199 / 0.228 / 0.224 / 0.232 / 0.233; atomic CMI (fixed-kl): 0.173 / 0.
 | **H-atomic-cmi-f1** (atomic CMI ≥ landed `trace/cli-atomic` fixed-kl) | **−0.017 (p < 0.001)** | **−0.041 (p < 0.001)** | **fail** on both grains |
 | **H-atomic-cmi-tau** (atomic CMI's drift ≤ the landed atomic arm's F1 drift) | F1 drift 0.031 vs 0.038 (τ drift 0.61 decade) | 0.037 vs 0.053 (0.29) | **pass** |
 | **H-atomic-cmi-shipped** (shipped cut non-empty, F1 ≥ the landed shipped cut) | −0.002 (p 0.44), non-empty 5 / 5 | −0.003 (p 0.29), non-empty 5 / 5 | **pass** |
-| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not computed (per-trace rows pending) |
+| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | **pass** (landed 2026-11-08, `benchmarks/trace-bench-rca/findings/rca-trace.md`: 0 context-unreachable root causes for every keep arm; keep = overwrite at hop 0, every cell at c = 1) |
 
 **H-ctx-cmi-f1 fails on both grains at m, as at s, and the session gap widens with the rung** (xs
 −0.016 / −0.017, s −0.031 / −0.036, m −0.044 / −0.045): the CMI cell sits under the information-gain
@@ -345,7 +345,7 @@ session 0.113 / 0.135 / 0.102 / 0.131 / 0.146; atomic CMI (fixed-kl): 0.116 / 0.
 | **H-atomic-cmi-f1** (atomic CMI ≥ landed `trace/cli-atomic` fixed-kl) | −0.008 (p 0.004), inside the band | **−0.027 (p < 0.001)** | **pass at request, fail at session** |
 | **H-atomic-cmi-tau** (F1-drift basis) | 0.031 vs 0.034 | 0.021 vs 0.035 | **pass** |
 | **H-atomic-cmi-shipped** (shipped cut non-empty, F1 ≥ the landed shipped cut) | −0.0005 (p 0.49), non-empty 5 / 5 | +0.0002 (p 0.55), non-empty 5 / 5 | **pass** |
-| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not computed (per-trace rows pending) |
+| H-ctx-keep-context-share (per-trace root-cause axis) | — | — | not applicable (l has no root-cause row; passes on xs, s, m — landed 2026-11-08) |
 
 **H-ctx-cmi-f1 fails on both grains at l, as at s and m, but the absolute session gap no longer widens:**
 xs −0.016 / −0.017, s −0.031 / −0.036, m −0.044 / −0.045, l −0.032 / −0.034. The levels fall faster than
@@ -552,13 +552,26 @@ within 0.01 per sequence on every rung. (5) The drift hypotheses pass everywhere
 basis of l and xl they say little (the lower-F1 arm drifts less by construction); the τ-drift readings
 of xs, s and m are the test, and there the CMI's drift is the larger of the two at m (within the
 registered half-decade). The root-cause axes of the family are in `benchmarks/trace-bench-rca/findings/`
-(xs landed; s, m pending).
+(case level xs / s / m landed 2026-11-02 / 11-06; per trace xs / s / m landed 2026-11-08; the closing paragraph below).
 
 
-### Not landed here
+### Across the axes (closing, 2026-11-08)
 
-The xs case-level root-cause rows of the family are landed (`benchmarks/trace-bench-rca/findings/rca-latent.md`,
-sections of 2026-11-02 and 2026-11-06, xs / s / m: H-rca-source passes on every rung, H-rca-hop0 fails
-(hop 0 costs at xs and s, leads at m), H-rca-presub fails (the pre-fault subtraction helps at xs and s, not at m),
-the family's hop0 rows under `control/rule` and `rca/rcd` everywhere); the per-trace axis (the GPU replica) follows.
-The type-level and per-sequence axes are complete on xs … xl, the case-level root-cause axis on xs … m.
+Every axis of the family is landed: type level and per sequence on xs … xl (above), the case-level root-cause axis on xs / s / m
+(`benchmarks/trace-bench-rca/findings/rca-latent.md`, sections 2026-11-02 and 2026-11-06) and the per-trace root-cause axis on
+xs / s / m (`benchmarks/trace-bench-rca/findings/rca-trace.md`, section 2026-11-08; the GPU replica). Read together: (1) **the CMI
+is never better than the information gain on any axis** — below it at the type level on every rung (session −0.016 … −0.045,
+every seed), tied at the case level (identical `hop0` per seed across the four core arms at s), and below it per trace at s and m
+(hop-0 hit@1 −0.08 / −0.03, hop-1 −0.14 / −0.08: the smaller frozen τ admits more edges and the upstream closure pays in
+precision); the author's claim that the two scores agree within 0.01 holds on no axis above xs. (2) **The keep layout is free**:
+equal to overwrite at the type level (within 0.002) and per sequence (within 0.01), equal per trace wherever both cells froze at
+c = 1, and better per trace exactly where the overwrite cell froze at c = 2 and put root-cause positions inside the context (xs:
+27 % of them, +0.12 … +0.14 hit@1; H-ctx-keep-context-share passes with 0 unreachable root causes for every keep arm). (3) **The
+atomic CMI arm beats nothing**: under the landed atomic information-gain arm at the type level on s, m, l, within 0.05 of the core
+arms at hop 0 per trace and the weakest TRACE row at hop ≥ 1 on s and m. (4) **The root-cause readings depend on the axis, not the
+arm**: at the case level the family's `hop0` reads 0.50 / 0.24 / 0.22 against `rca/rcd` 0.82 / 0.90 / 0.52 and `source` is the
+best post-only reading on every rung (H-rca-source passes 21 / 21; H-rca-hop0 and H-rca-presub fail — the directions reverse with the
+rung); per failed request the same arms read `hop0` 0.49–0.74 and `source` 0.53–0.64, two to three times random, above the
+earliest-error control on every rung and arm (H-trace-earliest passes 15 / 15) and 0.05–0.20 under the call-tree floor, while the
+four hypotheses of the landed per-trace axis fail for the family as they did for `rca/trace` and `rca/trace-core`. Nothing in the
+family moves a landed number; the paper's placement of any of it is the paper's decision.
