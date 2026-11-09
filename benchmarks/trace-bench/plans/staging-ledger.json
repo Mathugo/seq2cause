@@ -31818,6 +31818,546 @@
    "arm": "control/trace-earliest",
    "added": "2026-11-08",
    "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-ctx-trace-26-11-06 (one g5 box, fifteen corpora), code 3bdba66f; selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 52757 traces ranked; per-trace rankings in ranking-trace.json sha256 9c8218dab6d96db3 (untracked; bucket + local out/); prior-rung record = the s rank-trace record of the same arm made earlier in the same chain (fb5c38dbca166ddf, form record); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/m/latent/seed=4/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-rcd",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "8d15030097b6652014d3693aee8aafd126789e02d026209b475e8a98e2e75504",
+   "model_sha256": "none",
+   "cells": [
+    "rca/rcd/ranking"
+   ],
+   "arm": "rca/rcd",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rankrcd on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s0-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), D-TBR-6 / D-TBR-7 (the pinned environment built on the box by scripts/envs/rcd-env.sh); 5 cases x 10 seeded runs, 0 failed runs, 0 unranked; prior-rung record = the m seed-0 rank record of the same arm (9fe9b7a4b8315992, form ledger); scored by tracebenchrca.scorercd into benchmarks/trace-bench-rca/results/l/latent/seed=0/rca-rcd/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-baro",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "62b8d113de176ac3b63c3b63630d18c691972499841f8377d7c3dc8930ab77c9",
+   "model_sha256": "none",
+   "cells": [
+    "rca/baro/ranking"
+   ],
+   "arm": "rca/baro",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s0-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), in the method environment trace-bench-rca built on the box by scripts/envs/rca-env.sh (Python 3.12, RCAEval and fse-baro at their pins); 5 cases, 0 unranked; prior-rung record = the m seed-0 rank record of the same arm (a1e8c09e8744fb8d, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=0/rca-baro/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-control-rule",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "afe6f2792fa3bf009f5918f9e8577cf647550e9017941fcbfd1aeea27fd030f3",
+   "model_sha256": "none",
+   "cells": [
+    "control/rule/ranking"
+   ],
+   "arm": "control/rule",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s0-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set) (plans/controls.md §2); 5 cases, 0 unranked; prior-rung record = the m seed-0 rank record of the same arm (aeac7bb8e8570068, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=0/control-rule/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "a2b20d9ce8da20e449bd2b70d5f7941199d6a1c2eb2381034e4063be593ad5bb",
+   "model_sha256": "5a2027cfd0e5abe3dc6992d8f08c1a22d1d7a74ec142aa220e47803732b4aff8",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s0-context.json, backbone 5a2027cfd0e5abe3, c 1 N 8 g 1 tau 1e-05; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 38771 candidates, 38771 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 06518e5bd8e32036 (untracked; bucket + local out/); prior-rung record = the m seed-0 rank-trace record of the same arm (54282475c25d61b4, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=0/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "f517f00325767e51bdc44a9c5f318d2c101f6c7aef8d875756d975431dfcaef6",
+   "model_sha256": "5a2027cfd0e5abe3dc6992d8f08c1a22d1d7a74ec142aa220e47803732b4aff8",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s0-context.json, backbone 5a2027cfd0e5abe3, c 1 N 8 g 1 tau 1e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 38771 candidates, 38771 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 166de425e67d51b7 (untracked; bucket + local out/); prior-rung record = the m seed-0 rank-trace record of the same arm (edd03c14a5d1303a, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=0/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 0,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-l-s0-26-11-09",
+   "results_sha256": "63a5c163fb83e2e5f77a2893ea8ce7a0cedaa576c19c6f11194a0d620f6bd1b6",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-l-s0-26-11-09 (one g5.xlarge per seed), code 1b59e52a (addendum 2026-11-08: the 180 s export, D-TBR-21); selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 38771 traces ranked; per-trace rankings in ranking-trace.json sha256 f4ebefb2b00c8d74 (untracked; bucket + local out/); prior-rung record = the m seed-0 rank-trace record of the same arm (8064e4b7ae927dd0, form ledger); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/l/latent/seed=0/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-rcd",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "9a4e2d462934662cba7194f12c1b624b03d400e6421d53ba47369e85788b321c",
+   "model_sha256": "none",
+   "cells": [
+    "rca/rcd/ranking"
+   ],
+   "arm": "rca/rcd",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rankrcd on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s1-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), D-TBR-6 / D-TBR-7 (the pinned environment built on the box by scripts/envs/rcd-env.sh); 5 cases x 10 seeded runs, 0 failed runs, 0 unranked; prior-rung record = the m seed-1 rank record of the same arm (733e254a9a27d328, form ledger); scored by tracebenchrca.scorercd into benchmarks/trace-bench-rca/results/l/latent/seed=1/rca-rcd/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-baro",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "03343003ebc600b5b7bcfbc912271af61b36171bd8b97426f504b60a30c7e0a7",
+   "model_sha256": "none",
+   "cells": [
+    "rca/baro/ranking"
+   ],
+   "arm": "rca/baro",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s1-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), in the method environment trace-bench-rca built on the box by scripts/envs/rca-env.sh (Python 3.12, RCAEval and fse-baro at their pins); 5 cases, 0 unranked; prior-rung record = the m seed-1 rank record of the same arm (1ea5bba9542aabf6, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=1/rca-baro/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-control-rule",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "567c4cf5f4847ee55d9c11fd5a4a5837c48d765bf0a12e5cc0ca86bd09ede2da",
+   "model_sha256": "none",
+   "cells": [
+    "control/rule/ranking"
+   ],
+   "arm": "control/rule",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s1-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set) (plans/controls.md §2); 5 cases, 0 unranked; prior-rung record = the m seed-1 rank record of the same arm (6d10beca10c81a12, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=1/control-rule/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "fddf56660c56030a76a445bab581f86ababeeb54e13562577126a78fad89c994",
+   "model_sha256": "e6af4f30b49709fd9bd12025f1ebede652e75a592766f212bcc5319379b1ef58",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s1-context.json, backbone e6af4f30b49709fd, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 39074 candidates, 39074 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 44a7f3f77564a4dd (untracked; bucket + local out/); prior-rung record = the m seed-1 rank-trace record of the same arm (6dd99323769d41d2, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=1/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "e9a78667c66d6319d64ec7cf64c008f7d05cdbc73d9bb82ff110bcc602c2f815",
+   "model_sha256": "e6af4f30b49709fd9bd12025f1ebede652e75a592766f212bcc5319379b1ef58",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s1-context.json, backbone e6af4f30b49709fd, c 1 N 8 g 1 tau 1e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 39074 candidates, 39074 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 9e1a737427989b9d (untracked; bucket + local out/); prior-rung record = the m seed-1 rank-trace record of the same arm (d28517e3c0cfec36, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=1/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 1,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-l-s1-26-11-09",
+   "results_sha256": "64e57a7c74428cb910a3ca19ce1f2dc13540fb35bdc1d2f26dc0b380fa8d50ca",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-l-s1-26-11-09 (one g5.xlarge per seed), code 1b59e52a (addendum 2026-11-08: the 180 s export, D-TBR-21); selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 39074 traces ranked; per-trace rankings in ranking-trace.json sha256 b7dbcd7c67cbf8d7 (untracked; bucket + local out/); prior-rung record = the m seed-1 rank-trace record of the same arm (cd16c70a43722c7b, form ledger); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/l/latent/seed=1/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-rcd",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "64286cbc3b34fd3e521ce97165a02940c8563430a30a216c4447f49aa8c69375",
+   "model_sha256": "none",
+   "cells": [
+    "rca/rcd/ranking"
+   ],
+   "arm": "rca/rcd",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rankrcd on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s2-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), D-TBR-6 / D-TBR-7 (the pinned environment built on the box by scripts/envs/rcd-env.sh); 5 cases x 10 seeded runs, 0 failed runs, 0 unranked; prior-rung record = the m seed-2 rank record of the same arm (ddc03ef2a08825e4, form ledger); scored by tracebenchrca.scorercd into benchmarks/trace-bench-rca/results/l/latent/seed=2/rca-rcd/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-baro",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "72c7c120f8fe9cb466f75c83ef1633feaa173e00b0bb464a4ee0db3f4cc45cef",
+   "model_sha256": "none",
+   "cells": [
+    "rca/baro/ranking"
+   ],
+   "arm": "rca/baro",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s2-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), in the method environment trace-bench-rca built on the box by scripts/envs/rca-env.sh (Python 3.12, RCAEval and fse-baro at their pins); 5 cases, 0 unranked; prior-rung record = the m seed-2 rank record of the same arm (820027dea3145e04, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=2/rca-baro/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-control-rule",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "1e77159d60bd82c3d6ed052f9fab6d2b266a05cb52afc2ac325d3db9a1142f7c",
+   "model_sha256": "none",
+   "cells": [
+    "control/rule/ranking"
+   ],
+   "arm": "control/rule",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s2-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set) (plans/controls.md §2); 5 cases, 0 unranked; prior-rung record = the m seed-2 rank record of the same arm (27892b20968c4639, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=2/control-rule/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "84f1a9a962260e5c84e2690b1f579018b14836424907e5b4f20ef212eb2293ea",
+   "model_sha256": "799793076bf61ecb85646a5c32ffb03642dc3f8218590cc603afcf0c7185308c",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s2-context.json, backbone 799793076bf61ecb, c 1 N 8 g 1 tau 1e-05; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 42898 candidates, 42898 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 54e9859fae600d10 (untracked; bucket + local out/); prior-rung record = the m seed-2 rank-trace record of the same arm (067e2e08e629f190, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=2/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "727c40c52d288464172678cb536800e0533c821402d2ccb952288095d9154cd5",
+   "model_sha256": "799793076bf61ecb85646a5c32ffb03642dc3f8218590cc603afcf0c7185308c",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s2-context.json, backbone 799793076bf61ecb, c 1 N 8 g 1 tau 1e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 42898 candidates, 42898 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 f1d6760041083bbb (untracked; bucket + local out/); prior-rung record = the m seed-2 rank-trace record of the same arm (d30289c6c51d8d83, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=2/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 2,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-l-s2-26-11-09",
+   "results_sha256": "d6c44866143d244f7c0fe1b778b82aefb9393a3bd2079b0ec68e3e363a7cfedd",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-l-s2-26-11-09 (one g5.xlarge per seed), code 1b59e52a (addendum 2026-11-08: the 180 s export, D-TBR-21); selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 42898 traces ranked; per-trace rankings in ranking-trace.json sha256 a8c592043a3ec675 (untracked; bucket + local out/); prior-rung record = the m seed-2 rank-trace record of the same arm (d99d3397d6d3b072, form ledger); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/l/latent/seed=2/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-rcd",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "fe5f3cf4eefd66da1f7a4360e36cc6bd95025b41aebf4c7b6f3a31ff2bc649ea",
+   "model_sha256": "none",
+   "cells": [
+    "rca/rcd/ranking"
+   ],
+   "arm": "rca/rcd",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rankrcd on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s3-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), D-TBR-6 / D-TBR-7 (the pinned environment built on the box by scripts/envs/rcd-env.sh); 5 cases x 10 seeded runs, 0 failed runs, 0 unranked; prior-rung record = the m seed-3 rank record of the same arm (f42f5db491f671ef, form ledger); scored by tracebenchrca.scorercd into benchmarks/trace-bench-rca/results/l/latent/seed=3/rca-rcd/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-baro",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "48e64f6cdbe010df17b5f4ba456dfde29d2191b8a4c461004c1d3c0a4b92b2ac",
+   "model_sha256": "none",
+   "cells": [
+    "rca/baro/ranking"
+   ],
+   "arm": "rca/baro",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s3-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), in the method environment trace-bench-rca built on the box by scripts/envs/rca-env.sh (Python 3.12, RCAEval and fse-baro at their pins); 5 cases, 0 unranked; prior-rung record = the m seed-3 rank record of the same arm (507eb88ee0297a3c, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=3/rca-baro/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-control-rule",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "9fb2d5b68a4d2e1e147ae21ce122d8d2041d6d9c919322d830cf3ea212a15c81",
+   "model_sha256": "none",
+   "cells": [
+    "control/rule/ranking"
+   ],
+   "arm": "control/rule",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s3-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set) (plans/controls.md §2); 5 cases, 0 unranked; prior-rung record = the m seed-3 rank record of the same arm (990d35bd9361fc7a, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=3/control-rule/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "89667b3b9ec8fb80ccfd25dcd59fa4a3b2d0d41821e72a646a9f3f5be8628cdf",
+   "model_sha256": "dfe82ff05d3cd37eb46c4b9437b32eefee7a858024241fc58c02957bdee5b2be",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s3-context.json, backbone dfe82ff05d3cd37e, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 41089 candidates, 41089 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 7d4f7424f7990873 (untracked; bucket + local out/); prior-rung record = the m seed-3 rank-trace record of the same arm (9772ab7d90802b0e, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=3/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "82ebdfd9e6b2168eba6b4ccf847f9915b2d56afe81613e5f5998c3444f9f44a6",
+   "model_sha256": "dfe82ff05d3cd37eb46c4b9437b32eefee7a858024241fc58c02957bdee5b2be",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s3-context.json, backbone dfe82ff05d3cd37e, c 1 N 8 g 1 tau 1e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 41089 candidates, 41089 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 fc055011b1c37753 (untracked; bucket + local out/); prior-rung record = the m seed-3 rank-trace record of the same arm (e832db8074940163, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=3/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 3,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-l-s3-26-11-09",
+   "results_sha256": "2db432cdd0fd7c8c86e4d7c6faa7d271ed8412cdc79cc42c7407a5f7896acfb2",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-l-s3-26-11-09 (one g5.xlarge per seed), code 1b59e52a (addendum 2026-11-08: the 180 s export, D-TBR-21); selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 41089 traces ranked; per-trace rankings in ranking-trace.json sha256 3221ab0e5df6bc87 (untracked; bucket + local out/); prior-rung record = the m seed-3 rank-trace record of the same arm (2b6f4d6856c75149, form ledger); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/l/latent/seed=3/control-trace-earliest/trace/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-rcd",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "fa89dc540ba56713cb6d2b11c207708bb8933df18b36fd6d0661505048a0dd9b",
+   "model_sha256": "none",
+   "cells": [
+    "rca/rcd/ranking"
+   ],
+   "arm": "rca/rcd",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rankrcd on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s4-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), D-TBR-6 / D-TBR-7 (the pinned environment built on the box by scripts/envs/rcd-env.sh); 5 cases x 10 seeded runs, 0 failed runs, 0 unranked; prior-rung record = the m seed-4 rank record of the same arm (7a05426b41b6940c, form ledger); scored by tracebenchrca.scorercd into benchmarks/trace-bench-rca/results/l/latent/seed=4/rca-rcd/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-rca-baro",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "dca2fb7f399ffb58ea17a45e6cf39cfde947aeb3c838f0405e3fd53bc63ea13c",
+   "model_sha256": "none",
+   "cells": [
+    "rca/baro/ranking"
+   ],
+   "arm": "rca/baro",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s4-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set), in the method environment trace-bench-rca built on the box by scripts/envs/rca-env.sh (Python 3.12, RCAEval and fse-baro at their pins); 5 cases, 0 unranked; prior-rung record = the m seed-4 rank record of the same arm (7e1e7fa674fd02fc, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=4/rca-baro/"
+  },
+  {
+   "stage": "rank",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "service",
+   "split": "all cases",
+   "read": "rank-control-rule",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "c2c04b190fb30262fccab80e9579ab7728600f5349fb767edd066119aefa2f26",
+   "model_sha256": "none",
+   "cells": [
+    "control/rule/ranking"
+   ],
+   "arm": "control/rule",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca rank stage on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed; scripts/jobs/rca-l-s4-26-11-08.sh), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-21 the 180 s export under the relaxed rule with three fault boundaries floored, D-TBR-22 the exporter pin, D-TBR-23 the l broadcast set) (plans/controls.md §2); 5 cases, 0 unranked; prior-rung record = the m seed-4 rank record of the same arm (5afbd00db0cdbe05, form ledger); scored by tracebenchrca.score into benchmarks/trace-bench-rca/results/l/latent/seed=4/control-rule/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-ig-keep",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "c29be7e88518f886ac7ac177cc388af47eaf685283da7dc3ff192b90294b99f1",
+   "model_sha256": "c88ff00353906cd34cd5b3314a6c6ed4354f0b529f0c46280fc937d688794269",
+   "cells": [
+    "rca/trace-ig-keep/trace"
+   ],
+   "arm": "rca/trace-ig-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-ig-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s4-context.json, backbone c88ff00353906cd3, c 1 N 8 g 1 tau 0.0001; probe layout shared with rca/trace-cmi-keep (this run probed); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 35655 candidates, 35655 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 bbd6e144807e483b (untracked; bucket + local out/); prior-rung record = the m seed-4 rank-trace record of the same arm (f41ecb6d62c1cd8c, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=4/rca-trace-ig-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-rca-trace-cmi-keep",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "10042b8745ee29d49d9042039c0af1e5088609e38e77f223289f88ecfa1c0748",
+   "model_sha256": "c88ff00353906cd34cd5b3314a6c6ed4354f0b529f0c46280fc937d688794269",
+   "cells": [
+    "rca/trace-cmi-keep/trace"
+   ],
+   "arm": "rca/trace-cmi-keep",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca ranktrace --axis trace on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed; device cuda; a disclosed GPU replica of the frozen cells, D-TBR-15's class; no landed CPU row of these cells), code 1b59e52a (plans/rca-arms.md, addendum 2026-11-08; D-TBR-16 … 17, D-TBR-21 … 23): the frozen cell trace/core-cmi-keep/fixed-kl/frozen/request of 2026-11-02-l-latent-s4-context.json, backbone c88ff00353906cd3, c 1 N 8 g 1 tau 1e-07; probe layout shared with rca/trace-ig-keep (runner_reused: re-ranked from its work files, sha256 recorded); selection rule R, no cap: every failed request trace wholly inside the fault window; readings hop1 / hop0 / source per trace (primary hop0); 5 cases, 35655 candidates, 35655 probed, 0 skipped short; per-trace rankings in ranking-trace.json sha256 cd04c48f39db5ea9 (untracked; bucket + local out/); prior-rung record = the m seed-4 rank-trace record of the same arm (196a9ab725e819d8, form ledger); scored by tracebenchrca.scoretrace (broadcast rows: control/rule, rca/baro, rca/rcd of this seed, D-TBR-23) into benchmarks/trace-bench-rca/results/l/latent/seed=4/rca-trace-cmi-keep/trace/"
+  },
+  {
+   "stage": "rank-trace",
+   "rung": "l",
+   "variant": "latent",
+   "seed": 4,
+   "grain": "request",
+   "split": "all splits (failed POST traces)",
+   "read": "rank-trace-control-trace-earliest",
+   "run": "rca-l-s4-26-11-09",
+   "results_sha256": "645fb28c991f70f60824abe99deca0cb357eca17cac3240a61ddd5bfc3ccd0e9",
+   "model_sha256": "none",
+   "cells": [
+    "control/trace-earliest/trace"
+   ],
+   "arm": "control/trace-earliest",
+   "added": "2026-11-09",
+   "note": "trace-bench-rca earliest --axis trace (the earliest-error control per trace, plans/controls.md §3; plans/rca-arms.md addendum \"2026-10-31, later\"; D-TBR-19), on the EC2 replica rca-l-s4-26-11-09 (one g5.xlarge per seed), code 1b59e52a (addendum 2026-11-08: the 180 s export, D-TBR-21); selection rule R, no cap: every failed request trace wholly inside the fault window; 5 cases, 35655 traces ranked; per-trace rankings in ranking-trace.json sha256 33983ff6e1b26a77 (untracked; bucket + local out/); prior-rung record = the m seed-4 rank-trace record of the same arm (15c7a14fa1b64e2c, form ledger); scored by tracebenchrca.scoretrace --rows arm-only into benchmarks/trace-bench-rca/results/l/latent/seed=4/control-trace-earliest/trace/"
   }
  ]
 }
