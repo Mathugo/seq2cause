@@ -76,8 +76,26 @@ def test_expect_cases_binds_a_re_export_to_the_landed_record(tmp_path, monkeypat
     corpus = tmp_path / "instances/xs/latent/seed=0"
     corpus.mkdir(parents=True)
     landed = tmp_path / "landed"
-    assert export_mod.main(["--corpus-dir", str(corpus), "--rung", "xs", "--out", str(tmp_path / "e0"), "--workers", "1",
-                            "--extras", "--expect-cases", "none", "--output-folder", str(landed)]) == 0
+    assert (
+        export_mod.main(
+            [
+                "--corpus-dir",
+                str(corpus),
+                "--rung",
+                "xs",
+                "--out",
+                str(tmp_path / "e0"),
+                "--workers",
+                "1",
+                "--extras",
+                "--expect-cases",
+                "none",
+                "--output-folder",
+                str(landed),
+            ]
+        )
+        == 0
+    )
     record = landed / RUN_DIR / RESULTS_JSON
     res = export_mod.export(corpus, "xs", tmp_path / "e1", 1, (), str(record))
     assert res["expected_cases"]["n_cases"] == 2 and res["expected_cases"]["path"] == str(record)
@@ -126,4 +144,4 @@ def test_width_mismatch_and_missing_exporter_are_refused(monkeypatch):
 def test_real_exporter_when_the_pin_carries_it():
     pytest.importorskip("tracebench.export_rca")
     mod = export_mod._exporter()
-    assert hasattr(mod, "export") and dict(mod.BIN_WIDTH_S) == {"xs": 30, "s": 15, "m": 60}
+    assert hasattr(mod, "export") and dict(mod.BIN_WIDTH_S) == {"xs": 30, "s": 15, "m": 60, "l": 180}

@@ -48,8 +48,10 @@ from tracebenchrca.constants import (
     INPUTS,
     MIN_POST_BINS,
     ROOT_CAUSE_ARMS,
+    SHORTEST_FAULT_S,
     TRACE_AXIS_ARMS,
     TRACE_BROADCAST_ARMS,
+    TRACE_BROADCAST_ARMS_BY_RUNG,
 )
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -173,9 +175,12 @@ def test_code_pins_are_full_shas_and_controls_have_none():
 
 
 def test_registered_widths_are_the_exporters_and_divide_the_shard():
-    assert BIN_WIDTH_S == {"xs": 30, "s": 15, "m": 60}
-    for w in BIN_WIDTH_S.values():
-        assert 900 % w == 0 and 300 // w >= MIN_POST_BINS  # the shortest shipped fault (xs crash, 300 s) keeps ≥ 5 bins
+    assert BIN_WIDTH_S == {"xs": 30, "s": 15, "m": 60, "l": 180}  # l by the addendum of 2026-11-08 (D-TBR-21)
+    for rung, w in BIN_WIDTH_S.items():
+        assert 900 % w == 0 and SHORTEST_FAULT_S[rung] // w >= MIN_POST_BINS  # the rung's shortest fault keeps ≥ 5 bins
+    assert TRACE_BROADCAST_ARMS_BY_RUNG["l"] == (ARM_CONTROL_RULE, ARM_BARO, ARM_RCD) and all(
+        TRACE_BROADCAST_ARMS_BY_RUNG[g] == TRACE_BROADCAST_ARMS for g in ("xs", "s", "m")
+    )  # D-TBR-23
     export_rca = pytest.importorskip("tracebench.export_rca")  # present once the benchmark pin carries the exporter
     assert dict(export_rca.BIN_WIDTH_S) == BIN_WIDTH_S
     assert tuple(export_rca.METRICS) == ("count", "error", "latency-50", "latency-95")
