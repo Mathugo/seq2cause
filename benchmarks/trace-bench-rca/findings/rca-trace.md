@@ -280,3 +280,135 @@ on every service metric (same C). Cell = hit@1 [95 % interval over cases] / hit@
 - The ledger gained 90 `rank-trace` entries (75 arms, 15 control); `results/<rung>/latent/seed=<k>/pull-trace-ctx/` records the local
   re-pull of the score-side tier (the corpora had been removed after the s / m landing); the box's pull and export records are
   `pull-rca-ctx-trace/` and `export-ctx-trace/`.
+
+## The l rung, landed 2026-11-09: `rca/trace-ig-keep`, `rca/trace-cmi-keep`, `control/trace-earliest` per failed request, with `rca/rcd`, `rca/baro` and `control/rule` as broadcast sources (l × five seeds; a harness run under a relaxed bin rule)
+
+The l rung of the root-cause work (`plans/rca-arms.md`, addendum 2026-11-08; D-TBR-21 … 23; owner decisions 2026-11-08) is a
+**harness result**: the paper's outcome of 2026-10-26 ("no root-cause arm runs at l at this submission") stands as the paper's. The
+export uses the relaxed rule (180 s bins, N = 5; three of l's ten fault boundaries floored to their bin, offsets recorded per case:
+case-02 end +60 s, case-03 inject +120 s, case-04 inject +60 s on every seed) through the benchmark at the pinned commit; the
+case-level broadcast sources are `rca/rcd` (10 seeded runs per case in the pinned environment), `rca/baro` and `control/rule`
+only (D-TBR-23: CIRCA, PC-PageRank, BOCPD, TraceRCA and CausalRCA are not run at 152 services; their l rows are absent, not
+failed). Five EC2 replicas, one g5.xlarge per seed (`seq2cause-bench-26-11-08-rca-l-s<k>.tfvars`; job scripts
+`scripts/jobs/rca-l-s<k>-26-11-08.sh`, PRs #90 … #92; code `1b59e52a`; the chains 21–23 min each after the environment builds;
+two earlier applies died in setup and at `rca/baro` — RUN.md run register), the probes on the A10G (`--device cuda`; a disclosed
+GPU replica of the frozen cells, D-TBR-15's class; no CPU row). Selection as on the other rungs — rule R, no cap: 38 771 / 39 074 /
+42 898 / 41 089 / 35 655 failed POST traces per seed (197 487; seed 0 = the premise count exactly; 0 skipped short); the probes read
+the keep cells of the committed l context freezes (`freezes/2026-11-02-l-latent-s<k>-context.json`, `fixed-kl` request cells, every
+seed c = 1, N = 8, g = 1; τ 1e-5 for the information gain and 1e-7 for the CMI on seed 0) in one forward per seed (the CMI arm re-ranks
+the information-gain arm's work files, `runner_reused`; 482–578 s per probe, 16.8–26.0 M token positions). Staging: every l row on the
+m ledger entry of the same arm and stage (form ledger). **Scored traces C = 5 234 over the five seeds (645 / 789 / 1 801 / 851 /
+1 148 per seed; m: 16 758): at l the fault takes in few failed requests (the crash in 6–20 and the cache flush in 4–158 traces per corpus), so
+the intervals below are wider than m's and the per-kind rows for `crash` (n = 61) and `cache_flush` (n = 220) rest on small sets.**
+Scored locally (`scoretrace`, B = 2000, bootstrap seed 0; `--rows all` for the arms, `arm-only` for the control; `score` / `scorercd`
+for the three broadcast sources first); `reporttrace --rungs m l` → `tables/rca-trace-l/` (22 rows × 3 tables: m, l, pooled; the m rows
+re-pool identically to `tables/rca-trace-context/` on every metric and interval). The landed `tables/rca-trace/`, `tables/rca-trace-context/`
+and `tables/rca-latent/` re-run byte-equal (76 / 76, 124 / 124 and 66 / 66 pooled files; the two per-trace summaries gain only the "not run"
+keys of the hypotheses the code acquired since). Cell = hit@1 [95 % interval over cases] / hit@3 / exact set (mean set size):
+
+| row | `m` (landed 2026-11-08) | `l` |
+|---|---|---|
+| `rca/trace-ig-keep/hop1` | 0.258 [0.188, 0.327] / 0.494 / 0.093 (3.05) | 0.149 [0.088, 0.217] / 0.444 / 0.057 (4.08) |
+| `rca/trace-ig-keep/hop0` | 0.659 [0.594, 0.709] / 0.904 / 0.149 (3.99) | **0.603 [0.538, 0.663] / 0.824** / 0.054 (4.87) |
+| `rca/trace-ig-keep/source` | 0.619 [0.559, 0.674] / 0.850 / 0.483 (1.56) | 0.612 [0.552, 0.671] / 0.711 / 0.526 (1.27) |
+| `rca/trace-cmi-keep/hop1` | 0.174 [0.115, 0.235] / 0.430 / 0.054 (3.34) | 0.119 [0.069, 0.174] / 0.368 / 0.045 (3.89) |
+| `rca/trace-cmi-keep/hop0` | 0.627 [0.555, 0.687] / 0.856 / 0.110 (4.27) | **0.559 [0.484, 0.626] / 0.774** / 0.049 (4.82) |
+| `rca/trace-cmi-keep/source` | 0.631 [0.570, 0.684] / 0.806 / 0.520 (1.43) | 0.594 [0.527, 0.652] / 0.684 / 0.486 (1.32) |
+| `control/trace-earliest/earliest` | 0.428 [0.310, 0.557] / 0.881 / 0.008 (5.92) | 0.404 [0.282, 0.544] / 0.815 / 0.000 (6.28) |
+| `floor/trace-topology/hop1` | 0.191 [0.092, 0.301] / 0.390 / 0.052 (3.34) | 0.169 [0.068, 0.290] / 0.395 / 0.025 (3.67) |
+| `floor/trace-topology/hop0` | 0.695 [0.629, 0.755] / 0.956 / 0.133 (4.46) | 0.693 [0.621, 0.763] / 0.954 / 0.106 (4.86) |
+| `control/trace-random` | 0.199 [0.177, 0.225] / 0.569 / n/a | 0.181 [0.168, 0.194] / 0.540 / n/a |
+| `control/trace-callees/hop1` | 0.174 [0.120, 0.229] / 0.384 / n/a | 0.151 [0.108, 0.196] / 0.366 / n/a |
+| `control/trace-callees/hop0` | 0.351 [0.312, 0.387] / 0.723 / n/a | 0.314 [0.266, 0.362] / 0.681 / n/a |
+| `broadcast/control/rule` | 0.399 [0.246, 0.558] / 0.716 / n/a | 0.493 [0.328, 0.666] / 0.688 / n/a |
+| `broadcast/rca/baro` | 0.381 [0.233, 0.530] / 0.767 / n/a | 0.436 [0.261, 0.605] / 0.750 / n/a |
+| `broadcast/rca/rcd` | 0.477 [0.292, 0.661] / 0.732 / n/a | 0.398 [0.212, 0.587] / 0.718 / n/a |
+
+- Position hit@1 / hit@3 in the arm's own window at l: information gain `hop0` 0.60 / 0.80, `source` 0.59 / 0.71; CMI `hop0`
+  0.53 / 0.75, `source` 0.59 / 0.69 (m: 0.66 / 0.87 and 0.63 / 0.82 at `hop0`).
+- Per seed at l (`hop0` hit@1 / hit@3): `rca/trace-ig-keep` 0.62 / 0.76, 0.61 / 0.81, 0.56 / 0.82, 0.60 / 0.84, 0.63 / 0.90;
+  `rca/trace-cmi-keep` 0.52 / 0.70, 0.62 / 0.82, 0.47 / 0.73, 0.55 / 0.76, 0.63 / 0.86; the earliest control 0.34 / 0.79, 0.46 / 0.85,
+  0.44 / 0.80, 0.27 / 0.77, 0.51 / 0.87; broadcast RCD 0.41 / 0.66, 0.44 / 0.85, 0.40 / 0.75, 0.34 / 0.61, 0.40 / 0.72; the floor 0.70 / 0.98,
+  0.71 / 0.95, 0.66 / 0.92, 0.75 / 0.95, 0.65 / 0.97.
+- Per fault kind at l (hit@1; n = 220 cache-flush, 61 crash, 3 916 degrade, 1 037 pool-exhaust traces): `rca/trace-ig-keep/hop0`
+  cache-flush 0.45 · crash 0.59 · degrade 0.62 · pool-exhaust 0.73 (m 0.58 · 0.57 · 0.68 · 0.78); `rca/trace-cmi-keep/hop0` 0.41 · 0.46 · 0.61 ·
+  0.70; `…/source` 0.45 · 0.62 · 0.62 · 0.74 (IG), 0.45 · 0.53 · 0.62 · 0.76 (CMI); the floor `hop0` 0.56 · 0.73 · 0.65 · 0.87; the earliest control 0.23 ·
+  0.13 · 0.64 · 0.39; random 0.16 · 0.17 · 0.20 · 0.18; broadcast RCD 0.00 · 0.02 · 0.50 · 0.98, BARO 0.62 · 0.11 · 0.24 · 0.96, the rule 0.47 · 0.14 ·
+  0.43 · 0.99.
+- Case level at l (descriptive; the rows are the broadcast sources, no case-level table or hypothesis is registered at l — owner
+  2026-11-08): `rca/rcd` AC@1 0.40 / 0.40 / 0.40 / 0.26 / 0.34 per seed (AC@3 0.36–0.40; the run-averaged aggregation; m pooled 0.40 /
+  0.55), `rca/baro` 0.00 / 0.00 / 0.20 / 0.00 / 0.00, `control/rule` 0.20 / 0.20 / 0.20 / 0.20 / 0.00; random AC@1 0.0066 over 152
+  candidates. The three case-level rankings are in `results/l/latent/seed=<k>/<slug>/` with their `score-rca.json`.
+
+### Hypotheses (`plans/rca-arms.md`, addendum 2026-11-08; mechanical in `reporttrace.l_hypotheses`, reading `hop0`, pooled over five seeds)
+
+| hypothesis | threshold | `rca/trace-ig-keep` | `rca/trace-cmi-keep` | verdict |
+|---|---|---|---|---|
+| **H-l-top3** — hit@3 ≥ 0.80 | 0.80 | 0.824 | 0.774 | **fail** (the CMI arm 0.026 under) |
+| **H-l-over-free** — hit@1 ≥ best free baseline + 0.15 | best = earliest 0.404 (callees `hop0` 0.314, random 0.181) | +0.198 | +0.154 | **pass** (the CMI arm by 0.004) |
+| **H-l-hold** — \|l − m\| ≤ 0.10 on hit@1 and hit@3 | 0.10 | −0.056 / −0.081 | −0.068 / −0.082 | **pass** |
+| **H-l-vs-rcd** — hit@1 and hit@3 ≥ broadcast RCD's | RCD 0.398 / 0.718 | +0.205 / +0.106 | +0.161 / +0.056 | **pass** |
+| **H-l-ig-ge-cmi** — IG ≥ CMI on both | — | +0.044 / +0.050 | | **pass** |
+| **H-l-no-blind-kind** — each kind's hit@1 ≥ 2 × the rung's random hit@1 | 0.363 | min cache-flush 0.446 | min cache-flush 0.408 | **pass** |
+| **H-l-floor-gap** — hit@1 ≥ floor `hop0` − 0.15 | floor 0.693 | −0.090 | −0.134 | **pass** |
+
+The landed axis's hypotheses on the l rows read as on m: H-trace-earliest passes (both arms, +0.15 … +0.20), H-trace-perseq-random,
+-topology, -broadcast and -self fail (`hop1` at or below random; the floor leads at `hop0`; RCD's broadcast above every `hop1` row;
+`hop0` flips the sign against the best broadcast at l as at m).
+
+### Reading notes (descriptive, not re-tuned)
+
+- **Three times the services, no collapse — and a measurable price.** Per failed request the keep arms read `hop0` 0.60 / 0.56 at l
+  against 0.66 / 0.63 at m (−0.06 / −0.07 at hit@1, −0.08 at hit@3, inside the registered 0.10), while the call-tree floor is flat (0.69
+  on both rungs) and random falls 0.20 → 0.18. The gap to the floor widens from −0.04 / −0.07 (m) to −0.09 / −0.13 (l): the learned
+  graph loses a little of what the instrumented call tree keeps. The exact-set rate under `hop0` falls to 0.05 (m 0.11–0.15) with sets
+  of 4.8–4.9 services; the `source` rule keeps its shape (1.3 services named, exact on 49–53 %, hit@1 0.59–0.61 ≈ `hop0`'s, hit@3 0.68–0.71
+  because it names so few).
+- **H-l-top3 fails on the CMI arm only.** The information-gain arm clears the 0.80 bar (0.824); the CMI arm reads 0.774. The
+  difference between the two arms is the cut on one shared forward (τ 1e-5 against 1e-7 on seed 0), as at s and m, and the gap is the
+  registered direction (H-l-ig-ge-cmi passes: +0.044 / +0.050). Per seed the CMI arm's hit@3 is below 0.80 on three seeds (0.70 / 0.73 /
+  0.76) and above on two (0.82 / 0.86); the information-gain arm is below on one (seed 0, 0.76).
+- **The free heuristics stay well behind, the margin is thinner at l.** The earliest-error control is the best free baseline at l as
+  at m (0.404; random 0.181, callees `hop0` 0.314) and the arms lead it by +0.20 (IG) and +0.15 (CMI) — the CMI arm clears the 0.15
+  margin by 0.004, which at C = 5 234 is not a distinction. On `degrade` faults (3 916 of the 5 234 traces) the earliest control reads
+  0.64 and matches or beats both arms (0.62 / 0.61): the degraded service's own span is the first non-OK span of the request. The arms
+  earn their margin on the other kinds (pool-exhaust 0.73 / 0.70 against 0.39; cache-flush 0.45 / 0.41 against 0.23; crash 0.59 / 0.46
+  against 0.13).
+- **Against RCD per failed request the arms lead by more at l than at m.** RCD's case ranking applied to the request reads 0.398 /
+  0.718 (m 0.477 / 0.732); the arms +0.21 / +0.16 at hit@1. RCD's broadcast is a kind-level pattern: pool-exhaust 0.98 and degrade 0.50,
+  cache-flush 0.00 and crash 0.02 — the 180 s export gives its post-fault sample 5–14 bins, and on the two kinds that take in few
+  requests it names other services. BARO's broadcast (0.436) is the only row that reads the cache flush (0.62) and the rule's
+  broadcast (0.493) is the strongest case-level row at l at hit@1 — both still 0.07–0.17 under the arms. The case-level RCD numbers
+  themselves (AC@1 0.26–0.40 per seed) are recorded for the broadcast, not read as a case-level result (owner, 2026-11-08).
+- **No blind fault kind, with a caveat on the sample.** Every (arm, kind) hit@1 is above twice the rung's random (0.363): the weakest is
+  the CMI arm on the cache flush (0.408, n = 220) and the information-gain arm on the same kind (0.446). The crash rows rest on 61
+  traces across the five seeds (the 900 s crash takes in 6–20 failed requests per corpus at l's error multiplier) — the per-kind
+  intervals are not computed and these two rows would not survive a stricter bound.
+- **Hop 1 is at random at l as at m** (0.149 / 0.119 against 0.181; the floor's `hop1` 0.169): the l faults sit in the failed service
+  itself or one hop upstream of the failed position, and `hop0` remains the primary reading as registered.
+
+### Disclosures that travel with the rows
+
+- **The l run is a harness result under a disclosed departure from §3's bin rule (D-TBR-21):** 180 s bins, N = 5, three boundaries
+  floored to their bin (offsets recorded per case in the export record); the exporter is the pinned benchmark commit (D-TBR-22). The
+  paper's outcome of 2026-10-26 stands; nothing here enters the frozen paper.
+- **The broadcast set at l is three arms (D-TBR-23):** the other six case-level arms are not run at 152 services; their rows are absent.
+  **No case-level table and no case-level hypothesis at l** (owner, 2026-11-08); the three case-level `score-rca.json` are landed as the
+  broadcast sources' records.
+- **GPU replica:** the probes ran on an A10G (`--device cuda`); no CPU row of these cells exists, so D-TBR-15's tolerance check is not
+  applicable (the per-trace seed stream of 2026-10-30; CPU and CUDA draw differently under one seed). The runner names seq2cause 0.3.1
+  and harness commit `1b59e52a`; the backbone sha of every probe equals its freeze's.
+- **Small scored sets:** C = 645 … 1 801 per seed (5 234 pooled) against 16 758 at m; the intervals are over the 25 cases; two fault
+  kinds rest on 61 and 220 traces. Rule R itself selects 197 487 traces; the 192 253 in which the fault did not take are not scored
+  (`n_took_4xx_only` 26).
+- **RCD's post-fault sample under the floored boundaries is 5–14 bins per case** (72–91 pre-fault bins); 50 seeded runs per seed, 0
+  failed; the run-averaged aggregation of D-TBR-7; the rankings reproduce byte-equal across two boxes (the aborted second apply and the
+  landed third).
+- The box records name code `1b59e52a` with `dirty: true` (the job's untracked `input/` and `exports/`); the local score records name
+  the same commit with `dirty: true` (the landing's untracked result files, committed with them); `rca/baro` ran in the method
+  environment built on the box by `scripts/envs/rca-env.sh` (Python 3.12), the rest of the chain in the provisioning environment
+  (Python 3.11) — RUN.md "Environment".
+- The per-trace rankings (`ranking-trace.json`, 12–16 MB per arm and seed) and the per-trace score rows (`score-trace-traces.json`)
+  are not tracked (sha256 in the records; the files live on the run's prefixes and in the local `out/`); the 62 RCD work documents per
+  seed stay on the prefix. The ledger gained 15 `rank` and 15 `rank-trace` entries; `results/l/latent/seed=<k>/pull-trace-l/` records
+  the local pull of the score-side tier, `pull-rca-l/` and `export-l/` the box's.
