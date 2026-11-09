@@ -1,10 +1,12 @@
 # The suite's RCD environment, as this directory pins it (plans/rca-arms.md, addendum 2026-10-25, later; RUN.md D-TBR-7).
 # RCD runs only here, never in trace-bench-rca: upstream causal-learn has no local_skeleton_discovery.
 #
-#   conda env create -f environment-rcd.yml
-#   # then the suite's overlay (script/link.sh at the pin, as copies): the four files of lib/causallearn/ at
-#   # RCAEval 259ea41 over the installed causal-learn 0.1.2.3 —
-#   #   utils/PCUtils/SkeletonDiscovery.py  utils/Fas.py  search/ConstraintBased/FCI.py  graph/GraphClass.py
+#   bash scripts/envs/rcd-env.sh
+#   # = conda env create -f environment-rcd.yml, then RCAEval at the pin installed with --no-deps (pip rejects that option
+#   # inside a requirements file, so it cannot sit in the pip list below — the first l apply of 2026-11-09 failed on it), then
+#   # the suite's overlay (script/link.sh at the pin, as copies): the four files of lib/causallearn/ at RCAEval 259ea41 over
+#   # the installed causal-learn 0.1.2.3 — utils/PCUtils/SkeletonDiscovery.py  utils/Fas.py  search/ConstraintBased/FCI.py
+#   # graph/GraphClass.py — their sha256 asserted against constants.RCD_OVERLAY_SHA256.
 #   # rcd_runner.py refuses an environment whose causal-learn lacks local_skeleton_discovery and records the
 #   # four files' sha256; rankrcd refuses digests that differ from constants.RCD_OVERLAY_SHA256.
 #
@@ -27,4 +29,5 @@ dependencies:
       - matplotlib==3.7.1
       - tqdm==4.65.0
       - requests==2.30.0
-      - --no-deps RCAEval @ git+https://github.com/phamquiluan/RCAEval@259ea4167160256a74ad30004aa3d96a998c846e
+      # RCAEval @ git+https://github.com/phamquiluan/RCAEval@259ea4167160256a74ad30004aa3d96a998c846e is installed by
+      # scripts/envs/rcd-env.sh with --no-deps (not expressible here), followed by the overlay
