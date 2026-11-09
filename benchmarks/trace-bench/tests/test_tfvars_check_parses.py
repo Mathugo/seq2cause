@@ -113,3 +113,23 @@ def test_a_bash_job_script_segment_is_followed(tmp_path):
     assert any(p.startswith("argparse rejected") for p in problems)
     with pytest.raises(FileNotFoundError, match="job script"):
         tc.check(_tfvars(tmp_path, "bash scripts/jobs/missing.sh"), base=tmp_path)
+
+
+def test_a_variable_interpreter_line_is_parsed_not_skipped(tmp_path):
+    """A job script may run one command under another environment's python named by a shell variable
+    (`BP=$HOME/…/bin/python`, then `$BP -m <package>.<module> …`; the root-cause sibling's `rca/baro` rank
+    of 2026-11-09). That line is parsed with the real parser like a `python -m` line — a knob error in it
+    fails here — and the assignment line is the only skipped segment."""
+    jobs = tmp_path / "scripts" / "jobs"
+    jobs.mkdir(parents=True)
+    under_var = "$BP " + GOOD[len("python ") :]
+    (jobs / "v.sh").write_text(
+        "#!/usr/bin/env bash\nset -euo pipefail\nBP=$HOME/miniforge3/envs/other/bin/python\n" + under_var + "\n"
+    )
+    _, parsed, problems, skipped = tc.check(_tfvars(tmp_path, "bash scripts/jobs/v.sh"), base=tmp_path)
+    assert problems == [] and skipped == ["BP=$HOME/miniforge3/envs/other/bin/python"]
+    assert [m for m, _ in parsed] == ["seq2causebench.prepare"] and parsed[0][1]["max_len"] == 64
+    (jobs / "vbad.sh").write_text(under_var.replace(" --entropy-order 2", "") + "\n")
+    _, _, problems, _ = tc.check(_tfvars(tmp_path, "bash scripts/jobs/vbad.sh"), base=tmp_path)
+    assert any(p.startswith("argparse rejected") for p in problems)
+    assert tc.parse_segment("$HOME/bin/python -m seq2causebench.prepare --x 1") is None  # a path, not a variable

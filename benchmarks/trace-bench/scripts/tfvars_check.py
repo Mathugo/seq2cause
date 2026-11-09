@@ -7,8 +7,9 @@
 The replica's `train_command` is shlex-split into `&&`-chained segments; every
 segment of the form `python -m seq2causebench.<module> ...` (or, for a replica of the
 root-cause sibling `benchmarks/trace-bench-rca`, `python -m tracebenchrca.<module> ...`;
-2026-10-31) is parsed with that module's `build_parser()`, so a missing or misspelt knob fails here rather
-than on the instance (every knob is required, none has a default). With
+2026-10-31; the interpreter may also be a shell variable a job script sets to another environment's
+python, `$BP -m tracebenchrca.rank ...`, 2026-11-09) is parsed with that module's `build_parser()`, so a
+missing or misspelt knob fails here rather than on the instance (every knob is required, none has a default). With
 `--args-diff`, the parsed values are compared to a finished run's
 `run/arguments.json`, so the replica and the record agree by construction.
 
@@ -89,11 +90,17 @@ def segments(command, base=None):
     return out
 
 
+INTERPRETER_VARIABLE = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*")  # `$BP -m tracebenchrca.rank …`: a job script's method-environment python
+
+
 def parse_segment(seg, package="seq2causebench"):
+    """`python -m <package>.<module> …`, or the same command under a shell variable naming another
+    environment's interpreter (a job script's `BP=$HOME/…/envs/trace-bench-rca/bin/python` line, then
+    `$BP -m tracebenchrca.rank …`; 2026-11-09): the variable form is parsed, never skipped."""
     argv = shlex.split(seg)
     if (
         len(argv) < 3
-        or argv[0] != "python"
+        or not (argv[0] == "python" or INTERPRETER_VARIABLE.fullmatch(argv[0]))
         or argv[1] != "-m"
         or not argv[2].startswith(package + ".")
     ):
