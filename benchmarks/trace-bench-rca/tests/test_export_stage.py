@@ -144,4 +144,4 @@ def test_width_mismatch_and_missing_exporter_are_refused(monkeypatch):
 def test_real_exporter_when_the_pin_carries_it():
     pytest.importorskip("tracebench.export_rca")
     mod = export_mod._exporter()
-    assert hasattr(mod, "export") and dict(mod.BIN_WIDTH_S) == {"xs": 30, "s": 15, "m": 60, "l": 180}
+    assert hasattr(mod, "export") and dict(mod.BIN_WIDTH_S) == {"xs": 30, "s": 15, "m": 60, "l": 180, "xl": 180}
