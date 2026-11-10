@@ -774,7 +774,7 @@ def test_reporttrace_pools_and_scores_hypotheses(corpus, cell_rows, tmp_path):
     with pytest.raises((FileNotFoundError, ValueError)):
         reporttrace.main(_report_argv(missing, tmp_path / "tables-missing"))
     # the flags are required and constrained
-    for bad in (["--rungs", "xl"], ["--seeds", "7"], ["--arms", ARM_BARO]):
+    for bad in (["--rungs", "xxl"], ["--seeds", "7"], ["--arms", ARM_BARO]):
         with pytest.raises(SystemExit):
             reporttrace.main(
                 _report_argv(results, tmp_path / "tables-bad")[:2]
@@ -1026,6 +1026,10 @@ def test_l_hypotheses_by_hand():
     hl = reporttrace.l_hypotheses(only_l, ("l",), [ig, cmi])
     assert hl["H-l-hold"]["verdict"] == "not run" and hl["H-l-top3"]["verdict"] == "pass"
     assert all(h["verdict"] == "not run" for h in reporttrace.l_hypotheses(by, ("m", "l"), [ARM_TRACE]).values())
+    # xl is reported, never judged (addendum 2026-11-10): naming it, with rows present, moves no hypothesis
+    with_xl = good + [{**r, "rung": "xl", "metrics": {**r["metrics"], "s@1": 0.01, "s@3": 0.02}} for r in good if r["rung"] == "l"]
+    assert reporttrace.hypotheses(with_xl, ("m", "l", "xl"), [ig, cmi]) == reporttrace.hypotheses(good, ("m", "l"), [ig, cmi])
+    assert not any("xl" in k for k in reporttrace.hypotheses(with_xl, ("m", "l", "xl"), [ig, cmi]))
 
 
 def test_broadcast_sources_by_rung(tmp_path):
@@ -1043,3 +1047,6 @@ def test_broadcast_sources_by_rung(tmp_path):
     with pytest.raises(FileNotFoundError):
         broadcast_sources(results, "xs", 0)  # xs reads nine; none is present
     assert len(TRACE_BROADCAST_ARMS_BY_RUNG["xs"]) == 9
+    assert TRACE_BROADCAST_ARMS_BY_RUNG["xl"] == TRACE_BROADCAST_ARMS_BY_RUNG["l"]  # D-TBR-26
+    with pytest.raises(FileNotFoundError):
+        broadcast_sources(results, "xl", 0)  # xl reads the same three; none is present under xl

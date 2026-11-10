@@ -41,6 +41,7 @@ from .constants import (
     ARM_RCD,
     L_BLIND_KIND_FACTOR,
     L_FLOOR_GAP,
+    HYPOTHESIS_RUNGS,
     L_HOLD_GAP,
     L_HOLD_RUNG,
     L_HYPOTHESIS_ARMS,
@@ -161,6 +162,7 @@ def _low(row, key=S1):
 def hypotheses(rows, rungs, arms):
     by = {(r["rung"], r["row"]): r for r in rows}
     out = {}
+    rungs = [g for g in rungs if g in HYPOTHESIS_RUNGS]  # xl is reported, never judged (addendum 2026-11-10)
     arms = [a for a in arms if a in TRACE_ARMS]  # the control has rows of its own, never an arm's hypotheses
     trace_reading = [f"{a}/{HOP1}" for a in arms] + [f"{ARM_FLOOR_TRACE_TOPOLOGY}/{HOP1}"]
     per = {}

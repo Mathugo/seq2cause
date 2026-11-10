@@ -1259,3 +1259,55 @@ at l at this submission", appendix A5.3) stands as the paper's; this addendum re
   `tables/rca-latent/` re-run byte-equal (asserted).
 - **Deviations (RUN.md).** **D-TBR-21** the l width under the relaxed rule and the floored boundaries; **D-TBR-22** the pin move;
   **D-TBR-23** the l broadcast set.
+
+### 2026-11-10 — the xl rung: the l runs repeated one rung up, no hypothesis (owner decisions 2026-11-10; before any xl ranking or score)
+
+The owner asked on 2026-11-10 for the l runs at xl (351 candidate services + 1 external, five days, the l fault schedule) and moved
+the run cutoff to 2026-11-12. This addendum registers a **harness run**; its rows are reported beside m and l.
+
+- **Width.** Decided before the measurement (owner, 2026-11-10): **xl 180 s** — the widest grid width that keeps five bins in the
+  900 s crash — with boundaries floored as at l and **N recorded as measured**, the run stopping only if the sparsest candidate
+  service's pre-fault median were 0. Measured on 2026-11-10 with the bin-traffic script of 2026-10-14 (sha256 `830176b32602a2b9…`,
+  unchanged; xl × seeds 0–4, the public dataset at `v0.3.0`, raw access lines with `/healthz` dropped; local, 2 632 s; no method
+  ran, no ranking was produced). The sparsest candidate (non-external) service, pre-fault, minimum over the five seeds:
+
+  | width | median count / bin | p10 | max empty-bin share | bins in the 900 s crash |
+  |---|---|---|---|---|
+  | 60 s | 0 | 0 | 0.54 | 15 |
+  | 90 s | 1 | 0 | 0.41 | 10 |
+  | 180 s | 2 | 0 | 0.17 | 5 |
+  | 300 s | 3 | 1 | 0.06 | 3 |
+
+  Per-seed sparsest medians at 180 s: 2 / 3 / 3 / 2 / 2 (p10 0 / 1 / 1 / 1 / 0); 5–34 of the 351 candidate services per seed have a
+  median under 5; the median service reads 9–10 per bin; the sparsest root-cause service reads 4 / 10 / 3 / 7 / 8. So **N = 2**
+  (l: 5), p10 0 on two seeds — a wider departure from §3 than l's, disclosed (**D-TBR-24**). The xl fault boundaries are l's
+  (49 020, 62 220, 76 020 s off the 180 s grid by 60 / 120 / 60 s), floored and recorded per case. Exporter: trace-bench PR #17 on
+  `clear-2027` (`FLOORED_RUNGS` + xl, `RELAXED_RULE["xl"]`); the pin moves to `d86d822a307e6129…` (**D-TBR-25**).
+  `constants.RUNGS` gains `xl`.
+- **Arms, axes, row set.** As at l (addendum 2026-11-08), one rung up: per trace `rca/trace-ig-keep`, `rca/trace-cmi-keep`
+  (`ranktrace --axis trace --select post-nonok --cap 0`, GPU; the xl context freezes
+  `freezes/2026-11-03-xl-latent-s<k>-context.json`, `fixed-kl` request cells — every seed has both keep cells at c = 1, N = 8,
+  g = 1, one forward for both; the CMI cells' τ is 0 on every seed), readings `hop1` / `hop0` / `source`, `hop0` primary, and
+  `control/trace-earliest`. `scoretrace --rows all` rows: the three readings, `floor/trace-topology`, `control/trace-random`,
+  `control/trace-callees`, and the broadcasts of `control/rule`, `rca/baro`, `rca/rcd` only (`TRACE_BROADCAST_ARMS_BY_RUNG["xl"]`,
+  **D-TBR-26**; the other case-level arms are not run at 351 services; their rows are absent, not failed). Case level: `rca/rcd`,
+  `rca/baro`, `control/rule` run on the 180 s export and are scored as broadcast sources; no case-level table.
+- **No hypothesis at xl (owner, 2026-11-10).** The xl rows are descriptive. `reporttrace.hypotheses` reads the rungs of
+  `constants.HYPOTHESIS_RUNGS` (xs, s, m, l) only, so naming xl in a report moves no verdict (tested); the l hypotheses stay as
+  landed. Report call: `--rungs m l xl` → `tables/rca-trace-xl/`.
+- **Premise checks (2026-11-10, xl seed 0, local Mac, 4 workers, beside the traffic run; before this text was committed; no ranking
+  read).** Pull tier rca 422 s (480 shards, 6.8 GB gz access logs). Export at 180 s: 109 s, 2.9 GB peak; 39 366 334 access lines,
+  24 601 190 binned, 1 304 outside the window; per case 72 / 86 / 91 / 73 / 63 pre-fault bins and 10 / 5 / 8 / 14 / 7 fault bins,
+  offsets exactly {case-02 end 60 s, case-03 inject 120 s, case-04 inject 60 s}, 108 / 65 / 84 / 310 / 584 empty cells.
+  `rankrcd` 50 runs: 154 s, 0 failed (1 408 columns; one to three services ranked per run); `rank rca/baro` 8 s; `rank
+  control/rule` 2 s. Rule R on the end-request view (4 771 165 traces): **40 882** failed POST traces inside the five windows —
+  14 432 / 9 642 / 6 855 / 6 751 / 3 202 per case (window traces 24 640 / 12 756 / 17 812 / 17 421 / 8 077) — and **C = 388**
+  traces in which the fault took (249 / 1 / 39 / 10 / 89: the scored set is small and the crash contributes one request on this
+  seed), 5.44 non-client services per R trace. Loading the xl request labels peaks at 11.3 GB (23 855 825 rows).
+- **Environment, cost, staging.** Five g5.2xlarge boxes (32 GiB: the label load × 2.8), one per seed
+  (`infra/algos/seq2cause-bench-26-11-10-rca-xl-s<k>.tfvars`; job scripts `scripts/jobs/rca-xl-s<k>-26-11-10.sh`), the l chain
+  and the l environments (`scripts/envs/rcd-env.sh`, `rca-env.sh`); cap 24 h. Every xl row stages on the l ledger entry of the
+  same arm and stage (form ledger). The probes are a disclosed GPU replica of the frozen cells (D-TBR-15's class). The landed
+  tables re-run byte-equal (asserted at the landing).
+- **Deviations (RUN.md).** **D-TBR-24** the xl width with N = 2 as measured and the floored boundaries; **D-TBR-25** the pin
+  move; **D-TBR-26** the xl broadcast set and the absence of hypotheses.

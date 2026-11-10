@@ -36,7 +36,14 @@ RUNGS = (
     "s",
     "m",
     "l",
-)  # the registered rungs of the root-cause arms (plans/rca-arms.md §1; l by the addendum of 2026-11-08)
+    "xl",
+)  # the registered rungs of the root-cause arms (plans/rca-arms.md §1; l by the addendum of 2026-11-08, xl by that of 2026-11-10)
+HYPOTHESIS_RUNGS = (
+    "xs",
+    "s",
+    "m",
+    "l",
+)  # the rungs a per-trace hypothesis reads; xl rows are descriptive (addendum 2026-11-10: no hypothesis at xl)
 SCALE_RUNGS = (
     "xs",
     "m",
@@ -69,12 +76,14 @@ BIN_WIDTH_S = {
     "s": 15,
     "m": 60,
     "l": 180,  # the relaxed rule of the addendum of 2026-11-08 (N = 5, three boundaries floored; D-TBR-21)
-}  # the registered rule's values (plans/rca-arms.md §3 + addendum 2026-11-08); equal to the exporter's table
+    "xl": 180,  # the addendum of 2026-11-10 (N as measured, the same three boundaries floored; D-TBR-24)
+}  # the registered rule's values (plans/rca-arms.md §3 + addenda 2026-11-08, 2026-11-10); equal to the exporter's table
 SHORTEST_FAULT_S = {
     "xs": 300,
     "s": 900,
     "m": 900,
     "l": 900,
+    "xl": 900,
 }  # the shortest shipped fault per rung (the >= 5 bins bound)
 MIN_PRE_BINS = 4  # RobustScorer's minimum pre-fault length
 MIN_POST_BINS = 5  # the rule's fault-resolution bound
@@ -552,6 +561,7 @@ TRACE_BROADCAST_ARMS_BY_RUNG = {
     "s": TRACE_BROADCAST_ARMS,
     "m": TRACE_BROADCAST_ARMS,
     "l": TRACE_BROADCAST_ARMS_L,
+    "xl": TRACE_BROADCAST_ARMS_L,  # the l set again (addendum 2026-11-10; D-TBR-26)
 }
 # the l hypotheses of the addendum of 2026-11-08 (reporttrace.l_hypotheses): the arms they name, the rung they compare with
 # (H-l-hold) and their registered thresholds
