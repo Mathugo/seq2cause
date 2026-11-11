@@ -1,0 +1,277 @@
+{
+ "rows": {
+  "control/trace-earliest/earliest": {
+   "axis": "trace",
+   "bootstrap": {
+    "b": 2000,
+    "intervals": {
+     "exact": {
+      "high": 0.0,
+      "low": 0.0
+     },
+     "p@1": {
+      "high": 0.8437236856024543,
+      "low": 0.2964912280701754
+     },
+     "p@3": {
+      "high": 0.944160583941606,
+      "low": 0.6622807017543859
+     },
+     "s@1": {
+      "high": 0.8223844282238442,
+      "low": 0.2964912280701754
+     },
+     "s@3": {
+      "high": 0.9992700729927007,
+      "low": 0.7921052631578948
+     }
+    },
+    "level": 0.95,
+    "seed": 0
+   },
+   "by_fault_kind": {
+    "cache_flush": {
+     "exact": 0.0,
+     "mean_set_size": 7.5,
+     "n_cases": 1,
+     "n_traces": 4,
+     "p@1": 0.25,
+     "p@3": 0.75,
+     "s@1": 0.25,
+     "s@3": 0.75
+    },
+    "crash": {
+     "exact": 0.0,
+     "mean_set_size": 6.333333333333333,
+     "n_cases": 1,
+     "n_traces": 3,
+     "p@1": 0.6666666666666666,
+     "p@3": 0.6666666666666666,
+     "s@1": 0.6666666666666666,
+     "s@3": 1.0
+    },
+    "degrade": {
+     "exact": 0.0,
+     "mean_set_size": 5.269794050343249,
+     "n_cases": 2,
+     "n_traces": 172,
+     "p@1": 0.5745995423340962,
+     "p@3": 0.8070175438596492,
+     "s@1": 0.5789473684210527,
+     "s@3": 0.868421052631579
+    },
+    "pool_exhaust": {
+     "exact": 0.0,
+     "mean_set_size": 5.189781021897811,
+     "n_cases": 1,
+     "n_traces": 274,
+     "p@1": 0.7846715328467153,
+     "p@3": 0.9854014598540146,
+     "s@1": 0.7226277372262774,
+     "s@3": 0.9963503649635036
+    }
+   },
+   "by_split": {
+    "train": {
+     "exact": 0.0,
+     "mean_set_size": 4.960629921259843,
+     "n_cases": 5,
+     "n_traces": 381,
+     "p@1": 0.7532808398950132,
+     "p@3": 0.9343832020997376,
+     "s@1": 0.7217847769028871,
+     "s@3": 0.963254593175853
+    },
+    "val+test": {
+     "exact": 0.0,
+     "mean_set_size": 5.333333333333333,
+     "n_cases": 4,
+     "n_traces": 72,
+     "p@1": 0.75,
+     "p@3": 0.9583333333333334,
+     "s@1": 0.6944444444444444,
+     "s@3": 0.9583333333333334
+    }
+   },
+   "c": 1,
+   "cap": 0,
+   "cases": [
+    {
+     "case_dir": "case-00",
+     "case_id": "xl_tb-moli_degrade_0",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.15789473684210525,
+      "p@3": 0.6140350877192983,
+      "s@1": 0.15789473684210525,
+      "s@3": 0.7368421052631579
+     },
+     "mean_set_size": 7.052631578947368,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 15455,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 57,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.21567676962413804,
+      "p@3": 0.5644830315882947,
+      "s@1": 0.15131009341535656,
+      "s@3": 0.4539302802460697
+     },
+     "root_cause_component": "tb-moli"
+    },
+    {
+     "case_dir": "case-01",
+     "case_id": "xl_tb-gadono_crash_1",
+     "fault_kind": "crash",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.6666666666666666,
+      "p@3": 0.6666666666666666,
+      "s@1": 0.6666666666666666,
+      "s@3": 1.0
+     },
+     "mean_set_size": 6.333333333333333,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 6554,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 3,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.22407407407407406,
+      "p@3": 0.6087301587301587,
+      "s@1": 0.1638888888888889,
+      "s@3": 0.4916666666666667
+     },
+     "root_cause_component": "tb-gadono"
+    },
+    {
+     "case_dir": "case-02",
+     "case_id": "xl_tb-rusertos_pool_exhaust_2",
+     "fault_kind": "pool_exhaust",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.7846715328467153,
+      "p@3": 0.9854014598540146,
+      "s@1": 0.7226277372262774,
+      "s@3": 0.9963503649635036
+     },
+     "mean_set_size": 5.189781021897811,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 6525,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 274,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.31079915623711246,
+      "p@3": 0.7381518116919578,
+      "s@1": 0.21914478465573356,
+      "s@3": 0.6373613612664707
+     },
+     "root_cause_component": "tb-rusertos"
+    },
+    {
+     "case_dir": "case-03",
+     "case_id": "xl_tb-vaskere_cache_flush_3",
+     "fault_kind": "cache_flush",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.25,
+      "p@3": 0.75,
+      "s@1": 0.25,
+      "s@3": 0.75
+     },
+     "mean_set_size": 7.5,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 7266,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 4,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.15902777777777777,
+      "p@3": 0.44375,
+      "s@1": 0.13392857142857142,
+      "s@3": 0.4017857142857143
+     },
+     "root_cause_component": "tb-vaskere"
+    },
+    {
+     "case_dir": "case-04",
+     "case_id": "xl_tb-edge_degrade_4",
+     "fault_kind": "degrade",
+     "hit_rate": {
+      "exact": 0.0,
+      "p@1": 0.991304347826087,
+      "p@3": 1.0,
+      "s@1": 1.0,
+      "s@3": 1.0
+     },
+     "mean_set_size": 3.4869565217391303,
+     "n_rc_unreachable_context": 0,
+     "n_rc_unreachable_truncation": 0,
+     "n_selected": 3726,
+     "n_skipped": 0,
+     "n_took_4xx_only": 0,
+     "n_traces": 115,
+     "n_unprobed": 0,
+     "random": {
+      "p@1": 0.3258488612836439,
+      "p@3": 0.8514596273291926,
+      "s@1": 0.33224637681159425,
+      "s@3": 0.8619565217391304
+     },
+     "root_cause_component": "tb-edge"
+    }
+   ],
+   "corpus_dir_name": "seed=2",
+   "counts": {
+    "mean_n_services": 5.0198675496688745,
+    "n_candidates": 453,
+    "n_rc_unreachable_context": 0,
+    "n_rc_unreachable_truncation": 0,
+    "n_selected": 39526,
+    "n_took_4xx_only": 0,
+    "n_unprobed": 0
+   },
+   "hop0": 1,
+   "max_len": 64,
+   "metrics": {
+    "exact": 0.0,
+    "mean_set_size": 5.912540491183528,
+    "n_cases": 5,
+    "n_traces": 453,
+    "p@1": 0.5701074568363149,
+    "p@3": 0.803220642847996,
+    "s@1": 0.5594378281470098,
+    "s@3": 0.8966384940453324
+   },
+   "mode": "arm",
+   "random": {
+    "p@1": 0.24708532779934922,
+    "p@3": 0.6413149258679207,
+    "s@1": 0.20010374304002893,
+    "s@3": 0.5693401088408103
+   },
+   "select": "post-nonok",
+   "trace_weighted": {
+    "exact": 0.0,
+    "mean_set_size": 5.0198675496688745,
+    "n_cases": 5,
+    "n_traces": 453,
+    "p@1": 0.7527593818984547,
+    "p@3": 0.9381898454746137,
+    "s@1": 0.717439293598234,
+    "s@3": 0.9624724061810155
+   }
+  }
+ }
+}
