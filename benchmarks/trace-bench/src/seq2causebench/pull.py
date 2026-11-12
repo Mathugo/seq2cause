@@ -51,6 +51,19 @@ TIERS = {
         MANIFEST_JSON,
         COMPLETE_MARKER,
     ),
+    # the score tier plus what a re-run of the corpus's requests reads (`counterfactual.py`,
+    # per-sequence-rules addendum 2026-11-11): the oracle tables and the engine's three inputs
+    "engine": (
+        f"{VIEWS_DIR}/**",
+        f"{GRAPHS_DIR}/**",
+        f"{TOPOLOGY_DIR}/**",
+        "oracle/**",
+        "config.yaml",
+        "constants.json",
+        "instantiation.json",
+        MANIFEST_JSON,
+        COMPLETE_MARKER,
+    ),
 }
 UNFLAGGED = (MANIFEST_JSON, COMPLETE_MARKER)
 

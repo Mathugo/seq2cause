@@ -25,6 +25,8 @@ from pathlib import Path
 
 import numpy as np
 import pyarrow.parquet as pq
+import yaml
+from tracebench.correlate.__main__ import _window_epoch_ms
 from tracebench.rng import stable_hex, stable_id, stable_uuid
 from tracebench.score import truth_sets
 
@@ -65,13 +67,31 @@ from .seqtruth import (
 )
 from .vocab import Vocab
 
-ROW_COLUMNS = ("trace_id", "ops", "outcomes", "offsets", "durations", "parent_pos")
+ROW_COLUMNS = ("trace_id", "ops", "outcomes", "offsets", "durations", "parent_pos", "start_ns")
+SHARDS_ALL, SHARDS_AUTO = "all", "auto"
+SHARD_SLACK_TICKS = 120  # clock skew and the client record's lead, on either side
 ATTR_SESSION = 0
 # why a re-run pair is not scored: its source or target record is not in the row (a client record
 # the correlator filed elsewhere), a position's view outcome differs from the engine's, the source
 # is ordered after the target, a position is outside the window (context, truncation, a folded
 # token), or the pair is not a candidate (token pair outside the grain's universe, lag)
 LOST_REASONS = ("not_in_row", "outcome_mismatch", "reversed", "outside_window", "not_candidate")
+
+
+def shards_of_sample(runs, corpus_dir, starts_ns):
+    """The shards the sampled rows can come from. A session lives in the shard of its arrival
+    tick and may run on for the spill allowance, so a row that starts at tick `t` belongs to a
+    shard between `t - spill` and `t`."""
+    cfg = runs.inst.cfg
+    with open(Path(corpus_dir) / "config.yaml", encoding="utf-8") as f:
+        epoch_ms = _window_epoch_ms(yaml.safe_load(f))
+    tick_ms, per_shard = cfg.run.tick_s * 1000, cfg.run.shard_ticks
+    need = set()
+    for start in starts_ns:
+        tick = (int(start) // 1_000_000 - epoch_ms) / tick_ms
+        lo = max(0, int((tick - runs.spill - SHARD_SLACK_TICKS) // per_shard))
+        need.update(range(lo, int((tick + SHARD_SLACK_TICKS) // per_shard) + 1))
+    return sorted(k for k in need if k in runs.bounds)
 
 
 def request_ids(corpus_dir, seed, shards):
@@ -257,15 +277,20 @@ def run_truthbuild(args, rec):
     for values in corpus.sequences(split, columns=ROW_COLUMNS):
         if values[0] in wanted:
             rows[values[0]] = dict(
-                zip(ROW_COLUMNS, (values[0], *map(list, values[1:])), strict=True)
+                zip(
+                    ROW_COLUMNS, (values[0], *map(list, values[1:-1]), int(values[-1])), strict=True
+                )
             )
             if len(rows) == len(wanted):
                 break
 
     runs = CorpusRuns(args.corpus)
-    shards = (
-        sorted(runs.bounds) if args.shards == "all" else [int(x) for x in args.shards.split(",")]
-    )
+    if args.shards == SHARDS_ALL:
+        shards = sorted(runs.bounds)
+    elif args.shards == SHARDS_AUTO:
+        shards = shards_of_sample(runs, args.corpus, [r["start_ns"] for r in rows.values()])
+    else:
+        shards = [int(x) for x in args.shards.split(",")]
     checks = {int(k): runs.check_against_oracle(k) for k in shards}  # identity check 1
     by_trace, by_sequence = request_ids(args.corpus, runs.seed, shards)
     targets = load_targets(args.corpus, grain)
@@ -277,6 +302,11 @@ def run_truthbuild(args, rec):
         s: map_row(runs, grain, by_trace, by_sequence, rows[store.trace_ids[s]], stats)
         for s in stored
     }
+    if grain == "request" and stats["rows_unmapped"]:
+        raise CounterfactualRefusal(
+            f"{stats['rows_unmapped']} request rows have no request in shards {shards}; "
+            f"pass --shards {SHARDS_ALL}"
+        )
     needed = defaultdict(set)  # shard -> requests with a mapped position
     for ident, _ in mapped.values():
         for x in ident:
@@ -445,7 +475,9 @@ def build_parser():
     p.add_argument("--run-dir", required=True, help="the landed discover read whose sample is used")
     p.add_argument("--max-lag", required=True, type=int, help="candidate pairs within this lag")
     p.add_argument(
-        "--shards", required=True, help="'all', or the comma-separated shards the sample touches"
+        "--shards",
+        required=True,
+        help="'all', 'auto' (the shards the sampled rows' start times allow), or a comma-separated list",
     )
     p.add_argument(
         "--null-forcing-ops",
