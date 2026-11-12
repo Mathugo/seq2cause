@@ -46,6 +46,31 @@ class TruthFileRefusal(ValueError):
     pass
 
 
+def rule_suffix(rule):
+    """The suffix of a rule's output directories and tables: none for the landed rule, so every
+    landed path stays as it is."""
+    if rule not in RULES:
+        raise ValueError(f"rule must be one of {RULES}, got {rule!r}")
+    return "" if rule == RULE_FIRST_CALLER_PARENT else f"-{rule}"
+
+
+def truth_file_of(rule, value):
+    """`--truth-file` is the literal `none` under `first-caller-parent` and a truth file under
+    `forced-ok-counterfactual`; anything else refuses."""
+    if rule == RULE_FIRST_CALLER_PARENT:
+        if value != "none":
+            raise ValueError(f"--rule {rule} reads no truth file; pass --truth-file none")
+        return None
+    if value == "none":
+        raise ValueError(f"--rule {rule} needs the read's truth file (see truthbuild)")
+    return value
+
+
+def dropped_candidates(truth):
+    """The candidates each reduction dropped, summed over the sequences of a read."""
+    return {k: sum(t["dropped"][k] for t in truth.values()) for k in DROP_REASONS}
+
+
 def load_targets(corpus_dir, grain):
     """`(target, alphabet, universe ordered set, universe unordered set, directed truth set,
     bidirected truth set, request-directed truth set)` at the target's default floor."""
@@ -324,6 +349,9 @@ __all__ = [
     "TRUTH_FILE_FMT",
     "DROP_REASONS",
     "TruthFileRefusal",
+    "rule_suffix",
+    "truth_file_of",
+    "dropped_candidates",
     "is_ok_token",
     "same_step_other_attempt",
     "reduce_candidates",
