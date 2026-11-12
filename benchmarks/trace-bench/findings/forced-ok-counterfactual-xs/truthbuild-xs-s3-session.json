@@ -1,0 +1,87 @@
+{
+ "c": 4,
+ "corpus_id": "xs/latent/seed=3",
+ "counts": {
+  "candidates": 4270,
+  "candidates_landed": 19851,
+  "sequences": 485,
+  "sequences_with_candidates": 220,
+  "sequences_with_candidates_landed": 477,
+  "sequences_with_truth": 130,
+  "sequences_without_candidates_fully_healthy": 193,
+  "sequences_without_candidates_other": 72,
+  "truth_directed": 242,
+  "truth_directed_landed": 4037
+ },
+ "directed_pairs": {
+  "contingent_only": 6,
+  "critical_False": 52,
+  "critical_None": 86,
+  "critical_True": 104,
+  "population_edge_any_strength": 242,
+  "population_edge_at_floor": 226,
+  "single": 236,
+  "source_attempt0": 53,
+  "source_edge": 86,
+  "source_final": 103,
+  "within_request_by_oracle_cross_request_by_roots": 14
+ },
+ "dropped_candidates": {
+  "client_retry": 1089,
+  "ok_target": 14126,
+  "unmapped": 366
+ },
+ "grain": "session",
+ "mapping": {
+  "client_positions": 139,
+  "client_positions_unmapped": 0,
+  "positions": 5120,
+  "positions_outcome_mismatch": 0,
+  "positions_unmapped": 0,
+  "rows_client_skew_not_constant": 0,
+  "rows_unmapped": 3
+ },
+ "max_lag": 63,
+ "max_len": 64,
+ "old_against_new": {
+  "landed_kept": 218,
+  "landed_lost_client_retry": 61,
+  "landed_lost_not_a_rerun_edge": 334,
+  "landed_lost_ok_target": 3424,
+  "new_gained": 24
+ },
+ "ordering": "end",
+ "read": "discover-session-core-all-c4-N32",
+ "rerun_pairs_not_scored": {
+  "ancestor": {
+   "not_candidate": 0,
+   "not_in_row": 42,
+   "outcome_mismatch": 0,
+   "outside_window": 33,
+   "reversed": 9
+  },
+  "directed": {
+   "not_candidate": 0,
+   "not_in_row": 91,
+   "outcome_mismatch": 0,
+   "outside_window": 71,
+   "reversed": 45
+  }
+ },
+ "reruns": {
+  "n_null_forcing_runs": 37,
+  "n_shard_runs": 35,
+  "n_tree_runs": 91,
+  "shards": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "rule": "forced-ok-counterfactual",
+ "schema": "seq2causebench/seqtruth-forced-ok-counterfactual@1",
+ "split": "test",
+ "status": "ok",
+ "truth_file": "seqtruth-forced-ok-counterfactual-session.json"
+}

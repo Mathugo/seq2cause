@@ -30,6 +30,21 @@ from .record import read_json
 TRUTH_COLUMNS = ("trace_id", "ops", "outcomes", "parent_pos")
 RULES_VERSION = "per-sequence-rules@2026-09-24"
 
+# the truth rules: the landed one (the views' first-caller parent link) and the forced re-run of
+# each sampled request (`counterfactual.py`, `truthbuild.py`; plans/per-sequence-rules.md addendum)
+RULE_FIRST_CALLER_PARENT = "first-caller-parent"
+RULE_FORCED_OK = "forced-ok-counterfactual"
+RULES = (RULE_FIRST_CALLER_PARENT, RULE_FORCED_OK)
+TRUTH_FILE_SCHEMA = "seq2causebench/seqtruth-forced-ok-counterfactual@1"
+TRUTH_FILE_FMT = "seqtruth-forced-ok-counterfactual-{grain}.json"
+OUTCOME_OK_NAME = "ok"
+DROP_OK_TARGET, DROP_UNMAPPED, DROP_CLIENT_RETRY = "ok_target", "unmapped", "client_retry"
+DROP_REASONS = (DROP_OK_TARGET, DROP_UNMAPPED, DROP_CLIENT_RETRY)
+
+
+class TruthFileRefusal(ValueError):
+    pass
+
 
 def load_targets(corpus_dir, grain):
     """`(target, alphabet, universe ordered set, universe unordered set, directed truth set,
@@ -156,21 +171,141 @@ def induce(ids, ops, outcomes, parent_pos, c, vocab, grain, targets, max_lag):
     }
 
 
-def truth_for_read(corpus_dir, ordering, grain, split, sequences_record, stored_ids, c, max_lag):
-    """Per-sequence truth for every stored sequence of a read, keyed by its store index."""
+def is_ok_token(token):
+    return token.rsplit(":", 1)[-1] == OUTCOME_OK_NAME
+
+
+def same_step_other_attempt(req_a, req_b):
+    """Two request ids (`(session << 8) | (step * 16 + client attempt)`) of one step of one
+    session with different client attempts: a client retry and the attempt it retries."""
+    if req_a == req_b or (req_a >> 8) != (req_b >> 8):
+        return False
+    return ((req_a & 0xFF) // 16) == ((req_b & 0xFF) // 16)
+
+
+def reduce_candidates(candidates, tok, req):
+    """The candidate set of `forced-ok-counterfactual`: `induce`'s candidates minus the pairs whose
+    target is OK, the pairs with a position no request could be assigned to, and the pairs between
+    two client attempts of one step. `tok` maps a window index to its token, `req` to its request
+    id (None = unmapped). Returns `(kept, {reason: n dropped})`; the first matching reason counts."""
+    kept, dropped = [], dict.fromkeys(DROP_REASONS, 0)
+    for j, q in candidates:
+        if is_ok_token(tok[q]):
+            dropped[DROP_OK_TARGET] += 1
+        elif req[j] is None or req[q] is None:
+            dropped[DROP_UNMAPPED] += 1
+        elif same_step_other_attempt(req[j], req[q]):
+            dropped[DROP_CLIENT_RETRY] += 1
+        else:
+            kept.append((j, q))
+    return kept, dropped
+
+
+def forced_ok_truth(base, entry, tok, bidirected):
+    """One sequence's truth under `forced-ok-counterfactual` from its truth-file entry and the
+    landed `induce` result (`base`, whose candidates do not depend on the rule). Gates the file's
+    window-index convention: every pair's stored tokens must be the tokens at those window
+    indices, every pair must be a reduced candidate, and no pair may have an OK target."""
+    req = entry["req"]
+    if len(req) != base["n_window"]:
+        raise TruthFileRefusal(
+            f"sequence {entry['seq']}: the truth file lists {len(req)} window positions, "
+            f"the read has {base['n_window']}"
+        )
+    kept, dropped = reduce_candidates(base["candidates"], tok, req)
+    allowed = set(kept)
+    directed, anc = set(), set()
+    for j, q, column, _single, _contingent, _source, _critical, tok_j, tok_q in entry["pairs"]:
+        pair = (int(j), int(q))
+        if tok.get(pair[0]) != tok_j or tok.get(pair[1]) != tok_q:
+            raise TruthFileRefusal(
+                f"sequence {entry['seq']}: pair {pair} was built on tokens ({tok_j}, {tok_q}), the "
+                f"read has ({tok.get(pair[0])}, {tok.get(pair[1])}) there; window index t must be "
+                "view position c + t - 1 after truncation"
+            )
+        if pair not in allowed:
+            raise TruthFileRefusal(f"sequence {entry['seq']}: pair {pair} is not a candidate")
+        if is_ok_token(tok_q):
+            raise TruthFileRefusal(f"sequence {entry['seq']}: pair {pair} has an OK target")
+        anc.add(pair)
+        if column == "directed":
+            directed.add(pair)
+    adjacency = {p for p in kept if frozenset((tok[p[0]], tok[p[1]])) in bidirected}
+    return {
+        "candidates": kept,
+        "directed": directed,
+        "adjacency": adjacency | directed,
+        "ancestor_directed": anc,
+        "n_links_lost": 0,
+        "dropped": dropped,
+    }
+
+
+def load_truth_file(path, sequences_record, c, max_lag):
+    """The truth file of a read, refused unless it was built for exactly this read."""
+    doc = read_json(path)
+    if doc.get("schema") != TRUTH_FILE_SCHEMA or doc.get("rule") != RULE_FORCED_OK:
+        raise TruthFileRefusal(f"{path} is not a {RULE_FORCED_OK} truth file")
+    want = {"c": int(c), "max_lag": int(max_lag), "grain": sequences_record["grain"],
+            "split": sequences_record["split"]}  # fmt: skip
+    got = {k: doc.get(k) for k in want}
+    if got != want:
+        raise TruthFileRefusal(f"{path} was built for {got}, the read is {want}")
+    mine = [(int(s["seq"]), s["trace_id"], int(s["length"])) for s in sequences_record["sequences"]]
+    theirs = [(int(s["seq"]), s["trace_id"], int(s["length"])) for s in doc["sequences"]]
+    if mine != theirs:
+        raise TruthFileRefusal(f"{path} lists other sequences than the read's record")
+    return doc
+
+
+def truth_for_read(
+    corpus_dir,
+    ordering,
+    grain,
+    split,
+    sequences_record,
+    stored_ids,
+    c,
+    max_lag,
+    rule=RULE_FIRST_CALLER_PARENT,
+    truth_file=None,
+):
+    """Per-sequence truth for every stored sequence of a read, keyed by its store index.
+    `rule` picks the truth rule; `forced-ok-counterfactual` reads `truth_file`."""
+    if rule not in RULES:
+        raise ValueError(f"rule must be one of {RULES}, got {rule!r}")
     corpus = Corpus(corpus_dir, ordering, grain)
     from .vocab import Vocab
 
     vocab = Vocab.from_model_vocab(corpus.vocab_json())
     targets = load_targets(corpus_dir, grain)
     rows = rows_by_trace_id(corpus, split, [s["trace_id"] for s in sequences_record["sequences"]])
+    entries = None
+    if rule == RULE_FORCED_OK:
+        doc = load_truth_file(truth_file, sequences_record, c, max_lag)
+        entries = {int(s["seq"]): s for s in doc["sequences"]}
     out = {}
     for entry, ids in zip(sequences_record["sequences"], stored_ids, strict=True):
         ops, outcomes, parent_pos = rows[entry["trace_id"]]
-        out[int(entry["seq"])] = induce(
-            np.asarray(ids), ops, outcomes, parent_pos, c, vocab, grain, targets, max_lag
-        )
+        ids = np.asarray(ids)
+        base = induce(ids, ops, outcomes, parent_pos, c, vocab, grain, targets, max_lag)
+        if entries is not None:
+            tok = window_tokens(ids, c, len(ops), vocab)
+            base["n_window"] = len(ids) - c
+            base = forced_ok_truth(base, entries[int(entry["seq"])], tok, targets["bidirected"])
+        out[int(entry["seq"])] = base
     return out, targets, vocab
+
+
+def window_tokens(ids, c, n_ops, vocab):
+    """`{window index: token}` of the real tokens of one stored sequence, exactly as `induce`
+    resolves them: window index `t` is view position `c + t - 1` of the row after truncation."""
+    kept = min(n_ops, len(ids) - 2)
+    return {
+        t: vocab.token_string(int(ids[c + t]))
+        for t in range(len(ids) - c)
+        if 0 <= c + t - 1 < kept and vocab.is_real(int(ids[c + t]))
+    }
 
 
 __all__ = [
@@ -182,4 +317,17 @@ __all__ = [
     "ancestors",
     "induce",
     "truth_for_read",
+    "RULE_FIRST_CALLER_PARENT",
+    "RULE_FORCED_OK",
+    "RULES",
+    "TRUTH_FILE_SCHEMA",
+    "TRUTH_FILE_FMT",
+    "DROP_REASONS",
+    "TruthFileRefusal",
+    "is_ok_token",
+    "same_step_other_attempt",
+    "reduce_candidates",
+    "forced_ok_truth",
+    "load_truth_file",
+    "window_tokens",
 ]

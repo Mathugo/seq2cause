@@ -219,3 +219,43 @@ Registered with `plans/floors.md`'s addendum of the same date (the floors' per-s
   reported with their truth count and are not compared with the end view, and the floors'
   per-sequence read (addendum 2026-10-21) is not run on the start view. A direction-free
   per-sequence rule for the start view would be a new registration, not this entry.
+
+### 2026-11-11 — a second truth rule, `forced-ok-counterfactual` (before any arm is re-scored)
+
+§2's rule is now named **`first-caller-parent`**. It stays as it is and every landed number is its.
+An operation with several callers records one parent, so that rule drops the dependence of the
+other callers on a shared callee (`findings/shared-callee-count.md` on branch
+`shared-callee-count-26-11-11`), and it marks a parent-linked pair as truth whether or not the
+callee's outcome mattered in that request. The second rule decides each pair by intervention on
+the simulator itself, whose draws are keyed by request, operation and attempt and so repeat
+whatever is forced.
+
+- **Truth.** Inside one request, `(j, q)` is directed truth when re-evaluating the request with
+  the outcome at `j` forced to OK, everything else as drawn, changes the outcome at `q`
+  (`single`), or changes it once the other non-OK callees of `q`'s operation are forced OK too
+  (`contingent`). `j` is a position of a callee of `q`'s operation in the call graph, or the edge
+  position with `q` an error client record of the same request. A callee's last attempt is forced
+  through its final (`force_final`), an earlier attempt through `force_attempt`; the edge through
+  `force_bff` in a whole-shard re-run from which only that client attempt's outcome is read. Only
+  non-OK positions are forced. The ancestor column holds every non-OK position of the request
+  that changes. The population-level floor is not a condition.
+- **Scored pairs.** `induce`'s candidates minus the pairs whose target is OK, the pairs between
+  two client attempts of one step, and the pairs with a position no request can be assigned to.
+  A sequence left without a candidate is not scored; a fully healthy trace is such a sequence.
+  The same set holds for every row, predict-every-pair included.
+- **Across requests.** Nothing is truth. A later request that survives a forced run is not read
+  (its outcome could differ only by landing on another tick), and client-retry pairs are not
+  scored. One effect is dropped by this: a forcing that moves the edge to a failure that is not
+  retried and so ends a session that went on.
+- **Request membership** comes from the oracle (the trace id is a hash of the request id, the
+  session row's id a hash of the session id; client records are placed by their parent link or
+  their timestamp), never from the views' root links.
+- **Files.** `counterfactual.py` (re-runs), `truthbuild.py` (writes
+  `seqtruth-forced-ok-counterfactual-<grain>.json` per read), `seqtruth.truth_for_read(rule=…)`.
+  The truth file is refused unless it was built for the read, its pairs sit on the tokens the
+  read has at those window indices (window index `t` is view position `c + t − 1` after
+  truncation), and every pair is a scored pair. `truthbuild` refuses unless the re-run of every
+  shard equals the corpus's oracle tables.
+- **State.** Built and checked on the five xs corpora (`findings/forced-ok-counterfactual-xs.md`);
+  the model-free rows are scored there under both rules. `seqscore`, `floorseq` and the reports
+  do not take the rule yet; no arm has been re-scored.

@@ -1,0 +1,658 @@
+{
+ "fitted_at": "2026-09-10",
+ "leaves": {
+  "async_gap_quantiles": {
+   "p50": {
+    "n": 16267,
+    "note": "seconds",
+    "source": "B",
+    "value": 5.196350976
+   },
+   "p90": {
+    "n": 16267,
+    "note": "seconds",
+    "source": "B",
+    "value": 9.1148980224
+   },
+   "p95": {
+    "n": 16267,
+    "note": "seconds",
+    "source": "B",
+    "value": 9.647621631999998
+   },
+   "p99": {
+    "n": 16267,
+    "note": "seconds",
+    "source": "B",
+    "value": 10.071402557439999
+   }
+  },
+  "background": {
+   "app_lines_per_service_s": {
+    "n": 3123,
+    "note": "unattributed app lines per service per second",
+    "source": "A",
+    "value": 0.011566666666666666
+   }
+  },
+  "bytes_per_record": {
+   "sentry": {
+    "n": 1435,
+    "note": "normalised span bytes per client record",
+    "source": "A",
+    "value": 655.6585365853658
+   },
+   "vl": {
+    "n": 35818,
+    "note": "normalised span bytes per platform record (proxy for the raw line)",
+    "source": "A",
+    "value": 909.0040482438997
+   }
+  },
+  "cart_fallback_rate": {
+   "n": 691,
+   "note": "audit lines whose session id was the cart id",
+   "source": "A",
+   "value": 0.0
+  },
+  "client": {
+   "auth_expired_share": {
+    "n": null,
+    "note": "share of sessions presenting an expired credential",
+    "source": "spec",
+    "value": 0.03
+   },
+   "auto_captured_share": {
+    "n": 10,
+    "note": "client errors lacking the app-tagged request id",
+    "source": "A",
+    "value": 0.5
+   },
+   "error_rate": {
+    "n": 1380,
+    "note": "client error events per edge request",
+    "source": "A",
+    "value": 0.007246376811594203
+   },
+   "logged_in_share": {
+    "n": 23,
+    "note": "session-level sequences with an account hash",
+    "source": "A",
+    "value": 0.8260869565217391
+   },
+   "net_flaky_share": {
+    "n": null,
+    "note": "share of sessions on a flaky network",
+    "source": "spec",
+    "value": 0.05
+   },
+   "txn_sampling": {
+    "n": null,
+    "note": "platform tracesSampleRate (front-end configuration in the test environment)",
+    "source": "A",
+    "value": 0.3
+   }
+  },
+  "clock_skew_ms": {
+   "browser_sd": {
+    "n": 5,
+    "note": "sd of (browser error time - backend access time) for tagged errors; includes network and processing time",
+    "source": "A",
+    "value": 40.35135684378143
+   },
+   "server_sd": {
+    "n": 6132,
+    "note": "sd of internal-hop lines stamped after their edge request's completion (an upper bound on server skew)",
+    "source": "A",
+    "value": 0.0
+   }
+  },
+  "daily_profile": {
+   "n": 168,
+   "note": "mean traces per hour of day over the archive, normalised to mean 1",
+   "source": "B",
+   "value": [
+    1.0292119205077994,
+    1.0991826682862207,
+    1.1402539371907092,
+    1.1720839828089213,
+    1.2080932061206204,
+    1.2052943762094837,
+    1.182042825159944,
+    1.1820347360561547,
+    1.2110688407288688,
+    1.2445380854506927,
+    1.2630476883002526,
+    1.2403693080335056,
+    1.1993257731991525,
+    1.1107102189792621,
+    1.0056032933052699,
+    0.8574496240227895,
+    0.784929652964447,
+    0.6784452684737436,
+    0.6100022057252655,
+    0.5855003103471338,
+    0.5934310988195253,
+    0.6628939664385973,
+    0.8068268569223878,
+    0.9276601559492543
+   ]
+  },
+  "depth_pmf": {
+   "n": 24497,
+   "note": "P(max service-chain depth below the root = 1, 2, 3+), conditional on a chain existing; root-only traces excluded",
+   "source": "B",
+   "value": [
+    0.8549618320610687,
+    0.09891007062089235,
+    0.04612809731803894
+   ]
+  },
+  "error_rates": {
+   "bff": {
+    "4xx": {
+     "n": 752023,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.005370846370390267
+    },
+    "5xx": {
+     "n": 752023,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    },
+    "err": {
+     "n": 752023,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    }
+   },
+   "external": {
+    "4xx": {
+     "n": 2141,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    },
+    "5xx": {
+     "n": 2141,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    },
+    "err": {
+     "n": 2141,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.011676786548341896
+    }
+   },
+   "service": {
+    "4xx": {
+     "n": 117222,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.00049478766784392
+    },
+    "5xx": {
+     "n": 117222,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    },
+    "err": {
+     "n": 117222,
+     "note": "share of spans in the tier",
+     "source": "B",
+     "value": 0.0
+    }
+   }
+  },
+  "error_shift": {
+   "degraded": {
+    "n": null,
+    "note": "share of requests a DEGRADED endpoint fails during an incident, mixed on top of the nominal classes (ok = 1 - share); sized so an injected degradation at least doubles a hop's error rate (PRD scenario 8)",
+    "source": "spec",
+    "value": {
+     "4xx": 0.0,
+     "5xx": 0.36,
+     "err": 0.14,
+     "ok": 0.5
+    }
+   },
+   "failed": {
+    "n": null,
+    "note": "class distribution of a FAILED endpoint",
+    "source": "spec",
+    "value": {
+     "4xx": 0.0,
+     "5xx": 0.7,
+     "err": 0.25,
+     "ok": 0.05
+    }
+   },
+   "pool_exhausted": {
+    "n": null,
+    "note": "share of requests an EXHAUSTED pool fails (503-like)",
+    "source": "spec",
+    "value": {
+     "4xx": 0.0,
+     "5xx": 0.35,
+     "err": 0.05,
+     "ok": 0.6
+    }
+   }
+  },
+  "fanout_pmf_by_depth": {
+   "n": 869245,
+   "note": "P(number of SERVER callees = 0..4) for a SERVER span at depth 0, 1, 2",
+   "source": "B",
+   "value": [
+    [
+     0.9633189410430266,
+     0.022738666237601776,
+     0.005465258376406041,
+     0.002791138037001528,
+     0.005685996305964046
+    ],
+    [
+     0.8990886863747499,
+     0.061152478328517446,
+     0.03399366525894643,
+     0.0008890864636585908,
+     0.004876083574127584
+    ],
+    [
+     0.8108593534125449,
+     0.12648521691074882,
+     0.03916827852998066,
+     0.016233766233766232,
+     0.007253384912959381
+    ]
+   ]
+  },
+  "gzip_ratio": {
+   "n": 5000,
+   "note": "gzip-6 ratio over a 5,000-line sample",
+   "source": "A",
+   "value": 0.1138973891415205
+  },
+  "health_check_period_s": {
+   "n": 2,
+   "note": "median inter-arrival of health-check access lines per pod",
+   "source": "A",
+   "value": 39.26830005645752
+  },
+  "identity_level_mix": {
+   "device": {
+    "n": 37255,
+    "note": null,
+    "source": "A",
+    "value": 0.0
+   },
+   "ip": {
+    "n": 37255,
+    "note": null,
+    "source": "A",
+    "value": 0.0
+   },
+   "none": {
+    "n": 37255,
+    "note": null,
+    "source": "A",
+    "value": 0.48731713863910886
+   },
+   "session": {
+    "n": 37255,
+    "note": null,
+    "source": "A",
+    "value": 0.38558582740571734
+   },
+   "user": {
+    "n": 37255,
+    "note": null,
+    "source": "A",
+    "value": 0.1270970339551738
+   }
+  },
+  "latency_multipliers": {
+   "cache_cold": {
+    "n": null,
+    "note": "caller own-time multiplier when its cache is COLD (misses)",
+    "source": "spec",
+    "value": 1.3
+   },
+   "degraded": {
+    "n": null,
+    "note": "own-time multiplier of a DEGRADED endpoint; chosen so a degraded hop's p50 lands near its nominal p95",
+    "source": "spec",
+    "value": 3.0
+   },
+   "pool_exhausted": {
+    "n": null,
+    "note": "own-time multiplier under an EXHAUSTED pool",
+    "source": "spec",
+    "value": 4.0
+   },
+   "pool_tight": {
+    "n": null,
+    "note": "own-time multiplier under a TIGHT connection pool (queueing)",
+    "source": "spec",
+    "value": 1.8
+   }
+  },
+  "latency_quantiles": {
+   "bff": {
+    "p50": {
+     "n": 752023,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.00236928
+    },
+    "p90": {
+     "n": 752023,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.005357568
+    },
+    "p95": {
+     "n": 752023,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.012189414400000006
+    },
+    "p99": {
+     "n": 752023,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.102994432
+    }
+   },
+   "external": {
+    "p50": {
+     "n": 2141,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.123499008
+    },
+    "p90": {
+     "n": 2141,
+     "note": "seconds",
+     "source": "B",
+     "value": 1.103013888
+    },
+    "p95": {
+     "n": 2141,
+     "note": "seconds",
+     "source": "B",
+     "value": 4.888699904
+    },
+    "p99": {
+     "n": 2141,
+     "note": "seconds",
+     "source": "B",
+     "value": 15.722951270399966
+    }
+   },
+   "service": {
+    "p50": {
+     "n": 117222,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.00085888
+    },
+    "p90": {
+     "n": 117222,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.003540224
+    },
+    "p95": {
+     "n": 117222,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.009414988799999989
+    },
+    "p99": {
+     "n": 117222,
+     "note": "seconds",
+     "source": "B",
+     "value": 0.055673853439999706
+    }
+   }
+  },
+  "pods_per_service": {
+   "n": 50,
+   "note": "distinct pods per service seen in access lines, 1..4+",
+   "source": "A",
+   "value": [
+    0.04,
+    0.06,
+    0.0,
+    0.9
+   ]
+  },
+  "records_per_request": {
+   "access": {
+    "n": 18728,
+    "note": "one access line per hop attempt by construction of the platform",
+    "source": "A",
+    "value": 1.0
+   },
+   "app_err": {
+    "n": 41,
+    "note": "app lines per request whose access status >= 400",
+    "source": "A",
+    "value": 10.365853658536585
+   },
+   "app_ok": {
+    "n": 18687,
+    "note": "app lines per request whose access status < 400 (error-gated sink)",
+    "source": "A",
+    "value": 0.7621876170599883
+   },
+   "audit": {
+    "n": 1380,
+    "note": "audit lines per edge request",
+    "source": "A",
+    "value": 0.6355072463768116
+   }
+  },
+  "retry": {
+   "mean_retries": {
+    "n": 43020,
+    "note": "share of spans carrying a retry counter >= 1",
+    "source": "B",
+    "value": 0.002580195258019526
+   },
+   "p_retry_5xx": {
+    "n": 43020,
+    "note": "mean_retries / P(5xx or error): the retry probability given a retry-eligible failure that reproduces mean_retries",
+    "source": "B",
+    "value": 1.0
+   }
+  },
+  "session": {
+   "inactivity_gap_min": {
+    "n": null,
+    "note": "pipeline parameter",
+    "source": "A",
+    "value": 30.0
+   },
+   "step_gap_quantiles": {
+    "p50": {
+     "n": 145,
+     "note": "seconds between consecutive audited responses within a session (> 1.5 s)",
+     "source": "A",
+     "value": 4.3310980796813965
+    },
+    "p90": {
+     "n": 145,
+     "note": "seconds between consecutive audited responses within a session (> 1.5 s)",
+     "source": "A",
+     "value": 30.634609603881817
+    },
+    "p95": {
+     "n": 145,
+     "note": "seconds between consecutive audited responses within a session (> 1.5 s)",
+     "source": "A",
+     "value": 46.454144144058226
+    },
+    "p99": {
+     "n": 145,
+     "note": "seconds between consecutive audited responses within a session (> 1.5 s)",
+     "source": "A",
+     "value": 125.67314130783106
+    }
+   },
+   "steps_pmf": {
+    "n": 23,
+    "note": "audited responses per session-level sequence, 1..8",
+    "source": "A",
+    "value": [
+     0.30434782608695654,
+     0.043478260869565216,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.6521739130434783
+    ]
+   }
+  },
+  "split": {
+   "cut_chars": {
+    "n": null,
+    "note": "the platform's log-line cut length (platform configuration), at which long lines are split into parts",
+    "source": "spec",
+    "value": 4096
+   },
+   "key_part_pmf": {
+    "n": null,
+    "note": "which part (1..3) of a split line carries the audit keys; the platform's own documentation states the identifiers routinely land in part 2 of 3, and the merged feed cannot expose the split — declared, not measured",
+    "source": "spec",
+    "value": [
+     0.2,
+     0.7,
+     0.1
+    ]
+   },
+   "parts_pmf": {
+    "n": 1437,
+    "note": "P(total_parts = 1..5) for split lines (index 0 unused)",
+    "source": "A",
+    "value": [
+     0.0,
+     0.4759916492693111,
+     0.4126652748782185,
+     0.021572720946416143,
+     0.08977035490605428
+    ]
+   },
+   "rate": {
+    "n": 17090,
+    "note": "share of app/audit lines split into parts",
+    "source": "A",
+    "value": 0.08408425980105325
+   }
+  },
+  "state_dynamics": {
+   "cache_cold_given_high": {
+    "n": null,
+    "note": "per-tick hazard WARM -> COLD under HIGH load",
+    "source": "spec",
+    "value": 0.003
+   },
+   "cache_persist_cold": {
+    "n": null,
+    "note": "P(stays COLD per tick)",
+    "source": "spec",
+    "value": 0.97
+   },
+   "health_degraded_base": {
+    "n": null,
+    "note": "per-tick hazard HEALTHY -> DEGRADED otherwise (mean ~33 min)",
+    "source": "spec",
+    "value": 0.0005
+   },
+   "health_degraded_given_exhausted": {
+    "n": null,
+    "note": "per-tick hazard HEALTHY -> DEGRADED while the pool is EXHAUSTED",
+    "source": "spec",
+    "value": 0.05
+   },
+   "health_failed_given_degraded": {
+    "n": null,
+    "note": "per-tick hazard DEGRADED -> FAILED",
+    "source": "spec",
+    "value": 0.01
+   },
+   "health_recover": {
+    "n": null,
+    "note": "per-tick recovery hazard toward HEALTHY (mean 50 s)",
+    "source": "spec",
+    "value": 0.02
+   },
+   "load_persist": {
+    "n": null,
+    "note": "P(service load level unchanged per tick)",
+    "source": "spec",
+    "value": 0.9
+   },
+   "pool_exhausted_given_high": {
+    "n": null,
+    "note": "per-tick hazard TIGHT -> EXHAUSTED under HIGH load",
+    "source": "spec",
+    "value": 0.01
+   },
+   "pool_recover": {
+    "n": null,
+    "note": "per-tick recovery hazard toward FREE",
+    "source": "spec",
+    "value": 0.05
+   },
+   "pool_tight_given_high": {
+    "n": null,
+    "note": "per-tick hazard FREE -> TIGHT under HIGH load",
+    "source": "spec",
+    "value": 0.02
+   }
+  },
+  "unattributed_fraction": {
+   "n": 37255,
+   "note": "spans attributed to no actor in the pipeline's own histogram",
+   "source": "A",
+   "value": 0.48731713863910886
+  },
+  "vocab_size": {
+   "n": 1781,
+   "note": "distinct SERVER-kind operations (HTTP endpoints) in the operation vocabulary",
+   "source": "B",
+   "value": 549
+  },
+  "weekday": {
+   "n": 7,
+   "note": "mean traces per weekday over the archive, normalised to mean 1",
+   "source": "B",
+   "value": [
+    1.0041424156057301,
+    1.003424002075433,
+    1.0051692262179988,
+    0.9899330621846484,
+    1.0075482653470642,
+    1.01310935567929,
+    0.9766736728898358
+   ]
+  }
+ },
+ "schema": "tracebench/realism@1",
+ "sources": {
+  "A": "application-log and browser error-tracking feed of a consumer web platform (test-environment window), normalised by the platform's correlation pipeline",
+  "B": "distributed-trace archive of a production data centre (hourly span parquet, operation vocabulary, per-hour build statistics)",
+  "spec": "structural design choice of the mechanism, declared with a rationale (see mechanism-spec.json), not measured"
+ },
+ "version": "1"
+}
