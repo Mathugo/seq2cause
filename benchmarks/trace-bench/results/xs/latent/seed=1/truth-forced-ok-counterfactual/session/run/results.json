@@ -1,0 +1,87 @@
+{
+ "c": 2,
+ "corpus_id": "xs/latent/seed=1",
+ "counts": {
+  "candidates": 13582,
+  "candidates_landed": 48483,
+  "sequences": 470,
+  "sequences_with_candidates": 346,
+  "sequences_with_candidates_landed": 470,
+  "sequences_with_truth": 260,
+  "sequences_without_candidates_fully_healthy": 113,
+  "sequences_without_candidates_other": 11,
+  "truth_directed": 964,
+  "truth_directed_landed": 8552
+ },
+ "directed_pairs": {
+  "contingent_only": 103,
+  "critical_False": 40,
+  "critical_None": 201,
+  "critical_True": 723,
+  "population_edge_any_strength": 960,
+  "population_edge_at_floor": 826,
+  "single": 861,
+  "source_attempt0": 296,
+  "source_edge": 201,
+  "source_final": 467,
+  "within_request_by_oracle_cross_request_by_roots": 31
+ },
+ "dropped_candidates": {
+  "client_retry": 4428,
+  "ok_target": 30144,
+  "unmapped": 329
+ },
+ "grain": "session",
+ "mapping": {
+  "client_positions": 306,
+  "client_positions_unmapped": 0,
+  "positions": 6806,
+  "positions_outcome_mismatch": 2,
+  "positions_unmapped": 0,
+  "rows_client_skew_not_constant": 1,
+  "rows_unmapped": 3
+ },
+ "max_lag": 63,
+ "max_len": 64,
+ "old_against_new": {
+  "landed_kept": 730,
+  "landed_lost_client_retry": 161,
+  "landed_lost_not_a_rerun_edge": 1382,
+  "landed_lost_ok_target": 6279,
+  "new_gained": 234
+ },
+ "ordering": "end",
+ "read": "discover-session-core-all-c2-N8",
+ "rerun_pairs_not_scored": {
+  "ancestor": {
+   "not_candidate": 0,
+   "not_in_row": 180,
+   "outcome_mismatch": 0,
+   "outside_window": 6,
+   "reversed": 25
+  },
+  "directed": {
+   "not_candidate": 0,
+   "not_in_row": 218,
+   "outcome_mismatch": 1,
+   "outside_window": 34,
+   "reversed": 122
+  }
+ },
+ "reruns": {
+  "n_null_forcing_runs": 40,
+  "n_shard_runs": 70,
+  "n_tree_runs": 176,
+  "shards": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "rule": "forced-ok-counterfactual",
+ "schema": "seq2causebench/seqtruth-forced-ok-counterfactual@1",
+ "split": "test",
+ "status": "ok",
+ "truth_file": "seqtruth-forced-ok-counterfactual-session.json"
+}
