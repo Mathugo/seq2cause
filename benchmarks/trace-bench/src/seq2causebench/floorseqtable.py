@@ -31,27 +31,29 @@ from .report import (
     _headline,
     paired_test,
 )
+from .seqtruth import RULE_FIRST_CALLER_PARENT, RULES, rule_suffix
 
 TABLE_SCHEMA = "seq2causebench/report-perseq-floors@1"
 PAIRED_METRICS = ("pooled.directed.f1", "pooled.auroc")
 
 
-def load_rows(results_dir, rung, variant, reference_triples):
-    """`{(grain, reference, floor cell, row): {seed: (floor seqscore, reference seqscore)}}`."""
+def load_rows(results_dir, rung, variant, reference_triples, rule=RULE_FIRST_CALLER_PARENT):
+    """`{(grain, reference, floor cell, row): {seed: (floor seqscore, reference seqscore)}}` of the
+    records scored under `rule` (their directories carry the rule's suffix)."""
     root = Path(results_dir) / rung / variant
     out = {}
     for seed_dir in sorted(root.glob("seed=*")):
         seed = int(seed_dir.name.split("=", 1)[1])
         for grain in GRAINS:
             for ref in reference_triples:
-                ref_path = seed_dir / ref / grain / "seqscore" / SEQSCORE_JSON
+                ref_path = seed_dir / ref / grain / f"seqscore{rule_suffix(rule)}" / SEQSCORE_JSON
                 for arm in FLOOR_ARMS:
                     for row in ROWS_OF_FLOOR[arm]:
                         cell = f"{arm}/{PATH_NONE}/frozen/{grain}"
                         f = (
                             seed_dir
                             / cell
-                            / landing_dir_name(row, f"{ref}/{grain}")
+                            / landing_dir_name(row, f"{ref}/{grain}", rule)
                             / SEQSCORE_JSON
                         )
                         if not f.exists():
@@ -59,6 +61,9 @@ def load_rows(results_dir, rung, variant, reference_triples):
                         if not ref_path.exists():
                             raise ReportRefusal(f"{f} has no reference seqscore at {ref_path}")
                         fl, rf = read_json(f), read_json(ref_path)
+                        for doc, where in ((fl, f), (rf, ref_path)):
+                            if doc.get("rule", RULE_FIRST_CALLER_PARENT) != rule:
+                                raise ReportRefusal(f"{where} was not scored under {rule}")
                         if (
                             fl["reference_cell"] != f"{ref}/{grain}"
                             or fl["corpus_id"] != rf["corpus_id"]
@@ -167,19 +172,20 @@ def run_table(args, rec):
     refs = list(args.reference_cells)
     for r in refs:
         parse_cell_key(f"{r}/request")  # an <arm>/<path>/<cut> triple of the registry
-    rows = load_rows(args.results_dir, args.rung, args.variant, refs)
+    rows = load_rows(args.results_dir, args.rung, args.variant, refs, args.rule)
     if not rows:
         raise ReportRefusal(
             f"no landed floor per-sequence row under {args.results_dir}/{args.rung}"
         )
     doc = {
         "schema": TABLE_SCHEMA,
+        "rule": args.rule,
         "rung": args.rung,
         "variant": args.variant,
         "reference_cells": refs,
         "tables": build_tables(rows),
     }
-    stem = f"{args.rung}-{args.variant}-perseq-floors"
+    stem = f"{args.rung}-{args.variant}-perseq-floors{rule_suffix(args.rule)}"
     write_json(rec.out_dir / f"{stem}.json", doc)
     (rec.out_dir / f"{stem}.md").write_text(render_markdown(doc) + "\n")
     log({"event": "floorseqtable_done", "rung": args.rung, "n_rows": len(doc["tables"])})
@@ -194,6 +200,7 @@ def build_parser():
     p.add_argument("--rung", required=True, choices=RUNGS)
     p.add_argument("--variant", required=True, choices=VARIANTS)
     p.add_argument("--reference-cells", required=True, nargs="+", help="<arm>/<path>/<cut> triples")
+    p.add_argument("--rule", required=True, choices=RULES, help="the per-sequence truth rule")
     p.add_argument("--output-folder", required=True)
     return p
 

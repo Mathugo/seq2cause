@@ -1,0 +1,41 @@
+{
+ "arguments": {
+  "corpus": "corpora/instances/l/latent/seed=3",
+  "floor_cell": "floor/topology/none/frozen/session",
+  "floor_read": "results/l/latent/seed=3/test-read/floors-session",
+  "max_lag": 63,
+  "output_folder": "out/l-latent-s3/results/floor/topology/none/frozen/session/seqscore-broadcast-on-trace-core-forced-ok-counterfactual",
+  "read_dir": "input/l-latent-s3/test-read/discover-session-core-all-c2-N32",
+  "reference_cell": "trace/core/shipped/frozen/session",
+  "reference_seqscore": "out/l-latent-s3/results/trace/core/shipped/frozen/session/seqscore-forced-ok-counterfactual/seqscore.json",
+  "row": "broadcast",
+  "rule": "forced-ok-counterfactual",
+  "truth_file": "out/l-latent-s3/results/truth-forced-ok-counterfactual/session/seqtruth-forced-ok-counterfactual-session.json"
+ },
+ "argv": [
+  "/home/ubuntu/work/benchmarks/trace-bench/src/seq2causebench/floorseq.py",
+  "--corpus",
+  "corpora/instances/l/latent/seed=3",
+  "--read-dir",
+  "input/l-latent-s3/test-read/discover-session-core-all-c2-N32",
+  "--reference-cell",
+  "trace/core/shipped/frozen/session",
+  "--reference-seqscore",
+  "out/l-latent-s3/results/trace/core/shipped/frozen/session/seqscore-forced-ok-counterfactual/seqscore.json",
+  "--floor-read",
+  "results/l/latent/seed=3/test-read/floors-session",
+  "--floor-cell",
+  "floor/topology/none/frozen/session",
+  "--row",
+  "broadcast",
+  "--max-lag",
+  "63",
+  "--rule",
+  "forced-ok-counterfactual",
+  "--truth-file",
+  "out/l-latent-s3/results/truth-forced-ok-counterfactual/session/seqtruth-forced-ok-counterfactual-session.json",
+  "--output-folder",
+  "out/l-latent-s3/results/floor/topology/none/frozen/session/seqscore-broadcast-on-trace-core-forced-ok-counterfactual"
+ ],
+ "command": "floorseq"
+}

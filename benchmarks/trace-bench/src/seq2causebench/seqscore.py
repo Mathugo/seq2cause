@@ -37,7 +37,14 @@ from .data import SequenceStore
 from .engine import from_triangle
 from .log import log
 from .record import RunRecord, read_json, write_json
-from .seqtruth import RULES_VERSION, truth_for_read
+from .seqtruth import (
+    RULE_FORCED_OK,
+    RULES,
+    RULES_VERSION,
+    dropped_candidates,
+    truth_file_of,
+    truth_for_read,
+)
 from .vocab import Vocab
 
 SEQSCORE_SCHEMA = "seq2causebench/seqscore@1"
@@ -231,6 +238,7 @@ def run_seqscore(args, rec):
     run_dir = Path(args.run_dir)
     disc = read_json(run_dir / RUN_DIR / RESULTS_JSON)
     arm, path, cut, grain = parse_cell_key(args.cell)
+    truth_file = truth_file_of(args.rule, args.truth_file)
     if (
         disc.get("status") != "ok"
         or disc.get("grain") != grain
@@ -277,6 +285,8 @@ def run_seqscore(args, rec):
         stored_ids,
         c,
         int(args.max_lag),
+        rule=args.rule,
+        truth_file=truth_file,
     )
 
     def matrix_of(s, ids):
@@ -303,6 +313,7 @@ def run_seqscore(args, rec):
         "schema": SEQSCORE_SCHEMA,
         "axis": "per-sequence",
         "rules_version": RULES_VERSION,
+        "rule": args.rule,
         "cell": args.cell,
         "arm": arm,
         "path": path,
@@ -323,6 +334,10 @@ def run_seqscore(args, rec):
         "n_stored_by_read": disc.get("n_stored"),
         **agg,
     }
+    if args.rule == RULE_FORCED_OK:
+        # what the rule leaves unscored on this read, and the builder's own counts
+        result["dropped_candidates"] = dropped_candidates(truth)
+        result["truth_counts"] = read_json(truth_file)["counts"]
     write_json(rec.out_dir / SEQSCORE_JSON, result)
     log(
         {
@@ -353,6 +368,12 @@ def build_parser():
     )
     p.add_argument("--cell", required=True, help="<arm>/<path>/<cut>/<grain>")
     p.add_argument("--max-lag", required=True, type=int, help="candidate pairs within this lag")
+    p.add_argument("--rule", required=True, choices=RULES, help="the per-sequence truth rule")
+    p.add_argument(
+        "--truth-file",
+        required=True,
+        help="the read's truth file under forced-ok-counterfactual (truthbuild), else 'none'",
+    )
     p.add_argument("--output-folder", required=True)
     return p
 

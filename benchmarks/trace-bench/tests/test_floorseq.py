@@ -55,6 +55,10 @@ def read(world, fworld, tmp_path_factory):  # noqa: F811
                 REF,
                 "--max-lag",
                 "6",
+                "--rule",
+                "first-caller-parent",
+                "--truth-file",
+                "none",
                 "--output-folder",
                 str(ref),
             ]
@@ -80,6 +84,8 @@ def _run(r, out, floor_cell=TOPO, row="broadcast", **over):
         "--floor-cell": floor_cell,
         "--row": row,
         "--max-lag": "6",
+        "--rule": "first-caller-parent",
+        "--truth-file": "none",
         "--output-folder": str(out),
     }
     argv.update(over)
@@ -240,6 +246,8 @@ def test_five_seed_table_and_refusal(read, tmp_path):
         "latent",
         "--reference-cells",
         "trace/core/shipped/frozen",
+        "--rule",
+        "first-caller-parent",
         "--output-folder",
     ]
     with pytest.raises(ReportRefusal, match="needs 5"):

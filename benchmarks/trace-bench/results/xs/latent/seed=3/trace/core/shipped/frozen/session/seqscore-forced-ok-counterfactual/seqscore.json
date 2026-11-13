@@ -1,0 +1,198 @@
+{
+ "arm": "trace/core",
+ "axis": "per-sequence",
+ "c": 4,
+ "cell": "trace/core/shipped/frozen/session",
+ "corpus_id": "xs/latent/seed=3",
+ "cut": "frozen",
+ "dropped_candidates": {
+  "client_retry": 1089,
+  "ok_target": 14126,
+  "unmapped": 366
+ },
+ "floor": 0.05,
+ "grain": "session",
+ "max_lag": 63,
+ "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+ "n_links_lost": 0,
+ "n_scoreable": 176,
+ "n_sequences": 485,
+ "n_sequences_split": 487,
+ "n_skipped_short": 265,
+ "n_skipped_short_by_read": 2,
+ "n_stored_by_read": 485,
+ "n_unscoreable": 44,
+ "ordering": "end",
+ "path": "shipped",
+ "per_lag_recall": {
+  "1": 0.8703703703703703,
+  "2": 0.4,
+  "3": 0.1111111111111111,
+  "4": 0.16666666666666666,
+  "5": 0.0,
+  "6": 0.0,
+  "7": 0.0
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.2931058821600266,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.2857142857142857,
+    "p90": 0.6666666666666666,
+    "std": 0.28346564332620583
+   },
+   "precision": {
+    "mean": 0.2354225320134411,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.2,
+    "p90": 0.5,
+    "std": 0.26333668630016016
+   },
+   "recall": {
+    "mean": 0.5061442345533255,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.45787503142709113
+   }
+  },
+  "ap": {
+   "mean": 0.660930607991992,
+   "n": 130,
+   "p10": 0.19944444444444445,
+   "p50": 0.6285469392435337,
+   "p90": 1.0,
+   "std": 0.3201287556246868
+  },
+  "auroc": {
+   "mean": 0.8437030756577114,
+   "n": 122,
+   "p10": 0.55,
+   "p50": 0.9459459459459459,
+   "p90": 1.0,
+   "std": 0.2199223448231887
+  },
+  "auroc_skeleton": {
+   "mean": 0.6658788122516511,
+   "n": 151,
+   "p10": 0.36923076923076925,
+   "p50": 0.6428571428571429,
+   "p90": 1.0,
+   "std": 0.2366905475006572
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.29954205413473606,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.30952380952380953,
+    "p90": 0.6666666666666666,
+    "std": 0.28666573974277687
+   },
+   "precision": {
+    "mean": 0.23400207746798654,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.2,
+    "p90": 0.5,
+    "std": 0.26257453868395897
+   },
+   "recall": {
+    "mean": 0.5293402777777778,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.5777777777777777,
+    "p90": 1.0,
+    "std": 0.46109071060723966
+   }
+  },
+  "predict_all_mean": 0.19757573351809815,
+  "skeleton": {
+   "f1": {
+    "mean": 0.35571582487207704,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.3484848484848485,
+    "p90": 0.6666666666666666,
+    "std": 0.2714967797581828
+   },
+   "precision": {
+    "mean": 0.4543977171818081,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.44155844155844154,
+    "p90": 1.0,
+    "std": 0.34899963367345943
+   },
+   "recall": {
+    "mean": 0.40697374274566306,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.3205128205128205,
+    "p90": 1.0,
+    "std": 0.3686207057755069
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.3195146612740142,
+   "fn": 132,
+   "fp": 541,
+   "precision": 0.22603719599427755,
+   "recall": 0.5448275862068965,
+   "shd": 673,
+   "tp": 158
+  },
+  "ap": 0.31089670560806276,
+  "auroc": 0.7898286375536534,
+  "auroc_skeleton": 0.5623121997173811,
+  "directed": {
+   "f1": 0.33156216790648246,
+   "fn": 86,
+   "fp": 543,
+   "precision": 0.22317596566523606,
+   "recall": 0.6446280991735537,
+   "shd": 629,
+   "tp": 156
+  },
+  "n_candidates": 4270,
+  "n_truth_directed": 242,
+  "skeleton": {
+   "f1": 0.3114754098360656,
+   "fn": 1052,
+   "fp": 376,
+   "precision": 0.46208869814020026,
+   "recall": 0.2349090909090909,
+   "shd": 1428,
+   "tp": 323
+  }
+ },
+ "predict_all": {
+  "pooled": 0.10726950354609929
+ },
+ "rule": "forced-ok-counterfactual",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "xs",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.3628865979381443,
+ "split": "test",
+ "tau": 0.03,
+ "tau_by_lag": null,
+ "truth_counts": {
+  "candidates": 4270,
+  "candidates_landed": 19851,
+  "sequences": 485,
+  "sequences_with_candidates": 220,
+  "sequences_with_candidates_landed": 477,
+  "sequences_with_truth": 130,
+  "sequences_without_candidates_fully_healthy": 193,
+  "sequences_without_candidates_other": 72,
+  "truth_directed": 242,
+  "truth_directed_landed": 4037
+ }
+}
