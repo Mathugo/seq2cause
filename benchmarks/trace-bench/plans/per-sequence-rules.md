@@ -259,3 +259,25 @@ whatever is forced.
 - **State.** Built and checked on the five xs corpora (`findings/forced-ok-counterfactual-xs.md`);
   the model-free rows are scored there under both rules. `seqscore`, `floorseq` and the reports
   do not take the rule yet; no arm has been re-scored.
+
+### 2026-11-12 — every size re-scored; the edge → client-error pair stays, as a stated limitation
+
+The 25 corpora are re-scored under `forced-ok-counterfactual`
+(`tables/<rung>-latent-perseq-floors-forced-ok-counterfactual/`); under `first-caller-parent` the
+same commands reproduce every landed arm record, floor record and floor table.
+
+**Limitation of the session-grain numbers (owner's decision, 2026-11-12: kept as it is, no code
+or landed record changes, nothing re-scored).** The pair (edge position, the error client record
+of its own request) is directed truth and a candidate at the session grain only, so the two grains
+do not score the same pair types.
+
+- **Session grain.** These pairs are 18–22 % of the directed truth by size (pooled over the five
+  seeds: 0.182 xs, 0.203 s, 0.216 m, 0.215 l, 0.213 xl). The call graph has no client link and
+  the reference is not given one, so `floor/topology` cannot mark them: its pooled recall is
+  0.78–0.79 by size (five-seed mean), and its false negatives are exactly these pairs on every
+  size (739, 20,720, 18,876, 15,116 and 11,794 of the same number).
+- **Request grain.** The request-grain targets hold no client token, so these pairs are never
+  candidates there under either rule (`rerun_pairs_not_scored.directed.not_candidate` in the
+  truth-build records); the reference's recall is 1.000.
+
+Any text that reports session-grain numbers under this rule carries this limitation.

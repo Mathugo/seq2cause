@@ -82,6 +82,12 @@ Pooled directed F1 (precision, recall), five-seed mean.
   it marks did not carry the failure in that request.
 - At the session grain its recall rises from 0.45 to 0.79. The new truth has no cross-request
   pairs, which a call graph cannot hold; how much of the rise that accounts for was not measured.
+- **Limitation (added 2026-11-12, owner's decision: kept as it is).** The pair (edge position, the
+  error client record of its own request) is scored at the session grain only: 739 of the 4,059
+  session truth pairs here (18 %; 18–22 % by size), and never a candidate at the request grain. The
+  call graph has no client link, so the reference misses exactly these pairs and its session recall
+  is capped there (0.79 here, 0.78–0.79 by size). The two grains do not score the same pair types
+  (`plans/per-sequence-rules.md`, addendum 2026-11-12).
 
 ## Not done
 
