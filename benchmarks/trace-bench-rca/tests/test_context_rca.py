@@ -11,7 +11,7 @@ import pytest
 from fixture_corpus import SERVICES, fixture_corpus
 from test_rank_score import LEDGER, _export_record, _score
 from test_trace import _fake_runner, _ranktrace, pos
-from test_trace_axis import _harness
+from test_trace_axis import TRACE_DOCS, _harness
 from test_trace_axis_score import (
     EPOCH,
     corpus,  # noqa: F401  (the hand corpus, a module fixture)
@@ -26,7 +26,9 @@ from tracebenchrca.constants import (
     ARM_RCD,
     ARM_TRACE,
     ARM_TRACE_ATOMIC_CMI_KEEP,
+    ARM_TRACE_CMI_KEEP,
     ARM_TRACE_CMI_OVERWRITE,
+    ARM_TRACE_IG_KEEP,
     ARM_TRACE_IG_OVERWRITE,
     CONTEXT_TRACE_ARMS,
     RANKING_TRACE_JSON,
@@ -34,6 +36,7 @@ from tracebenchrca.constants import (
     RUN_DIR,
     SCORE_RCA_JSON,
     SCORE_TRACE_JSON,
+    STAGE_RANK_TRACE,
     TRACE_CELLS,
     TRACE_MISS_NO_SOURCE,
     TRACE_PRE_SOURCE_CORPUS_START,
@@ -363,6 +366,61 @@ def test_ranktrace_refuses_probe_arms_of_two_layouts(tmp_path, monkeypatch):
             harness_root,
             probe_arms=[ARM_TRACE_IG_OVERWRITE, ARM_TRACE_ATOMIC_CMI_KEEP],
         )
+
+
+def test_ranktrace_trace_axis_probe_arms_reuse_and_source_primary(tmp_path, monkeypatch):
+    """The per-trace job of the family (`scripts/jobs/rca-ctx-trace-26-11-06.sh`): the first arm of a probe layout probes
+    with `--axis trace`, the second re-ranks the shared work directory (`runner_reused`), every reading is written per
+    trace and `--reading` names the primary — the premise of the GPU replica, checked on the fixture before the job."""
+    rec, _ = _export_record(tmp_path)
+    fx_corpus = fixture_corpus()
+    harness_root = _harness(tmp_path)
+    seen = []
+    monkeypatch.setattr(rt, "_spawn", _fake_runner(TRACE_DOCS, seen))
+    monkeypatch.setattr(rt, "pinned_environment", lambda python: ["stand-in==0"])
+    both = [ARM_TRACE_IG_KEEP, ARM_TRACE_CMI_KEEP]
+    _freeze_with_layout(tmp_path, both)
+    work = tmp_path / "work-keep"
+    outs = {}
+    for arm, reading in ((ARM_TRACE_IG_KEEP, "hop0"), (ARM_TRACE_CMI_KEEP, "source")):
+        outs[arm] = tmp_path / arm.replace("/", "-") / "trace" / "rank"
+        assert (
+            _ranktrace(
+                arm,
+                rec,
+                fx_corpus,
+                outs[arm],
+                tmp_path,
+                harness_root,
+                axis="trace",
+                select=TRACE_SELECT_POST_NONOK,
+                cap=0,
+                reading=reading,
+                probe_arms=both,
+                work_dir=work,
+            )
+            == 0
+        )
+    assert len(seen) == 1  # one forward per layout: the CMI arm re-ranks the IG arm's work files
+    cmd = seen[0]["cmd"]
+    i = cmd.index("--cells")
+    assert cmd[i + 1 : i + 3] == [TRACE_CELLS[a] for a in both] and cmd[cmd.index("--cap") + 1] == "0"
+    res_ig = read_json(outs[ARM_TRACE_IG_KEEP] / RUN_DIR / RESULTS_JSON)
+    res_cmi = read_json(outs[ARM_TRACE_CMI_KEEP] / RUN_DIR / RESULTS_JSON)
+    assert res_ig["stage"] == res_cmi["stage"] == STAGE_RANK_TRACE and res_cmi["probe_arms"] == both
+    assert res_ig["runner_reused"] is False and res_cmi["runner_reused"] is True
+    assert set(res_cmi["work_files_sha256"]) == {rt.SUMMARY_JSON, "case-00.json", "case-01.json"}
+    assert res_ig["reading"] == "hop0" and res_cmi["reading"] == "source"
+    r_ig = read_json(outs[ARM_TRACE_IG_KEEP] / RANKING_TRACE_JSON)
+    r_cmi = read_json(outs[ARM_TRACE_CMI_KEEP] / RANKING_TRACE_JSON)
+    assert r_ig["primary_reading"] == "hop0" and r_cmi["primary_reading"] == "source"
+    assert r_ig["readings"] == r_cmi["readings"] == list(TRACE_READINGS)
+    assert r_ig["cell"] == TRACE_CELLS[ARM_TRACE_IG_KEEP] and r_cmi["cell"] == TRACE_CELLS[ARM_TRACE_CMI_KEEP]
+    # the stand-in gives every cell of the layout the same cut, so the two arms' per-trace entries agree; each entry
+    # carries the three readings (hop1 `s` / `p`, hop0 `s0` / `p0`, source `ss` / `ps`)
+    assert r_ig["cases"] == r_cmi["cases"]
+    t_a = r_cmi["cases"]["case-00"]["traces"]["t-a"]
+    assert set(t_a) == {"s", "p", "s0", "p0", "ss", "ps"} and t_a["ss"] == [0] and t_a["ps"] == [1]
 
 
 # --- the earliest-error control on the hand corpus -------------------------------------------------------------------

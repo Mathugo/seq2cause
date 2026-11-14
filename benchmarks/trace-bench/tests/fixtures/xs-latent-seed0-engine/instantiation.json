@@ -1,0 +1,829 @@
+{
+ "config_hash": "1656f43b4b6e5deb690a31574bd98e55",
+ "constants_version": "1",
+ "counts": {
+  "call_edges": 25,
+  "mechanism_latent_nodes": 34,
+  "mechanism_nodes": 128,
+  "ops": 20,
+  "services": 3
+ },
+ "instance": "xs",
+ "latency": {
+  "mc_samples": 20000,
+  "nominal_p_slow": {
+   "0": 0.05,
+   "1": 0.05,
+   "10": 0.05,
+   "11": 0.05,
+   "12": 0.05,
+   "19": 0.05,
+   "2": 0.05,
+   "3": 0.05,
+   "4": 0.05,
+   "5": 0.05,
+   "6": 0.05,
+   "7": 0.05,
+   "8": 0.05,
+   "9": 0.05
+  },
+  "slow_quantile": 0.95,
+  "thresholds_s": {
+   "0": 0.056938354,
+   "1": 1.064075394,
+   "10": 0.00981147,
+   "11": 0.009054333,
+   "12": 0.013179661,
+   "19": 5.278927002,
+   "2": 3.280103986,
+   "3": 3.067284563,
+   "4": 0.027136396,
+   "5": 0.026335783,
+   "6": 0.02824417,
+   "7": 0.021847459,
+   "8": 0.024667328,
+   "9": 0.024016852
+  }
+ },
+ "numpy_minor": "2.4",
+ "scenarios": {
+  "order": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "scenarios": [
+   {
+    "bff_mask": [
+     "ok",
+     "4xx",
+     "5xx",
+     "err",
+     "slow"
+    ],
+    "client_mask": [
+     "ok",
+     "err"
+    ],
+    "fatal_error": true,
+    "index": 0,
+    "max_retries": 1,
+    "name": "browse",
+    "retry_on": [
+     "5xx",
+     "err"
+    ],
+    "steps": [
+     {
+      "bff_op": 1,
+      "client_op": 13,
+      "index": 0,
+      "scenario": 0
+     },
+     {
+      "bff_op": 2,
+      "client_op": 14,
+      "index": 1,
+      "scenario": 0
+     }
+    ],
+    "terminal_failure": true,
+    "weight": 0.75
+   },
+   {
+    "bff_mask": [
+     "ok",
+     "4xx",
+     "5xx",
+     "err",
+     "slow"
+    ],
+    "client_mask": [
+     "ok",
+     "err"
+    ],
+    "fatal_error": true,
+    "index": 1,
+    "max_retries": 2,
+    "name": "purchase",
+    "retry_on": [
+     "5xx",
+     "err",
+     "slow"
+    ],
+    "steps": [
+     {
+      "bff_op": 0,
+      "client_op": 15,
+      "index": 0,
+      "scenario": 1
+     },
+     {
+      "bff_op": 1,
+      "client_op": 16,
+      "index": 1,
+      "scenario": 1
+     },
+     {
+      "bff_op": 2,
+      "client_op": 17,
+      "index": 2,
+      "scenario": 1
+     },
+     {
+      "bff_op": 3,
+      "client_op": 18,
+      "index": 3,
+      "scenario": 1
+     }
+    ],
+    "terminal_failure": true,
+    "weight": 0.25
+   }
+  ]
+ },
+ "schema": "tracebench/instantiation@1",
+ "seed": 0,
+ "tool_version": "0.3.0",
+ "topology": {
+  "bff_ops": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "calibration": {
+   "layer_stop_probability": [
+    0.697276,
+    0.739553
+   ],
+   "method": "per-layer stop probabilities fitted by topology-only Monte Carlo over request depth",
+   "p_call_min": 0.02,
+   "realised_pmf": [
+    0.50223,
+    0.352253,
+    0.145516
+   ],
+   "requests": 20000,
+   "root_only_share": 0.02485,
+   "share_at_min": 0.0,
+   "steps": 2,
+   "target_pmf": [
+    0.5,
+    0.35,
+    0.15
+   ],
+   "tv": 0.004484,
+   "warm_share": 0.990099
+  },
+  "client_ops": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18
+  ],
+  "depth_levels": 3,
+  "edges": [
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 4,
+    "caller": 0,
+    "critical": true,
+    "index": 0,
+    "p_call": 1.0,
+    "p_hit": 0.5090303246118801,
+    "rho": 0.9966620829338446
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 5,
+    "caller": 1,
+    "critical": true,
+    "index": 1,
+    "p_call": 1.0,
+    "p_hit": 0.3687044980621782,
+    "rho": 0.8070664179284079
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 4,
+    "caller": 1,
+    "critical": false,
+    "index": 2,
+    "p_call": 1.0,
+    "p_hit": 0.3167142395501415,
+    "rho": 0.95082230116405
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 19,
+    "caller": 1,
+    "critical": true,
+    "index": 3,
+    "p_call": 1.0,
+    "p_hit": 0.6031668804543734,
+    "rho": 0.9488268618448232
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 4,
+    "caller": 2,
+    "critical": true,
+    "index": 4,
+    "p_call": 1.0,
+    "p_hit": 0.7481598049751395,
+    "rho": 0.8154129984608078
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 5,
+    "caller": 2,
+    "critical": true,
+    "index": 5,
+    "p_call": 1.0,
+    "p_hit": 0.35200465840252027,
+    "rho": 0.5773775975480748
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 6,
+    "caller": 2,
+    "critical": true,
+    "index": 6,
+    "p_call": 1.0,
+    "p_hit": 0.39047155866482147,
+    "rho": 0.9973372722902809
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 19,
+    "caller": 2,
+    "critical": false,
+    "index": 7,
+    "p_call": 1.0,
+    "p_hit": 0.35089200728889663,
+    "rho": 0.8789706044584398
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 4,
+    "caller": 3,
+    "critical": true,
+    "index": 8,
+    "p_call": 1.0,
+    "p_hit": 0.3016368068560831,
+    "rho": 0.7873100664660598
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 5,
+    "caller": 3,
+    "critical": true,
+    "index": 9,
+    "p_call": 1.0,
+    "p_hit": 0.8554032223965073,
+    "rho": 0.8760130325467386
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 19,
+    "caller": 3,
+    "critical": false,
+    "index": 10,
+    "p_call": 1.0,
+    "p_hit": 0.3549908242577298,
+    "rho": 0.9573392034940766
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 7,
+    "caller": 4,
+    "critical": true,
+    "index": 11,
+    "p_call": 0.164969339,
+    "p_hit": 0.5733231303844704,
+    "rho": 0.9206517434202365
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 9,
+    "caller": 4,
+    "critical": true,
+    "index": 12,
+    "p_call": 0.164969339,
+    "p_hit": 0.3786577266859152,
+    "rho": 0.9935702325716649
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 9,
+    "caller": 5,
+    "critical": false,
+    "index": 13,
+    "p_call": 0.302723795,
+    "p_hit": 0.7845344947630514,
+    "rho": 0.6326762365101108
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 7,
+    "caller": 6,
+    "critical": true,
+    "index": 14,
+    "p_call": 0.113249147,
+    "p_hit": 0.4271728578641236,
+    "rho": 0.6013856689555095
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 8,
+    "caller": 6,
+    "critical": true,
+    "index": 15,
+    "p_call": 0.113249147,
+    "p_hit": 0.6368812525425451,
+    "rho": 0.87686506430992
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 9,
+    "caller": 6,
+    "critical": false,
+    "index": 16,
+    "p_call": 0.113249147,
+    "p_hit": 0.35387801411621606,
+    "rho": 0.6592798255277441
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 12,
+    "caller": 7,
+    "critical": true,
+    "index": 17,
+    "p_call": 0.095678098,
+    "p_hit": 0.8960224119293501,
+    "rho": 0.9424840227041402
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 11,
+    "caller": 7,
+    "critical": true,
+    "index": 18,
+    "p_call": 0.095678098,
+    "p_hit": 0.33776070634598787,
+    "rho": 0.6304750452251173
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 10,
+    "caller": 7,
+    "critical": true,
+    "index": 19,
+    "p_call": 0.095678098,
+    "p_hit": 0.4938730969949889,
+    "rho": 0.8119518818801239
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 10,
+    "caller": 8,
+    "critical": true,
+    "index": 20,
+    "p_call": 0.14002748,
+    "p_hit": 0.7117552301725014,
+    "rho": 0.9720957647097939
+   },
+   {
+    "attached": false,
+    "cached": true,
+    "callee": 11,
+    "caller": 8,
+    "critical": false,
+    "index": 21,
+    "p_call": 0.14002748,
+    "p_hit": 0.30291043455133987,
+    "rho": 0.8081004257778797
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 10,
+    "caller": 9,
+    "critical": false,
+    "index": 22,
+    "p_call": 0.095678098,
+    "p_hit": 0.4040606533125186,
+    "rho": 0.8442550396546749
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 12,
+    "caller": 9,
+    "critical": true,
+    "index": 23,
+    "p_call": 0.095678098,
+    "p_hit": 0.8189412191324079,
+    "rho": 0.9045169559537809
+   },
+   {
+    "attached": false,
+    "cached": false,
+    "callee": 11,
+    "caller": 9,
+    "critical": true,
+    "index": 24,
+    "p_call": 0.095678098,
+    "p_hit": 0.8173823102466098,
+    "rho": 0.9181685924131702
+   }
+  ],
+  "external_ops": [
+   19
+  ],
+  "ops": [
+   {
+    "callees": [
+     0
+    ],
+    "callers": [],
+    "depth": 0,
+    "id": 0,
+    "kind": 0,
+    "name": "/v1/kererku/sarporkem",
+    "service": 0
+   },
+   {
+    "callees": [
+     1,
+     2,
+     3
+    ],
+    "callers": [],
+    "depth": 0,
+    "id": 1,
+    "kind": 0,
+    "name": "/v1/kererku/zilperde",
+    "service": 0
+   },
+   {
+    "callees": [
+     4,
+     5,
+     6,
+     7
+    ],
+    "callers": [],
+    "depth": 0,
+    "id": 2,
+    "kind": 0,
+    "name": "/v1/kererku/sanzizi",
+    "service": 0
+   },
+   {
+    "callees": [
+     8,
+     9,
+     10
+    ],
+    "callers": [],
+    "depth": 0,
+    "id": 3,
+    "kind": 0,
+    "name": "/v1/kererku/lomita",
+    "service": 0
+   },
+   {
+    "callees": [
+     11,
+     12
+    ],
+    "callers": [
+     0,
+     2,
+     4,
+     8
+    ],
+    "depth": 1,
+    "id": 4,
+    "kind": 1,
+    "name": "/v1/sitizo/lutsit",
+    "service": 1
+   },
+   {
+    "callees": [
+     13
+    ],
+    "callers": [
+     1,
+     5,
+     9
+    ],
+    "depth": 1,
+    "id": 5,
+    "kind": 1,
+    "name": "/v1/sitizo/kadale",
+    "service": 1
+   },
+   {
+    "callees": [
+     14,
+     15,
+     16
+    ],
+    "callers": [
+     6
+    ],
+    "depth": 1,
+    "id": 6,
+    "kind": 1,
+    "name": "/v1/sitizo/firfizim",
+    "service": 1
+   },
+   {
+    "callees": [
+     17,
+     18,
+     19
+    ],
+    "callers": [
+     11,
+     14
+    ],
+    "depth": 2,
+    "id": 7,
+    "kind": 1,
+    "name": "/v1/kotaram/zevi",
+    "service": 2
+   },
+   {
+    "callees": [
+     20,
+     21
+    ],
+    "callers": [
+     15
+    ],
+    "depth": 2,
+    "id": 8,
+    "kind": 1,
+    "name": "/v1/kotaram/rinzo",
+    "service": 2
+   },
+   {
+    "callees": [
+     22,
+     23,
+     24
+    ],
+    "callers": [
+     12,
+     13,
+     16
+    ],
+    "depth": 2,
+    "id": 9,
+    "kind": 1,
+    "name": "/v1/kotaram/fasgenun",
+    "service": 2
+   },
+   {
+    "callees": [],
+    "callers": [
+     19,
+     20,
+     22
+    ],
+    "depth": 3,
+    "id": 10,
+    "kind": 1,
+    "name": "/v1/visliput/zepusge",
+    "service": 3
+   },
+   {
+    "callees": [],
+    "callers": [
+     18,
+     21,
+     24
+    ],
+    "depth": 3,
+    "id": 11,
+    "kind": 1,
+    "name": "/v1/visliput/duge",
+    "service": 3
+   },
+   {
+    "callees": [],
+    "callers": [
+     17,
+     23
+    ],
+    "depth": 3,
+    "id": 12,
+    "kind": 1,
+    "name": "/v1/visliput/fosbe",
+    "service": 3
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 13,
+    "kind": 2,
+    "name": "/page/zuvoba",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 14,
+    "kind": 2,
+    "name": "/page/tagan",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 15,
+    "kind": 2,
+    "name": "/page/kokuna",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 16,
+    "kind": 2,
+    "name": "/page/matpi",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 17,
+    "kind": 2,
+    "name": "/page/riduva",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "depth": -1,
+    "id": 18,
+    "kind": 2,
+    "name": "/page/matitso",
+    "service": 4
+   },
+   {
+    "callees": [],
+    "callers": [
+     3,
+     7,
+     10
+    ],
+    "depth": 4,
+    "id": 19,
+    "kind": 3,
+    "name": "/v1/gedu/rotbuti",
+    "service": 5
+   }
+  ],
+  "services": [
+   {
+    "depth": 0,
+    "endpoints": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "host": "node-0.tb.internal",
+    "index": 0,
+    "ip": "10.77.0.1",
+    "kind": 0,
+    "name": "tb-edge",
+    "pods": [
+     "tb-edge-44e77-264f0",
+     "tb-edge-0fdb0-a329a",
+     "tb-edge-54ec0-de85e",
+     "tb-edge-cf06b-9fb04"
+    ]
+   },
+   {
+    "depth": 1,
+    "endpoints": [
+     4,
+     5,
+     6
+    ],
+    "host": "node-1.tb.internal",
+    "index": 1,
+    "ip": "10.77.0.2",
+    "kind": 1,
+    "name": "tb-limle",
+    "pods": [
+     "tb-limle-0490b-afbb4"
+    ]
+   },
+   {
+    "depth": 2,
+    "endpoints": [
+     7,
+     8,
+     9
+    ],
+    "host": "node-2.tb.internal",
+    "index": 2,
+    "ip": "10.77.0.3",
+    "kind": 1,
+    "name": "tb-kamko",
+    "pods": [
+     "tb-kamko-af4a6-bcaf4",
+     "tb-kamko-36e14-18918",
+     "tb-kamko-84da9-6a10e",
+     "tb-kamko-a8c4d-fa1fe"
+    ]
+   },
+   {
+    "depth": 3,
+    "endpoints": [
+     10,
+     11,
+     12
+    ],
+    "host": "node-3.tb.internal",
+    "index": 3,
+    "ip": "10.77.0.4",
+    "kind": 1,
+    "name": "tb-razase",
+    "pods": [
+     "tb-razase-9c3c3-6b9e0",
+     "tb-razase-035a3-d997a",
+     "tb-razase-5eb3c-618ec",
+     "tb-razase-1a2bd-4433d"
+    ]
+   },
+   {
+    "depth": -1,
+    "endpoints": [
+     13,
+     14,
+     15,
+     16,
+     17,
+     18
+    ],
+    "host": "",
+    "index": 4,
+    "ip": "",
+    "kind": 2,
+    "name": "client",
+    "pods": []
+   },
+   {
+    "depth": 4,
+    "endpoints": [
+     19
+    ],
+    "host": "node-5.tb.internal",
+    "index": 5,
+    "ip": "10.77.0.6",
+    "kind": 3,
+    "name": "ext-tuzelsom",
+    "pods": [
+     "ext-tuzelsom-7fdaa-5241e"
+    ]
+   }
+  ]
+ }
+}

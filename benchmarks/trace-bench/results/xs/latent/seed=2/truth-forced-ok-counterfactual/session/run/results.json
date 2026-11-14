@@ -1,0 +1,88 @@
+{
+ "c": 2,
+ "corpus_id": "xs/latent/seed=2",
+ "counts": {
+  "candidates": 11251,
+  "candidates_landed": 40070,
+  "sequences": 472,
+  "sequences_with_candidates": 334,
+  "sequences_with_candidates_landed": 472,
+  "sequences_with_truth": 243,
+  "sequences_without_candidates_fully_healthy": 131,
+  "sequences_without_candidates_other": 7,
+  "truth_directed": 956,
+  "truth_directed_landed": 7689
+ },
+ "directed_pairs": {
+  "contingent_only": 124,
+  "critical_False": 3,
+  "critical_None": 161,
+  "critical_True": 792,
+  "population_edge_any_strength": 956,
+  "population_edge_at_floor": 804,
+  "single": 832,
+  "source_attempt0": 308,
+  "source_edge": 161,
+  "source_final": 487,
+  "within_request_by_oracle_cross_request_by_roots": 21
+ },
+ "dropped_candidates": {
+  "client_retry": 3544,
+  "ok_target": 24933,
+  "unmapped": 342
+ },
+ "grain": "session",
+ "mapping": {
+  "client_positions": 270,
+  "client_positions_unmapped": 3,
+  "positions": 6093,
+  "positions_outcome_mismatch": 0,
+  "positions_unmapped": 3,
+  "rows_client_skew_not_constant": 5,
+  "rows_unmapped": 3
+ },
+ "max_lag": 63,
+ "max_len": 64,
+ "old_against_new": {
+  "landed_kept": 589,
+  "landed_lost_client_retry": 128,
+  "landed_lost_not_a_rerun_edge": 1028,
+  "landed_lost_ok_target": 5942,
+  "landed_lost_unmapped": 2,
+  "new_gained": 367
+ },
+ "ordering": "end",
+ "read": "discover-session-core-all-c2-N32",
+ "rerun_pairs_not_scored": {
+  "ancestor": {
+   "not_candidate": 0,
+   "not_in_row": 120,
+   "outcome_mismatch": 0,
+   "outside_window": 15,
+   "reversed": 10
+  },
+  "directed": {
+   "not_candidate": 0,
+   "not_in_row": 198,
+   "outcome_mismatch": 0,
+   "outside_window": 39,
+   "reversed": 236
+  }
+ },
+ "reruns": {
+  "n_null_forcing_runs": 39,
+  "n_shard_runs": 51,
+  "n_tree_runs": 147,
+  "shards": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "rule": "forced-ok-counterfactual",
+ "schema": "seq2causebench/seqtruth-forced-ok-counterfactual@1",
+ "split": "test",
+ "status": "ok",
+ "truth_file": "seqtruth-forced-ok-counterfactual-session.json"
+}

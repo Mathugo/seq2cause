@@ -54,6 +54,7 @@ from .constants import (
     ROOT_CAUSE_ARMS,
     RUN_DIR,
     RUNGS,
+    SCALE_RUNGS,
     SCORE_RCA_JSON,
     SEEDS,
     TRACE_ARMS_ALL,
@@ -326,8 +327,8 @@ def hypotheses(rows, rungs, graph_rows=()):
             "gap_bocpd_minus_baro": gaps,
             "verdict": "pass" if all(abs(v) <= BOCPD_GAP for v in gaps.values()) else "fail",
         }
-    if (RUNGS[0], ARM_BARO) in by and (RUNGS[-1], ARM_BARO) in by:
-        lo, hi = by[(RUNGS[0], ARM_BARO)], by[(RUNGS[-1], ARM_BARO)]
+    if all((g, ARM_BARO) in by for g in SCALE_RUNGS):  # xs against m (§6); not the last rung since l joined RUNGS
+        lo, hi = by[(SCALE_RUNGS[0], ARM_BARO)], by[(SCALE_RUNGS[1], ARM_BARO)]
         rise = hi["metrics"][AVG] - lo["metrics"][AVG]
         bound = max(half_width(lo), half_width(hi))
         out["H-rca-scale"] = {

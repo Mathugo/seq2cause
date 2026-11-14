@@ -1,0 +1,87 @@
+{
+ "c": 2,
+ "corpus_id": "xs/latent/seed=0",
+ "counts": {
+  "candidates": 12538,
+  "candidates_landed": 39086,
+  "sequences": 443,
+  "sequences_with_candidates": 322,
+  "sequences_with_candidates_landed": 442,
+  "sequences_with_truth": 219,
+  "sequences_without_candidates_fully_healthy": 110,
+  "sequences_without_candidates_other": 11,
+  "truth_directed": 919,
+  "truth_directed_landed": 6682
+ },
+ "directed_pairs": {
+  "contingent_only": 137,
+  "critical_False": 112,
+  "critical_None": 140,
+  "critical_True": 667,
+  "population_edge_any_strength": 917,
+  "population_edge_at_floor": 805,
+  "single": 782,
+  "source_attempt0": 357,
+  "source_edge": 140,
+  "source_final": 422,
+  "within_request_by_oracle_cross_request_by_roots": 27
+ },
+ "dropped_candidates": {
+  "client_retry": 3770,
+  "ok_target": 22633,
+  "unmapped": 145
+ },
+ "grain": "session",
+ "mapping": {
+  "client_positions": 236,
+  "client_positions_unmapped": 0,
+  "positions": 5948,
+  "positions_outcome_mismatch": 1,
+  "positions_unmapped": 0,
+  "rows_client_skew_not_constant": 2,
+  "rows_unmapped": 2
+ },
+ "max_lag": 63,
+ "max_len": 64,
+ "old_against_new": {
+  "landed_kept": 620,
+  "landed_lost_client_retry": 145,
+  "landed_lost_not_a_rerun_edge": 806,
+  "landed_lost_ok_target": 5111,
+  "new_gained": 299
+ },
+ "ordering": "end",
+ "read": "discover-session-core-all-c2-N32",
+ "rerun_pairs_not_scored": {
+  "ancestor": {
+   "not_candidate": 0,
+   "not_in_row": 161,
+   "outcome_mismatch": 0,
+   "outside_window": 15,
+   "reversed": 26
+  },
+  "directed": {
+   "not_candidate": 0,
+   "not_in_row": 183,
+   "outcome_mismatch": 1,
+   "outside_window": 55,
+   "reversed": 177
+  }
+ },
+ "reruns": {
+  "n_null_forcing_runs": 40,
+  "n_shard_runs": 64,
+  "n_tree_runs": 199,
+  "shards": [
+   0,
+   1,
+   2,
+   3
+  ]
+ },
+ "rule": "forced-ok-counterfactual",
+ "schema": "seq2causebench/seqtruth-forced-ok-counterfactual@1",
+ "split": "test",
+ "status": "ok",
+ "truth_file": "seqtruth-forced-ok-counterfactual-session.json"
+}

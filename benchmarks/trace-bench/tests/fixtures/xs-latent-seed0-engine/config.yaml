@@ -1,0 +1,115 @@
+constants: constants/realism-v1.json
+counts:
+  bff_endpoints: 4
+  clients: 20
+  endpoints_per_service: 3
+  scenarios: 2
+  services: 3
+endpoints:
+  repertoire:
+  - ok
+  - 4xx
+  - 5xx
+  - err
+  - slow
+  retry:
+    max_retries: 1
+    retry_on:
+    - 5xx
+mechanism:
+  ctxmax: true
+  error_rate_multiplier: 3.0
+  floor: 0.05
+  mc_samples: 20000
+  sweep:
+  - 0.01
+  - 0.02
+  - 0.05
+  - 0.1
+  - 0.2
+  - 0.5
+name: xs
+run:
+  base_rps: 1.0
+  cap_gb: 50.0
+  seed: 0
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  shard_ticks: 900
+  tick_s: 1
+  twin: true
+  window:
+    duration_hours: 1.0
+    start: '2026-01-05T09:00:00Z'
+rung: local
+scenarios:
+- fatal_error: true
+  name: browse
+  repertoire:
+    bff:
+    - ok
+    - 4xx
+    - 5xx
+    - err
+    - slow
+    client:
+    - ok
+    - err
+  retry:
+    max_retries: 1
+    retry_on:
+    - 5xx
+    - err
+  steps: 2
+  terminal_failure: true
+  weight: 3.0
+- fatal_error: true
+  name: purchase
+  repertoire:
+    bff:
+    - ok
+    - 4xx
+    - 5xx
+    - err
+    - slow
+    client:
+    - ok
+    - err
+  retry:
+    max_retries: 2
+    retry_on:
+    - 5xx
+    - err
+    - slow
+  steps: 4
+  terminal_failure: true
+  weight: 1.0
+schedules:
+  faults:
+  - component: service:1
+    end_s: 1800.0
+    kind: degrade
+    start_s: 1200.0
+  - component: service:2/endpoint:0
+    end_s: 3000.0
+    kind: crash
+    start_s: 2700.0
+  regimes: []
+schema_version: tracebench/config@1
+slow:
+  quantile: 0.95
+topology:
+  cache_hit_share: 0.3
+  criticality_share: 0.7
+  depth_pmf:
+  - 0.5
+  - 0.35
+  - 0.15
+  external_services: 1
+  fanout_mean: 2.0
+vocab:
+  min_count: 5

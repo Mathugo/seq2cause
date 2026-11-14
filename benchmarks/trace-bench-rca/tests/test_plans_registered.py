@@ -30,7 +30,7 @@ def test_rca_arms_plan_is_dated_and_names_every_registered_fact():
     for sha in (BARO_COMMIT, RCAEVAL_COMMIT, CAUSALRCA_COMMIT):
         assert sha in text, sha
     assert f"B = {BOOTSTRAP_B}" in text and f"seed {BOOTSTRAP_SEED}" in text
-    for dev in ("D-TBR-1", "D-TBR-2", "D-TBR-3"):
+    for dev in ("D-TBR-1", "D-TBR-2", "D-TBR-3", "D-TBR-24", "D-TBR-25", "D-TBR-26"):
         assert dev in text
     assert "no change point" in text  # the BOCPD empty-anomalies rule is registered, not improvised
     assert "`time`" in text  # the suite's identity preprocess leaves the time column; its removal is registered

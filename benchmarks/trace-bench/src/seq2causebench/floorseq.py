@@ -48,7 +48,16 @@ from .floors import bigram_read
 from .log import log
 from .record import RunRecord, read_json, write_json
 from .seqscore import SEQSCORE_SCHEMA, aggregate_read, read_view
-from .seqtruth import RULES_VERSION, truth_for_read
+from .seqtruth import (
+    RULE_FIRST_CALLER_PARENT,
+    RULE_FORCED_OK,
+    RULES,
+    RULES_VERSION,
+    dropped_candidates,
+    rule_suffix,
+    truth_file_of,
+    truth_for_read,
+)
 from .vocab import Vocab
 
 ROW_BROADCAST = "broadcast"
@@ -179,6 +188,13 @@ def run_floorseq(args, rec):
     ref = read_json(args.reference_seqscore)
     if ref.get("cell") != args.reference_cell or ref.get("corpus_id") != disc["corpus_id"]:
         raise FloorSeqRefusal("the reference seqscore is not the reference cell's on this corpus")
+    # a record written before the rule existed is the landed rule's
+    if ref.get("rule", RULE_FIRST_CALLER_PARENT) != args.rule:
+        raise FloorSeqRefusal(
+            f"the reference seqscore was scored under {ref.get('rule', RULE_FIRST_CALLER_PARENT)}, "
+            f"this row asks for {args.rule}: a floor row is scored on its arm's pairs"
+        )
+    truth_file = truth_file_of(args.rule, args.truth_file)
     if int(ref["max_lag"]) != int(args.max_lag) or int(ref["c"]) != int(disc["c"]):
         raise FloorSeqRefusal(
             f"--max-lag {args.max_lag} / c {disc['c']} differ from the reference seqscore's"
@@ -232,7 +248,16 @@ def run_floorseq(args, rec):
         raise FloorSeqRefusal("the re-derived sequences differ from the read's sequences record")
     stored_ids = [store.get(s) for s in stored_seq]
     truth, targets, _ = truth_for_read(
-        args.corpus, ordering, grain, disc["split"], seqrec, stored_ids, c, int(args.max_lag)
+        args.corpus,
+        ordering,
+        grain,
+        disc["split"],
+        seqrec,
+        stored_ids,
+        c,
+        int(args.max_lag),
+        rule=args.rule,
+        truth_file=truth_file,
     )
 
     toks = {}
@@ -257,6 +282,7 @@ def run_floorseq(args, rec):
         "schema": SEQSCORE_SCHEMA,
         "axis": "per-sequence",
         "rules_version": RULES_VERSION,
+        "rule": args.rule,
         "cell": args.floor_cell,
         "arm": arm,
         "path": path,
@@ -283,6 +309,8 @@ def run_floorseq(args, rec):
         "floor_table_edges": n_edges,
         **agg,
     }
+    if args.rule == RULE_FORCED_OK:
+        result["dropped_candidates"] = dropped_candidates(truth)
     write_json(rec.out_dir / SEQSCORE_JSON, result)
     log(
         {
@@ -305,9 +333,10 @@ def run_floorseq(args, rec):
     }
 
 
-def landing_dir_name(row, reference_cell):
-    """`seqscore-<row>-on-<reference arm slug>`: beside the floor cell, a directory `report` does not read."""
-    return f"seqscore-{row}-on-{arm_slug(parse_cell_key(reference_cell)[0])}"
+def landing_dir_name(row, reference_cell, rule=RULE_FIRST_CALLER_PARENT):
+    """`seqscore-<row>-on-<reference arm slug>[-<rule>]`: beside the floor cell, a directory
+    `report` does not read; the landed rule carries no suffix."""
+    return f"seqscore-{row}-on-{arm_slug(parse_cell_key(reference_cell)[0])}{rule_suffix(rule)}"
 
 
 def build_parser():
@@ -328,6 +357,14 @@ def build_parser():
     p.add_argument("--floor-cell", required=True, help="floor/<name>/none/frozen/<grain>")
     p.add_argument("--row", required=True, choices=ROWS)
     p.add_argument("--max-lag", required=True, type=int, help="the reference seqscore's --max-lag")
+    p.add_argument(
+        "--rule", required=True, choices=RULES, help="the reference seqscore's truth rule"
+    )
+    p.add_argument(
+        "--truth-file",
+        required=True,
+        help="the read's truth file under forced-ok-counterfactual (truthbuild), else 'none'",
+    )
     p.add_argument("--output-folder", required=True)
     return p
 

@@ -1,0 +1,201 @@
+{
+ "arm": "floor/bigram",
+ "axis": "per-sequence",
+ "c": 1,
+ "cell": "floor/bigram/none/frozen/request",
+ "corpus_id": "s/latent/seed=3",
+ "cut": "frozen",
+ "dropped_candidates": {
+  "client_retry": 0,
+  "ok_target": 165936,
+  "unmapped": 0
+ },
+ "floor": 0.05,
+ "floor_read_freeze": {
+  "committed_at": "2026-10-09T22:11:10-04:00",
+  "path": "freezes/2026-10-10-s-latent-s3-floors.json",
+  "sha": "3ee3fa2b75085625ee9cab86d1f6f35bedf4e573"
+ },
+ "floor_table_edges": 2079,
+ "floor_table_pairs": 3862,
+ "grain": "request",
+ "max_lag": 63,
+ "model_sha256": "none",
+ "n_links_lost": 0,
+ "n_scoreable": 4140,
+ "n_sequences": 20000,
+ "n_sequences_split": 20000,
+ "n_skipped_short": 12533,
+ "n_skipped_short_by_read": 0,
+ "n_stored_by_read": 20000,
+ "n_unscoreable": 3327,
+ "path": "none",
+ "per_lag_recall": {
+  "1": 0.9924324324324324,
+  "10": 0.25,
+  "11": 0.0,
+  "12": 0.0,
+  "2": 0.7162162162162162,
+  "3": 0.5012562814070352,
+  "4": 0.38979118329466356,
+  "5": 0.3131868131868132,
+  "6": 0.23809523809523808,
+  "7": 0.2909090909090909,
+  "8": 0.3333333333333333,
+  "9": 0.2857142857142857
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.353402718445779,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.4,
+    "p90": 0.8,
+    "std": 0.3377490855107108
+   },
+   "precision": {
+    "mean": 0.2997403356574061,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.25,
+    "p90": 0.8,
+    "std": 0.3179218997692033
+   },
+   "recall": {
+    "mean": 0.5070249062488428,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.45831247420703
+   }
+  },
+  "ap": {
+   "mean": 0.7069742709055767,
+   "n": 2984,
+   "p10": 0.25,
+   "p50": 0.8055555555555555,
+   "p90": 1.0,
+   "std": 0.3091787002186404
+  },
+  "auroc": {
+   "mean": 0.7030211928800514,
+   "n": 2920,
+   "p10": 0.125,
+   "p50": 0.8571428571428571,
+   "p90": 1.0,
+   "std": 0.34330581292866075
+  },
+  "auroc_skeleton": {
+   "mean": 0.6519910415617098,
+   "n": 3843,
+   "p10": 0.1,
+   "p50": 0.7142857142857143,
+   "p90": 1.0,
+   "std": 0.33271226287263056
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.36213330620963813,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.4,
+    "p90": 0.8,
+    "std": 0.3458344545660008
+   },
+   "precision": {
+    "mean": 0.2989459180513943,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.25,
+    "p90": 0.8,
+    "std": 0.31758661863406995
+   },
+   "recall": {
+    "mean": 0.5318742843237504,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.6666666666666666,
+    "p90": 1.0,
+    "std": 0.4703618454756506
+   }
+  },
+  "predict_all_mean": 0.2780671137224195,
+  "skeleton": {
+   "f1": {
+    "mean": 0.44781877635393186,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 0.9090909090909091,
+    "std": 0.31278288764626055
+   },
+   "precision": {
+    "mean": 0.4692654139809993,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.36890511644186713
+   },
+   "recall": {
+    "mean": 0.5556802732569713,
+    "n": 4140,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.4037079496217361
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.35368178392516736,
+   "fn": 2071,
+   "fp": 12508,
+   "precision": 0.2418015396738801,
+   "recall": 0.6582508250825082,
+   "shd": 14579,
+   "tp": 3989
+  },
+  "ap": 0.4113347374435061,
+  "auroc": 0.7543284976053624,
+  "auroc_skeleton": 0.6426672196854292,
+  "directed": {
+   "f1": 0.362455995976775,
+   "fn": 1412,
+   "fp": 12533,
+   "precision": 0.24028611262653815,
+   "recall": 0.7373511904761905,
+   "shd": 13945,
+   "tp": 3964
+  },
+  "n_candidates": 46957,
+  "n_truth_directed": 5376,
+  "skeleton": {
+   "f1": 0.39975157094841446,
+   "fn": 5404,
+   "fp": 11026,
+   "precision": 0.33163605504031035,
+   "recall": 0.503080459770115,
+   "shd": 16430,
+   "tp": 5471
+  }
+ },
+ "predict_all": {
+  "pooled": 0.2054535379206237
+ },
+ "reference_cell": "trace/core/shipped/frozen/request",
+ "reference_model_sha256": "5592943af91f15060c7a4eb0002fbb0fae0382f22c8e69c1371579de325366f0",
+ "reference_read": "discover-request-core-all-c1-N8",
+ "row": "broadcast",
+ "rule": "forced-ok-counterfactual",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "s",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.207,
+ "split": "test",
+ "tau": 0.01,
+ "tau_by_lag": null
+}

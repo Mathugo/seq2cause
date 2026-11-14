@@ -1,0 +1,202 @@
+{
+ "arm": "floor/bigram",
+ "axis": "per-sequence",
+ "c": 2,
+ "cell": "floor/bigram/none/frozen/session",
+ "corpus_id": "xl/latent/seed=1",
+ "cut": "frozen",
+ "dropped_candidates": {
+  "client_retry": 58500,
+  "ok_target": 865252,
+  "unmapped": 184
+ },
+ "floor": 0.05,
+ "floor_read_freeze": {
+  "committed_at": "2026-10-10T11:48:34-04:00",
+  "path": "freezes/2026-10-10-xl-latent-s1-floors.json",
+  "sha": "19d8bd71edac7767829816e4ad91e8a48157c6b3"
+ },
+ "floor_table_edges": 42190,
+ "floor_table_pairs": 42190,
+ "grain": "session",
+ "max_lag": 63,
+ "model_sha256": "none",
+ "n_links_lost": 0,
+ "n_scoreable": 4319,
+ "n_sequences": 8640,
+ "n_sequences_split": 10000,
+ "n_skipped_short": 3267,
+ "n_skipped_short_by_read": 1360,
+ "n_stored_by_read": 8640,
+ "n_unscoreable": 1054,
+ "path": "none",
+ "per_lag_recall": {
+  "1": 0.988529291274068,
+  "10": 0.0,
+  "11": 0.0,
+  "12": 0.0,
+  "13": 0.0,
+  "2": 0.0,
+  "3": 0.0,
+  "4": 0.0,
+  "5": 0.0,
+  "6": 0.0,
+  "7": 0.0,
+  "8": 0.0,
+  "9": 0.0
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.20458067049430617,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.18181818181818182,
+    "p90": 0.5,
+    "std": 0.2171651556561913
+   },
+   "precision": {
+    "mean": 0.17140700579777549,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.14285714285714285,
+    "p90": 0.5,
+    "std": 0.18678752009321836
+   },
+   "recall": {
+    "mean": 0.32007834223026727,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.2,
+    "p90": 1.0,
+    "std": 0.3716039794297483
+   }
+  },
+  "ap": {
+   "mean": 0.43071534201834866,
+   "n": 3223,
+   "p10": 0.037689081899613674,
+   "p50": 0.3578754578754579,
+   "p90": 1.0,
+   "std": 0.33492220994376565
+  },
+  "auroc": {
+   "mean": 0.6941051254691628,
+   "n": 3208,
+   "p10": 0.43333333333333335,
+   "p50": 0.6833333333333333,
+   "p90": 1.0,
+   "std": 0.21586063746606524
+  },
+  "auroc_skeleton": {
+   "mean": 0.5594339664388663,
+   "n": 4259,
+   "p10": 0.43333333333333335,
+   "p50": 0.5300202839756593,
+   "p90": 0.7298709677419355,
+   "std": 0.1470524043970176
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.21435630143291468,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.1904761904761905,
+    "p90": 0.5,
+    "std": 0.22704908131313525
+   },
+   "precision": {
+    "mean": 0.16904394739543283,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.14285714285714285,
+    "p90": 0.5,
+    "std": 0.1863552105813502
+   },
+   "recall": {
+    "mean": 0.3504112106935204,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.25,
+    "p90": 1.0,
+    "std": 0.3858801010436644
+   }
+  },
+  "predict_all_mean": 0.09991606676784894,
+  "skeleton": {
+   "f1": {
+    "mean": 0.23715310376241833,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.19999999999999998,
+    "p90": 0.5,
+    "std": 0.2047868861958654
+   },
+   "precision": {
+    "mean": 0.3867566000437893,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.375,
+    "p90": 0.75,
+    "std": 0.2814243037062744
+   },
+   "recall": {
+    "mean": 0.2247372294807783,
+    "n": 4319,
+    "p10": 0.0,
+    "p50": 0.13333333333333333,
+    "p90": 0.5,
+    "std": 0.2629172963817099
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.22623865252105438,
+   "fn": 8729,
+   "fp": 19569,
+   "precision": 0.174512781574285,
+   "recall": 0.3215451577801959,
+   "shd": 28298,
+   "tp": 4137
+  },
+  "ap": 0.1963055787094481,
+  "auroc": 0.6696152045593099,
+  "auroc_skeleton": 0.5265132521238525,
+  "directed": {
+   "f1": 0.2377195812193906,
+   "fn": 6340,
+   "fp": 19653,
+   "precision": 0.1709693748418122,
+   "recall": 0.3899740209756567,
+   "shd": 25993,
+   "tp": 4053
+  },
+  "n_candidates": 302603,
+  "n_truth_directed": 10393,
+  "skeleton": {
+   "f1": 0.17592592592592593,
+   "fn": 62777,
+   "fp": 15365,
+   "precision": 0.35185185185185186,
+   "recall": 0.11728395061728394,
+   "shd": 78142,
+   "tp": 8341
+  }
+ },
+ "predict_all": {
+  "pooled": 0.066409794374369
+ },
+ "reference_cell": "trace/core/shipped/frozen/session",
+ "reference_model_sha256": "e0ebceb979cc3c0b6a8f39ee1911dff299e1da99f88ddf9690edc008ea9a2299",
+ "reference_read": "discover-session-core-all-c2-N16",
+ "row": "adjacent",
+ "rule": "forced-ok-counterfactual",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "xl",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.4998842592592593,
+ "split": "test",
+ "tau": 0.0,
+ "tau_by_lag": null
+}

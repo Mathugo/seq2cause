@@ -298,6 +298,7 @@ def test_start_view_test_read_annotate_and_seqscore(sworld, tmp_path):
         assert an.main(ann) == 0
         assert read_json(res / "annotate.json")["coverage"]["reachable_recall_ceiling"] <= 1
         seq = ["--corpus", str(w["corpus"]), "--run-dir", str(out), "--cell", key]
+        seq += ["--rule", "first-caller-parent", "--truth-file", "none"]
         assert sq.main([*seq, "--max-lag", "6", "--output-folder", str(res / "seq")]) == 0
         s = read_json(res / "seq" / "seqscore.json")
         assert s["grain"] == "request" and s["predict_all"]["pooled"] is not None
@@ -321,6 +322,7 @@ def test_seqscore_reads_the_view_the_read_was_made_on(sworld, tmp_path):
     docs = {}
     for name, run_dir in (("start", out), ("end", as_end)):
         seq = ["--corpus", str(w["corpus"]), "--run-dir", str(run_dir), "--cell", key]
+        seq += ["--rule", "first-caller-parent", "--truth-file", "none"]
         dest = tmp_path / f"seq-{name}"
         assert sq.main([*seq, "--max-lag", "6", "--output-folder", str(dest)]) == 0
         docs[name] = read_json(dest / "seqscore.json")
@@ -330,6 +332,7 @@ def test_seqscore_reads_the_view_the_read_was_made_on(sworld, tmp_path):
     del args["arguments"]["ordering"]
     write_json(as_end / RUN_DIR / ARGUMENTS_JSON, args)
     seq = ["--corpus", str(w["corpus"]), "--run-dir", str(as_end), "--cell", key]
+    seq += ["--rule", "first-caller-parent", "--truth-file", "none"]
     with pytest.raises(ValueError, match="records no --ordering"):
         sq.run_seqscore(
             sq.build_parser().parse_args([*seq, "--max-lag", "6", "--output-folder", "unused"]),

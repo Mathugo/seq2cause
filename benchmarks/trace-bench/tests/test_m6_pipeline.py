@@ -776,6 +776,10 @@ def test_discover_test_read_annotate_and_seqscore(world, tmp_path):
                         key,
                         "--max-lag",
                         "6",
+                        "--rule",
+                        "first-caller-parent",
+                        "--truth-file",
+                        "none",
                         "--output-folder",
                         str(res / "seq"),
                     ]

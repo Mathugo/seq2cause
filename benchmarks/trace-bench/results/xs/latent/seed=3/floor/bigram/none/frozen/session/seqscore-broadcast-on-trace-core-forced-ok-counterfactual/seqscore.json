@@ -1,0 +1,196 @@
+{
+ "arm": "floor/bigram",
+ "axis": "per-sequence",
+ "c": 4,
+ "cell": "floor/bigram/none/frozen/session",
+ "corpus_id": "xs/latent/seed=3",
+ "cut": "frozen",
+ "dropped_candidates": {
+  "client_retry": 1089,
+  "ok_target": 14126,
+  "unmapped": 366
+ },
+ "floor": 0.05,
+ "floor_read_freeze": {
+  "committed_at": "2026-10-09T21:59:17-04:00",
+  "path": "freezes/2026-10-10-xs-latent-s3-floors.json",
+  "sha": "541cb077e113350abf79640111a48eb9ca9ad7f2"
+ },
+ "floor_table_edges": 332,
+ "floor_table_pairs": 465,
+ "grain": "session",
+ "max_lag": 63,
+ "model_sha256": "none",
+ "n_links_lost": 0,
+ "n_scoreable": 176,
+ "n_sequences": 485,
+ "n_sequences_split": 487,
+ "n_skipped_short": 265,
+ "n_skipped_short_by_read": 2,
+ "n_stored_by_read": 485,
+ "n_unscoreable": 44,
+ "path": "none",
+ "per_lag_recall": {
+  "1": 1.0,
+  "2": 0.94,
+  "3": 0.3333333333333333,
+  "4": 0.16666666666666666,
+  "5": 0.0,
+  "6": 0.0,
+  "7": 0.0
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.404344044373317,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.4,
+    "p90": 0.8,
+    "std": 0.319965906123197
+   },
+   "precision": {
+    "mean": 0.32652250035689206,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.3333333333333333,
+    "p90": 0.7857142857142857,
+    "std": 0.30326615325965994
+   },
+   "recall": {
+    "mean": 0.661269759281123,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.4405564864676854
+   }
+  },
+  "ap": {
+   "mean": 0.8100218999144027,
+   "n": 130,
+   "p10": 0.3933795820486468,
+   "p50": 1.0,
+   "p90": 1.0,
+   "std": 0.2714037344729346
+  },
+  "auroc": {
+   "mean": 0.91919463373285,
+   "n": 122,
+   "p10": 0.7201587301587302,
+   "p50": 1.0,
+   "p90": 1.0,
+   "std": 0.15712386046827584
+  },
+  "auroc_skeleton": {
+   "mean": 0.7214385094880903,
+   "n": 151,
+   "p10": 0.43253968253968256,
+   "p50": 0.7142857142857143,
+   "p90": 1.0,
+   "std": 0.21610563826742055
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.406203458904505,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.4222222222222222,
+    "p90": 0.8166666666666667,
+    "std": 0.3233434353803699
+   },
+   "precision": {
+    "mean": 0.31964351843195427,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 0.30952380952380953,
+    "p90": 0.6904761904761905,
+    "std": 0.2994634907286429
+   },
+   "recall": {
+    "mean": 0.68521148989899,
+    "n": 176,
+    "p10": 0.0,
+    "p50": 1.0,
+    "p90": 1.0,
+    "std": 0.44403654594481295
+   }
+  },
+  "predict_all_mean": 0.19757573351809815,
+  "skeleton": {
+   "f1": {
+    "mean": 0.5040539393941558,
+    "n": 176,
+    "p10": 0.04761904761904762,
+    "p50": 0.5,
+    "p90": 0.8571428571428571,
+    "std": 0.2790166290839773
+   },
+   "precision": {
+    "mean": 0.6092961901066848,
+    "n": 176,
+    "p10": 0.041666666666666664,
+    "p50": 0.5941176470588235,
+    "p90": 1.0,
+    "std": 0.3497964541637535
+   },
+   "recall": {
+    "mean": 0.544638532849501,
+    "n": 176,
+    "p10": 0.043478260869565216,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.35423178676166733
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.38572642310960065,
+   "fn": 63,
+   "fp": 660,
+   "precision": 0.25591882750845546,
+   "recall": 0.7827586206896552,
+   "shd": 723,
+   "tp": 227
+  },
+  "ap": 0.4336442587324053,
+  "auroc": 0.8937248147266654,
+  "auroc_skeleton": 0.6209296278850683,
+  "directed": {
+   "f1": 0.3773250664304694,
+   "fn": 29,
+   "fp": 674,
+   "precision": 0.24013528748590757,
+   "recall": 0.8801652892561983,
+   "shd": 703,
+   "tp": 213
+  },
+  "n_candidates": 4270,
+  "n_truth_directed": 242,
+  "skeleton": {
+   "f1": 0.4146772767462423,
+   "fn": 906,
+   "fp": 418,
+   "precision": 0.5287485907553551,
+   "recall": 0.3410909090909091,
+   "shd": 1324,
+   "tp": 469
+  }
+ },
+ "predict_all": {
+  "pooled": 0.10726950354609929
+ },
+ "reference_cell": "trace/core/shipped/frozen/session",
+ "reference_model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+ "reference_read": "discover-session-core-all-c4-N32",
+ "row": "broadcast",
+ "rule": "forced-ok-counterfactual",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "xs",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.3628865979381443,
+ "split": "test",
+ "tau": 0.03,
+ "tau_by_lag": null
+}

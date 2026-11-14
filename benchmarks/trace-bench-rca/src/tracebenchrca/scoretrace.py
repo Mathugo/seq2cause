@@ -52,7 +52,7 @@ from .constants import (
     STAGE_RANK_TRACE,
     STAGE_SCORE_TRACE,
     TRACE_ARMS_ALL,
-    TRACE_BROADCAST_ARMS,
+    TRACE_BROADCAST_ARMS_BY_RUNG,
     TRACE_READING_EARLIEST,
     TRACE_READINGS,
     VARIANT,
@@ -126,7 +126,7 @@ def broadcast_sources(results_dir, rung, seed):
     """`[(row_id, ranking.json path)]` of the landed case rankings this corpus's broadcast rows read."""
     root = Path(results_dir) / rung / VARIANT / f"seed={seed}"
     out = []
-    for arm in TRACE_BROADCAST_ARMS:
+    for arm in TRACE_BROADCAST_ARMS_BY_RUNG[rung]:  # nine on xs / s / m; three on l (addendum 2026-11-08, D-TBR-23)
         if arm == ARM_CAUSALRCA:
             for series in CAUSALRCA_SERIES:
                 out.append((f"broadcast/{arm}/{series}", root / arm_slug(arm) / series / RANKING_JSON))

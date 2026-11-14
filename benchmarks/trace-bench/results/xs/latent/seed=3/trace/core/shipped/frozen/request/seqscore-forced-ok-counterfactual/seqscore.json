@@ -1,0 +1,199 @@
+{
+ "arm": "trace/core",
+ "axis": "per-sequence",
+ "c": 2,
+ "cell": "trace/core/shipped/frozen/request",
+ "corpus_id": "xs/latent/seed=3",
+ "cut": "frozen",
+ "dropped_candidates": {
+  "client_retry": 0,
+  "ok_target": 3660,
+  "unmapped": 0
+ },
+ "floor": 0.05,
+ "grain": "request",
+ "max_lag": 63,
+ "model_sha256": "0c6345ca47c07e012eca9b957b0b97f903c45ea0784d22e04954cbc52459cbb2",
+ "n_links_lost": 0,
+ "n_scoreable": 221,
+ "n_sequences": 1274,
+ "n_sequences_split": 1274,
+ "n_skipped_short": 933,
+ "n_skipped_short_by_read": 0,
+ "n_stored_by_read": 1274,
+ "n_unscoreable": 120,
+ "ordering": "end",
+ "path": "shipped",
+ "per_lag_recall": {
+  "1": 0.8271604938271605,
+  "2": 0.4444444444444444,
+  "3": 0.4166666666666667,
+  "4": 0.0,
+  "5": 0.0,
+  "6": 0.0,
+  "7": 0.0,
+  "9": 0.0
+ },
+ "per_sequence": {
+  "ancestor_directed": {
+   "f1": {
+    "mean": 0.19375786883344706,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.6666666666666666,
+    "std": 0.2952840904300488
+   },
+   "precision": {
+    "mean": 0.1733364360626804,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.5,
+    "std": 0.29830647913650293
+   },
+   "recall": {
+    "mean": 0.31285531964264995,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 1.0,
+    "std": 0.4325294594450067
+   }
+  },
+  "ap": {
+   "mean": 0.6858691487514236,
+   "n": 117,
+   "p10": 0.25,
+   "p50": 0.7,
+   "p90": 1.0,
+   "std": 0.32140721319619064
+  },
+  "auroc": {
+   "mean": 0.6906988409614461,
+   "n": 105,
+   "p10": 0.028571428571428595,
+   "p50": 0.75,
+   "p90": 1.0,
+   "std": 0.3469598168063032
+  },
+  "auroc_skeleton": {
+   "mean": 0.6370437809337375,
+   "n": 136,
+   "p10": 0.125,
+   "p50": 0.675,
+   "p90": 1.0,
+   "std": 0.3194161204281953
+  },
+  "directed": {
+   "f1": {
+    "mean": 0.19408128187276674,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.6666666666666666,
+    "std": 0.29685024941208943
+   },
+   "precision": {
+    "mean": 0.17141140031411525,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.5,
+    "std": 0.2984042694328324
+   },
+   "recall": {
+    "mean": 0.3242835595776772,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 1.0,
+    "std": 0.43943093599712824
+   }
+  },
+  "predict_all_mean": 0.23022350155280963,
+  "skeleton": {
+   "f1": {
+    "mean": 0.36128655190791836,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.33333333333333337,
+    "p90": 0.8,
+    "std": 0.3402468506753041
+   },
+   "precision": {
+    "mean": 0.3899390747777268,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.25,
+    "p90": 1.0,
+    "std": 0.4067050807944841
+   },
+   "recall": {
+    "mean": 0.4364919394331159,
+    "n": 221,
+    "p10": 0.0,
+    "p50": 0.5,
+    "p90": 1.0,
+    "std": 0.4095887919150104
+   }
+  }
+ },
+ "pooled": {
+  "ancestor_directed": {
+   "f1": 0.23031727379553465,
+   "fn": 85,
+   "fp": 570,
+   "precision": 0.1467065868263473,
+   "recall": 0.5355191256830601,
+   "shd": 655,
+   "tp": 98
+  },
+  "ap": 0.27809216083327115,
+  "auroc": 0.608700271281248,
+  "auroc_skeleton": 0.523581765949374,
+  "directed": {
+   "f1": 0.22545454545454546,
+   "fn": 64,
+   "fp": 575,
+   "precision": 0.13922155688622753,
+   "recall": 0.5923566878980892,
+   "shd": 639,
+   "tp": 93
+  },
+  "n_candidates": 1446,
+  "n_truth_directed": 157,
+  "skeleton": {
+   "f1": 0.4111986001749781,
+   "fn": 240,
+   "fp": 433,
+   "precision": 0.35179640718562877,
+   "recall": 0.49473684210526314,
+   "shd": 673,
+   "tp": 235
+  }
+ },
+ "predict_all": {
+  "pooled": 0.19588271990018716
+ },
+ "rule": "forced-ok-counterfactual",
+ "rules_version": "per-sequence-rules@2026-09-24",
+ "rung": "xs",
+ "schema": "seq2causebench/seqscore@1",
+ "scoreable_fraction": 0.17346938775510204,
+ "split": "test",
+ "tau": 0.0003,
+ "tau_by_lag": null,
+ "truth_counts": {
+  "candidates": 1446,
+  "candidates_landed": 5106,
+  "sequences": 1274,
+  "sequences_with_candidates": 341,
+  "sequences_with_candidates_landed": 985,
+  "sequences_with_truth": 117,
+  "sequences_without_candidates_fully_healthy": 795,
+  "sequences_without_candidates_other": 138,
+  "truth_directed": 157,
+  "truth_directed_landed": 1344
+ }
+}
