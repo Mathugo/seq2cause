@@ -1,0 +1,340 @@
+diff --git a/model/main.py b/model/main.py
+index 62eab28..ec39fb5 100644
+--- a/model/main.py
++++ b/model/main.py
+@@ -18,10 +18,11 @@ from transformer.Models import *
+ from utils.util_loss import *
+ from utils.util_os import count_subdirectories, save_graph_or_decay
+ 
+-# Project Dir
+-proj_dir = '/home/user_name/causalnet'
++# Project Dir (lab patch 0002-drivable-entry: the clone's root by default; `proj_dir` /
++# `dataset_dir` keys of the config or the -proj_dir / -dataset_dir flags override)
++proj_dir = opd(opd(os.path.abspath(__file__)))
+ # Dataset Dir
+-dataset_dir = '/home/user_name/causalnet/datasets/'
++dataset_dir = opj(proj_dir, 'datasets') + '/'
+ 
+ 
+ def node_of_type_from_data(data, num_types):
+@@ -90,6 +91,21 @@ class CausalNET(object):
+         # self.graph = nn.Parameter(torch.rand([self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * (-1))
+         # [3] Zero Init
+         self.graph = nn.Parameter(torch.ones([self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * 0)
++        # [5] Mask Init (lab patch 0002-drivable-entry): `graph_init: mask` reads the causal prior
++        # (causal_prior.npy: 1 = allowed pair, 0 = not allowed, -1 = unknown) as a soft edge
++        # initialisation -- the zero init (ZI) on the allowed and unknown pairs, -1 (the lower end
++        # of the paper's negative init, NI) on the pairs outside the mask; the prior is never
++        # clamped afterwards. `zero` (the default) is the shipped init.
++        graph_init = str(self.args.get('graph_init', 'zero'))
++        if graph_init == 'mask':
++            prior = torch.as_tensor(np.asarray(prior_cm), dtype=torch.float32)
++            if prior.shape != self.graph.shape:
++                raise ValueError(f'causal prior shape {tuple(prior.shape)} != graph shape {tuple(self.graph.shape)}')
++            init = torch.where(prior.eq(0), torch.full_like(prior, -1.0), torch.zeros_like(prior))
++            with torch.no_grad():
++                self.graph.copy_(init.to(self.device))
++        elif graph_init != 'zero':
++            raise ValueError(f'graph_init must be zero or mask, got {graph_init!r}')
+         # [4] Positive Init
+         # self.graph = nn.Parameter(torch.rand([self.args.dataset.n_nodes, self.args.dataset.n_nodes]).to(self.device) * (1))
+         ## Optimizer
+@@ -248,22 +264,40 @@ class CausalNET(object):
+         return loss, loss_data, loss_sparsity, loss_dag, pred_acc
+ 
+ 
+-    def train(self, dataset, data, topology, true_cm=None):
+-        
++    def train(self, dataset, data, topology, true_cm=None, stream=False, on_epoch=None, save=True):
++        """
++        stream (lab patch 0002-drivable-entry): generate each epoch's batches just before the
++        epoch instead of loading the files preprocess_data wrote -- the same generator, the same
++        numpy random stream (nothing else draws from numpy between epochs), no files on disk.
++        on_epoch(epoch_i, facts) is called at the end of every epoch; save=False skips the
++        dags/ files. Returns the final read-out and the last epoch's loss terms.
++        """
+         latent_pred_step = 0
+         graph_discov_step = 0
+         pbar = tqdm.tqdm(total=self.epochs)
+         auc = 0
++        last = {}
++        prob_mat_decayed_adj_max = None
+         
+         for epoch_i in range(self.epochs):
+             ### Stag1: given causal graph and decay matrix, learn to conduct event prediction
+-            data_dir = proj_dir + '/model/' + self.args.dataset.input_format + '/' + dataset + '/' + 'epoch_data' + '/'
+-            if self.args.dataset.input_format == 'data':
+-                sub_dir = str(self.epochs) + '_' + str(self.args.dataset.max_time_lag) + '_' + str(self.args.dataset.max_seq_len) + '/'
+-            elif self.args.dataset.input_format == 'data_topo':
+-                sub_dir = str(self.epochs) + '_' + str(self.args.dataset.max_hop) + '_' + str(self.args.dataset.max_time_lag) + '_' + str(self.args.dataset.max_seq_len) + '/'
+-            file_name = str(epoch_i) + '.pt'
+-            batch_gen = torch.load(data_dir+sub_dir+file_name)
++            if stream:
++                batch_gen = list(training_data_generater(data,
++                        bs=self.args.batch_size,
++                        max_time_lag=self.args.dataset.max_time_lag,
++                        max_seq_len=self.args.dataset.max_seq_len,
++                        device='cpu',
++                        time_scale=float(self.args.dataset.get('time_scale', 60))))
++                if not batch_gen:
++                    raise ValueError('the data yields no full batch: fewer events than batch_size + 1')
++            else:
++                data_dir = proj_dir + '/model/' + self.args.dataset.input_format + '/' + dataset + '/' + 'epoch_data' + '/'
++                if self.args.dataset.input_format == 'data':
++                    sub_dir = str(self.epochs) + '_' + str(self.args.dataset.max_time_lag) + '_' + str(self.args.dataset.max_seq_len) + '/'
++                elif self.args.dataset.input_format == 'data_topo':
++                    sub_dir = str(self.epochs) + '_' + str(self.args.dataset.max_hop) + '_' + str(self.args.dataset.max_time_lag) + '_' + str(self.args.dataset.max_seq_len) + '/'
++                file_name = str(epoch_i) + '.pt'
++                batch_gen = torch.load(data_dir+sub_dir+file_name)
+             
+             count = 0  # batch idx
+             for event_type, event_time, event_topo, event_num in batch_gen:
+@@ -283,6 +317,9 @@ class CausalNET(object):
+                     "latent_data_pred/pred_acc": pred_acc}, latent_pred_step)
+                 pbar.set_postfix_str(f"S1 id={count} loss={data_pred_loss.item():.2f}, spr=IDLE, acc={pred_acc:.4f}")
+                 count += 1
++            last.update({"latent_data_pred/likelihood": float(pred_loss_likelihood), "latent_data_pred/type_loss": float(pred_loss_type),
++                         "latent_data_pred/time_loss": float(pred_loss_time), "latent_data_pred/data_pred_loss": float(data_pred_loss),
++                         "latent_data_pred/pred_acc": float(pred_acc), "n_batches": count})
+ 
+             current_data_pred_lr = self.pred_optimizer.param_groups[0]['lr']
+             self.log.log_metrics({"latent_data_pred/lr": current_data_pred_lr}, latent_pred_step)
+@@ -306,6 +343,9 @@ class CausalNET(object):
+                                         "graph_discov/pred_acc": pred_acc,}, graph_discov_step)
+                 pbar.set_postfix_str(f"S2 id={count}, loss={loss_data.item():.2f}, spr={loss_sparsity.item():.2f}, acc={pred_acc:.4f}")
+                 count += 1
++            last.update({"graph_discov/total_loss": float(loss), "graph_discov/data_loss": float(loss_data),
++                         "graph_discov/sparsity_loss": float(loss_sparsity), "graph_discov/dag_loss": float(loss_dag),
++                         "graph_discov/pred_acc": float(pred_acc)})
+                 
+             self.graph_scheduler.step()
+             self.decay_scheduler.step()
+@@ -326,17 +366,21 @@ class CausalNET(object):
+             ##   f.
+             prob_mat_np = prob_mat_decayed_adj_max.cpu().numpy()
+ 
+-
+-            # Prune (post-processing)
+-            p_prob_mat = prune_by_dag_ness_soft(prob_mat_decayed_adj_max, self.args.causal_thres)
+-            p_prob_mat_np = p_prob_mat.cpu().numpy()
+-            
+-            # Hard Prune (post-processing)
+-            p_prob_mat_hard = prune_by_dag_ness_hard(prob_mat_decayed_adj_max, self.args.causal_thres)
+-            p_prob_mat_np_hard = p_prob_mat_hard.cpu().numpy()
++            # the two prunes are display / metric post-processing (the read-out saved as final_prob is
++            # unpruned); they are computed only when shown or scored (lab patch 0002-drivable-entry:
++            # the shipped loop ran both every epoch, O(|V|^2) matrix exponentials each)
++            show_graph = bool(self.args.show_graph_every) and (epoch_i+1) % self.args.show_graph_every == 0
++            if show_graph or true_cm is not None:
++                # Prune (post-processing)
++                p_prob_mat = prune_by_dag_ness_soft(prob_mat_decayed_adj_max, self.args.causal_thres)
++                p_prob_mat_np = p_prob_mat.cpu().numpy()
++                
++                # Hard Prune (post-processing)
++                p_prob_mat_hard = prune_by_dag_ness_hard(prob_mat_decayed_adj_max, self.args.causal_thres)
++                p_prob_mat_np_hard = p_prob_mat_hard.cpu().numpy()
+             
+             # Show graph
+-            if (epoch_i+1) % self.args.show_graph_every == 0:
++            if show_graph:
+                 plot_causal_matrix_in_training(prob_mat_np, self.log, graph_discov_step, threshold=self.args.causal_thres, pruned=False)
+                 plot_causal_matrix_in_training(p_prob_mat_np, self.log, graph_discov_step, threshold=self.args.causal_thres, pruned=True, prune_strategy="soft")
+                 plot_causal_matrix_in_training(p_prob_mat_np_hard, self.log, graph_discov_step, threshold=self.args.causal_thres, pruned=True, prune_strategy="hard")
+@@ -347,8 +391,11 @@ class CausalNET(object):
+                 calc_and_log_metrics(p_prob_mat_np, true_cm, self.log, graph_discov_step, threshold=self.args.causal_thres, pruned=True, prune_strategy="soft")
+                 calc_and_log_metrics(p_prob_mat_np_hard, true_cm, self.log, graph_discov_step, threshold=self.args.causal_thres, pruned=True, prune_strategy="hard")
+             
++            if on_epoch is not None:
++                on_epoch(epoch_i, dict(last))
++
+             # Save Graph
+-            if epoch_i == (self.epochs-1):
++            if save and epoch_i == (self.epochs-1):
+                 dir_path = proj_dir + '/model/dags/final_prob/'
+                 data_mat = prob_mat_decayed_adj_max.cpu().numpy()
+                 save_graph_or_decay(dir_path=dir_path, file_name=dataset, data_type='final_prob', data_mat=data_mat)
+@@ -360,6 +407,8 @@ class CausalNET(object):
+                 dir_path = proj_dir + '/model/dags/decay/'
+                 data_mat = torch.sigmoid(self.theta.detach()).cpu().numpy()
+                 save_graph_or_decay(dir_path=dir_path, file_name=dataset, data_type='decay', data_mat=data_mat)                
++        pbar.close()
++        return prob_mat_decayed_adj_max.cpu().numpy(), last
+ 
+ 
+     def final_prob(self):
+@@ -454,6 +503,11 @@ def load_formated_data(dataset_name):
+ 
+ 
+ def main(opt, device="cuda"):
++    global proj_dir, dataset_dir
++    if opt.get('proj_dir') is not None:
++        proj_dir = str(opt.proj_dir)
++    if opt.get('dataset_dir') is not None:
++        dataset_dir = str(opt.dataset_dir).rstrip('/') + '/'
+     reproduc(**opt.reproduc)
+     log_id = count_subdirectories(opt.dir_name) + 1
+     opt.task_name += '_' + str(log_id)
+@@ -500,6 +554,8 @@ if __name__ == "__main__":
+     parser.add_argument('-debug', action='store_true')
+     parser.add_argument('-log', action='store_true')
+     parser.add_argument('-task', default='causalnet', type=str)
++    parser.add_argument('-proj_dir', default=None, type=str, help='project dir (default: the clone root)')
++    parser.add_argument('-dataset_dir', default=None, type=str, help='datasets dir (default: <clone>/datasets/)')
+     args = parser.parse_args()
+ 
+     if args.g == "mps":
+@@ -512,4 +568,9 @@ if __name__ == "__main__":
+         device = "cuda"
+         print('Use GPU:{}'.format(os.environ["CUDA_VISIBLE_DEVICES"]))
+ 
+-    main(OmegaConf.load(args.opt), device=device)
++    opt = OmegaConf.load(args.opt)
++    if args.proj_dir is not None:
++        opt.proj_dir = args.proj_dir
++    if args.dataset_dir is not None:
++        opt.dataset_dir = args.dataset_dir
++    main(opt, device=device)
+diff --git a/model/transformer/Models.py b/model/transformer/Models.py
+index 40d48b1..5bf254e 100644
+--- a/model/transformer/Models.py
++++ b/model/transformer/Models.py
+@@ -63,12 +63,8 @@ def get_attn_causal_mask(event_num, event_type, causal_graph):
+     
+     # records which event types are the (causal) parents of the predicted event in each batch
+     event_type = event_type - 1  # -1 because 0 means PAD
+-    target_types = []
+-    for batch_id in range(sz_b):         
+-        idx = event_num[batch_id] - 1
+-        cur_type = event_type[batch_id][idx].item()
+-        target_types.append(cur_type)
+-    parent_types = causal_graph[range(sz_b), :, target_types]  # batch*n_node
++    target_types = _target_index(event_num, event_type).to(torch.int64)  # vectorised (lab patch 0002-drivable-entry)
++    parent_types = causal_graph[torch.arange(sz_b, device=causal_graph.device), :, target_types]  # batch*n_node
+     
+     # to be improved: a little time-consuming
+     causal_mask = torch.zeros((sz_b, len_k), device=device)  # bs*len_k
+@@ -131,19 +127,11 @@ def get_causal_decay_coef(event_num, event_type, event_topo, theta, A, causal_gr
+     
+     # identify the 'topological node' of the each predicted event
+     event_topo = event_topo - 1  # -1 because 0 means PAD
+-    target_topos = []
+-    for batch_id in range(sz_b): 
+-        idx = event_num[batch_id] - 1
+-        cur_topo = event_topo[batch_id][idx].item()
+-        target_topos.append(cur_topo)
++    target_topos = _target_index(event_num, event_topo).to(torch.int64)  # vectorised (lab patch 0002-drivable-entry)
+         
+     # identify the 'event type' of the each predicted event
+     event_type = event_type - 1  # -1 because 0 means PAD
+-    target_types = []
+-    for batch_id in range(sz_b):
+-        idx = event_num[batch_id] - 1
+-        cur_type = event_type[batch_id][idx].item()
+-        target_types.append(cur_type)
++    target_types = _target_index(event_num, event_type).to(torch.int64)
+     
+     # identify the causal decay coef between the predicted event and each historical event
+     parents = torch.zeros(sz_b, n_topo, n_node).to(device) 
+@@ -177,10 +165,10 @@ class Decoder(nn.Module):
+ 
+         self.d_model = d_model
+ 
+-        # position vector, used for temporal encoding
+-        self.position_vec = torch.tensor(
+-            [math.pow(10000.0, 2.0 * (i // 2) / d_model) for i in range(d_model)],
+-            device=torch.device('cuda'))
++        # position vector, used for temporal encoding (a buffer: it follows the module's device;
++        # the shipped code built it on cuda unconditionally -- lab patch 0002-drivable-entry)
++        self.register_buffer('position_vec', torch.tensor(
++            [math.pow(10000.0, 2.0 * (i // 2) / d_model) for i in range(d_model)]), persistent=False)
+ 
+         # event type embedding
+         self.event_emb = nn.Embedding(num_types + 1, d_model, padding_idx=Constants.PAD)
+diff --git a/model/utils/util_dataset.py b/model/utils/util_dataset.py
+index e9c34a6..80ee45b 100644
+--- a/model/utils/util_dataset.py
++++ b/model/utils/util_dataset.py
+@@ -51,7 +51,7 @@ def get_formated_dataset(path, dataset, fold='fold2'):
+     topology = read_topology(path, dataset)
+     prior_cm = read_prior(path, dataset)
+     
+-    ds = ds.sort_values(by='start_timestamp')
++    ds = ds.sort_values(by='start_timestamp', kind='stable')  # ties keep the file's row order (lab patch 0002-drivable-entry)
+     
+     alarm_ids = ds['alarm_id'].tolist()
+     device_ids = ds['device_id'].tolist()
+@@ -138,12 +138,14 @@ def visualize_event_distribution(event_time, max_time_lag, max_seq_len):
+     return 'ok'
+ 
+ 
+-def training_data_generater(data, bs, max_time_lag, max_seq_len, device):
++def training_data_generater(data, bs, max_time_lag, max_seq_len, device, time_scale=60):
+     """
+     batch generator for Event Sequence data
+     
+     Input:
+-    - max_time_lag: the longest time distance
++    - max_time_lag: the longest time distance (in the data's time unit)
++    - time_scale: the divisor applied to the window-shifted times before they reach the model
++      (the shipped constant 60: seconds -> minutes; lab patch 0002-drivable-entry makes it a parameter)
+     Output: 
+     - event_type: batch*(max_seq_len+1) 
+     - event_time: batch*(max_seq_len+1)
+@@ -217,6 +219,12 @@ def training_data_generater(data, bs, max_time_lag, max_seq_len, device):
+             y_type = data_type[seq_id][data_t]  # len([y])=1
+             y_time = data_time[seq_id][data_t]  # len([y])=1
+             y_topo = data_topo[seq_id][data_t]  # len([y])=1
++            # the window shift (t - t_first + 1) in exact integers before the float32 cast; the
++            # shipped shift below (on the float32 tensor) is then the identity (lab patch
++            # 0002-drivable-entry: millisecond timestamps exceed float32's integer range)
++            t_first = x_time[0]
++            x_time = [tt - t_first + 1 for tt in x_time]
++            y_time = y_time - t_first + 1
+             # Pad meaningless events
+             seq_len = len(x_type+[y_type])
+             z_type = [0] * (batch_seq_len - seq_len)
+@@ -242,7 +250,7 @@ def training_data_generater(data, bs, max_time_lag, max_seq_len, device):
+     
+         # time window shift & rescale
+         event_time = event_time -  event_time[:,0][:,None].expand(-1,batch_seq_len) + 1
+-        event_time /= 60
++        event_time /= time_scale
+         yield event_type, event_time, event_topo, event_num
+     
+ 
+diff --git a/model/utils/util_logger.py b/model/utils/util_logger.py
+index d22c47c..10cc90d 100644
+--- a/model/utils/util_logger.py
++++ b/model/utils/util_logger.py
+@@ -5,7 +5,6 @@ from os.path import join as opj
+ import numpy as np
+ from os.path import dirname as opd
+ from typing import Dict
+-from torch.utils.tensorboard import SummaryWriter
+ from utils.util_misc import omegaconf2list
+ 
+ 
+@@ -22,6 +21,7 @@ class MyLogger():
+             stderr_handler = open(opj(self.log_dir, 'stderr.log'), 'w')
+             sys.stderr = stderr_handler
+         if tensorboard:
++            from torch.utils.tensorboard import SummaryWriter  # imported on demand (lab patch 0002-drivable-entry)
+             self.tblogger = SummaryWriter(self.log_dir)
+             self.logger_dict['tblogger'] = self.tblogger
+ 
+diff --git a/model/utils/util_loss.py b/model/utils/util_loss.py
+index ddcc979..1ca796d 100644
+--- a/model/utils/util_loss.py
++++ b/model/utils/util_loss.py
+@@ -165,9 +165,8 @@ def log_likelihood(model, data, time, types, indices):
+     """
+     non_pad_mask = get_non_pad_mask(types).squeeze(2)  # batch*seq_len
+ 
+-    type_mask = torch.zeros([*types.size(), model.num_types], device=data.device)  # batch*seq_len*num_classes
+-    for i in range(model.num_types):
+-        type_mask[:, :, i] = (types == i + 1).bool().to(data.device)
++    # one-hot of the type (PAD = 0 -> all zeros): the shipped per-type loop, vectorised (lab patch 0002-drivable-entry)
++    type_mask = F.one_hot(types.to(torch.int64), num_classes=model.num_types + 1)[:, :, 1:].to(dtype=data.dtype, device=data.device)  # batch*seq_len*num_classes
+ 
+     diff_time = (time[:, 1:] - time[:, :-1]) * non_pad_mask[:, 1:]
+     temp_time = diff_time

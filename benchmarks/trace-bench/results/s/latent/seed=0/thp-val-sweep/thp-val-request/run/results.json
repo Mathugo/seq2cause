@@ -1,0 +1,191 @@
+{
+ "N": null,
+ "arms": [
+  "thp/topology"
+ ],
+ "c": 0,
+ "cells": {},
+ "corpus_id": "s/latent/seed=0",
+ "corrupted_cells": {},
+ "facts": {
+  "thp/topology": {
+   "fits": {
+    "100": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.01,
+     "file": "scores-thp-topology-none-c0-N100-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 2146,
+     "n_edges": 462,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 462,
+     "n_events": 47709,
+     "n_forbidden_pairs": 77096,
+     "n_nonzero": 462,
+     "n_ops": 73,
+     "n_pairs": 462,
+     "n_rows": 47698,
+     "n_sweeps_run": 465,
+     "n_topology_edges": 115,
+     "n_types": 282,
+     "n_within_op_dropped": 0,
+     "setting": 100,
+     "wall_seconds": 207.72946462,
+     "wall_seconds_subprocess": 210.61752774900003
+    },
+    "1000": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.001,
+     "file": "scores-thp-topology-none-c0-N1000-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 2146,
+     "n_edges": 369,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 369,
+     "n_events": 47709,
+     "n_forbidden_pairs": 77096,
+     "n_nonzero": 369,
+     "n_ops": 73,
+     "n_pairs": 369,
+     "n_rows": 47698,
+     "n_sweeps_run": 372,
+     "n_topology_edges": 115,
+     "n_types": 282,
+     "n_within_op_dropped": 0,
+     "setting": 1000,
+     "wall_seconds": 193.83388965799998,
+     "wall_seconds_subprocess": 196.776741352
+    },
+    "10000": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.0001,
+     "file": "scores-thp-topology-none-c0-N10000-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 2146,
+     "n_edges": 165,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 165,
+     "n_events": 47709,
+     "n_forbidden_pairs": 77096,
+     "n_nonzero": 165,
+     "n_ops": 73,
+     "n_pairs": 165,
+     "n_rows": 47698,
+     "n_sweeps_run": 166,
+     "n_topology_edges": 115,
+     "n_types": 282,
+     "n_within_op_dropped": 0,
+     "setting": 10000,
+     "wall_seconds": 120.82946498299998,
+     "wall_seconds_subprocess": 123.76445726300005
+    }
+   },
+   "n_allowed_pairs": 2146,
+   "n_events": 47709,
+   "n_ops": 73,
+   "n_prior_pairs": 2875,
+   "n_prior_pairs_outside_sample": 729,
+   "n_sequences": 10000,
+   "n_skipped_short": 286,
+   "n_tokens": 282,
+   "span_ms": 6540259
+  }
+ },
+ "files": {
+  "thp/topology": [
+   "scores-thp-topology-none-c0-N100-request.npz",
+   "scores-thp-topology-none-c0-N1000-request.npz",
+   "scores-thp-topology-none-c0-N10000-request.npz"
+  ]
+ },
+ "freeze": null,
+ "g": 0,
+ "grain": "request",
+ "hard_output": true,
+ "inputs": {
+  "thp/topology": [
+   "views/end-request/sequences/split=val",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "refuse",
+ "max_len": 64,
+ "memory": null,
+ "method": "thp",
+ "method_args": {
+  "epsilon": "1",
+  "max_hop": "1",
+  "max_iter": "5000",
+  "penalty": "BIC"
+ },
+ "method_commit": "4889dbb6284f1c6e1104cb7ecc039e10a611a306",
+ "method_python": "envs/thp/venv/bin/python",
+ "method_sha256": "b78652fdf066d6995a5eaff08744134cd26e179068e75eb35209301950f561a2",
+ "method_src": "envs/thp/venv/lib/python3.11/site-packages",
+ "model_sha256": "none",
+ "n_probed": 10000,
+ "n_sequences": 10000,
+ "n_skipped_short": 286,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "thp-topology",
+ "probe_amp": null,
+ "rung": "s",
+ "setting_name": "decay_ms",
+ "settings": [
+  100,
+  1000,
+  10000
+ ],
+ "shipped_rule": null,
+ "split": "val",
+ "stage": "thp",
+ "staging": {
+  "entry": {
+   "added": "2026-10-31",
+   "grain": "request",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "n_cells": 3,
+   "note": "context family (plans/reference-arms.md, addendum 2026-10-31 §5): the `sweep-request-keep` pass (core-keep + cli-atomic-cmi; N = 8; c 1) on the landed seed-0 backbone, a validation sweep without pretrain; frozen in freezes/2026-11-01-xs-latent-s0-context.json (family context); the s context sweep of this seed and grain names this sha256 through --prior-rung-record",
+   "results_sha256": "54872cc1ed679ff94c2667bbd8abae4032ea54caed77c61a76341847d6c037b4",
+   "run": "xs-latent-s0-ctx-val-26-10-31",
+   "rung": "xs",
+   "seed": 0,
+   "stage": "sweep",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "54872cc1ed679ff94c2667bbd8abae4032ea54caed77c61a76341847d6c037b4",
+  "rung": "s",
+  "stage_matched": "sweep"
+ },
+ "status": "ok"
+}

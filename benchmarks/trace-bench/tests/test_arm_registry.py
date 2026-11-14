@@ -6,6 +6,8 @@ import pytest
 from seq2causebench import arms
 from seq2causebench.constants import (
     AGGREGATIONS,
+    ARM_CASCADE_NONE,
+    ARM_CASCADE_TOPOLOGY,
     ARM_CLI,
     ARM_CLI_ATOMIC,
     ARM_CLI_ATOMIC_CMI_KEEP,
@@ -14,20 +16,31 @@ from seq2causebench.constants import (
     ARM_CORE_CMI_OVERWRITE,
     ARM_CORE_IG_KEEP,
     ARM_CORE_IG_OVERWRITE,
+    ARM_FLOOR_TOPOLOGY,
     ARM_GRANGER,
     ARM_SALIENCY,
     ARM_SHAPLEY,
     ARMS,
     BASELINE_ARMS,
+    CASCADE_MAX_DELAYS_MS,
+    CASCADE_PRECISION,
     CONTEXT_ARMS,
     CONTEXT_FAMILY_GRID,
     CONTEXT_MODE_OF_PROBE,
     CUT_FROZEN,
     CUT_SHIPPED,
+    EXTERNAL_ARM_OF_PROBE,
+    EXTERNAL_ARMS,
+    EXTERNAL_METHOD_OF_ARM,
+    EXTERNAL_METHODS,
+    EXTERNAL_PROBES,
+    MASK_MODES,
     FLOOR_ARM_OF_PROBE,
     FLOOR_ARMS,
     FLOOR_PROBES,
     GRAINS,
+    MODEL_FREE_ARMS,
+    MODEL_FREE_PROBES,
     PATH_FIXED,
     PATH_FIXED_KL,
     PATH_NONE,
@@ -45,17 +58,64 @@ from seq2causebench.constants import (
 )
 
 
-def test_thirteen_arms_three_reference_three_baseline_two_floor_five_context():
+def test_eighteen_arms_three_reference_three_baseline_two_floor_five_context_five_external():
     assert set(ARMS) == (
-        set(REFERENCE_ARMS) | set(BASELINE_ARMS) | set(FLOOR_ARMS) | set(CONTEXT_ARMS)
+        set(REFERENCE_ARMS)
+        | set(BASELINE_ARMS)
+        | set(FLOOR_ARMS)
+        | set(CONTEXT_ARMS)
+        | set(EXTERNAL_ARMS)
     )
-    assert len(ARMS) == 13 and len(FLOOR_ARMS) == 2 and len(CONTEXT_ARMS) == 5
+    assert len(ARMS) == 18 and len(FLOOR_ARMS) == 2 and len(CONTEXT_ARMS) == 5
+    assert len(EXTERNAL_ARMS) == 5
     assert REFERENCE_ARMS == (ARM_CORE, ARM_CLI, ARM_CLI_ATOMIC)  # the landed arms, never extended
     assert all(ARMS[a]["class"] == "reference" for a in REFERENCE_ARMS)
     assert all(ARMS[a]["class"] == "reference" for a in CONTEXT_ARMS)
     assert all(ARMS[a]["class"] == "baseline" for a in BASELINE_ARMS)
     assert all(ARMS[a]["class"] == "floor" for a in FLOOR_ARMS)
+    assert all(ARMS[a]["class"] == "external" for a in EXTERNAL_ARMS)
     assert AGGREGATIONS == ("max",)
+
+
+def test_external_family_is_model_free_single_cut_own_probes():
+    """plans/cascade.md (D-SB-27, D-SB-28) and its addendum (D-SB-29): CASCADE's two arms plus one
+    topology arm per method of the registry, the floors' binding, the N slot."""
+    assert EXTERNAL_ARMS[:2] == (ARM_CASCADE_TOPOLOGY, ARM_CASCADE_NONE)
+    assert EXTERNAL_ARMS[2:] == ("thp/topology", "lmt/topology", "causalnet/topology")
+    assert tuple(EXTERNAL_METHODS) == ("cascade", "thp", "lmt", "causalnet")
+    for arm in EXTERNAL_ARMS:
+        assert ARMS[arm]["paths"] == (PATH_NONE,) and ARMS[arm]["cuts"] == (CUT_FROZEN,)
+        assert arms.is_external(arm) and arms.is_model_free(arm) and not arms.is_floor(arm)
+        assert ARMS[arm]["probe"] in EXTERNAL_PROBES
+        assert ARMS[arm]["statistic"] == EXTERNAL_METHODS[arms.external_method(arm)]["statistic"]
+        assert len(arms.allowed_cells(arm)) == len(GRAINS)
+    for method, spec in EXTERNAL_METHODS.items():
+        assert spec["stage"] == method and spec["runner"] == f"{method}_runner"
+        assert spec["mask_mode"] in MASK_MODES and isinstance(spec["hard_output"], bool)
+        assert spec["grid"] and all(isinstance(n, int) and n > 0 for n in spec["grid"])
+        assert spec["setting"] and spec["hash_globs"]
+        assert all(EXTERNAL_METHOD_OF_ARM[a] == method for a in spec["arms"])
+        assert all(a.endswith("/topology") or method == "cascade" for a in spec["arms"])
+    suffixes = [s["freeze_suffix"] for s in EXTERNAL_METHODS.values()]
+    assert len(set(suffixes)) == len(suffixes) and suffixes[0] == "external"
+    assert EXTERNAL_METHODS["cascade"]["mask_mode"] == EXTERNAL_METHODS["thp"]["mask_mode"] == "refuse"
+    assert EXTERNAL_METHODS["lmt"]["mask_mode"] == EXTERNAL_METHODS["causalnet"]["mask_mode"] == "count"
+    assert ARMS[ARM_CASCADE_TOPOLOGY]["statistic"] == "cascade_dag"
+    with pytest.raises(ValueError):
+        arms.external_method(ARM_FLOOR_TOPOLOGY)
+    assert {EXTERNAL_ARM_OF_PROBE[p] for p in EXTERNAL_PROBES} == set(EXTERNAL_ARMS)
+    assert MODEL_FREE_ARMS == FLOOR_ARMS + EXTERNAL_ARMS
+    assert set(MODEL_FREE_PROBES) == set(FLOOR_PROBES) | set(EXTERNAL_PROBES)
+    assert arms.floor_columns("cascade-topology") == {
+        "cascade/topology": {"none": "cascade-topology__none"}
+    }
+    assert arms.cell_key("cascade/none", PATH_NONE, CUT_FROZEN, "request") == (
+        "cascade/none/none/frozen/request"
+    )
+    assert not arms.is_model_free(ARM_CORE) and not arms.is_external(ARM_FLOOR_TOPOLOGY)
+    assert CASCADE_MAX_DELAYS_MS == (1000, 10000, 60000) and CASCADE_PRECISION == 2
+    with pytest.raises(ValueError):
+        arms.cell_key("cascade/topology", PATH_SHIPPED, CUT_FROZEN, "request")
 
 
 def test_context_family_arms_paths_cuts_and_grid():

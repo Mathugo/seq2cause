@@ -10,7 +10,16 @@ inside a scores table is `<arm slug>__<path>`.
 
 from __future__ import annotations
 
-from .constants import ARMS, CUTS, FLOOR_ARM_OF_PROBE, FLOOR_PROBES, GRAINS, PATH_SPEC, PATHS
+from .constants import (
+    ARMS,
+    CUTS,
+    EXTERNAL_METHOD_OF_ARM,
+    GRAINS,
+    MODEL_FREE_ARM_OF_PROBE,
+    MODEL_FREE_PROBES,
+    PATH_SPEC,
+    PATHS,
+)
 
 
 def arm_spec(name):
@@ -77,12 +86,30 @@ def is_floor(name):
     return arm_spec(name)["class"] == "floor"
 
 
+def is_external(name):
+    """An external arm (plans/cascade.md, D-SB-27): a published method outside seq2cause, run as
+    a subprocess; model-free in the harness's binding, its one setting in the `N` slot."""
+    return arm_spec(name)["class"] == "external"
+
+
+def external_method(name):
+    """The published method an external arm belongs to (`constants.EXTERNAL_METHODS`; D-SB-29)."""
+    if not is_external(name):
+        raise ValueError(f"{name!r} is not an external arm")
+    return EXTERNAL_METHOD_OF_ARM[name]
+
+
+def is_model_free(name):
+    """A floor or an external arm: model hash `none`, its own token list, the `floor_taus` grid."""
+    return is_floor(name) or is_external(name)
+
+
 def floor_columns(probe):
-    """`{arm: {path: column}}` for the floor arm whose score table this pass word names
-    (the floors' counterpart of `engine.probe_columns`)."""
-    if probe not in FLOOR_ARM_OF_PROBE:
-        raise ValueError(f"a floor probe must be one of {FLOOR_PROBES}, got {probe!r}")
-    arm = FLOOR_ARM_OF_PROBE[probe]
+    """`{arm: {path: column}}` for the model-free arm whose score table this pass word names
+    (the floors' and the external family's counterpart of `engine.probe_columns`)."""
+    if probe not in MODEL_FREE_ARM_OF_PROBE:
+        raise ValueError(f"a model-free probe must be one of {MODEL_FREE_PROBES}, got {probe!r}")
+    arm = MODEL_FREE_ARM_OF_PROBE[probe]
     return {arm: {p: column_of(arm, p) for p in arm_spec(arm)["paths"]}}
 
 
@@ -104,5 +131,8 @@ __all__ = [
     "parse_cell_key",
     "allowed_cells",
     "is_floor",
+    "is_external",
+    "external_method",
+    "is_model_free",
     "floor_columns",
 ]

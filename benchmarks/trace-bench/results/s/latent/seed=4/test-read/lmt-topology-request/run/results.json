@@ -1,0 +1,170 @@
+{
+ "N": 100000,
+ "arms": [
+  "lmt/topology"
+ ],
+ "c": 0,
+ "cells": {
+  "lmt/topology/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 4494,
+   "n_pairs": 95898,
+   "per_lag_files": 0,
+   "tau": 0.01
+  }
+ },
+ "corpus_id": "s/latent/seed=4",
+ "corrupted_cells": {},
+ "facts": {
+  "lmt/topology": {
+   "fits": {
+    "100000": {
+     "a_init": -2.0,
+     "device": "cpu",
+     "dtype": "float64",
+     "epoch_seconds_max": 4.151967035999405,
+     "epoch_seconds_mean": 3.325119709359992,
+     "epochs": 200,
+     "file": "scores-lmt-topology-none-request.npz",
+     "final_h": 0.002185122920991489,
+     "final_log_prior": -5199.131127010649,
+     "final_loglike": -188924.91107364203,
+     "final_sparsity_sum": 580.0537695495286,
+     "finite": true,
+     "init_log_mu": -3.3419912468443336,
+     "loss_first": 9072253.533751197,
+     "loss_last": 710403.7170138215,
+     "mask_mode": "count",
+     "method_args": {
+      "a_init": -2.0,
+      "beta_dag": 0.1,
+      "chunk_events": 0,
+      "device": "cpu",
+      "dtype": "float64",
+      "epochs": 200,
+      "fit": "torch",
+      "init_std": 0.35,
+      "lambda_e": 0.1,
+      "lr": 0.05,
+      "param_dtype": "float64",
+      "q_default": 0.5,
+      "q_in": 0.5,
+      "q_out": 0.01,
+      "seed": 0
+     },
+     "method_version": "6f4143dc0668187f69505bc206e87ae2084d47d3",
+     "n_above_half": 18,
+     "n_above_half_outside_mask": 0,
+     "n_allowed_pairs": 3441,
+     "n_edges_outside_mask": 93591,
+     "n_edges_returned": 97032,
+     "n_events": 120516,
+     "n_nonzero": 97032,
+     "n_pairs": 95898,
+     "n_types": 312,
+     "n_within_op_dropped": 1134,
+     "param_dtype": "float64",
+     "prior_weight": 100.0,
+     "setting": 100000,
+     "span_seconds": 11110.726,
+     "time_unit": "seconds (integer milliseconds / 1000; D-LM-2)",
+     "torch_version": "2.15.0+cu132",
+     "wall_seconds": 667.0438613840006,
+     "wall_seconds_subprocess": 668.6869663530006
+    }
+   },
+   "n_allowed_pairs": 3441,
+   "n_events": 120516,
+   "n_ops": 73,
+   "n_prior_pairs": 3725,
+   "n_prior_pairs_outside_sample": 284,
+   "n_sequences": 20000,
+   "n_skipped_short": 0,
+   "n_tokens": 312,
+   "span_ms": 11110726
+  }
+ },
+ "files": {
+  "lmt/topology": [
+   "scores-lmt-topology-none-request.npz"
+  ]
+ },
+ "freeze": {
+  "committed_at": "2026-11-04T06:37:38-05:00",
+  "path": "freezes/2026-11-04-s-latent-s4-external-lmt.json",
+  "sha": "61c817a6c48469a013a44c7a9d46cf3449aeb935"
+ },
+ "g": 0,
+ "grain": "request",
+ "hard_output": false,
+ "inputs": {
+  "lmt/topology": [
+   "views/end-request/sequences/split=test",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "count",
+ "max_len": 64,
+ "memory": null,
+ "method": "lmt",
+ "method_args": {
+  "a_init": "-2",
+  "beta_dag": "0.1",
+  "chunk_events": "0",
+  "device": "cpu",
+  "dtype": "float64",
+  "epochs": "200",
+  "init_std": "0.35",
+  "lambda_e": "0.1",
+  "lr": "0.05",
+  "param_dtype": "float64",
+  "q_in": "0.5",
+  "q_out": "0.01",
+  "seed": "0"
+ },
+ "method_commit": "6f4143dc0668187f69505bc206e87ae2084d47d3",
+ "method_python": "envs/lmt/bin/python",
+ "method_sha256": "5232ff6aeb20d6f2fb0d8b010fdec4c52e8cc53e3013203c0462d504aa14b572",
+ "method_src": "envs/lmt/LMT",
+ "model_sha256": "none",
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 0,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "lmt-topology",
+ "probe_amp": null,
+ "rung": "s",
+ "setting_name": "prior_weight_milli",
+ "settings": [
+  100000
+ ],
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "lmt",
+ "staging": {
+  "entry": {
+   "added": "2026-11-01",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "grain": "request",
+   "model_sha256": "3478a11160460707cdf9510bdf942adee712bc84de4901c4a5fef8bb4a538579",
+   "note": "context family Job T (test read) under freezes/2026-11-01-xs-latent-s4-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none); the s context discover of this seed, grain and probe names this sha256 through --prior-rung-record",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "results_sha256": "9a876e616dc798ec7c96fe0ae4440a666b7fb1d2055c04882ff428e717d99f24",
+   "run": "xs-latent-s4-ctx-test-26-10-31",
+   "rung": "xs",
+   "seed": 4,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "9a876e616dc798ec7c96fe0ae4440a666b7fb1d2055c04882ff428e717d99f24",
+  "rung": "s",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}

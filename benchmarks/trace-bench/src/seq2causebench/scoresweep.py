@@ -42,10 +42,10 @@ from .constants import (
     ARMS,
     CUT_FROZEN,
     CUT_SHIPPED,
-    FLOOR_ARMS,
-    FLOOR_PROBES,
     GRAINS,
     MANIFEST_JSON,
+    MODEL_FREE_ARMS,
+    MODEL_FREE_PROBES,
     TAU_GRID_ARMS,
     VAL_TABLE_JSON,
 )
@@ -144,7 +144,7 @@ def taus_for(arm, scores, col, args):
         return _grid(arm, args.taus, "--taus")
     if arm == ARM_GRANGER:
         return _grid(arm, args.granger_taus, "--granger-taus")
-    if arm in FLOOR_ARMS:
+    if arm in MODEL_FREE_ARMS:  # the floors and the external family (plans/cascade.md §3)
         return _grid(arm, args.floor_taus, "--floor-taus")
     if arm in (ARM_SALIENCY, ARM_SHAPLEY):
         if not args.quantiles:
@@ -164,6 +164,7 @@ def run_scoresweep(args, rec):
     facts = manifest_facts(args.corpus)
     rows, coverage = [], {}
     model_sha = corpus_id = sweep_ordering = None
+    method_sha = method_commit = None  # an external method's identity, carried into the table (D-SB-29)
     for grain in args.grains:
         target, alphabet, context = load_target(args.corpus, grain)
         floor = float(target["default_floor"])
@@ -181,13 +182,20 @@ def run_scoresweep(args, rec):
                 raise ValueError(
                     f"{f.name}: mixed models in one sweep ({scores['model_sha256']} vs {model_sha})"
                 )
+            if "method_sha256" in scores:
+                msha, mcommit = str(scores["method_sha256"]), str(scores.get("method_commit", ""))
+                method_sha, method_commit = method_sha or msha, method_commit or mcommit
+                if msha != method_sha:
+                    raise ValueError(
+                        f"{f.name}: mixed external methods in one sweep ({msha} vs {method_sha})"
+                    )
             sweep_ordering = sweep_ordering or ordering
             if ordering != sweep_ordering:
                 raise ValueError(
                     f"{f.name}: mixed view orderings in one sweep ({ordering} vs {sweep_ordering})"
                 )
-            if probe in FLOOR_PROBES:
-                vocab = TokenTable(scores["tokens"])  # the floor's own token list
+            if probe in MODEL_FREE_PROBES:
+                vocab = TokenTable(scores["tokens"])  # the floor's / external arm's own token list
                 columns = floor_columns(probe)
             else:
                 vocab = Vocab.from_model_vocab(Corpus(args.corpus, ordering, grain).vocab_json())
@@ -264,6 +272,8 @@ def run_scoresweep(args, rec):
         "schema": VAL_TABLE_SCHEMA,
         "corpus_id": corpus_id,
         "model_sha256": model_sha,
+        "method_sha256": method_sha,
+        "method_commit": method_commit,
         **facts,
         "sweep_dir_name": Path(args.sweep_dir).name,
         "ordering": sweep_ordering,

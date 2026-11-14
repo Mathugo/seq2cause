@@ -1,0 +1,139 @@
+{
+ "N": 100,
+ "arms": [
+  "thp/topology"
+ ],
+ "c": 0,
+ "cells": {
+  "thp/topology/none/frozen/request": {
+   "cut": "frozen",
+   "n_edges": 602,
+   "n_pairs": 602,
+   "per_lag_files": 0,
+   "tau": 0.99
+  }
+ },
+ "corpus_id": "s/latent/seed=0",
+ "corrupted_cells": {},
+ "facts": {
+  "thp/topology": {
+   "fits": {
+    "100": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.01,
+     "file": "scores-thp-topology-none-request.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 2565,
+     "n_edges": 602,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 602,
+     "n_events": 96772,
+     "n_forbidden_pairs": 91377,
+     "n_nonzero": 602,
+     "n_ops": 73,
+     "n_pairs": 602,
+     "n_rows": 96757,
+     "n_sweeps_run": 607,
+     "n_topology_edges": 115,
+     "n_types": 307,
+     "n_within_op_dropped": 0,
+     "setting": 100,
+     "wall_seconds": 628.714021765,
+     "wall_seconds_subprocess": 631.3614477020001
+    }
+   },
+   "n_allowed_pairs": 2565,
+   "n_events": 96772,
+   "n_ops": 73,
+   "n_prior_pairs": 2875,
+   "n_prior_pairs_outside_sample": 310,
+   "n_sequences": 20000,
+   "n_skipped_short": 509,
+   "n_tokens": 307,
+   "span_ms": 11805005
+  }
+ },
+ "files": {
+  "thp/topology": [
+   "scores-thp-topology-none-request.npz"
+  ]
+ },
+ "freeze": {
+  "committed_at": "2026-11-04T06:37:38-05:00",
+  "path": "freezes/2026-11-04-s-latent-s0-external-thp.json",
+  "sha": "61c817a6c48469a013a44c7a9d46cf3449aeb935"
+ },
+ "g": 0,
+ "grain": "request",
+ "hard_output": true,
+ "inputs": {
+  "thp/topology": [
+   "views/end-request/sequences/split=test",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "refuse",
+ "max_len": 64,
+ "memory": null,
+ "method": "thp",
+ "method_args": {
+  "epsilon": "1",
+  "max_hop": "1",
+  "max_iter": "5000",
+  "penalty": "BIC"
+ },
+ "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+ "method_python": "envs/thp/venv/bin/python",
+ "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+ "method_src": "envs/thp/venv/lib/python3.11/site-packages",
+ "model_sha256": "none",
+ "n_probed": 20000,
+ "n_sequences": 20000,
+ "n_skipped_short": 509,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "thp-topology",
+ "probe_amp": null,
+ "rung": "s",
+ "setting_name": "decay_ms",
+ "settings": [
+  100
+ ],
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "thp",
+ "staging": {
+  "entry": {
+   "added": "2026-11-01",
+   "cells": [
+    "trace/core-cmi-keep/fixed-kl/frozen/request",
+    "trace/core-ig-keep/fixed-kl/frozen/request"
+   ],
+   "grain": "request",
+   "model_sha256": "ba7725c4f3d2f3aac69a327e38990b4c2f780ac4eec9604c65b34861684c42e3",
+   "note": "context family Job T (test read) under freezes/2026-11-01-xs-latent-s0-context.json (plans/reference-arms.md, addendum 2026-10-31 §5; probe core-keep, noise all, c 1, N 8, context_mode none); the s context discover of this seed, grain and probe names this sha256 through --prior-rung-record",
+   "read": "discover-request-core-keep-all-c1-N8",
+   "results_sha256": "402ddf68e6d428e9c0c103227b8955a31aab756114d653e9dd5c9661bbd20312",
+   "run": "xs-latent-s0-ctx-test-26-10-31",
+   "rung": "xs",
+   "seed": 0,
+   "stage": "discover",
+   "variant": "latent"
+  },
+  "form": "ledger",
+  "previous_rung": "xs",
+  "results_sha256": "402ddf68e6d428e9c0c103227b8955a31aab756114d653e9dd5c9661bbd20312",
+  "rung": "s",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}

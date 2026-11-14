@@ -1,0 +1,121 @@
+{
+ "N": 100,
+ "arms": [
+  "thp/topology"
+ ],
+ "c": 0,
+ "cells": {
+  "thp/topology/none/frozen/session": {
+   "cut": "frozen",
+   "n_edges": 104,
+   "n_pairs": 104,
+   "per_lag_files": 0,
+   "tau": 0.99
+  }
+ },
+ "corpus_id": "xs/latent/seed=2",
+ "corrupted_cells": {},
+ "facts": {
+  "thp/topology": {
+   "fits": {
+    "100": {
+     "acyclic": true,
+     "converged": true,
+     "delta": 0.01,
+     "file": "scores-thp-topology-none-session.npz",
+     "mask_mode": "refuse",
+     "max_iter": 5000,
+     "method_args": {
+      "epsilon": 1,
+      "max_hop": 1,
+      "max_iter": 5000,
+      "penalty": "BIC"
+     },
+     "method_version": "gcastle 1.0.4 @ 8675af0bc532c7f138158ded62e8cf303e9af655",
+     "n_allowed_pairs": 470,
+     "n_edges": 104,
+     "n_edges_outside_mask": 0,
+     "n_edges_returned": 104,
+     "n_events": 6285,
+     "n_forbidden_pairs": 4642,
+     "n_nonzero": 104,
+     "n_ops": 20,
+     "n_pairs": 104,
+     "n_rows": 6285,
+     "n_sweeps_run": 105,
+     "n_topology_edges": 23,
+     "n_types": 72,
+     "n_within_op_dropped": 0,
+     "setting": 100,
+     "wall_seconds": 2.7064912540000137,
+     "wall_seconds_subprocess": 5.508087605000014
+    }
+   },
+   "n_allowed_pairs": 470,
+   "n_events": 6285,
+   "n_ops": 20,
+   "n_prior_pairs": 575,
+   "n_prior_pairs_outside_sample": 105,
+   "n_sequences": 472,
+   "n_skipped_short": 0,
+   "n_tokens": 72,
+   "span_ms": 3611451
+  }
+ },
+ "files": {
+  "thp/topology": [
+   "scores-thp-topology-none-session.npz"
+  ]
+ },
+ "freeze": {
+  "committed_at": "2026-11-04T06:37:38-05:00",
+  "path": "freezes/2026-11-04-xs-latent-s2-external-thp.json",
+  "sha": "61c817a6c48469a013a44c7a9d46cf3449aeb935"
+ },
+ "g": 0,
+ "grain": "session",
+ "hard_output": true,
+ "inputs": {
+  "thp/topology": [
+   "views/end-session/sequences/split=test",
+   "topology prior through floorprior.topology_read (score side)"
+  ]
+ },
+ "mask_mode": "refuse",
+ "max_len": 64,
+ "memory": null,
+ "method": "thp",
+ "method_args": {
+  "epsilon": "1",
+  "max_hop": "1",
+  "max_iter": "5000",
+  "penalty": "BIC"
+ },
+ "method_commit": "8bc78aca29449abc087082a26c5673cf73d7c259",
+ "method_python": "envs/thp/venv/bin/python",
+ "method_sha256": "ad573d146f8046eb5193ab3aea405ca0f0f9a7b566bb9b0c194878866bba44ce",
+ "method_src": "envs/thp/venv/lib/python3.11/site-packages",
+ "model_sha256": "none",
+ "n_probed": 472,
+ "n_sequences": 472,
+ "n_skipped_short": 0,
+ "noise": "none",
+ "ordering": "end",
+ "probe": "thp-topology",
+ "probe_amp": null,
+ "rung": "xs",
+ "setting_name": "decay_ms",
+ "settings": [
+  100
+ ],
+ "shipped_rule": null,
+ "split": "test",
+ "stage": "thp",
+ "staging": {
+  "form": "smallest-rung",
+  "previous_rung": null,
+  "rung": "xs",
+  "stage_matched": "discover"
+ },
+ "status": "ok"
+}

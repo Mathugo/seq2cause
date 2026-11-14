@@ -1,0 +1,15 @@
+diff --git a/model/main.py b/model/main.py
+--- a/model/main.py
++++ b/model/main.py
+@@ -101,7 +101,10 @@
+             prior = torch.as_tensor(np.asarray(prior_cm), dtype=torch.float32)
+             if prior.shape != self.graph.shape:
+                 raise ValueError(f'causal prior shape {tuple(prior.shape)} != graph shape {tuple(self.graph.shape)}')
+-            init = torch.where(prior.eq(0), torch.full_like(prior, -1.0), torch.zeros_like(prior))
++            # lab patch 0003-init-off: the off-mask logit is a config knob (`graph_init_off`,
++            # default -1.0 = the 0002 value); the on-mask logit stays 0.
++            init_off = float(self.args.get('graph_init_off', -1.0))
++            init = torch.where(prior.eq(0), torch.full_like(prior, init_off), torch.zeros_like(prior))
+             with torch.no_grad():
+                 self.graph.copy_(init.to(self.device))
+         elif graph_init != 'zero':
